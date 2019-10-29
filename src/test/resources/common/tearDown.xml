@@ -1,0 +1,36 @@
+<dataset>
+    <system_parameter/>
+    <currency_pair/>
+    <participant/>
+    <legal_entity/>
+    <user/>
+    <trade/>
+    <issuer_bank/>
+    <collateral_product/>
+    <security_collateral_product/>
+    <bond_collateral_product/>
+    <cash_collateral_product/>
+    <equity_collateral_product/>
+    <log_collateral_product/>
+    <collateral_request/>
+    <clearing_permission/>
+    <custodian_account/>
+    <bond_custodian_account/>
+    <cash_custodian_account />
+    <equity_custodian_account/>
+    <log_custodian_account/>
+    <fx_spot_product/>
+    <fx_spot_eod_position_setting/>
+    <fx_spot_single_ticket_limit/>
+    <margin_alert_configuration/>
+    <margin_ratio/>
+    <margin_ratio_multiplier/>
+    <collateral_balance/>
+    <participant_collateral_requirement/>
+    <calendar_trade_value_date/>
+    <holiday/>
+    <haircut_rate/>
+    <bond_haircut_rate/>
+    <log_haircut_rate/>
+    <equity_haircut_rate/>
+</dataset>

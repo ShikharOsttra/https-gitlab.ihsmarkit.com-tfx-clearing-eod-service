@@ -1,0 +1,73 @@
+stages:
+  - build
+  - post-build
+  - deliver
+
+branch-job:
+  stage: build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  script:
+    - gradle clean build
+  except:
+    - master
+    - develop
+    - uat-drop
+  artifacts:
+    paths:
+      - build/libs/
+
+check-dependencies:
+  stage: post-build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.05
+  script:
+    - check_dependencies.sh
+  except:
+    - uat-drop
+
+develop-job:
+  stage: build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  script:
+    - gradle clean build publish
+  only:
+    - develop
+  artifacts:
+    paths:
+      - build/libs/
+
+uat-drop-job:
+  stage: build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  script:
+    - gradle clean build publish
+  only:
+    - uat-drop
+  artifacts:
+    paths:
+      - build/libs/
+
+master-job:
+  stage: build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  script:
+    - gradle clean build publish
+  only:
+    - master
+  artifacts:
+    paths:
+      - build/libs/
+
+gconf:deliver:
+  stage: deliver
+  image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
+  script:
+    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.0.4
+  only:
+    - master
+    - develop
+    - uat-drop
+  artifacts:
+    paths:
+      - build/deliverable/
+      - build/reports/
+      - build/test-results/

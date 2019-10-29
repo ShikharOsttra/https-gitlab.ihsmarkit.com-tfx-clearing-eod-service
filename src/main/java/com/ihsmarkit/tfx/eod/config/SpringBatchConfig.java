@@ -1,0 +1,56 @@
+package com.ihsmarkit.tfx.eod.config;
+
+import java.time.format.DateTimeFormatter;
+
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+import com.ihsmarkit.tfx.eod.batch.Eod1JobParametersValidator;
+import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
+@Configuration
+@ComponentScan(basePackages = "com.ihsmarkit.tfx.eod.batch")
+@EnableBatchProcessing
+public class SpringBatchConfig {
+
+    public static final DateTimeFormatter BUSINESS_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    @Autowired
+    private JobBuilderFactory jobs;
+
+    @Autowired
+    private Eod1JobParametersValidator eod1JobParametersValidator;
+
+    @Autowired
+    private StepBuilderFactory steps;
+
+    @Autowired
+    private MarkToMarketTradesTasklet markToMarketTradesTasklet;
+
+    @Bean(name = "eod1Job")
+    public Job eod1Job() {
+        return jobs.get("eod1Job")
+            .validator(eod1JobParametersValidator)
+            .start(mtmTrades())
+            .build();
+    }
+
+    @Bean
+    @JobScope
+    public Step mtmTrades() {
+        return steps.get("mtmTrades")
+            .tasklet(markToMarketTradesTasklet)
+            .build();
+    }
+}

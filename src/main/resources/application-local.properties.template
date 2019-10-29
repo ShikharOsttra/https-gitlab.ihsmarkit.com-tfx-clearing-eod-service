@@ -1,0 +1,8 @@
+spring.profiles.active=local
+
+spring.datasource.username=devXX_owner
+spring.datasource.password=devXX_owner_tfx
+spring.jpa.properties.hibernate.default_catalog=devXX
+spring.liquibase.default-schema=devXX
+
+
