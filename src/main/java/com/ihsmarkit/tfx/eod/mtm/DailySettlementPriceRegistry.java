@@ -1,13 +1,11 @@
 package com.ihsmarkit.tfx.eod.mtm;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.mtm.generated.TradeOrPositionEssentialsMapperImpl;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Map;
