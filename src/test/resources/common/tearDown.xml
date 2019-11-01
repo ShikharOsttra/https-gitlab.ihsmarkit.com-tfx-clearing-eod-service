@@ -33,4 +33,5 @@
     <bond_haircut_rate/>
     <log_haircut_rate/>
     <equity_haircut_rate/>
+    <eod_product_cash_settlement/>
 </dataset>

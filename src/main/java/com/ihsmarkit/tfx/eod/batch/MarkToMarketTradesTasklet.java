@@ -37,7 +37,10 @@ import java.util.stream.Stream;
 public class MarkToMarketTradesTasklet implements Tasklet {
 
     public static final Map<CurrencyPairEntity, BigDecimal> PRICE_MAP = Map.of(
-            CurrencyPairEntity.of(1L, "USD", "JPY"), new BigDecimal(99.111d)
+            CurrencyPairEntity.of(0L, "USD", "JPY"), new BigDecimal(99.111d),
+            CurrencyPairEntity.of(1L, "EUR", "JPY"), new BigDecimal(120.79),
+            CurrencyPairEntity.of(2L, "EUR", "USD"), new BigDecimal(1.1d),
+            CurrencyPairEntity.of(81L, "USD", "EUR"), new BigDecimal(0.9d)
     );
 
     @Autowired
