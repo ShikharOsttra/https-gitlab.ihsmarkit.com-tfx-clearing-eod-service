@@ -1,10 +1,11 @@
 package com.ihsmarkit.tfx.eod.mtm;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
 import com.ihsmarkit.tfx.common.mapstruct.DefaultMapperConfig;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 @Mapper(config = DefaultMapperConfig.class)
 public interface TradeOrPositionEssentialsMapper {
