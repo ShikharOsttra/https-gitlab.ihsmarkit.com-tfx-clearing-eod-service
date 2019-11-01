@@ -35,13 +35,6 @@ import com.ihsmarkit.tfx.eod.service.TradeMtmCalculator;
 
 import lombok.AllArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @Service
 @AllArgsConstructor
 @JobScope

@@ -23,9 +23,9 @@ public class DailySettlementPriceRegistry {
     public DailySettlementPriceRegistry(Map<CurrencyPairEntity, BigDecimal> rateByCurrencyPair) {
         this.rateByCurrencyPair = rateByCurrencyPair;
         this.JPYRates = rateByCurrencyPair.entrySet().stream()
-                .filter((a) -> a.getKey().getValueCurrency().equals("JPY"))
+                .filter(a -> a.getKey().getValueCurrency().equals("JPY"))
                 .collect(Collectors.toMap(
-                        (a) -> a.getKey().getBaseCurrency(),
+                        a -> a.getKey().getBaseCurrency(),
                         Map.Entry::getValue
                 ));
     }
@@ -43,7 +43,7 @@ public class DailySettlementPriceRegistry {
 
         var mtmAmount = rate.subtract(trade.getSpotRate()).multiply(trade.getBaseAmount());
 
-        if (!valueCurrency.equals("JPY")) {
+        if (!"JPY".equals(valueCurrency)) {
             mtmAmount = mtmAmount.multiply(JPYRates.get(valueCurrency));
         }
 
@@ -66,7 +66,7 @@ public class DailySettlementPriceRegistry {
                                 )
                         )
                 ).entrySet().stream()
-                    .flatMap( (a) -> a.getValue().entrySet().stream().map( (b) -> TradeMTM.of(a.getKey(), b.getKey(), b.getValue())));
+                    .flatMap(a -> a.getValue().entrySet().stream().map(b -> TradeMTM.of(a.getKey(), b.getKey(), b.getValue())));
     }
 
     public Stream<TradeMTM> calculateAndAggregateDailyMTM(Collection<ParticipantPositionEntity> positions) {
