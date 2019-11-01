@@ -1,11 +1,14 @@
 package com.ihsmarkit.tfx.eod.mtm;
 
-import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
-import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
-import lombok.*;
-
 import java.math.BigDecimal;
+
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
+
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @RequiredArgsConstructor(staticName = "of")
 @Getter

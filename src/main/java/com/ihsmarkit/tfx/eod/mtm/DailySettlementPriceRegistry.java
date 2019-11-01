@@ -1,16 +1,16 @@
 package com.ihsmarkit.tfx.eod.mtm;
 
-import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
-import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.eod.mtm.generated.TradeOrPositionEssentialsMapperImpl;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.eod.mtm.generated.TradeOrPositionEssentialsMapperImpl;
 
 public class DailySettlementPriceRegistry {
 
@@ -23,7 +23,7 @@ public class DailySettlementPriceRegistry {
     public DailySettlementPriceRegistry(Map<CurrencyPairEntity, BigDecimal> rateByCurrencyPair) {
         this.rateByCurrencyPair = rateByCurrencyPair;
         this.JPYRates = rateByCurrencyPair.entrySet().stream()
-                .filter( (a) -> a.getKey().getValueCurrency().equals("JPY"))
+                .filter((a) -> a.getKey().getValueCurrency().equals("JPY"))
                 .collect(Collectors.toMap(
                         (a) -> a.getKey().getBaseCurrency(),
                         Map.Entry::getValue
