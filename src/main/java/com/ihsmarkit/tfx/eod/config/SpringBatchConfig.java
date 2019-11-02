@@ -20,7 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @Configuration
-@ComponentScan(basePackages = "com.ihsmarkit.tfx.eod.batch")
+@ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper" })
 @EnableBatchProcessing
 public class SpringBatchConfig {
 

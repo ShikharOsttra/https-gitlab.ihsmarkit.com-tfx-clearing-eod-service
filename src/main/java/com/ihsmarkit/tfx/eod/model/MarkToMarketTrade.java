@@ -1,30 +1,26 @@
-package com.ihsmarkit.tfx.eod.mtm;
+package com.ihsmarkit.tfx.eod.model;
 
 import java.math.BigDecimal;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @RequiredArgsConstructor(staticName = "of")
 @Getter
-@Builder
-public class TradeOrPositionEssentials {
-
-    @NonNull
-    private final CurrencyPairEntity currencyPair;
+@ToString
+public class MarkToMarketTrade {
 
     @NonNull
     private final ParticipantEntity participant;
 
     @NonNull
-    private final BigDecimal baseAmount;
+    private final CurrencyPairEntity currencyPair;
 
     @NonNull
-    private final BigDecimal spotRate;
-
+    private final BigDecimal amount;
 }
