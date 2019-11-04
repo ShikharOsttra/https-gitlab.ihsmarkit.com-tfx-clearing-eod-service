@@ -59,4 +59,17 @@
             version_tsp="2019-03-05 16:00:00"
             message_id="WEB0000000012"
     />
+
+    <participant_position
+        id="1"
+        currency_pair_id="81"
+        participant_type="FX_BROKER"
+        participant_id="101"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="-1"
+        currency="JPY"
+        type="SOD"
+    />
 </dataset>
