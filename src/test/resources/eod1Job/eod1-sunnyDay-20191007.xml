@@ -8,6 +8,33 @@
     <currency_pair id="81" base_ccy="USD" value_ccy="EUR"/>
 
     <trade
+            id="110"
+            currency_pair_id="81"
+            product_code="USD/EUR"
+            trade_ref="some_ref"
+            activity="NEW"
+            originator_id="101"
+            counterparty_id="102"
+            direction="BUY"
+            base_ccy="USD"
+            base_ccy_amt="1.11"
+            value_ccy="EUR"
+            value_ccy_amt="2.11"
+            spot_rate="3.11"
+            matching_status="CONFIRMED"
+            clearing_status="NOVATED"
+            trade_date="2019-10-06"
+            value_date="2019-10-09"
+            execution_time="2019-03-06 22:00:00"
+            source_system="GUI"
+            submission_tsp="2019-03-06 16:00:00"
+            user_name="john.doe"
+            matching_ref="[null]"
+            version_tsp="2019-03-06 16:00:00"
+            message_id="WEB0000000011"
+    />
+
+    <trade
             id="111"
             currency_pair_id="81"
             product_code="USD/EUR"
@@ -72,4 +99,31 @@
         currency="JPY"
         type="SOD"
     />
+
+    <participant_position
+            id="2"
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-06"
+            value_date="2019-10-09"
+            price="3.12"
+            amount="-1"
+            currency="JPY"
+            type="SOD"
+    />
+
+    <participant_position
+            id="3"
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="3.12"
+            amount="-1"
+            currency="JPY"
+            type="NET"
+    />
+
 </dataset>
