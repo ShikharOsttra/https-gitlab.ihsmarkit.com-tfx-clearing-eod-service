@@ -24,7 +24,7 @@ import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 @ExtendWith(SpringExtension.class)
 class TradeOrPositionEssentialsMapperTest {
 
-    private final static CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
+    private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().name("A").build();
     private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder()
             .participant(PARTICIPANT_A)
@@ -62,7 +62,7 @@ class TradeOrPositionEssentialsMapperTest {
     }
 
     @Test
-    void shouldMapPosition(){
+    void shouldMapPosition() {
         ParticipantPositionEntity position = ParticipantPositionEntity.builder()
                 .amount(AmountEntity.of(BigDecimal.valueOf(20.0), "USD"))
                 .currencyPair(CURRENCY_PAIR)
@@ -84,6 +84,5 @@ class TradeOrPositionEssentialsMapperTest {
     static class TestConfig {
 
     }
-
 
 }
