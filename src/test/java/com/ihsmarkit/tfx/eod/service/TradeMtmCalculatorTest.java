@@ -1,13 +1,13 @@
 package com.ihsmarkit.tfx.eod.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,32 +100,13 @@ class TradeMtmCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
-        Stream<MarkToMarketTrade> mtm = tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP);
-
-        assertThat(mtm)
-            .anySatisfy(
-                a -> Assertions.assertAll(
-                    () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                    () -> assertThat(a.getCurrencyPair()).isSameAs(EURUSD),
-                    () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(-99))
-                )
-            )
-            .anySatisfy(
-                a -> Assertions.assertAll(
-                    () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                    () -> assertThat(a.getCurrencyPair()).isSameAs(USDJPY),
-                    () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(-4))
-                )
-            )
-            .anySatisfy(
-                a -> Assertions.assertAll(
-                    () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_B),
-                    () -> assertThat(a.getCurrencyPair()).isSameAs(EURUSD),
-                    () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(198))
-                )
-            )
-            .hasSize(3);
-
+        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+            .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
+                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
+                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(198))
+            );
     }
 
     @Test
@@ -133,23 +114,11 @@ class TradeMtmCalculatorTest {
         Stream<MarkToMarketTrade> mtm =
             tradeMtmCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
-        assertThat(mtm)
-            .anySatisfy(
-                a -> Assertions.assertAll(
-                    () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                    () -> assertThat(a.getCurrencyPair()).isSameAs(EURUSD),
-                    () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(99000))
-                )
-            )
-            .anySatisfy(
-                a -> Assertions.assertAll(
-                    () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                    () -> assertThat(a.getCurrencyPair()).isSameAs(USDJPY),
-                    () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(-30000))
-                )
-            )
-            .hasSize(2);
-
+        assertThat(mtm).extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
+                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))
+            );
     }
 
     @TestConfiguration
