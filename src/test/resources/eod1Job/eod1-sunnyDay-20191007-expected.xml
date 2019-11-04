@@ -1,0 +1,11 @@
+<dataset>
+    <eod_product_cash_settlement
+            participant_id="101"
+            currency_pair_id="81"
+            amount="-1"
+            currency="JPY"
+            settlement_date="2019-10-10"
+            date="2019-10-07"
+            type="INITIAL_MTM"
+    />
+</dataset>

@@ -19,6 +19,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
+import com.github.springtestdbunit.annotation.ExpectedDatabase;
+import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 import com.ihsmarkit.tfx.test.db.util.DbUnitTestListeners;
@@ -40,6 +42,7 @@ class EodJobIntegrationTest {
 
     @Test
     @DatabaseSetup("/eod1Job/eod1-sunnyDay-20191007.xml")
+    @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
     void testEodJob() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncherTestUtils.getJobLauncher().run(eodJob, jobParams);
