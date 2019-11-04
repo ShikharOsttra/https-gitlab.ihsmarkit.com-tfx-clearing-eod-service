@@ -80,7 +80,7 @@ class TradeMtmCalculatorTest {
         .originator(ORIGINATOR_B)
         .build();
 
-    private static final TradeEntity A_BUYS_1_USD_AT_99001 = TradeEntity.builder()
+    private static final TradeEntity A_BUYS_1_USD_AT_991 = TradeEntity.builder()
             .direction(Side.BUY)
             .currencyPair(USDJPY)
             .spotRate(BigDecimal.valueOf(99.1))
@@ -117,35 +117,23 @@ class TradeMtmCalculatorTest {
     void shouldRoundPositiveFractionalPYDown() {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
-        Stream<MarkToMarketTrade> mtm = tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP);
-
-        assertThat(mtm)
-                .anySatisfy(
-                        a -> Assertions.assertAll(
-                                () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                                () -> assertThat(a.getCurrencyPair()).isSameAs(USDJPY),
-                                () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.ZERO)
-                        )
-                )
-                .hasSize(1);
+        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+                .containsExactly(
+                        tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
+                );
 
     }
 
     @Test
     void shouldRoundNegativeFractionalPYUp() {
 
-        final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_99001);
-        Stream<MarkToMarketTrade> mtm = tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP);
-
-        assertThat(mtm)
-                .anySatisfy(
-                        a -> Assertions.assertAll(
-                                () -> assertThat(a.getParticipant()).isSameAs(PARTICIPANT_A),
-                                () -> assertThat(a.getCurrencyPair()).isSameAs(USDJPY),
-                                () -> assertThat(a.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(-1))
-                        )
-                )
-                .hasSize(1);
+        final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
+        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+                .containsExactly(
+                        tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
+                );
 
     }
 
