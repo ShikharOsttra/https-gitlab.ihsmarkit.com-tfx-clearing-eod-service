@@ -1,7 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,7 +16,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
@@ -27,6 +25,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.mapper.MarkToMarketTradeMapper;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
@@ -49,6 +48,8 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final TradeMtmCalculator tradeMtmCalculator;
 
+    private final MarkToMarketTradeMapper mtmMapper;
+
     @Value("#{jobParameters['businessDate']}")
     private String businessDateJobParameter;
 
@@ -60,31 +61,17 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<EodProductCashSettlementEntity> initial = tradeMtmCalculator.calculateAndAggregateInitialMtm(novatedTrades, dsp)
-            .map(a -> mapToEodProductCashSettlementEntity(a, businessDate, EodProductCashSettlementType.INITIAL_MTM));
+            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, EodProductCashSettlementType.INITIAL_MTM));
 
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
         final Stream<EodProductCashSettlementEntity> daily = tradeMtmCalculator.calculateAndAggregateDailyMtm(positions, dsp)
-            .map(a -> mapToEodProductCashSettlementEntity(a, businessDate, EodProductCashSettlementType.DAILY_MTM));
+            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, EodProductCashSettlementType.DAILY_MTM));
 
-        final Stream<EodProductCashSettlementEntity> eod = Stream.concat(initial, daily);
-        eodProductCashSettlementRepository.saveAll(eod::iterator);
+        eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 
         return RepeatStatus.FINISHED;
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
-    private EodProductCashSettlementEntity mapToEodProductCashSettlementEntity(final ParticipantPositionForPair mtm,
-        final LocalDate businessDate, final EodProductCashSettlementType type) {
-
-        return EodProductCashSettlementEntity.builder()
-            .type(type)
-            .participant(mtm.getParticipant())
-            .currencyPair(mtm.getCurrencyPair())
-            .amount(AmountEntity.of(mtm.getAmount(), JPY))
-            .date(businessDate)
-            .settlementDate(businessDate.plusDays(3))
-            .build();
-    }
 }
