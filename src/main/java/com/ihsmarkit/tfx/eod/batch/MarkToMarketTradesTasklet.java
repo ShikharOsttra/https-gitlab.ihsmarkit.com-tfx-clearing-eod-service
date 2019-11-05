@@ -27,6 +27,7 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.MarkToMarketTradeMapper;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
 import com.ihsmarkit.tfx.eod.service.TradeMtmCalculator;
 
 import lombok.AllArgsConstructor;
@@ -48,24 +49,27 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final MarkToMarketTradeMapper mtmMapper;
 
+    private final SettlementDateProvider settlementDateProvider;
+
     @Value("#{jobParameters['businessDate']}")
     private final String businessDateJobParameter;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
         final LocalDate businessDate = LocalDate.parse(businessDateJobParameter, BUSINESS_DATE_FMT);
+        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate);
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<EodProductCashSettlementEntity> initial = tradeMtmCalculator.calculateAndAggregateInitialMtm(novatedTrades, dsp)
-            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, EodProductCashSettlementType.INITIAL_MTM));
+            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, settlementDate, EodProductCashSettlementType.INITIAL_MTM));
 
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
         final Stream<EodProductCashSettlementEntity> daily = tradeMtmCalculator.calculateAndAggregateDailyMtm(positions, dsp)
-            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, EodProductCashSettlementType.DAILY_MTM));
+            .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, settlementDate, EodProductCashSettlementType.DAILY_MTM));
 
         eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 

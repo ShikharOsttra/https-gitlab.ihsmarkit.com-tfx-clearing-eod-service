@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 import com.ihsmarkit.tfx.common.mapstruct.DefaultMapperConfig;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
 
 @Mapper(config = DefaultMapperConfig.class)
@@ -19,11 +20,12 @@ public interface MarkToMarketTradeMapper {
     @Mapping(target = "participant", source = "trade.participant")
     @Mapping(target = "currencyPair", source = "trade.currencyPair")
     @Mapping(target = "date", source = "businessDate")
-    @Mapping(target = "tlementDate", expression = "java(businessDate.plusDays(3))")
+    @Mapping(target = "tlementDate", source = "settlementDate")
     @Mapping(target = "amount.value", source = "trade.amount")
-    @Mapping(target = "amount.currency", constant = "JPY")
+    @Mapping(target = "amount.currency", constant = EodJobConstants.JPY)
     EodProductCashSettlementEntity toEodProductCashSettlement(
         MarkToMarketTrade trade,
         LocalDate businessDate,
+        LocalDate settlementDate,
         EodProductCashSettlementType type);
 }
