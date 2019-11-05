@@ -7,7 +7,6 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -118,8 +116,8 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
         verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, businessDate);
 
-        verify(eodProductCashSettlementRepository, times(2)).saveAll(captor.capture());
-        assertThat(captor.getAllValues().stream().flatMap(a -> StreamSupport.stream(a.spliterator(), false)))
+        verify(eodProductCashSettlementRepository).saveAll(captor.capture());
+        assertThat(captor.getValue())
             .extracting(
                 EodProductCashSettlementEntity::getParticipant,
                 EodProductCashSettlementEntity::getCurrencyPair,
