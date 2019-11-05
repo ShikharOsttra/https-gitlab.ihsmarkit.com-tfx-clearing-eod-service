@@ -80,12 +80,17 @@ public class NetCalculatorTest {
         Stream<ParticipantPositionForPair> mtm =
                 netCalculator.netAllTtrades(Stream.of(A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR, A_SELLS_30_EUR));
 
-        assertThat(mtm).extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
-                .containsExactlyInAnyOrder(
-                        tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
-                        tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(10.0)),
-                        tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(-20))
-                );
+        assertThat(mtm)
+            .extracting(
+                ParticipantPositionForPair::getParticipant,
+                ParticipantPositionForPair::getCurrencyPair,
+                ParticipantPositionForPair::getAmount
+            )
+            .containsExactlyInAnyOrder(
+                    tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
+                    tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(10.0)),
+                    tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(-20))
+            );
     }
 
     @TestConfiguration

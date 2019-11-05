@@ -154,7 +154,12 @@ class TradeMtmCalculatorTest {
         Stream<ParticipantPositionForPair> mtm =
             tradeMtmCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
-        assertThat(mtm).extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
+        assertThat(mtm)
+            .extracting(
+                ParticipantPositionForPair::getParticipant,
+                ParticipantPositionForPair::getCurrencyPair,
+                ParticipantPositionForPair::getAmount
+            )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))
