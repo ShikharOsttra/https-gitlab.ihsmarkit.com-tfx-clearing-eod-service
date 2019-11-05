@@ -12,7 +12,7 @@ import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @Mapper(config = DefaultMapperConfig.class)
-public interface MarkToMarketTradeMapper {
+public interface ParticipantPositionForPairMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "timestamp", ignore = true)

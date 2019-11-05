@@ -21,13 +21,13 @@ import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
-class MarkToMarketTradeMapperTest {
+class ParticipantPositionForPairMapperTest {
 
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
 
     @Autowired
-    private MarkToMarketTradeMapper mapper;
+    private ParticipantPositionForPairMapper mapper;
 
     @Test
     void shouldConvertToEodProductCashSettlementEntity() {
@@ -52,7 +52,7 @@ class MarkToMarketTradeMapperTest {
 
     }
     @TestConfiguration
-    @ComponentScan(basePackageClasses = MarkToMarketTradeMapper.class)
+    @ComponentScan(basePackageClasses = ParticipantPositionForPairMapper.class)
     static class TestConfig {
 
     }

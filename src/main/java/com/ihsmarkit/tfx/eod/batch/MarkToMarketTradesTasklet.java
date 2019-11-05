@@ -25,7 +25,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.mapper.MarkToMarketTradeMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
@@ -49,7 +49,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final TradeMtmCalculator tradeMtmCalculator;
 
-    private final MarkToMarketTradeMapper mtmMapper;
+    private final ParticipantPositionForPairMapper mtmMapper;
 
     private final SettlementDateProvider settlementDateProvider;
 
