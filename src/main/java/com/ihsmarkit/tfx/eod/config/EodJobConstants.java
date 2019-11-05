@@ -11,4 +11,6 @@ public final class EodJobConstants {
 
     public static final DateTimeFormatter BUSINESS_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    public static final String JPY = "JPY";
+
 }
