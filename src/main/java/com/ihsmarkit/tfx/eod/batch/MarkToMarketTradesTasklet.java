@@ -49,7 +49,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     private final MarkToMarketTradeMapper mtmMapper;
 
     @Value("#{jobParameters['businessDate']}")
-    private String businessDateJobParameter;
+    private final String businessDateJobParameter;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
