@@ -20,7 +20,6 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.NetCalculator;
@@ -64,7 +63,7 @@ public class NettingTasklet implements Tasklet {
     private ParticipantPositionEntity mapToParticipantPosition(final ParticipantPositionForPair trade, final LocalDate businessDate) {
         return ParticipantPositionEntity.builder()
                 .participant(trade.getParticipant())
-                .participantType(ParticipantType.FX_BROKER)
+                .participantType(trade.getParticipant().getType())
                 .currencyPair(trade.getCurrencyPair())
                 .amount(AmountEntity.of(trade.getAmount(), trade.getCurrencyPair().getBaseCurrency()))
                 .price(dailySettlementPriceProvider.getDailySettlementPrices(businessDate).get(trade.getCurrencyPair()))
