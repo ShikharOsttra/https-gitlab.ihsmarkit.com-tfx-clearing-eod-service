@@ -18,7 +18,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
 class MarkToMarketTradeMapperTest {
@@ -36,7 +36,7 @@ class MarkToMarketTradeMapperTest {
         final LocalDate settlementDate = LocalDate.of(2019, 11, 8);
 
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
-            MarkToMarketTrade.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
+            ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             businessDate,
             settlementDate,
             EodProductCashSettlementType.INITIAL_MTM

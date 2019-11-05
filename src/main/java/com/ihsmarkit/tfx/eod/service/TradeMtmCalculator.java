@@ -59,13 +59,12 @@ public class TradeMtmCalculator {
                 )
             ).entrySet().stream()
             .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
-                .map(ccyPairBalances -> ParticipantPositionForPair.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue())));
-
+                .map(ccyPairBalances -> ParticipantPositionForPair.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
             );
     }
 
     public Stream<ParticipantPositionForPair> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
-                                                                            final Map<CurrencyPairEntity, BigDecimal> dsp) {
+        final Map<CurrencyPairEntity, BigDecimal> dsp) {
 
         final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
 
