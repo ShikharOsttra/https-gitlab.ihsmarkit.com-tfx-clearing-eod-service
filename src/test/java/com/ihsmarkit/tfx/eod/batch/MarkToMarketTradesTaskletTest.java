@@ -8,10 +8,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -19,6 +22,7 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -30,7 +34,9 @@ import org.springframework.context.annotation.FilterType;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
+import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
@@ -66,12 +72,28 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
 
+    @Mock
+    private Stream<TradeEntity> trades;
+
+    @Mock
+    private Collection<ParticipantPositionEntity> positions;
+
+    @Mock
+    private Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices;
+
     @Test
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldCalculateAndStoreDailyAndInitialMtm() {
 
         final String businessDateStr = "20191006";
         final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+
+        when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(trades);
+
+        when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
+            .thenReturn(positions);
+        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+            .thenReturn(dailySettlementPrices);
 
         when(tradeMtmCalculator.calculateAndAggregateInitialMtm(any(), any()))
             .thenReturn(
@@ -87,6 +109,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
             new JobParametersBuilder().addString("businessDate", businessDateStr).toJobParameters());
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+
+        verify(tradeMtmCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
+        verify(tradeMtmCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
 
         verify(dailySettlementPriceProvider).getDailySettlementPrices(businessDate);
         verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
@@ -125,6 +150,14 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                     LocalDate.of(2019, 10, 9)
                 )
             );
+
+        verifyNoMoreInteractions(
+            tradeRepository,
+            participantPositionRepository,
+            dailySettlementPriceProvider,
+            tradeMtmCalculator,
+            eodProductCashSettlementRepository
+        );
     }
 
     @TestConfiguration
