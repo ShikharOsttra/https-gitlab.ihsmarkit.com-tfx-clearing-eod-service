@@ -2,7 +2,7 @@
     <eod_product_cash_settlement
             participant_id="101"
             currency_pair_id="81"
-            amount="-1"
+            amount="-17"
             currency="JPY"
             settlement_date="2019-10-10"
             date="2019-10-07"
@@ -16,5 +16,53 @@
             settlement_date="2019-10-10"
             date="2019-10-07"
             type="DAILY_MTM"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="3.12"
+            amount="-1"
+            currency="JPY"
+            type="SOD"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-06"
+            value_date="2019-10-09"
+            price="3.12"
+            amount="-1"
+            currency="JPY"
+            type="SOD"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-06"
+            value_date="2019-10-09"
+            price="3.12"
+            amount="-1"
+            currency="JPY"
+            type="NET"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            participant_type="FX_BROKER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="0.9"
+            amount="0.06"
+            currency="USD"
+            type="NET"
     />
 </dataset>
