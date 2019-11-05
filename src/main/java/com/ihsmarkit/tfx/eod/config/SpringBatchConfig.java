@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.config;
 
-import java.time.format.DateTimeFormatter;
-
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -23,8 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper" })
 @EnableBatchProcessing
 public class SpringBatchConfig {
-
-    public static final DateTimeFormatter BUSINESS_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Autowired
     private JobBuilderFactory jobs;
