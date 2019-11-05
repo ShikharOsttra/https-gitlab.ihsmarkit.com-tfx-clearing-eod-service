@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
@@ -34,7 +36,7 @@ public class TradeMtmCalculator {
 
         final var mtmAmount = rate.subtract(trade.getSpotRate())
             .multiply(trade.getBaseAmount())
-            .multiply("JPY".equals(valueCurrency) ? BigDecimal.ONE : jpyRates.get(valueCurrency))
+            .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.get(valueCurrency))
             .setScale(0, RoundingMode.FLOOR);
 
         return MarkToMarketTrade.of(trade.getParticipant(), currencyPair, mtmAmount);
@@ -46,7 +48,7 @@ public class TradeMtmCalculator {
 
         return trades
             .map(tradeOrPositionMapper::convertTrade)
-            .map(t -> calculateMtmValue(t, dsp, jpyRates))
+            .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
             .collect(
                 Collectors.groupingBy(
                     MarkToMarketTrade::getParticipant,
@@ -56,7 +58,9 @@ public class TradeMtmCalculator {
                     )
                 )
             ).entrySet().stream()
-            .flatMap(a -> a.getValue().entrySet().stream().map(b -> MarkToMarketTrade.of(a.getKey(), b.getKey(), b.getValue())));
+            .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
+                .map(ccyPairBalances -> MarkToMarketTrade.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
+            );
     }
 
     public Stream<MarkToMarketTrade> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
@@ -71,9 +75,9 @@ public class TradeMtmCalculator {
 
     private Map<String, BigDecimal> getJpyRatesFromDsp(final Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices) {
         return dailySettlementPrices.entrySet().stream()
-            .filter(a -> "JPY".equals(a.getKey().getValueCurrency()))
+            .filter(a -> JPY.equals(a.getKey().getValueCurrency()))
             .collect(Collectors.toMap(
-                a -> a.getKey().getBaseCurrency(),
+                ccyPairBalance -> ccyPairBalance.getKey().getBaseCurrency(),
                 Map.Entry::getValue
             ));
     }

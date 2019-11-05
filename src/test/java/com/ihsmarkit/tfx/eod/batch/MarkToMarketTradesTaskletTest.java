@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntit
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
@@ -45,7 +46,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().build();
-    private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency("JPY").build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
 
     @MockBean
@@ -106,21 +107,21 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
-                    EodProductCashSettlementType.DAILY_MTM, AmountEntity.of(BigDecimal.TEN, "JPY"),
+                    EodProductCashSettlementType.DAILY_MTM, AmountEntity.of(BigDecimal.TEN, JPY),
                     businessDate,
                     LocalDate.of(2019, 10, 9)
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
-                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.ONE, "JPY"),
+                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.ONE, JPY),
                     businessDate,
                     LocalDate.of(2019, 10, 9)
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_JPY,
-                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.valueOf(2), "JPY"),
+                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     businessDate,
                     LocalDate.of(2019, 10, 9)
                 )

@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import com.ihsmarkit.tfx.eod.batch.Eod1JobParametersValidator;
 import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -26,9 +25,6 @@ public class SpringBatchConfig {
     private JobBuilderFactory jobs;
 
     @Autowired
-    private Eod1JobParametersValidator eod1JobParametersValidator;
-
-    @Autowired
     private StepBuilderFactory steps;
 
     @Autowired
@@ -37,7 +33,6 @@ public class SpringBatchConfig {
     @Bean(name = "eod1Job")
     public Job eod1Job() {
         return jobs.get("eod1Job")
-            .validator(eod1JobParametersValidator)
             .start(mtmTrades())
             .build();
     }
