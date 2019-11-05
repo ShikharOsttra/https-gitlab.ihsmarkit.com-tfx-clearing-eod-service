@@ -90,7 +90,7 @@
     <participant_position
         id="1"
         currency_pair_id="81"
-        participant_type="FX_BROKER"
+        participant_type="LIQUIDITY_PROVIDER"
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
@@ -103,7 +103,7 @@
     <participant_position
             id="2"
             currency_pair_id="81"
-            participant_type="FX_BROKER"
+            participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-06"
             value_date="2019-10-09"
@@ -116,7 +116,7 @@
     <participant_position
             id="3"
             currency_pair_id="81"
-            participant_type="FX_BROKER"
+            participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-06"
             value_date="2019-10-09"
