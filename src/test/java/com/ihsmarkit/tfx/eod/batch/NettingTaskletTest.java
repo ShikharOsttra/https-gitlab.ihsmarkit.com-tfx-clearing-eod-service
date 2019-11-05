@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -104,7 +103,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
 
         verify(participantPositionRepository).saveAll(captor.capture());
-        assertThat(captor.getAllValues().stream().flatMap(a -> StreamSupport.stream(a.spliterator(), false)))
+        assertThat(captor.getValue())
             .extracting(
                 ParticipantPositionEntity::getParticipant,
                 ParticipantPositionEntity::getParticipantType,
