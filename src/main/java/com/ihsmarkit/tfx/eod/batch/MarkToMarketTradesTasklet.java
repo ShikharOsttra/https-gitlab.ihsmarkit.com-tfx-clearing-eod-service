@@ -65,7 +65,6 @@ public class MarkToMarketTradesTasklet implements Tasklet {
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<EodProductCashSettlementEntity> initial = tradeMtmCalculator.calculateAndAggregateInitialMtm(novatedTrades, dsp)
             .map(a -> mapToEodProductCashSettlementEntity(a, businessDate, EodProductCashSettlementType.INITIAL_MTM));
-        eodProductCashSettlementRepository.saveAll(initial::iterator);
 
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
@@ -73,7 +72,8 @@ public class MarkToMarketTradesTasklet implements Tasklet {
         final Stream<EodProductCashSettlementEntity> daily = tradeMtmCalculator.calculateAndAggregateDailyMtm(positions, dsp)
             .map(a -> mapToEodProductCashSettlementEntity(a, businessDate, EodProductCashSettlementType.DAILY_MTM));
 
-        eodProductCashSettlementRepository.saveAll(daily::iterator);
+        final Stream<EodProductCashSettlementEntity> eod = Stream.concat(initial, daily);
+        eodProductCashSettlementRepository.saveAll(eod::iterator);
 
         return RepeatStatus.FINISHED;
     }
