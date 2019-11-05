@@ -41,7 +41,7 @@ public class NettingTasklet implements Tasklet {
     private final DailySettlementPriceProvider dailySettlementPriceProvider;
 
     @Autowired
-    private NetCalculator netCalculator;
+    private final NetCalculator netCalculator;
 
     @Value("#{jobParameters['businessDate']}")
     private String businessDateStr;
