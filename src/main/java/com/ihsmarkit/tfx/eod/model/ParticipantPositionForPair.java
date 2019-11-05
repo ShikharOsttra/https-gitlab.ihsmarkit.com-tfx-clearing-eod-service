@@ -13,7 +13,7 @@ import lombok.ToString;
 @RequiredArgsConstructor(staticName = "of")
 @Getter
 @ToString
-public class MarkToMarketTrade {
+public class ParticipantPositionForPair {
 
     @NonNull
     private final ParticipantEntity participant;

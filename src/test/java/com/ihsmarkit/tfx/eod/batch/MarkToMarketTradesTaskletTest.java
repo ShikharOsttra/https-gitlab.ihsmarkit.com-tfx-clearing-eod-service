@@ -36,7 +36,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.TradeMtmCalculator;
 
@@ -76,13 +76,13 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         when(tradeMtmCalculator.calculateAndAggregateInitialMtm(any(), any()))
             .thenReturn(
                 Stream.of(
-                    MarkToMarketTrade.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
-                    MarkToMarketTrade.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
+                    ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
+                    ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
                 )
             );
 
         when(tradeMtmCalculator.calculateAndAggregateDailyMtm(any(), any()))
-            .thenReturn(Stream.of(MarkToMarketTrade.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN)));
+            .thenReturn(Stream.of(ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN)));
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
             new JobParametersBuilder().addString("businessDate", businessDateStr).toJobParameters());

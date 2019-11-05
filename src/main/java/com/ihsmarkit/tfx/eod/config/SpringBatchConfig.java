@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ihsmarkit.tfx.eod.batch.Eod1JobParametersValidator;
 import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
+import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -34,11 +35,15 @@ public class SpringBatchConfig {
     @Autowired
     private MarkToMarketTradesTasklet markToMarketTradesTasklet;
 
+    @Autowired
+    private NettingTasklet nettingTasklet;
+
     @Bean(name = "eod1Job")
     public Job eod1Job() {
         return jobs.get("eod1Job")
             .validator(eod1JobParametersValidator)
             .start(mtmTrades())
+            .next(netTrades())
             .build();
     }
 
@@ -48,5 +53,13 @@ public class SpringBatchConfig {
         return steps.get("mtmTrades")
             .tasklet(markToMarketTradesTasklet)
             .build();
+    }
+
+    @Bean
+    @JobScope
+    public Step netTrades() {
+        return steps.get("netTrades")
+                .tasklet(nettingTasklet)
+                .build();
     }
 }

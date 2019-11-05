@@ -25,7 +25,7 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
 class TradeMtmCalculatorTest {
@@ -118,7 +118,7 @@ class TradeMtmCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
         assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
                 .containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
                 );
@@ -130,7 +130,7 @@ class TradeMtmCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
         assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
                 .containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
                 );
@@ -141,7 +141,7 @@ class TradeMtmCalculatorTest {
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
         assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-            .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+            .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
@@ -151,10 +151,10 @@ class TradeMtmCalculatorTest {
 
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
-        Stream<MarkToMarketTrade> mtm =
+        Stream<ParticipantPositionForPair> mtm =
             tradeMtmCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
-        assertThat(mtm).extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+        assertThat(mtm).extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))

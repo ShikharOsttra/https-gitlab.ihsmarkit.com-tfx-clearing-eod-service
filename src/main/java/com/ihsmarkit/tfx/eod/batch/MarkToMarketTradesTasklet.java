@@ -27,7 +27,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.TradeMtmCalculator;
 
@@ -79,7 +79,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
-    private EodProductCashSettlementEntity mapToEodProductCashSettlementEntity(final MarkToMarketTrade mtm,
+    private EodProductCashSettlementEntity mapToEodProductCashSettlementEntity(final ParticipantPositionForPair mtm,
         final LocalDate businessDate, final EodProductCashSettlementType type) {
 
         return EodProductCashSettlementEntity.builder()
