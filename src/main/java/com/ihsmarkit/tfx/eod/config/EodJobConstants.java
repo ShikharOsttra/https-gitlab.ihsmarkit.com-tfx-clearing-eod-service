@@ -15,10 +15,10 @@ public final class EodJobConstants {
 
     public static final String JPY = "JPY";
 
+    public static final String EOD1_BATCH_JOB_NAME = "eod1Job";
+    public static final String JOB_NAME_PARAM_NAME = "jobName";
     public static final String BUSINESS_DATE_JOB_PARAM_NAME = "businessDate";
-
+    public static final String CURRENT_TSP_JOB_PARAM_NAME = "currentTimestamp";
     public static final String MTM_TRADES_STEP_NAME = "mtmTrades";
-
     public static final String NET_TRADES_STEP_NAME = "netTrades";
-
 }

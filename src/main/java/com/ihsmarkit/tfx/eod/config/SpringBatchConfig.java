@@ -1,14 +1,17 @@
 package com.ihsmarkit.tfx.eod.config;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +37,17 @@ public class SpringBatchConfig {
 
     private final NettingTasklet nettingTasklet;
 
-    @Bean(name = "eod1Job")
+    @Bean
+    public JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor(final JobRegistry jobRegistry) {
+        final JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor = new JobRegistryBeanPostProcessor();
+        jobRegistryBeanPostProcessor.setJobRegistry(jobRegistry);
+
+        return jobRegistryBeanPostProcessor;
+    }
+
+    @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
-        return jobs.get("eod1Job")
+        return jobs.get(EOD1_BATCH_JOB_NAME)
             .start(mtmTrades())
             .next(netTrades())
             .build();

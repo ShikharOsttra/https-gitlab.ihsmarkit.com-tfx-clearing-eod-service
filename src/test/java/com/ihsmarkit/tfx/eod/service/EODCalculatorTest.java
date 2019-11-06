@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aLegalEntityBuilder;
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
@@ -38,13 +40,13 @@ class EODCalculatorTest {
         EURUSD, BigDecimal.valueOf(1.1)
     );
 
-    private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().name("A").build();
-    private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder()
+    private static final ParticipantEntity PARTICIPANT_A = aParticipantEntityBuilder().name("A").build();
+    private static final LegalEntity ORIGINATOR_A = aLegalEntityBuilder()
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantEntity PARTICIPANT_B = EntityTestDataFactory.aParticipantEntityBuilder().name("B").build();
-    private static final LegalEntity ORIGINATOR_B = EntityTestDataFactory.aLegalEntityBuilder()
+    private static final ParticipantEntity PARTICIPANT_B = aParticipantEntityBuilder().name("B").build();
+    private static final LegalEntity ORIGINATOR_B = aLegalEntityBuilder()
         .participant(PARTICIPANT_B)
         .build();
 
