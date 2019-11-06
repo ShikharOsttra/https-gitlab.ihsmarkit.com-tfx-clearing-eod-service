@@ -48,7 +48,7 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
-import com.ihsmarkit.tfx.eod.service.NetCalculator;
+import com.ihsmarkit.tfx.eod.service.EODCalculator;
 
 class NettingTaskletTest extends AbstractSpringBatchTest {
 
@@ -92,7 +92,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private DailySettlementPriceProvider dailySettlementPriceProvider;
 
     @MockBean
-    private NetCalculator netCalculator;
+    private EODCalculator eodCalculator;
 
     @Mock
     private Stream<TradeEntity> trades;
@@ -127,7 +127,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(dailySettlementPrices.get(CURRENCY_PAIR_JPY))
             .thenReturn(BigDecimal.valueOf(3));
 
-        when(netCalculator.netAllTtrades(any()))
+        when(eodCalculator.netAllTtrades(any()))
             .thenReturn(
                 Stream.of(
                     ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
@@ -145,7 +145,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         verify(participantPositionRepository)
             .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
-        verify(netCalculator).netAllTtrades(tradeCaptor.capture());
+        verify(eodCalculator).netAllTtrades(tradeCaptor.capture());
         assertThat(tradeCaptor.getValue())
             .extracting(
                 TradeOrPositionEssentials::getParticipant,
@@ -195,20 +195,20 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 )
             );
 
-        verifyNoMoreInteractions(tradeRepository, netCalculator, participantPositionRepository);
+        verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
 
     }
 
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         NettingTasklet.class, TradeOrPositionEssentialsMapper.class, ParticipantPositionRepository.class,
-        NetCalculator.class
+        EODCalculator.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = {
                 NettingTasklet.class,
-                NetCalculator.class,
+                EODCalculator.class,
                 TradeRepository.class,
                 TradeOrPositionEssentialsMapper.class,
                 ParticipantPositionRepository.class

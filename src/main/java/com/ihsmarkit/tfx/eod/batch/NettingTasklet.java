@@ -25,7 +25,7 @@ import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
-import com.ihsmarkit.tfx.eod.service.NetCalculator;
+import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class NettingTasklet implements Tasklet {
 
     private final DailySettlementPriceProvider dailySettlementPriceProvider;
 
-    private final NetCalculator netCalculator;
+    private final EODCalculator eodCalculator;
 
     private final SettlementDateProvider settlementDateProvider;
 
@@ -69,7 +69,7 @@ public class NettingTasklet implements Tasklet {
             positions.map(tradeOrPositionMapper::convertPosition)
         );
 
-        final Stream<ParticipantPositionEntity> netted = netCalculator.netAllTtrades(tradesToNet)
+        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllTtrades(tradesToNet)
             .map(trade -> participantPositionForPairMapper.toParticipantPosition(
                 trade,
                 businessDate,

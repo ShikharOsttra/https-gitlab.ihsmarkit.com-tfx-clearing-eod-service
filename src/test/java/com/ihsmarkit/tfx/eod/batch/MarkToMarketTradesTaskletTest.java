@@ -43,7 +43,7 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
-import com.ihsmarkit.tfx.eod.service.TradeMtmCalculator;
+import com.ihsmarkit.tfx.eod.service.EODCalculator;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -66,7 +66,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private ParticipantPositionRepository participantPositionRepository;
 
     @MockBean
-    private TradeMtmCalculator tradeMtmCalculator;
+    private EODCalculator eodCalculator;
 
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
@@ -94,7 +94,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
             .thenReturn(dailySettlementPrices);
 
-        when(tradeMtmCalculator.calculateAndAggregateInitialMtm(any(), any()))
+        when(eodCalculator.calculateAndAggregateInitialMtm(any(), any()))
             .thenReturn(
                 Stream.of(
                     ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
@@ -102,7 +102,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 )
             );
 
-        when(tradeMtmCalculator.calculateAndAggregateDailyMtm(any(), any()))
+        when(eodCalculator.calculateAndAggregateDailyMtm(any(), any()))
             .thenReturn(Stream.of(ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN)));
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
@@ -112,8 +112,8 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
 
-        verify(tradeMtmCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
-        verify(tradeMtmCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
+        verify(eodCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
+        verify(eodCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
 
         verify(dailySettlementPriceProvider).getDailySettlementPrices(businessDate);
         verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
@@ -157,7 +157,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
             tradeRepository,
             participantPositionRepository,
             dailySettlementPriceProvider,
-            tradeMtmCalculator,
+            eodCalculator,
             eodProductCashSettlementRepository
         );
     }
@@ -165,13 +165,13 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         MarkToMarketTradesTasklet.class, TradeOrPositionEssentialsMapper.class, EodProductCashSettlementRepository.class,
-        TradeMtmCalculator.class
+        EODCalculator.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = {
                 MarkToMarketTradesTasklet.class,
-                TradeMtmCalculator.class,
+                EODCalculator.class,
                 TradeOrPositionEssentialsMapper.class,
                 EodProductCashSettlementRepository.class
         })

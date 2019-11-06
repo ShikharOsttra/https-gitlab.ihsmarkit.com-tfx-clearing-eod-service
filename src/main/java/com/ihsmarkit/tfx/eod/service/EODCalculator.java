@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class TradeMtmCalculator {
+public class EODCalculator {
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
@@ -46,7 +47,7 @@ public class TradeMtmCalculator {
 
         final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
 
-        return trades
+        return flatten(trades
             .map(tradeOrPositionMapper::convertTrade)
             .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
             .collect(
@@ -57,10 +58,27 @@ public class TradeMtmCalculator {
                         Collectors.reducing(BigDecimal.ZERO, ParticipantPositionForPair::getAmount, BigDecimal::add)
                     )
                 )
-            ).entrySet().stream()
+            ));
+    }
+
+    private Stream<ParticipantPositionForPair> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
+        return input.entrySet().stream()
             .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
                 .map(ccyPairBalances -> ParticipantPositionForPair.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
             );
+    }
+
+    public Stream<ParticipantPositionForPair> netAllTtrades(final Stream<TradeOrPositionEssentials> trades) {
+        return flatten(trades
+            .collect(
+                Collectors.groupingBy(
+                    TradeOrPositionEssentials::getParticipant,
+                    Collectors.groupingBy(
+                        TradeOrPositionEssentials::getCurrencyPair,
+                        Collectors.reducing(BigDecimal.ZERO, TradeOrPositionEssentials::getBaseAmount, BigDecimal::add)
+                    )
+                )
+            ));
     }
 
     public Stream<ParticipantPositionForPair> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
