@@ -15,14 +15,12 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
-import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
-import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 @ExtendWith(SpringExtension.class)
 public class NetCalculatorTest {
@@ -40,36 +38,32 @@ public class NetCalculatorTest {
             .participant(PARTICIPANT_B)
             .build();
 
-    private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
-            .direction(Side.BUY)
+    private static final TradeOrPositionEssentials A_BUYS_20_USD = TradeOrPositionEssentials.builder()
             .currencyPair(USDJPY)
+            .participant(PARTICIPANT_A)
             .spotRate(BigDecimal.valueOf(99.5))
-            .baseAmount(AmountEntity.of(BigDecimal.valueOf(20.0), "USD"))
-            .originator(ORIGINATOR_A)
+            .baseAmount(BigDecimal.valueOf(20.0))
             .build();
 
-    private static final TradeEntity A_SELLS_10_USD = TradeEntity.builder()
-            .direction(Side.SELL)
+    private static final TradeOrPositionEssentials A_SELLS_10_USD = TradeOrPositionEssentials.builder()
             .currencyPair(USDJPY)
             .spotRate(BigDecimal.valueOf(99.6))
-            .baseAmount(AmountEntity.of(BigDecimal.valueOf(10.0), "USD"))
-            .originator(ORIGINATOR_A)
+            .baseAmount(BigDecimal.valueOf(-10.0))
+            .participant(PARTICIPANT_A)
             .build();
 
-    private static final TradeEntity B_SELLS_20_EUR = TradeEntity.builder()
-            .direction(Side.SELL)
+    private static final TradeOrPositionEssentials B_SELLS_20_EUR = TradeOrPositionEssentials.builder()
             .currencyPair(EURUSD)
             .spotRate(BigDecimal.valueOf(1.2))
-            .baseAmount(AmountEntity.of(BigDecimal.valueOf(20), "EUR"))
-            .originator(ORIGINATOR_B)
+            .baseAmount(BigDecimal.valueOf(-20))
+            .participant(PARTICIPANT_B)
             .build();
 
-    private static final TradeEntity A_SELLS_30_EUR = TradeEntity.builder()
-            .direction(Side.SELL)
+    private static final TradeOrPositionEssentials A_SELLS_30_EUR = TradeOrPositionEssentials.builder()
             .currencyPair(EURUSD)
             .spotRate(BigDecimal.valueOf(1.2))
-            .baseAmount(AmountEntity.of(BigDecimal.valueOf(30), "EUR"))
-            .originator(ORIGINATOR_A)
+            .baseAmount(BigDecimal.valueOf(-30))
+            .participant(PARTICIPANT_A)
             .build();
 
     @Autowired

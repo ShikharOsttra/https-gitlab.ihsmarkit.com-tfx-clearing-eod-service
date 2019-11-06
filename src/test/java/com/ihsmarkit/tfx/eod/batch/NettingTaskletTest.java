@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntit
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -11,10 +12,10 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -27,8 +28,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
+import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
@@ -36,8 +39,10 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
+import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.NetCalculator;
 
@@ -46,6 +51,32 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency("JPY").build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
+    private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder()
+        .participant(PARTICIPANT)
+        .build();
+
+    private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
+        .direction(Side.BUY)
+        .currencyPair(CURRENCY_PAIR_USD)
+        .originator(ORIGINATOR_A)
+        .spotRate(BigDecimal.valueOf(99.3))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20.0), "USF"))
+        .build();
+
+    private static final TradeEntity A_SELLS_10_USD = TradeEntity.builder()
+        .direction(Side.SELL)
+        .currencyPair(CURRENCY_PAIR_USD)
+        .originator(ORIGINATOR_A)
+        .spotRate(BigDecimal.valueOf(99.5))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10.0), "USD"))
+        .build();
+
+    private static final ParticipantPositionEntity POSITION = ParticipantPositionEntity.builder()
+        .currencyPair(CURRENCY_PAIR_USD)
+        .participant(PARTICIPANT)
+        .amount(AmountEntity.of(BigDecimal.valueOf(993.0), "USD"))
+        .price(BigDecimal.valueOf(99.4))
+        .build();
 
     @MockBean
     private TradeRepository tradeRepository;
@@ -66,14 +97,23 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices;
 
     @Captor
-    private ArgumentCaptor<Iterable<ParticipantPositionEntity>> captor;
+    private ArgumentCaptor<Iterable<ParticipantPositionEntity>> positionCaptor;
+
+    @Captor
+    private ArgumentCaptor<Stream<TradeOrPositionEssentials>> tradeCaptor;
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
         final String businessDateStr = "20191006";
         final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
 
-        when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(trades);
+        when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(
+            Stream.of(A_BUYS_20_USD, A_SELLS_10_USD)
+        );
+
+        when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any())).thenReturn(
+            List.of(POSITION)
+        );
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
             .thenReturn(dailySettlementPrices);
@@ -98,12 +138,26 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
 
-        verify(netCalculator).netAllTtrades(trades);
+        verify(participantPositionRepository)
+            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
+
+        verify(netCalculator).netAllTtrades(tradeCaptor.capture());
+        assertThat(tradeCaptor.getValue())
+            .extracting(
+                TradeOrPositionEssentials::getParticipant,
+                TradeOrPositionEssentials::getCurrencyPair,
+                TradeOrPositionEssentials::getSpotRate,
+                TradeOrPositionEssentials::getBaseAmount
+            ).containsExactlyInAnyOrder(
+                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0)),
+                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0)),
+                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.5), BigDecimal.valueOf(-10.0))
+            );
 
         verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
 
-        verify(participantPositionRepository).saveAll(captor.capture());
-        assertThat(captor.getValue())
+        verify(participantPositionRepository).saveAll(positionCaptor.capture());
+        assertThat(positionCaptor.getValue())
             .extracting(
                 ParticipantPositionEntity::getParticipant,
                 ParticipantPositionEntity::getParticipantType,
@@ -115,7 +169,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 ParticipantPositionEntity::getValueDate
             )
             .containsExactlyInAnyOrder(
-                Tuple.tuple(
+                tuple(
                     PARTICIPANT,
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_USD,
@@ -125,7 +179,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     businessDate,
                     LocalDate.of(2019, 10, 9)
                 ),
-                Tuple.tuple(
+                tuple(
                     PARTICIPANT,
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_JPY,

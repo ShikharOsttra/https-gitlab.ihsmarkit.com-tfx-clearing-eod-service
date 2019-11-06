@@ -61,7 +61,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="0.9"
-            amount="0.06"
+            amount="-0.94"
             currency="USD"
             type="NET"
     />

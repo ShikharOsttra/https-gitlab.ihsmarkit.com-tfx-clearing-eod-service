@@ -20,7 +20,10 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.NetCalculator;
 import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
@@ -42,7 +45,9 @@ public class NettingTasklet implements Tasklet {
 
     private final SettlementDateProvider settlementDateProvider;
 
-    private final ParticipantPositionForPairMapper mapper;
+    private final ParticipantPositionForPairMapper participantPositionForPairMapper;
+
+    private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
     @Value("#{jobParameters['businessDate']}")
     private final String businessDateStr;
@@ -55,8 +60,17 @@ public class NettingTasklet implements Tasklet {
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
-        final Stream<ParticipantPositionEntity> netted = netCalculator.netAllTtrades(novatedTrades)
-            .map(trade -> mapper.toParticipantPosition(
+        final Stream<ParticipantPositionEntity> positions =
+            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
+            .stream();
+
+        final Stream<TradeOrPositionEssentials> tradesToNet = Stream.concat(
+            novatedTrades.map(tradeOrPositionMapper::convertTrade),
+            positions.map(tradeOrPositionMapper::convertPosition)
+        );
+
+        final Stream<ParticipantPositionEntity> netted = netCalculator.netAllTtrades(tradesToNet)
+            .map(trade -> participantPositionForPairMapper.toParticipantPosition(
                 trade,
                 businessDate,
                 settlementDate,
