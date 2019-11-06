@@ -5,7 +5,7 @@ stages:
 
 branch-job:
   stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.06
   script:
     - gradle clean build
   except:
@@ -18,7 +18,7 @@ branch-job:
 
 check-dependencies:
   stage: post-build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.05
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.06
   script:
     - check_dependencies.sh
   except:
@@ -26,7 +26,7 @@ check-dependencies:
 
 develop-job:
   stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.06
   script:
     - gradle clean build publish
   only:
@@ -37,7 +37,7 @@ develop-job:
 
 uat-drop-job:
   stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.06
   script:
     - gradle clean build publish
   only:
@@ -48,7 +48,7 @@ uat-drop-job:
 
 master-job:
   stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.02
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.06
   script:
     - gradle clean build publish
   only:
