@@ -1,7 +1,7 @@
 package com.ihsmarkit.tfx.eod.config;
 
+import static com.ihsmarkit.tfx.core.time.ClockService.JST;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JST;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -20,7 +20,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.spi.JobFactory;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.support.JobRegistryBeanPostProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.ApplicationContext;
@@ -41,6 +40,7 @@ public class QuartzConfig {
     private static final String JOB_NAME_PARAM_NAME = "jobName";
     private static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
     private static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
+    private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(JST);
 
     @Value("${eod1.job.trigger1.cron}")
     private final String eod1JobTrigger1Cron;
@@ -48,10 +48,8 @@ public class QuartzConfig {
     @Value("${eod1.job.trigger2.cron}")
     private final String eod1JobTrigger2Cron;
 
-    @Autowired
     private final DataSource dataSource;
 
-    @Autowired
     private final ApplicationContext applicationContext;
 
     @Bean
@@ -79,7 +77,7 @@ public class QuartzConfig {
     public Trigger eod1JobTrigger1() {
         final ScheduleBuilder<CronTrigger> scheduleBuilder = CronScheduleBuilder
             .cronSchedule(eod1JobTrigger1Cron)
-            .inTimeZone(TimeZone.getTimeZone(JST));
+            .inTimeZone(TIME_ZONE);
 
         return TriggerBuilder
             .newTrigger()
@@ -93,7 +91,7 @@ public class QuartzConfig {
     public Trigger eod1JobTrigger2() {
         final ScheduleBuilder<CronTrigger> scheduleBuilder = CronScheduleBuilder
             .cronSchedule(eod1JobTrigger2Cron)
-            .inTimeZone(TimeZone.getTimeZone(JST));
+            .inTimeZone(TIME_ZONE);
 
         return TriggerBuilder
             .newTrigger()

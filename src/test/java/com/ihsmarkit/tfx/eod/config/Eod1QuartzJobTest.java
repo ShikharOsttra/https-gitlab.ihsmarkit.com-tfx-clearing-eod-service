@@ -1,20 +1,18 @@
 package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalDate;
 
 import org.assertj.core.matcher.AssertionMatcher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.quartz.JobExecutionContext;
@@ -34,7 +32,6 @@ class Eod1QuartzJobTest {
 
     private static final String JOB_NAME = "eod1Job";
 
-    @InjectMocks
     private Eod1QuartzJob eod1QuartzJob;
 
     @Mock
@@ -52,14 +49,17 @@ class Eod1QuartzJobTest {
     @Mock
     private JobExecutionContext jobExecutionContext;
 
+    @BeforeEach
+    void setUp() {
+        eod1QuartzJob = new Eod1QuartzJob(JOB_NAME, jobLauncher, jobLocator, clockService);
+    }
+
     @Test
     @SneakyThrows
     void shouldRunSpringBatchJob() {
-        eod1QuartzJob.setJobName(JOB_NAME);
         when(jobLocator.getJob(JOB_NAME)).thenReturn(job);
-        final LocalDateTime scheduleTime = LocalDateTime.ofInstant(LocalDateTime.of(2019, 11, 10, 9, 30, 0).atZone(ZoneId.of(JST)).toInstant(),
-            ZoneId.of(JST));
-        when(clockService.getCurrentDateTime()).thenReturn(scheduleTime);
+        final LocalDate scheduleDate = LocalDate.of(2019, 11, 10);
+        when(clockService.getCurrentDate()).thenReturn(scheduleDate);
 
         eod1QuartzJob.executeInternal(jobExecutionContext);
 
