@@ -57,6 +57,7 @@ dependencies {
         [group: 'org.springframework.boot', name: 'spring-boot-starter-web'],
         [group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'],
         [group: 'org.springframework.boot', name: 'spring-boot-starter-batch'],
+        [group: 'org.springframework.boot', name: 'spring-boot-starter-quartz'],
         [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
         [group: 'org.springframework', name: 'spring-jms'],
         [group: 'org.yaml', name: 'snakeyaml'],

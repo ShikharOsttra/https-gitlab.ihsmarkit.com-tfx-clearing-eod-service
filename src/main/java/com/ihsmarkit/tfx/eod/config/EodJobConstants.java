@@ -13,4 +13,9 @@ public final class EodJobConstants {
 
     public static final String JPY = "JPY";
 
+    public static final String JST = "Asia/Tokyo";
+
+    public static final String EOD1_BATCH_JOB_NAME = "eod1Job";
+
+    public static final String BUSINESS_DATE_JOB_PARAM_NAME = "businessDate";
 }

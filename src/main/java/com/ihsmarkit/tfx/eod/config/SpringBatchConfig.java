@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.config;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -30,9 +32,9 @@ public class SpringBatchConfig {
     @Autowired
     private MarkToMarketTradesTasklet markToMarketTradesTasklet;
 
-    @Bean(name = "eod1Job")
+    @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
-        return jobs.get("eod1Job")
+        return jobs.get(EOD1_BATCH_JOB_NAME)
             .start(mtmTrades())
             .build();
     }
