@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.core.time.ClockService.JST;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JOB_NAME_PARAM_NAME;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -37,7 +38,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class QuartzConfig {
 
-    private static final String JOB_NAME_PARAM_NAME = "jobName";
     private static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
     private static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
     private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(JST);
@@ -49,8 +49,6 @@ public class QuartzConfig {
     private final String eod1JobTrigger2Cron;
 
     private final DataSource dataSource;
-
-    private final ApplicationContext applicationContext;
 
     @Bean
     public JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor(final JobRegistry jobRegistry) {
@@ -66,7 +64,7 @@ public class QuartzConfig {
         final JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(JOB_NAME_PARAM_NAME, EOD1_BATCH_JOB_NAME);
 
-        return JobBuilder.newJob(Eod1QuartzJob.class)
+        return JobBuilder.newJob(EodQuartzJob.class)
             .withIdentity(EOD1_BATCH_JOB_NAME)
             .setJobData(jobDataMap)
             .storeDurably()
@@ -102,7 +100,7 @@ public class QuartzConfig {
     }
 
     @Bean
-    public SchedulerFactoryBean schedulerFactoryBean() throws IOException {
+    public SchedulerFactoryBean schedulerFactoryBean(final ApplicationContext applicationContext) throws IOException {
         final SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
         final JobFactory jobFactory = new SpringBeanJobFactory();
         ((ApplicationContextAware) jobFactory).setApplicationContext(applicationContext);

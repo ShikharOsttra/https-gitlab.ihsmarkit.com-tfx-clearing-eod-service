@@ -3,7 +3,7 @@ package com.ihsmarkit.tfx.eod.config;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JOB_NAME_PARAM_NAME;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,9 +15,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.configuration.JobLocator;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.quartz.QuartzJobBean;
-import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.time.ClockService;
 
@@ -29,11 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @RequiredArgsConstructor
-@Service
-public class Eod1QuartzJob extends QuartzJobBean {
-
-    @Value(EOD1_BATCH_JOB_NAME)
-    private final String jobName;
+public class EodQuartzJob extends QuartzJobBean {
 
     private final JobLauncher jobLauncher;
 
@@ -44,6 +38,7 @@ public class Eod1QuartzJob extends QuartzJobBean {
     @Override
     @SneakyThrows
     protected void executeInternal(final JobExecutionContext context) {
+        final String jobName = context.getJobDetail().getJobDataMap().getString(JOB_NAME_PARAM_NAME);
         final Job job = jobLocator.getJob(jobName);
         final JobParameters params = new JobParametersBuilder()
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, getBusinessDate().format(BUSINESS_DATE_FMT))

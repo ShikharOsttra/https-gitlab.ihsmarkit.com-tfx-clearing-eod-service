@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JOB_NAME_PARAM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -8,13 +9,16 @@ import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import org.assertj.core.matcher.AssertionMatcher;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -28,11 +32,12 @@ import lombok.SneakyThrows;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
 @ExtendWith(MockitoExtension.class)
-class Eod1QuartzJobTest {
+class EodQuartzJobTest {
 
     private static final String JOB_NAME = "eod1Job";
 
-    private Eod1QuartzJob eod1QuartzJob;
+    @InjectMocks
+    private EodQuartzJob eodQuartzJob;
 
     @Mock
     private JobLauncher jobLauncher;
@@ -47,21 +52,21 @@ class Eod1QuartzJobTest {
     private Job job;
 
     @Mock
-    private JobExecutionContext jobExecutionContext;
+    private JobDetail jobDetail;
 
-    @BeforeEach
-    void setUp() {
-        eod1QuartzJob = new Eod1QuartzJob(JOB_NAME, jobLauncher, jobLocator, clockService);
-    }
+    @Mock
+    private JobExecutionContext jobExecutionContext;
 
     @Test
     @SneakyThrows
     void shouldRunSpringBatchJob() {
-        when(jobLocator.getJob(JOB_NAME)).thenReturn(job);
         final LocalDate scheduleDate = LocalDate.of(2019, 11, 10);
+        when(jobLocator.getJob(JOB_NAME)).thenReturn(job);
         when(clockService.getCurrentDate()).thenReturn(scheduleDate);
+        when(jobDetail.getJobDataMap()).thenReturn(new JobDataMap(Map.of(JOB_NAME_PARAM_NAME, JOB_NAME)));
+        when(jobExecutionContext.getJobDetail()).thenReturn(jobDetail);
 
-        eod1QuartzJob.executeInternal(jobExecutionContext);
+        eodQuartzJob.executeInternal(jobExecutionContext);
 
         verify(jobLauncher).run(eq(job), argThat(new AssertionMatcher<>() {
             @SneakyThrows
