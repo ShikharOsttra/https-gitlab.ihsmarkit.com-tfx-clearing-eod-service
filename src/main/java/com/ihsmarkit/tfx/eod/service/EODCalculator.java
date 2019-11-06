@@ -12,22 +12,23 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class TradeMtmCalculator {
+public class EODCalculator {
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
-    private MarkToMarketTrade calculateMtmValue(final TradeOrPositionEssentials trade, final Map<CurrencyPairEntity, BigDecimal> dsp,
-        final Map<String, BigDecimal> jpyRates) {
+    private ParticipantPositionForPair calculateMtmValue(final TradeOrPositionEssentials trade, final Map<CurrencyPairEntity, BigDecimal> dsp,
+                                                         final Map<String, BigDecimal> jpyRates) {
 
         final var currencyPair = trade.getCurrencyPair();
         final var valueCurrency = currencyPair.getValueCurrency();
@@ -39,31 +40,48 @@ public class TradeMtmCalculator {
             .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.get(valueCurrency))
             .setScale(0, RoundingMode.FLOOR);
 
-        return MarkToMarketTrade.of(trade.getParticipant(), currencyPair, mtmAmount);
+        return ParticipantPositionForPair.of(trade.getParticipant(), currencyPair, mtmAmount);
     }
 
-    public Stream<MarkToMarketTrade> calculateAndAggregateInitialMtm(final Stream<TradeEntity> trades, final Map<CurrencyPairEntity, BigDecimal> dsp) {
+    public Stream<ParticipantPositionForPair> calculateAndAggregateInitialMtm(final Stream<TradeEntity> trades, final Map<CurrencyPairEntity, BigDecimal> dsp) {
 
         final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
 
-        return trades
+        return flatten(trades
             .map(tradeOrPositionMapper::convertTrade)
             .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
             .collect(
                 Collectors.groupingBy(
-                    MarkToMarketTrade::getParticipant,
+                    ParticipantPositionForPair::getParticipant,
                     Collectors.groupingBy(
-                        MarkToMarketTrade::getCurrencyPair,
-                        Collectors.reducing(BigDecimal.ZERO, MarkToMarketTrade::getAmount, BigDecimal::add)
+                        ParticipantPositionForPair::getCurrencyPair,
+                        Collectors.reducing(BigDecimal.ZERO, ParticipantPositionForPair::getAmount, BigDecimal::add)
                     )
                 )
-            ).entrySet().stream()
+            ));
+    }
+
+    private Stream<ParticipantPositionForPair> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
+        return input.entrySet().stream()
             .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
-                .map(ccyPairBalances -> MarkToMarketTrade.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
+                .map(ccyPairBalances -> ParticipantPositionForPair.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
             );
     }
 
-    public Stream<MarkToMarketTrade> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
+    public Stream<ParticipantPositionForPair> netAllTtrades(final Stream<TradeOrPositionEssentials> trades) {
+        return flatten(trades
+            .collect(
+                Collectors.groupingBy(
+                    TradeOrPositionEssentials::getParticipant,
+                    Collectors.groupingBy(
+                        TradeOrPositionEssentials::getCurrencyPair,
+                        Collectors.reducing(BigDecimal.ZERO, TradeOrPositionEssentials::getBaseAmount, BigDecimal::add)
+                    )
+                )
+            ));
+    }
+
+    public Stream<ParticipantPositionForPair> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
         final Map<CurrencyPairEntity, BigDecimal> dsp) {
 
         final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);

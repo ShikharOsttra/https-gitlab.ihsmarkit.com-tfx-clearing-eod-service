@@ -27,10 +27,10 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
-class TradeMtmCalculatorTest {
+class EODCalculatorTest {
 
     private static final CurrencyPairEntity USDJPY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final CurrencyPairEntity EURUSD = CurrencyPairEntity.of(2L, "EUR", "USD");
@@ -83,20 +83,29 @@ class TradeMtmCalculatorTest {
         .build();
 
     private static final TradeEntity A_BUYS_1_USD_AT_991 = TradeEntity.builder()
-            .direction(Side.BUY)
-            .currencyPair(USDJPY)
-            .spotRate(BigDecimal.valueOf(99.1))
-            .baseAmount(AmountEntity.of(BigDecimal.ONE, "USD"))
-            .originator(ORIGINATOR_A)
-            .build();
+        .direction(Side.BUY)
+        .currencyPair(USDJPY)
+        .spotRate(BigDecimal.valueOf(99.1))
+        .baseAmount(AmountEntity.of(BigDecimal.ONE, "USD"))
+        .originator(ORIGINATOR_A)
+        .build();
 
     private static final TradeEntity A_SELLS_1_USD_AT_991 = TradeEntity.builder()
-            .direction(Side.SELL)
-            .currencyPair(USDJPY)
-            .spotRate(BigDecimal.valueOf(99.1))
-            .baseAmount(AmountEntity.of(BigDecimal.ONE, "USD"))
-            .originator(ORIGINATOR_A)
-            .build();
+        .direction(Side.SELL)
+        .currencyPair(USDJPY)
+        .spotRate(BigDecimal.valueOf(99.1))
+        .baseAmount(AmountEntity.of(BigDecimal.ONE, "USD"))
+        .originator(ORIGINATOR_A)
+        .build();
+
+
+    private static final TradeEntity A_SELLS_30_EUR = TradeEntity.builder()
+        .direction(Side.SELL)
+        .currencyPair(EURUSD)
+        .spotRate(BigDecimal.valueOf(1.2))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(30), "EUR"))
+        .originator(ORIGINATOR_A)
+        .build();
 
     private static final ParticipantPositionEntity A_POSITION_USD = ParticipantPositionEntity.builder()
         .currencyPair(USDJPY)
@@ -113,14 +122,38 @@ class TradeMtmCalculatorTest {
         .build();
 
     @Autowired
-    private TradeMtmCalculator tradeMtmCalculator;
+    private EODCalculator eodCalculator;
+
+    @Autowired
+    private TradeOrPositionEssentialsMapper tradeOrPositionMapper;
+
+    @Test
+    void shouldCalculateNetAmounts() {
+        Stream<ParticipantPositionForPair> mtm =
+            eodCalculator.netAllTtrades(
+                Stream.of(A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR, A_SELLS_30_EUR)
+                    .map(tradeOrPositionMapper::convertTrade)
+            );
+
+        assertThat(mtm)
+            .extracting(
+                ParticipantPositionForPair::getParticipant,
+                ParticipantPositionForPair::getCurrencyPair,
+                ParticipantPositionForPair::getAmount
+            )
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
+                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(10.0)),
+                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(-20))
+            );
+    }
 
     @Test
     void shouldRoundPositiveFractionalPYDown() {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
-        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
                 .containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
                 );
@@ -131,8 +164,8 @@ class TradeMtmCalculatorTest {
     void shouldRoundNegativeFractionalPYUp() {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
-        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
                 .containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
                 );
@@ -142,8 +175,8 @@ class TradeMtmCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
-        assertThat(tradeMtmCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-            .extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+            .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
@@ -153,10 +186,15 @@ class TradeMtmCalculatorTest {
 
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
-        Stream<MarkToMarketTrade> mtm =
-            tradeMtmCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
+        Stream<ParticipantPositionForPair> mtm =
+            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
-        assertThat(mtm).extracting(MarkToMarketTrade::getParticipant, MarkToMarketTrade::getCurrencyPair, MarkToMarketTrade::getAmount)
+        assertThat(mtm)
+            .extracting(
+                ParticipantPositionForPair::getParticipant,
+                ParticipantPositionForPair::getCurrencyPair,
+                ParticipantPositionForPair::getAmount
+            )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))
@@ -164,10 +202,10 @@ class TradeMtmCalculatorTest {
     }
 
     @TestConfiguration
-    @ComponentScan(basePackageClasses = { TradeMtmCalculator.class, TradeOrPositionEssentialsMapper.class },
+    @ComponentScan(basePackageClasses = { EODCalculator.class, TradeOrPositionEssentialsMapper.class },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = { TradeMtmCalculator.class, TradeOrPositionEssentialsMapper.class })
+            classes = { EODCalculator.class, TradeOrPositionEssentialsMapper.class })
     )
     static class TestConfig {
 

@@ -34,4 +34,5 @@ class EodJobIntegrationTest extends AbstractSpringBatchTest {
 
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
     }
+
 }

@@ -18,16 +18,16 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
-import com.ihsmarkit.tfx.eod.model.MarkToMarketTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
-class MarkToMarketTradeMapperTest {
+class ParticipantPositionForPairMapperTest {
 
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
 
     @Autowired
-    private MarkToMarketTradeMapper mapper;
+    private ParticipantPositionForPairMapper mapper;
 
     @Test
     void shouldConvertToEodProductCashSettlementEntity() {
@@ -36,7 +36,7 @@ class MarkToMarketTradeMapperTest {
         final LocalDate settlementDate = LocalDate.of(2019, 11, 8);
 
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
-            MarkToMarketTrade.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
+            ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             businessDate,
             settlementDate,
             EodProductCashSettlementType.INITIAL_MTM
@@ -52,7 +52,7 @@ class MarkToMarketTradeMapperTest {
 
     }
     @TestConfiguration
-    @ComponentScan(basePackageClasses = MarkToMarketTradeMapper.class)
+    @ComponentScan(basePackageClasses = ParticipantPositionForPairMapper.class)
     static class TestConfig {
 
     }
