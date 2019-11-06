@@ -1,12 +1,14 @@
 package com.ihsmarkit.tfx.eod.config;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -15,24 +17,22 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AllArgsConstructor;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @Configuration
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper" })
 @EnableBatchProcessing
+@AllArgsConstructor
 public class SpringBatchConfig {
 
-    @Autowired
-    private JobBuilderFactory jobs;
+    private final JobBuilderFactory jobs;
 
-    @Autowired
-    private StepBuilderFactory steps;
+    private final StepBuilderFactory steps;
 
-    @Autowired
-    private MarkToMarketTradesTasklet markToMarketTradesTasklet;
+    private final MarkToMarketTradesTasklet markToMarketTradesTasklet;
 
-    @Autowired
-    private NettingTasklet nettingTasklet;
+    private final NettingTasklet nettingTasklet;
 
     @Bean(name = "eod1Job")
     public Job eod1Job() {
@@ -45,7 +45,7 @@ public class SpringBatchConfig {
     @Bean
     @JobScope
     public Step mtmTrades() {
-        return steps.get("mtmTrades")
+        return steps.get(MTM_TRADES_STEP_NAME)
             .tasklet(markToMarketTradesTasklet)
             .build();
     }
@@ -53,7 +53,7 @@ public class SpringBatchConfig {
     @Bean
     @JobScope
     public Step netTrades() {
-        return steps.get("netTrades")
+        return steps.get(NET_TRADES_STEP_NAME)
                 .tasklet(nettingTasklet)
                 .build();
     }

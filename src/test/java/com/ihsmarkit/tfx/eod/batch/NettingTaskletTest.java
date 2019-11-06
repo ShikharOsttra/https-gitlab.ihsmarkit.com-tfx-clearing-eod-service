@@ -3,6 +3,10 @@ package com.ihsmarkit.tfx.eod.batch;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.USD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,8 +52,8 @@ import com.ihsmarkit.tfx.eod.service.NetCalculator;
 
 class NettingTaskletTest extends AbstractSpringBatchTest {
 
-    private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().build();
-    private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency("JPY").build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().valueCurrency(JPY).build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder()
         .participant(PARTICIPANT)
@@ -60,7 +64,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         .currencyPair(CURRENCY_PAIR_USD)
         .originator(ORIGINATOR_A)
         .spotRate(BigDecimal.valueOf(99.3))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20.0), "USF"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20.0), USD))
         .build();
 
     private static final TradeEntity A_SELLS_10_USD = TradeEntity.builder()
@@ -68,13 +72,13 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         .currencyPair(CURRENCY_PAIR_USD)
         .originator(ORIGINATOR_A)
         .spotRate(BigDecimal.valueOf(99.5))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10.0), "USD"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10.0), USD))
         .build();
 
     private static final ParticipantPositionEntity POSITION = ParticipantPositionEntity.builder()
         .currencyPair(CURRENCY_PAIR_USD)
         .participant(PARTICIPANT)
-        .amount(AmountEntity.of(BigDecimal.valueOf(993.0), "USD"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(993.0), USD))
         .price(BigDecimal.valueOf(99.4))
         .build();
 
@@ -131,9 +135,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 )
             );
 
-        final JobExecution execution = jobLauncherTestUtils.launchStep("netTrades",
+        final JobExecution execution = jobLauncherTestUtils.launchStep(NET_TRADES_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("businessDate", businessDateStr)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
@@ -174,7 +178,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_USD,
                     ParticipantPositionType.NET,
-                    AmountEntity.of(BigDecimal.ONE, "USD"),
+                    AmountEntity.of(BigDecimal.ONE, USD),
                     BigDecimal.valueOf(2),
                     businessDate,
                     LocalDate.of(2019, 10, 9)
@@ -184,7 +188,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_JPY,
                     ParticipantPositionType.NET,
-                    AmountEntity.of(BigDecimal.valueOf(2), "JPY"),
+                    AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     BigDecimal.valueOf(3),
                     businessDate,
                     LocalDate.of(2019, 10, 9)
