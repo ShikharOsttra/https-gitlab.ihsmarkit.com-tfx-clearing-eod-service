@@ -19,7 +19,7 @@ import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
 @Import(SpringBatchConfig.class)
 @SpringBatchTest
-@TestPropertySource(properties = "clock-service.time-zone=UTC")
+@TestPropertySource("classpath:/application.properties")
 @SuppressWarnings("VisibilityModifier")
 public abstract class AbstractSpringBatchTest {
 
