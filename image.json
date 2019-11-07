@@ -98,6 +98,15 @@
                 "key": "environment.name"
               }
             }
+          },
+          {
+            "name": "SERVER_TIME_ZONE",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "environment-config",
+                "key": "server.timezone"
+              }
+            }
           }
         ],
         "readinessProbe": {
