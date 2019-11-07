@@ -2,6 +2,7 @@ stages:
   - build
   - post-build
   - deliver
+  - downstream
 
 branch-job:
   stage: build
@@ -71,3 +72,7 @@ gconf:deliver:
       - build/deliverable/
       - build/reports/
       - build/test-results/
+
+include:
+  - project: 'tfx-clearing/environments/ci'
+    file: 'deployable-builds-ci.yml'
