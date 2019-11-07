@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.Import;
 import org.springframework.jmx.support.RegistrationPolicy;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
@@ -18,6 +19,7 @@ import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
 @Import(SpringBatchConfig.class)
 @SpringBatchTest
+@TestPropertySource("classpath:/application.properties")
 @SuppressWarnings("VisibilityModifier")
 public abstract class AbstractSpringBatchTest {
 
