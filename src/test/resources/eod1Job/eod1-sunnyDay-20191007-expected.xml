@@ -1,8 +1,8 @@
 <dataset>
     <eod_product_cash_settlement
             participant_id="101"
-            currency_pair_id="81"
-            amount="-17"
+            currency_pair_id="13"
+            amount="-14"
             currency="JPY"
             settlement_date="2019-10-10"
             date="2019-10-07"
@@ -10,8 +10,8 @@
     />
     <eod_product_cash_settlement
             participant_id="101"
-            currency_pair_id="81"
-            amount="268"
+            currency_pair_id="13"
+            amount="220"
             currency="JPY"
             settlement_date="2019-10-10"
             date="2019-10-07"
@@ -19,7 +19,7 @@
     />
 
     <participant_position
-            currency_pair_id="81"
+            currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-07"
@@ -31,7 +31,7 @@
     />
 
     <participant_position
-            currency_pair_id="81"
+            currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-06"
@@ -43,7 +43,7 @@
     />
 
     <participant_position
-            currency_pair_id="81"
+            currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-06"
@@ -55,14 +55,14 @@
     />
 
     <participant_position
-            currency_pair_id="81"
+            currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-07"
             value_date="2019-10-10"
-            price="0.9"
+            price="1.10"
             amount="-0.94"
-            currency="USD"
+            currency="EUR"
             type="NET"
     />
 </dataset>
