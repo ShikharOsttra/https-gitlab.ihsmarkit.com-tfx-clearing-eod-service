@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -18,7 +19,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
@@ -27,6 +27,7 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
 @ExtendWith(SpringExtension.class)
@@ -49,6 +50,8 @@ class EODCalculatorTest {
     private static final LegalEntity ORIGINATOR_B = aLegalEntityBuilder()
         .participant(PARTICIPANT_B)
         .build();
+
+    private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().name("C").build();
 
     private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
         .direction(Side.BUY)
@@ -119,6 +122,27 @@ class EODCalculatorTest {
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
         .participant(PARTICIPANT_A)
+        .build();
+
+    private static final ParticipantPositionEntity A_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(10000000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_A)
+        .build();
+
+    private static final ParticipantPositionEntity B_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-9700000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_B)
+        .build();
+
+    private static final ParticipantPositionEntity C_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-1800000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_C)
         .build();
 
     @Autowired
@@ -199,6 +223,13 @@ class EODCalculatorTest {
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))
             );
+    }
+
+    @Test
+    void shouldRebalancePositions() {
+        Stream<BalanceTrade> balanceTrades = eodCalculator.rebalanceLPPositions(Arrays.asList(A_POSITION_EUR_BIG, B_POSITION_EUR_BIG, C_POSITION_EUR_BIG));
+
+        assertThat(balanceTrades).isNotEmpty();
     }
 
     @TestConfiguration
