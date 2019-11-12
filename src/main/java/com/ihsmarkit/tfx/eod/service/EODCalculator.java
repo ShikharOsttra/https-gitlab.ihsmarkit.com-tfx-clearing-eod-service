@@ -4,7 +4,9 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,7 +18,10 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.PositionBalance;
+import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EODCalculator {
 
+    private static final int DEFAULT_ROUNDING = 5;
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
     private ParticipantPositionForPair calculateMtmValue(final TradeOrPositionEssentials trade, final Map<CurrencyPairEntity, BigDecimal> dsp,
@@ -89,6 +95,43 @@ public class EODCalculator {
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
             .map(t -> calculateMtmValue(t, dsp, jpyRates));
+    }
+
+    public Stream<BalanceTrade> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
+
+        final Stream<BalanceTrade> balanceTrades = positions.stream()
+            .map(tradeOrPositionMapper::convertPosition)
+            .collect(Collectors.groupingBy(
+                TradeOrPositionEssentials::getCurrencyPair,
+                Collectors.toList()
+            )).entrySet().stream()
+            .flatMap(e -> rebalanceSingleCurrency(e.getValue(), DEFAULT_ROUNDING).stream());
+
+        return balanceTrades;
+    }
+
+
+    private List<BalanceTrade> rebalanceSingleCurrency(final List<TradeOrPositionEssentials> list, final int rounding) {
+
+        PositionBalance balance = PositionBalance.of(
+            list.stream()
+                .map(p -> new RawPositionData(p.getParticipant(), p.getBaseAmount()))
+        );
+
+        final BigDecimal threshold = BigDecimal.TEN.pow(rounding);
+        final List<BalanceTrade> trades = new ArrayList<>();
+
+        int tradesInIteration = Integer.MAX_VALUE;
+
+        while (tradesInIteration > 0 && balance.getBuy().getNet().max(balance.getSell().getNet()).compareTo(threshold) > 0) {
+            final List<BalanceTrade> iterationTrades = balance.rebalance(rounding).collect(Collectors.toList());
+            tradesInIteration = iterationTrades.size();
+            trades.addAll(iterationTrades);
+            balance = balance.applyTrades(iterationTrades.stream());
+        }
+
+        return trades;
+
     }
 
     private Map<String, BigDecimal> getJpyRatesFromDsp(final Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices) {
