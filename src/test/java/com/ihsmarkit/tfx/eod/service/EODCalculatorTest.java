@@ -30,6 +30,8 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
+import lombok.NonNull;
+
 @ExtendWith(SpringExtension.class)
 class EODCalculatorTest {
 
@@ -227,7 +229,8 @@ class EODCalculatorTest {
 
     @Test
     void shouldRebalancePositions() {
-        Stream<BalanceTrade> balanceTrades = eodCalculator.rebalanceLPPositions(Arrays.asList(A_POSITION_EUR_BIG, B_POSITION_EUR_BIG, C_POSITION_EUR_BIG));
+        Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
+            eodCalculator.rebalanceLPPositions(Arrays.asList(A_POSITION_EUR_BIG, B_POSITION_EUR_BIG, C_POSITION_EUR_BIG));
 
         assertThat(balanceTrades).isNotEmpty();
     }

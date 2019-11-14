@@ -19,11 +19,13 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
+import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 import com.ihsmarkit.tfx.eod.model.PositionBalance;
 import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class EODCalculator {
 
     private static final int DEFAULT_ROUNDING = 5;
+
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
     private ParticipantPositionForPair calculateMtmValue(final TradeOrPositionEssentials trade, final Map<CurrencyPairEntity, BigDecimal> dsp,
@@ -42,7 +45,7 @@ public class EODCalculator {
         final var rate = dsp.get(currencyPair);
 
         final var mtmAmount = rate.subtract(trade.getSpotRate())
-            .multiply(trade.getBaseAmount())
+            .multiply(trade.getAmount())
             .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.get(valueCurrency))
             .setScale(0, RoundingMode.FLOOR);
 
@@ -53,18 +56,27 @@ public class EODCalculator {
 
         final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
 
-        return flatten(trades
-            .map(tradeOrPositionMapper::convertTrade)
-            .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
+        return flatten(
+            aggregate(
+                trades
+                    .map(tradeOrPositionMapper::convertTrade)
+                    .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
+            )
+        );
+
+    }
+
+    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
+        return input
             .collect(
                 Collectors.groupingBy(
-                    ParticipantPositionForPair::getParticipant,
+                    CcyParticipantAmount::getParticipant,
                     Collectors.groupingBy(
-                        ParticipantPositionForPair::getCurrencyPair,
-                        Collectors.reducing(BigDecimal.ZERO, ParticipantPositionForPair::getAmount, BigDecimal::add)
+                        CcyParticipantAmount::getCurrencyPair,
+                        Collectors.reducing(BigDecimal.ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
                     )
                 )
-            ));
+            );
     }
 
     private Stream<ParticipantPositionForPair> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
@@ -74,17 +86,8 @@ public class EODCalculator {
             );
     }
 
-    public Stream<ParticipantPositionForPair> netAllTtrades(final Stream<TradeOrPositionEssentials> trades) {
-        return flatten(trades
-            .collect(
-                Collectors.groupingBy(
-                    TradeOrPositionEssentials::getParticipant,
-                    Collectors.groupingBy(
-                        TradeOrPositionEssentials::getCurrencyPair,
-                        Collectors.reducing(BigDecimal.ZERO, TradeOrPositionEssentials::getBaseAmount, BigDecimal::add)
-                    )
-                )
-            ));
+    public Stream<ParticipantPositionForPair> netAllTtrades(final Stream<? extends CcyParticipantAmount> trades) {
+        return flatten(aggregate(trades));
     }
 
     public Stream<ParticipantPositionForPair> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
@@ -97,17 +100,21 @@ public class EODCalculator {
             .map(t -> calculateMtmValue(t, dsp, jpyRates));
     }
 
-    public Stream<BalanceTrade> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
+    public Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
 
-        final Stream<BalanceTrade> balanceTrades = positions.stream()
+        return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
             .collect(Collectors.groupingBy(
                 TradeOrPositionEssentials::getCurrencyPair,
                 Collectors.toList()
             )).entrySet().stream()
-            .flatMap(e -> rebalanceSingleCurrency(e.getValue(), DEFAULT_ROUNDING).stream());
+                .collect(
+                    Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING)
+                    )
+                );
 
-        return balanceTrades;
     }
 
 
@@ -115,7 +122,7 @@ public class EODCalculator {
 
         PositionBalance balance = PositionBalance.of(
             list.stream()
-                .map(p -> new RawPositionData(p.getParticipant(), p.getBaseAmount()))
+                .map(p -> new RawPositionData(p.getParticipant(), p.getAmount()))
         );
 
         final BigDecimal threshold = BigDecimal.TEN.pow(rounding);

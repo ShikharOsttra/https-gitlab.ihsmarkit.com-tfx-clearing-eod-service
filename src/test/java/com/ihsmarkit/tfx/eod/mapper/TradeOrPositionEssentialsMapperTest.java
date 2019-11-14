@@ -43,7 +43,7 @@ class TradeOrPositionEssentialsMapperTest {
     void shouldMapBuyTrade() {
         TradeOrPositionEssentials mapped = mapper.convertTrade(TRADE.direction(Side.BUY).build());
 
-        assertThat(mapped.getBaseAmount()).isEqualByComparingTo(BigDecimal.valueOf(20.0));
+        assertThat(mapped.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(20.0));
         assertThat(mapped.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(99.5));
         assertThat(mapped.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(mapped.getParticipant()).isSameAs(PARTICIPANT_A);
@@ -54,7 +54,7 @@ class TradeOrPositionEssentialsMapperTest {
     void shouldMapSellTrade() {
         TradeOrPositionEssentials mapped = mapper.convertTrade(TRADE.direction(Side.SELL).build());
 
-        assertThat(mapped.getBaseAmount()).isEqualByComparingTo(BigDecimal.valueOf(-20.0));
+        assertThat(mapped.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(-20.0));
         assertThat(mapped.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(99.5));
         assertThat(mapped.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(mapped.getParticipant()).isSameAs(PARTICIPANT_A);
@@ -72,7 +72,7 @@ class TradeOrPositionEssentialsMapperTest {
 
         TradeOrPositionEssentials mapped = mapper.convertPosition(position);
 
-        assertThat(mapped.getBaseAmount()).isEqualByComparingTo(BigDecimal.valueOf(20.0));
+        assertThat(mapped.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(20.0));
         assertThat(mapped.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(99.5));
         assertThat(mapped.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(mapped.getParticipant()).isSameAs(PARTICIPANT_A);
