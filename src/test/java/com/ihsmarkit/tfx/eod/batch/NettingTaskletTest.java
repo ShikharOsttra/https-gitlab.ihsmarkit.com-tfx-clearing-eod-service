@@ -151,7 +151,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 TradeOrPositionEssentials::getParticipant,
                 TradeOrPositionEssentials::getCurrencyPair,
                 TradeOrPositionEssentials::getSpotRate,
-                TradeOrPositionEssentials::getBaseAmount
+                TradeOrPositionEssentials::getAmount
             ).containsExactlyInAnyOrder(
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0)),
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0)),
