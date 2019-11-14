@@ -75,6 +75,8 @@ class BalanceTradeMapperTest {
         );
 
         assertThat(tradeEntity.getDirection()).isEqualTo(Side.SELL);
+        assertThat(tradeEntity.getBaseAmount().getValue()).isEqualByComparingTo(BigDecimal.TEN);
+        assertThat(tradeEntity.getValueAmount().getValue()).isEqualByComparingTo(BigDecimal.valueOf(5));
 
     }
 
