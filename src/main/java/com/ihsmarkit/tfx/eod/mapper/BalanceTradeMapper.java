@@ -56,11 +56,11 @@ public interface BalanceTradeMapper {
     @Mapping(target = "spotRate", source = TRADE)
     @Mapping(target = "counterparty", source = "trade.counterpart")
     @Mapping(target = "originator", source = "trade.originator")
-
     @Mapping(target = "productCode", source = TRADE)
     @Mapping(target = "direction", source = "trade.amount")
     @Mapping(target = "tradeDate", source = "tradeDate")
     @Mapping(target = "valueDate", source = "valueDate")
+    @Mapping(target = "transactionType", constant = "2")
     TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate,  @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate);
 
     default Side tradeDirection(BigDecimal amount) {
