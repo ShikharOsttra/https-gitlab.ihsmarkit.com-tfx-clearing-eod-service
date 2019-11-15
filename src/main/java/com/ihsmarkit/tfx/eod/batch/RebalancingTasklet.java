@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.batch.core.StepContribution;
@@ -84,6 +83,8 @@ public class RebalancingTasklet implements Tasklet {
                 )
             );
 
+        tradeRepositiory.saveAll(trades::iterator);
+
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAllTtrades(
             balanceTrades.entrySet().stream()
                 .flatMap(
@@ -103,8 +104,6 @@ public class RebalancingTasklet implements Tasklet {
             settlementDate,
             dsp.get(trade.getCurrencyPair())
         ));
-
-        trades.collect(Collectors.toList());
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
 
