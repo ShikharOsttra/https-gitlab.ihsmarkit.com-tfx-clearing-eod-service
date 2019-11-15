@@ -12,6 +12,7 @@ import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
@@ -43,11 +44,12 @@ public interface ParticipantPositionForPairMapper {
     @Mapping(target = "participantType", source = "trade.participant.type")
     @Mapping(target = "currencyPair", source = "trade.currencyPair")
     @Mapping(target = "amount", source = "trade", qualifiedByName = PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
-    @Mapping(target = "type", constant = "NET")
+    @Mapping(target = "type", source = "positionType")
     @Mapping(target = "tradeDate", source = "businessDate")
     @Mapping(target = "valueDate", source = "settlementDate")
     ParticipantPositionEntity toParticipantPosition(
         ParticipantPositionForPair trade,
+        ParticipantPositionType positionType,
         LocalDate businessDate,
         LocalDate settlementDate,
         BigDecimal price

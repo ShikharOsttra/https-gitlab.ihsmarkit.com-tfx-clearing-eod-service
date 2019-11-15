@@ -13,10 +13,14 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
+import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
 
@@ -26,14 +30,35 @@ class ParticipantPositionForPairMapperTest {
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
 
+    private static final LocalDate businessDate = LocalDate.of(2019, 11, 5);
+    private static final LocalDate settlementDate = LocalDate.of(2019, 11, 8);
+
     @Autowired
     private ParticipantPositionForPairMapper mapper;
 
     @Test
+    void shouldConvertToParticipantPositionEntity() {
+        ParticipantPositionEntity position = mapper.toParticipantPosition(
+            ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
+            ParticipantPositionType.NET,
+            businessDate,
+            settlementDate,
+            BigDecimal.TEN
+        );
+
+        assertThat(position.getAmount()).isEqualTo(AmountEntity.of(BigDecimal.ONE, EodJobConstants.USD));
+        assertThat(position.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
+        assertThat(position.getParticipant()).isSameAs(PARTICIPANT_A);
+        assertThat(position.getTradeDate()).isEqualTo(businessDate);
+        assertThat(position.getValueDate()).isEqualTo(settlementDate);
+        assertThat(position.getType()).isSameAs(ParticipantPositionType.NET);
+        assertThat(position.getParticipantType()).isSameAs(ParticipantType.LIQUIDITY_PROVIDER);
+        assertThat(position.getPrice()).isEqualByComparingTo(BigDecimal.TEN);
+    }
+
+    @Test
     void shouldConvertToEodProductCashSettlementEntity() {
 
-        final LocalDate businessDate = LocalDate.of(2019, 11, 5);
-        final LocalDate settlementDate = LocalDate.of(2019, 11, 8);
 
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
             ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
@@ -42,8 +67,7 @@ class ParticipantPositionForPairMapperTest {
             EodProductCashSettlementType.INITIAL_MTM
         );
 
-        assertThat(eod.getAmount().getCurrency()).isEqualTo(EodJobConstants.JPY);
-        assertThat(eod.getAmount().getValue()).isEqualByComparingTo(BigDecimal.ONE);
+        assertThat(eod.getAmount()).isEqualTo(AmountEntity.of(BigDecimal.ONE, EodJobConstants.JPY));
         assertThat(eod.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(eod.getParticipant()).isSameAs(PARTICIPANT_A);
         assertThat(eod.getDate()).isEqualTo(businessDate);

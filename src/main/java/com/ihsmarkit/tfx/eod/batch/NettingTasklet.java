@@ -72,6 +72,7 @@ public class NettingTasklet implements Tasklet {
         final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllTtrades(tradesToNet)
             .map(trade -> participantPositionForPairMapper.toParticipantPosition(
                 trade,
+                ParticipantPositionType.NET,
                 businessDate,
                 settlementDate,
                 dsp.get(trade.getCurrencyPair())
