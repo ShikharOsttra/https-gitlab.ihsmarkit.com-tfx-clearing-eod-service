@@ -90,6 +90,34 @@
             message_id="WEB0000000012"
     />
 
+    <trade
+            id="113"
+            transaction_type="1"
+            currency_pair_id="81"
+            product_code="USD/EUR"
+            trade_ref="some_ref1"
+            activity="NEW"
+            originator_id="102"
+            counterparty_id="101"
+            direction="BUY"
+            base_ccy="USD"
+            base_ccy_amt="330000"
+            value_ccy="EUR"
+            value_ccy_amt="300000"
+            spot_rate="1.1"
+            matching_status="CONFIRMED"
+            clearing_status="NOVATED"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            execution_time="2019-03-06 22:00:00"
+            source_system="GUI"
+            submission_tsp="2019-03-05 16:00:00"
+            user_name="john.doe"
+            matching_ref="match_ref_1"
+            version_tsp="2019-03-05 16:00:00"
+            message_id="WEB0000000012"
+    />
+
     <participant_position
         id="1"
         currency_pair_id="81"
@@ -98,7 +126,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1"
+        amount="-1000000"
         currency="JPY"
         type="SOD"
     />

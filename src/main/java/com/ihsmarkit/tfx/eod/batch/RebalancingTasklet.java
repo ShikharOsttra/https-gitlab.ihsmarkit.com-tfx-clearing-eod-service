@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
@@ -41,6 +42,8 @@ public class RebalancingTasklet implements Tasklet {
 
 
     private final ParticipantPositionRepository participantPositionRepository;
+
+    private final TradeRepository tradeRepositiory;
 
     private final DailySettlementPriceProvider dailySettlementPriceProvider;
 
@@ -102,7 +105,8 @@ public class RebalancingTasklet implements Tasklet {
         ));
 
         trades.collect(Collectors.toList());
-        rebalanceNetPositions.collect(Collectors.toList());
+
+        participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
 
         return RepeatStatus.FINISHED;
     }
