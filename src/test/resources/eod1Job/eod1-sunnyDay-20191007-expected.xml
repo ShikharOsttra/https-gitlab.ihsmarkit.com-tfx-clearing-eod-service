@@ -1,5 +1,14 @@
 <dataset>
     <eod_product_cash_settlement
+            participant_id="102"
+            currency_pair_id="81"
+            amount="-7972140"
+            currency="JPY"
+            settlement_date="2019-10-10"
+            date="2019-10-07"
+            type="INITIAL_MTM"
+    />
+    <eod_product_cash_settlement
             participant_id="101"
             currency_pair_id="13"
             amount="-14"
@@ -25,7 +34,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="3.12"
-            amount="-1"
+            amount="-1000000"
             currency="JPY"
             type="SOD"
     />
@@ -56,13 +65,50 @@
 
     <participant_position
             currency_pair_id="13"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="102"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="0.9"
+            amount="330000"
+            currency="USD"
+            type="NET"
+    />
+
+    <participant_position
+            currency_pair_id="81"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.10"
-            amount="-0.94"
+            amount="-999999.94"
             currency="EUR"
             type="NET"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            type="REBALANCING"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="102"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="0.9"
+            amount="-300000"
+            currency="USD"
+    />
+
+    <participant_position
+            currency_pair_id="81"
+            type="REBALANCING"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="0.9"
+            amount="300000"
+            currency="USD"
+
     />
 </dataset>

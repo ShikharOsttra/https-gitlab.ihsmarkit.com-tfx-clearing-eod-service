@@ -27,7 +27,7 @@ class EodJobIntegrationTest extends AbstractSpringBatchTest {
 
     @Test
     @DatabaseSetup("/eod1Job/eod1-sunnyDay-20191007.xml")
-    @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
+    @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testEodJob() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncherTestUtils.getJobLauncher().run(eodJob, jobParams);
