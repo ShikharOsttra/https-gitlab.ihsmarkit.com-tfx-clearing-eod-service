@@ -9,6 +9,7 @@
 
     <trade
             id="110"
+            transaction_type="1"
             currency_pair_id="81"
             product_code="USD/EUR"
             trade_ref="some_ref"
@@ -36,6 +37,7 @@
 
     <trade
             id="111"
+            transaction_type="1"
             currency_pair_id="81"
             product_code="USD/EUR"
             trade_ref="some_ref"
@@ -62,6 +64,7 @@
     />
     <trade
             id="112"
+            transaction_type="1"
             currency_pair_id="81"
             product_code="USD/EUR"
             trade_ref="some_ref1"
