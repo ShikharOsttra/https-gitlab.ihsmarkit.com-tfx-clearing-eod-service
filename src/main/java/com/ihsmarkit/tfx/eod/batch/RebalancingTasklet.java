@@ -95,6 +95,7 @@ public class RebalancingTasklet implements Tasklet {
 
         ).map(trade -> participantPositionForPairMapper.toParticipantPosition(
             trade,
+            ParticipantPositionType.REBALANCING,
             businessDate,
             settlementDate,
             dsp.get(trade.getCurrencyPair())
