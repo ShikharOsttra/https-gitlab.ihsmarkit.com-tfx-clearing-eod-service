@@ -30,8 +30,8 @@ class ParticipantPositionForPairMapperTest {
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
 
-    private static final LocalDate businessDate = LocalDate.of(2019, 11, 5);
-    private static final LocalDate settlementDate = LocalDate.of(2019, 11, 8);
+    private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 11, 5);
+    private static final LocalDate SETTLEMENT_DATE = LocalDate.of(2019, 11, 8);
 
     @Autowired
     private ParticipantPositionForPairMapper mapper;
@@ -41,16 +41,16 @@ class ParticipantPositionForPairMapperTest {
         ParticipantPositionEntity position = mapper.toParticipantPosition(
             ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             ParticipantPositionType.NET,
-            businessDate,
-            settlementDate,
+            BUSINESS_DATE,
+            SETTLEMENT_DATE,
             BigDecimal.TEN
         );
 
         assertThat(position.getAmount()).isEqualTo(AmountEntity.of(BigDecimal.ONE, EodJobConstants.USD));
         assertThat(position.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(position.getParticipant()).isSameAs(PARTICIPANT_A);
-        assertThat(position.getTradeDate()).isEqualTo(businessDate);
-        assertThat(position.getValueDate()).isEqualTo(settlementDate);
+        assertThat(position.getTradeDate()).isEqualTo(BUSINESS_DATE);
+        assertThat(position.getValueDate()).isEqualTo(SETTLEMENT_DATE);
         assertThat(position.getType()).isSameAs(ParticipantPositionType.NET);
         assertThat(position.getParticipantType()).isSameAs(ParticipantType.LIQUIDITY_PROVIDER);
         assertThat(position.getPrice()).isEqualByComparingTo(BigDecimal.TEN);
@@ -62,16 +62,16 @@ class ParticipantPositionForPairMapperTest {
 
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
             ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
-            businessDate,
-            settlementDate,
+            BUSINESS_DATE,
+            SETTLEMENT_DATE,
             EodProductCashSettlementType.INITIAL_MTM
         );
 
         assertThat(eod.getAmount()).isEqualTo(AmountEntity.of(BigDecimal.ONE, EodJobConstants.JPY));
         assertThat(eod.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(eod.getParticipant()).isSameAs(PARTICIPANT_A);
-        assertThat(eod.getDate()).isEqualTo(businessDate);
-        assertThat(eod.getSettlementDate()).isEqualTo(settlementDate);
+        assertThat(eod.getDate()).isEqualTo(BUSINESS_DATE);
+        assertThat(eod.getSettlementDate()).isEqualTo(SETTLEMENT_DATE);
         assertThat(eod.getType()).isSameAs(EodProductCashSettlementType.INITIAL_MTM);
 
     }
