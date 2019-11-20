@@ -1,17 +1,8 @@
 <dataset>
     <eod_product_cash_settlement
             participant_id="102"
-            currency_pair_id="81"
-            amount="-7972140"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="INITIAL_MTM"
-    />
-    <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="81"
-            amount="-7972140"
+            currency_pair_id="13"
+            amount="-360954"
             currency="JPY"
             settlement_date="2019-10-10"
             date="2019-10-07"
@@ -26,10 +17,11 @@
             date="2019-10-07"
             type="INITIAL_MTM"
     />
+
     <eod_product_cash_settlement
             participant_id="101"
             currency_pair_id="13"
-            amount="220"
+            amount="220947600"
             currency="JPY"
             settlement_date="2019-10-10"
             date="2019-10-07"
@@ -74,74 +66,50 @@
 
     <participant_position
             currency_pair_id="13"
+            type="NET"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="102"
             trade_date="2019-10-07"
             value_date="2019-10-10"
-            price="0.9"
+            price="1.1"
             amount="330000"
-            currency="USD"
-            type="NET"
+            currency="EUR"
     />
 
     <participant_position
-            currency_pair_id="81"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="102"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="0.9"
-            amount="330000"
-            currency="USD"
-            type="NET"
-    />
-
-    <participant_position
-            currency_pair_id="81"
+            currency_pair_id="13"
+            type="REBALANCING"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
             trade_date="2019-10-07"
             value_date="2019-10-10"
-            price="1.10"
+            price="1.1"
+            amount="300000"
+            currency="EUR"
+    />
+
+
+    <participant_position
+            currency_pair_id="13"
+            type="REBALANCING"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="102"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
+            amount="-300000"
+            currency="EUR"
+
+    />
+    <participant_position
+            currency_pair_id="13"
+            type="NET"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
             amount="-999999.94"
             currency="EUR"
-            type="NET"
-    />
-
-    <participant_position
-            currency_pair_id="81"
-            type="REBALANCING"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="102"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="0.9"
-            amount="-300000"
-            currency="USD"
-    />
-
-    <participant_position
-            currency_pair_id="81"
-            type="REBALANCING"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="102"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="0.9"
-            amount="-300000"
-            currency="USD"
-    />
-
-    <participant_position
-            currency_pair_id="81"
-            type="REBALANCING"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="101"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="0.9"
-            amount="300000"
-            currency="USD"
-
     />
 </dataset>

@@ -32,11 +32,11 @@ public interface BalanceTradeMapper {
     @Mapping(target = "sequenceId", ignore = true)
     @Mapping(target = "matchingStatus", constant = "CONFIRMED")
     @Mapping(target = "errorCode", ignore = true)
-    @Mapping(target = "executionTime", constant = "201911121010" , dateFormat = "yyyyMMddHHmm")
-    @Mapping(target = "submissionTsp", constant = "201911121010" , dateFormat = "yyyyMMddHHmm")
+    @Mapping(target = "executionTime", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
+    @Mapping(target = "submissionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
     @Mapping(target = "accountInfo", ignore = true)
     @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "versionTsp", constant = "201911121010" , dateFormat = "yyyyMMddHHmm")
+    @Mapping(target = "versionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
     @Mapping(target = "sourceSystem", constant = "GUI")
     @Mapping(target = "utiPrefix", ignore = true)
     @Mapping(target = "utiTradeId", ignore = true)
@@ -60,7 +60,7 @@ public interface BalanceTradeMapper {
     @Mapping(target = "direction", source = "trade.amount")
     @Mapping(target = "tradeDate", source = "tradeDate")
     @Mapping(target = "valueDate", source = "valueDate")
-    @Mapping(target = "transactionType", constant = "2")
+    @Mapping(target = "transactionType", constant = "BALANCE")
     TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate,  @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate);
 
     default Side tradeDirection(BigDecimal amount) {
