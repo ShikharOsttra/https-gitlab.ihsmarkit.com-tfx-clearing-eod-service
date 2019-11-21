@@ -132,17 +132,17 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             .extracting(
                 TradeEntity::getOriginator,
                 TradeEntity::getCounterparty,
-                trade -> trade.getBaseAmount().getValue().longValue(),
+                trade -> trade.getBaseAmount().getValue().intValue(),
                 TradeEntity::getDirection,
                 TradeEntity::getSpotRate,
                 TradeEntity::getCurrencyPair,
                 TradeEntity::getTradeDate,
                 TradeEntity::getValueDate
             ).containsExactlyInAnyOrder(
-                tuple(ORIG_A, ORIG_C, 123539000L, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_A, ORIG_D, 25761000L, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_B, ORIG_D, 21100000L, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_A, ORIG_D, 100000L, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate)
+                tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
+                tuple(ORIG_A, ORIG_D, 25761000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
+                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
+                tuple(ORIG_A, ORIG_D, 100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate)
             );
 
         verify(eodCalculator).netAllTtrades(netCaptor.capture());
@@ -151,12 +151,12 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             .containsExactlyInAnyOrder(
                 tuple(EURUSD, PARTICIPANT_A, BigDecimal.valueOf(-123539000)),
                 tuple(EURUSD, PARTICIPANT_C, BigDecimal.valueOf(123539000)),
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.valueOf(-25761000L)),
-                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(25761000L)),
-                tuple(EURUSD, PARTICIPANT_B, BigDecimal.valueOf(-21100000L)),
-                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(21100000L)),
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.valueOf(-100000L)),
-                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(100000L))
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.valueOf(-25761000)),
+                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(25761000)),
+                tuple(EURUSD, PARTICIPANT_B, BigDecimal.valueOf(-21100000)),
+                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(21100000)),
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.valueOf(-100000)),
+                tuple(EURUSD, PARTICIPANT_D, BigDecimal.valueOf(100000))
             );
 
         verify(participantPositionRepository).saveAll(positionCaptor.capture());
@@ -173,7 +173,6 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
-
 
     }
 

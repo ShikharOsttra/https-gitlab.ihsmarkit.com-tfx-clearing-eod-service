@@ -25,19 +25,19 @@ public interface BalanceTradeMapper {
     String VALUE_AMOUNT_MAPPER = "valueAmountMapper";
     String TRADE = "trade";
 
-    @Mapping(target = "tradeReference", constant = "test")
+    @Mapping(target = "tradeReference", constant = "test") //FIXME proper value!!!
     @Mapping(target = "activity", constant = "NEW")
-    @Mapping(target = "messageId", constant = "test")
+    @Mapping(target = "messageId", constant = "test")//FIXME proper value!!!
     @Mapping(target = "fixSessionId", ignore = true)
     @Mapping(target = "sequenceId", ignore = true)
     @Mapping(target = "matchingStatus", constant = "CONFIRMED")
     @Mapping(target = "errorCode", ignore = true)
-    @Mapping(target = "executionTime", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
-    @Mapping(target = "submissionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
+    @Mapping(target = "executionTime", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
+    @Mapping(target = "submissionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
     @Mapping(target = "accountInfo", ignore = true)
     @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "versionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")
-    @Mapping(target = "sourceSystem", constant = "GUI")
+    @Mapping(target = "versionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
+    @Mapping(target = "sourceSystem", constant = "GUI")//FIXME proper value!!!
     @Mapping(target = "utiPrefix", ignore = true)
     @Mapping(target = "utiTradeId", ignore = true)
     @Mapping(target = "userName", ignore = true)

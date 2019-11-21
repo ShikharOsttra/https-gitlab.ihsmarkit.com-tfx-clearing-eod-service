@@ -74,7 +74,7 @@ public class NettingTasklet implements Tasklet {
                 trade,
                 ParticipantPositionType.NET,
                 businessDate,
-                settlementDate,
+                settlementDate, //FIXME: settlement date by ccy?
                 dsp.get(trade.getCurrencyPair())
             ));
 

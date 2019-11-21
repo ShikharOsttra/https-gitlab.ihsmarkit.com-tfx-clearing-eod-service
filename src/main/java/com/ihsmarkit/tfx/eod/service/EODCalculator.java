@@ -25,7 +25,6 @@ import com.ihsmarkit.tfx.eod.model.PositionBalance;
 import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -100,7 +99,7 @@ public class EODCalculator {
             .map(t -> calculateMtmValue(t, dsp, jpyRates));
     }
 
-    public Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
+    public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
 
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
@@ -111,7 +110,7 @@ public class EODCalculator {
                 .collect(
                     Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING)
+                        entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
                     )
                 );
 

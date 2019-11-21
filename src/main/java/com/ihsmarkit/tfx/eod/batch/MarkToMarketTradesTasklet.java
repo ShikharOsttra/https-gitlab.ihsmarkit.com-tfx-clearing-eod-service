@@ -57,20 +57,20 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
         final LocalDate businessDate = LocalDate.parse(businessDateJobParameter, BUSINESS_DATE_FMT);
-        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate);
+        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate); //FIXME: settlement date by ccy?
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dsp)
             .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, settlementDate, EodProductCashSettlementType.INITIAL_MTM));
-
+//FIXME: settlement date by ccy?
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
         final Stream<EodProductCashSettlementEntity> daily = eodCalculator.calculateAndAggregateDailyMtm(positions, dsp)
             .map(mtm -> mtmMapper.toEodProductCashSettlement(mtm, businessDate, settlementDate, EodProductCashSettlementType.DAILY_MTM));
-
+//FIXME: settlement date by ccy?
         eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 
         return RepeatStatus.FINISHED;

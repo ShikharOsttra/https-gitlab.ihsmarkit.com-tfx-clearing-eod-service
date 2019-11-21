@@ -41,7 +41,7 @@ public class Slicer<T> {
     public <R> Stream<R> produce(final BigDecimal amount, final BiFunction<T, BigDecimal, R> producer) {
 
         return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(new ProducingIterator<R>(amount, producer), 0),
+            Spliterators.spliteratorUnknownSize(new ProducingIterator<R>(amount, producer), 0), //FIXME verify characteristics!
             false
         );
     }
