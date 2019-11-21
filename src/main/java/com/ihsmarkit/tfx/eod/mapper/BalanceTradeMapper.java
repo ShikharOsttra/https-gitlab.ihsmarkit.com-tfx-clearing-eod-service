@@ -48,7 +48,7 @@ public interface BalanceTradeMapper {
     @Mapping(target = "matchingRef", ignore = true)
     @Mapping(target = "matchingTsp", ignore = true)
     @Mapping(target = "clearingRef", ignore = true)
-    @Mapping(target = "clearingStatus", ignore = true)
+    @Mapping(target = "clearingStatus", constant = "NOVATED")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "currencyPair", source = TRADE)
     @Mapping(target = "baseAmount", source = TRADE, qualifiedByName = BASE_AMOUNT_MAPPER)

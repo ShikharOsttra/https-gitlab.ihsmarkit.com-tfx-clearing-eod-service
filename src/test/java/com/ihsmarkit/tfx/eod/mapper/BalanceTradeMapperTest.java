@@ -19,7 +19,10 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.domain.type.ClearingStatus;
+import com.ihsmarkit.tfx.core.domain.type.MatchingStatus;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.domain.type.TradeActivity;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 
 @ExtendWith(SpringExtension.class)
@@ -62,6 +65,10 @@ class BalanceTradeMapperTest {
         assertThat(tradeEntity.getDirection()).isEqualTo(Side.BUY);
         assertThat(tradeEntity.getTradeDate()).isEqualTo(LocalDate.of(2019, 11, 13));
         assertThat(tradeEntity.getValueDate()).isEqualTo(LocalDate.of(2019, 11, 15));
+        assertThat(tradeEntity.getClearingStatus()).isEqualTo(ClearingStatus.NOVATED);
+        assertThat(tradeEntity.getActivity()).isEqualTo(TradeActivity.NEW);
+        assertThat(tradeEntity.getMatchingStatus()).isEqualTo(MatchingStatus.CONFIRMED);
+
     }
 
     @Test
