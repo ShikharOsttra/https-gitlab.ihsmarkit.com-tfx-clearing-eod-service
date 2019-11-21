@@ -78,7 +78,7 @@ public interface BalanceTradeMapper {
 
     @Named(VALUE_AMOUNT_MAPPER)
     default AmountEntity valueAmountMapper(BalanceTrade trade, @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate) {
-        return AmountEntity.of(trade.getAmount().abs().divide(spotRate, RoundingMode.DOWN), currencyPair.getValueCurrency());
+        return AmountEntity.of(trade.getAmount().setScale(2, RoundingMode.DOWN).abs().divide(spotRate, RoundingMode.DOWN), currencyPair.getValueCurrency());
     }
 
     default String currencyPairCode(BalanceTrade trade, @Context CurrencyPairEntity currencyPair) {

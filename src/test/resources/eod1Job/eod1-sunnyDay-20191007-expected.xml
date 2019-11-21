@@ -224,7 +224,7 @@
             base_ccy="EUR"
             base_ccy_amt="300000.00"
             value_ccy="USD"
-            value_ccy_amt="200000.00"
+            value_ccy_amt="272727.27"
             spot_rate="1.1"
             matching_status="CONFIRMED"
             clearing_status="NOVATED"

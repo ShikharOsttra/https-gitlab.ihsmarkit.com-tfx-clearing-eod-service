@@ -31,8 +31,8 @@ class BalanceTradeMapperTest {
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
     private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder().name("A-LE").build();
     private static final LegalEntity ORIGINATOR_B = EntityTestDataFactory.aLegalEntityBuilder().name("B-LE").build();
-    private static LocalDate NOVEMBER_13 = LocalDate.of(2019, 11, 13);
-    private static LocalDate NOVEMBER_15 = LocalDate.of(2019, 11, 15);
+    private static final LocalDate NOVEMBER_13 = LocalDate.of(2019, 11, 13);
+    private static final LocalDate NOVEMBER_15 = LocalDate.of(2019, 11, 15);
 
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder()
         .name("A")
@@ -58,7 +58,8 @@ class BalanceTradeMapperTest {
             BigDecimal.valueOf(2)
         );
         assertThat(tradeEntity.getBaseAmount()).isEqualTo(AmountEntity.of(BigDecimal.valueOf(200000), "USD"));
-        assertThat(tradeEntity.getValueAmount()).isEqualTo(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"));
+        assertThat(tradeEntity.getValueAmount().getCurrency()).isEqualTo("EUR");
+        assertThat(tradeEntity.getValueAmount().getValue()).isEqualByComparingTo(BigDecimal.valueOf(100000));
         assertThat(tradeEntity.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(2));
         assertThat(tradeEntity.getCounterparty()).isEqualTo(ORIGINATOR_B);
         assertThat(tradeEntity.getOriginator()).isEqualTo(ORIGINATOR_A);
@@ -87,6 +88,19 @@ class BalanceTradeMapperTest {
         assertThat(tradeEntity.getBaseAmount().getValue()).isEqualByComparingTo(BigDecimal.TEN);
         assertThat(tradeEntity.getValueAmount().getValue()).isEqualByComparingTo(BigDecimal.valueOf(5));
 
+    }
+
+    @Test
+    void shouldRoundProperly() {
+        TradeEntity tradeEntity = mapper.toTrade(
+            new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.valueOf(200000)),
+            NOVEMBER_13,
+            NOVEMBER_15,
+            CURRENCY_PAIR,
+            BigDecimal.valueOf(1.69)
+        );
+
+        assertThat(tradeEntity.getValueAmount().getValue()).isEqualByComparingTo(BigDecimal.valueOf(118343.19));
     }
 
     @TestConfiguration
