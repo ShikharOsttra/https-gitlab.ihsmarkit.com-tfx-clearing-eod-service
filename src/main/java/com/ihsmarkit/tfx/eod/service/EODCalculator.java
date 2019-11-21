@@ -117,12 +117,11 @@ public class EODCalculator {
 
     }
 
-
     private List<BalanceTrade> rebalanceSingleCurrency(final List<TradeOrPositionEssentials> list, final int rounding) {
 
         PositionBalance balance = PositionBalance.of(
             list.stream()
-                .map(p -> new RawPositionData(p.getParticipant(), p.getAmount()))
+                .map(position -> new RawPositionData(position.getParticipant(), position.getAmount()))
         );
 
         final BigDecimal threshold = BigDecimal.TEN.pow(rounding);
@@ -130,7 +129,7 @@ public class EODCalculator {
 
         int tradesInIteration = Integer.MAX_VALUE;
 
-        while (tradesInIteration > 0 && balance.getBuy().getNet().max(balance.getSell().getNet()).compareTo(threshold) > 0) {
+        while (tradesInIteration > 0 && balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(threshold) > 0) {
             final List<BalanceTrade> iterationTrades = balance.rebalance(rounding).collect(Collectors.toList());
             tradesInIteration = iterationTrades.size();
             trades.addAll(iterationTrades);

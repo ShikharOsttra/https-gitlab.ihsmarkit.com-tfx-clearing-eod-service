@@ -54,6 +54,7 @@ class EODCalculatorTest {
         .build();
 
     private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().name("C").build();
+    private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().name("D").build();
 
     private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
         .direction(Side.BUY)
@@ -126,24 +127,45 @@ class EODCalculatorTest {
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_EUR_L_212M = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
-        .amount(AmountEntity.of(BigDecimal.valueOf(10000000), "EUR"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(212000000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantPositionEntity B_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity B_POS_EUR_L_30M = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
-        .amount(AmountEntity.of(BigDecimal.valueOf(-9700000), "EUR"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(30000000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
         .participant(PARTICIPANT_B)
         .build();
 
-    private static final ParticipantPositionEntity C_POSITION_EUR_BIG = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity C_POS_EUR_S_123M539 = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
-        .amount(AmountEntity.of(BigDecimal.valueOf(-1800000), "EUR"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(-123539000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_C)
+        .build();
+
+    private static final ParticipantPositionEntity D_POS_EUR_S_47M = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-47000000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_D)
+        .build();
+
+    private static final ParticipantPositionEntity D_POS_USD_S_47M = ParticipantPositionEntity.builder()
+        .currencyPair(USDJPY)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-47000000), "USD"))
+        .price(BigDecimal.valueOf(99))
+        .participant(PARTICIPANT_D)
+        .build();
+
+    private static final ParticipantPositionEntity C_POS_USD_L_37M7 = ParticipantPositionEntity.builder()
+        .currencyPair(USDJPY)
+        .amount(AmountEntity.of(BigDecimal.valueOf(37700000), "USD"))
+        .price(BigDecimal.valueOf(99))
         .participant(PARTICIPANT_C)
         .build();
 
@@ -230,9 +252,23 @@ class EODCalculatorTest {
     @Test
     void shouldRebalancePositions() {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
-            eodCalculator.rebalanceLPPositions(Arrays.asList(A_POSITION_EUR_BIG, B_POSITION_EUR_BIG, C_POSITION_EUR_BIG));
+            eodCalculator.rebalanceLPPositions(
+                Arrays.asList(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M)
+            );
 
-        assertThat(balanceTrades).isNotEmpty();
+        assertThat(balanceTrades.get(EURUSD))
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, trade -> trade.getAmount().toPlainString())
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, PARTICIPANT_C, "-123539000"),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, "-25761000"),
+                tuple(PARTICIPANT_B, PARTICIPANT_D, "-21100000"),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, "-100000")
+            );
+        assertThat(balanceTrades.get(USDJPY))
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, trade -> trade.getAmount().toPlainString())
+            .containsOnly(
+                tuple(PARTICIPANT_D, PARTICIPANT_C, "37700000")
+            );
     }
 
     @TestConfiguration
