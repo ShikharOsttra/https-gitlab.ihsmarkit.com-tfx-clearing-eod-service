@@ -140,9 +140,8 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 TradeEntity::getValueDate
             ).containsExactlyInAnyOrder(
                 tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_A, ORIG_D, 25761000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_A, ORIG_D, 100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate)
+                tuple(ORIG_A, ORIG_D, 25861000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
+                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate)
             );
 
         verify(eodCalculator).netAllTtrades(netCaptor.capture());

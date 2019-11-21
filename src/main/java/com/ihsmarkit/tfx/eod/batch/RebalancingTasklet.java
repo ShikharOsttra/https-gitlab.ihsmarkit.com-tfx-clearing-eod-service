@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.batch.core.StepContribution;
@@ -71,16 +72,29 @@ public class RebalancingTasklet implements Tasklet {
 
         final Stream<TradeEntity> trades = balanceTrades.entrySet().stream()
             .flatMap(
-                tradesByCcy -> tradesByCcy.getValue().stream() //FIXME: aggregate trades by participants
-                    .map(trade -> balanceTradeMapper.toTrade(
-                        trade,
-                        businessDate,
-                        settlementDate, //FIXME: settlement date by ccy?
-                        tradesByCcy.getKey(),
-                        dsp.get(tradesByCcy.getKey())
+                tradesByCcy -> tradesByCcy.getValue().stream()
+                    .collect(
+                        Collectors.groupingBy(
+                            BalanceTrade::getOriginator,
+                            Collectors.groupingBy(
+                                BalanceTrade::getCounterpart,
+                                Collectors.reducing(BigDecimal.ZERO, BalanceTrade::getAmount, BigDecimal::add)
+                            )
+                        )
+                    ).entrySet().stream()
+                    .flatMap(
+                        byOriginator -> byOriginator.getValue().entrySet().stream()
+                            .map(byCounterpart -> new BalanceTrade(byOriginator.getKey(), byCounterpart.getKey(), byCounterpart.getValue()))
+                    ).map(
+                        trade -> balanceTradeMapper.toTrade(
+                            trade,
+                            businessDate,
+                            settlementDate, //FIXME: settlement date by ccy?
+                            tradesByCcy.getKey(),
+                            dsp.get(tradesByCcy.getKey())
+                        )
                     )
-                )
-            );
+                );
 
         tradeRepositiory.saveAll(trades::iterator);
 
