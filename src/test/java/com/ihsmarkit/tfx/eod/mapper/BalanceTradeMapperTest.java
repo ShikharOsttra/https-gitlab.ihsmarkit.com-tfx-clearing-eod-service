@@ -31,6 +31,8 @@ class BalanceTradeMapperTest {
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
     private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder().name("A-LE").build();
     private static final LegalEntity ORIGINATOR_B = EntityTestDataFactory.aLegalEntityBuilder().name("B-LE").build();
+    private static LocalDate NOVEMBER_13 = LocalDate.of(2019, 11, 13);
+    private static LocalDate NOVEMBER_15 = LocalDate.of(2019, 11, 15);
 
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder()
         .name("A")
@@ -49,22 +51,22 @@ class BalanceTradeMapperTest {
     @Test
     void shouldMapToTrade() {
         TradeEntity tradeEntity = mapper.toTrade(
-            new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.TEN),
-            LocalDate.of(2019, 11, 13),
-            LocalDate.of(2019, 11, 15),
+            new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.valueOf(200000)),
+            NOVEMBER_13,
+            NOVEMBER_15,
             CURRENCY_PAIR,
             BigDecimal.valueOf(2)
         );
-        assertThat(tradeEntity.getBaseAmount()).isEqualTo(AmountEntity.of(BigDecimal.TEN, "USD"));
-        assertThat(tradeEntity.getValueAmount()).isEqualTo(AmountEntity.of(BigDecimal.valueOf(5), "EUR"));
+        assertThat(tradeEntity.getBaseAmount()).isEqualTo(AmountEntity.of(BigDecimal.valueOf(200000), "USD"));
+        assertThat(tradeEntity.getValueAmount()).isEqualTo(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"));
         assertThat(tradeEntity.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(2));
         assertThat(tradeEntity.getCounterparty()).isEqualTo(ORIGINATOR_B);
         assertThat(tradeEntity.getOriginator()).isEqualTo(ORIGINATOR_A);
         assertThat(tradeEntity.getCurrencyPair()).isEqualTo(CURRENCY_PAIR);
         assertThat(tradeEntity.getProductCode()).isEqualTo("USD/EUR");
         assertThat(tradeEntity.getDirection()).isEqualTo(Side.BUY);
-        assertThat(tradeEntity.getTradeDate()).isEqualTo(LocalDate.of(2019, 11, 13));
-        assertThat(tradeEntity.getValueDate()).isEqualTo(LocalDate.of(2019, 11, 15));
+        assertThat(tradeEntity.getTradeDate()).isEqualTo(NOVEMBER_13);
+        assertThat(tradeEntity.getValueDate()).isEqualTo(NOVEMBER_15);
         assertThat(tradeEntity.getClearingStatus()).isEqualTo(ClearingStatus.NOVATED);
         assertThat(tradeEntity.getActivity()).isEqualTo(TradeActivity.NEW);
         assertThat(tradeEntity.getMatchingStatus()).isEqualTo(MatchingStatus.CONFIRMED);
@@ -75,8 +77,8 @@ class BalanceTradeMapperTest {
     void shouldMapToTradeForSale() {
         TradeEntity tradeEntity = mapper.toTrade(
             new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.TEN.negate()),
-            LocalDate.of(2019, 11, 13),
-            LocalDate.of(2019, 11, 15),
+            NOVEMBER_13,
+            NOVEMBER_15,
             CURRENCY_PAIR,
             BigDecimal.valueOf(2)
         );
