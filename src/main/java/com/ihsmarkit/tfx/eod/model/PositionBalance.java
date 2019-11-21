@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.model;
 
+import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.partitioningBy;
@@ -26,8 +27,8 @@ import lombok.Getter;
 public class PositionBalance {
 
     private static final Comparator<RawPositionData> BY_AMOUNT_AND_PARTICIPANT_CODE  = Comparator
-        .comparing((RawPositionData t) -> t.getAmount().abs(), BigDecimal::compareTo).reversed()
-        .thenComparing(t -> t.getParticipant().getCode());
+        .comparing((RawPositionData position) -> position.getAmount().abs(), BigDecimal::compareTo).reversed()
+        .thenComparing(position -> position.getParticipant().getCode());
 
     private final PositionList sell;
     private final PositionList buy;
@@ -35,14 +36,14 @@ public class PositionBalance {
     public static PositionBalance of(final Stream<RawPositionData> positions) {
 
         final Map<Boolean, PositionList.PositionListBuilder> separatedByDirection = positions
-            .filter(a -> a.getAmount().compareTo(BigDecimal.ZERO) != 0)
+            .filter(position -> position.getAmount().compareTo(BigDecimal.ZERO) != 0)
             .map(PositionList.PositionListBuilder::of)
             .collect(
                 partitioningBy(
                     position -> position.getTotal().compareTo(BigDecimal.ZERO) > 0,
                     collectingAndThen(
                         reducing(PositionList.PositionListBuilder::combine),
-                        o -> o.orElseGet(PositionList.PositionListBuilder::empty)
+                        optionalPositionListBuilder -> optionalPositionListBuilder.orElseGet(PositionList.PositionListBuilder::empty)
                     )
                 )
             );
@@ -63,9 +64,9 @@ public class PositionBalance {
     public PositionBalance applyTrades(final Stream<BalanceTrade> trades) {
         final Map<ParticipantEntity, BigDecimal> positionChanges = trades
             .flatMap(
-                t -> Stream.of(
-                    new RawPositionData(t.getOriginator(), t.getAmount()),
-                    new RawPositionData(t.getCounterpart(), t.getAmount().negate())
+                trade -> Stream.of(
+                    new RawPositionData(trade.getOriginator(), trade.getAmount()),
+                    new RawPositionData(trade.getCounterpart(), trade.getAmount().negate())
                 )
             ).collect(
                 groupingBy(
@@ -79,11 +80,11 @@ public class PositionBalance {
                 sell.getPositions().stream(),
                 buy.getPositions().stream()
             ).map(
-                t -> new RawPositionData(
-                    t.getParticipant(),
-                    Optional.ofNullable(positionChanges.get(t.getParticipant()))
-                        .map(t.getAmount()::add)
-                        .orElseGet(t::getAmount)
+                position -> new RawPositionData(
+                    position.getParticipant(),
+                    Optional.ofNullable(positionChanges.get(position.getParticipant()))
+                        .map(position.getAmount()::add)
+                        .orElseGet(position::getAmount)
                 )
             )
         );
@@ -94,7 +95,7 @@ public class PositionBalance {
         if (buy.getNet().compareTo(sell.getNet().abs()) >= 0) {
             return rebalanceImpl(buy, sell, rounding, BigDecimal::negate);
         } else {
-            return rebalanceImpl(sell, buy, rounding, a -> a);
+            return rebalanceImpl(sell, buy, rounding, identity());
         }
 
     }
@@ -110,20 +111,19 @@ public class PositionBalance {
         toReduce.addAll(to.getPositions());
 
         final Slicer<RawPositionData> slicer =
-            new Slicer<>(toReduce, (RawPositionData t) -> t.getAmount().abs());
+            new Slicer<>(toReduce, (RawPositionData position) -> position.getAmount().abs());
 
         return from.getPositions().stream().sorted(BY_AMOUNT_AND_PARTICIPANT_CODE)
             .flatMap(
-                t -> slicer.produce(
-                    t.getAmount()
+                position -> slicer.produce(
+                    position.getAmount()
                         .abs()
                         .multiply(to.getNet().abs())
                         .divide(from.getNet().abs(), RoundingMode.FLOOR)
                         .setScale(-rounding, RoundingMode.FLOOR),
-                    (a, b) -> new BalanceTrade(t.getParticipant(), a.getParticipant(), amountAdjuster.apply(b))
+                    (other, slice) -> new BalanceTrade(position.getParticipant(), other.getParticipant(), amountAdjuster.apply(slice))
                 )
             );
     }
-
 
 }
