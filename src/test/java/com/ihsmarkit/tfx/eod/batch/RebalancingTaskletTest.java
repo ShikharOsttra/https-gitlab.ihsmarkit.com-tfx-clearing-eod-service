@@ -41,7 +41,7 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
@@ -113,7 +113,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
         );
 
         when(eodCalculator.netAllTtrades(any())).thenReturn(
-            Stream.of(ParticipantPositionForPair.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
+            Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(REBALANCE_POSITIONS_STEP_NAME,

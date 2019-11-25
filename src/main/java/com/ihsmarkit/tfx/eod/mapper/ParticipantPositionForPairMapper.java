@@ -14,7 +14,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 @Mapper(config = DefaultMapperConfig.class)
 public interface ParticipantPositionForPairMapper {
@@ -31,7 +31,7 @@ public interface ParticipantPositionForPairMapper {
     @Mapping(target = "amount.value", source = "trade.amount")
     @Mapping(target = "amount.currency", constant = EodJobConstants.JPY)
     EodProductCashSettlementEntity toEodProductCashSettlement(
-        ParticipantPositionForPair trade,
+        ParticipantCurrencyPairAmount trade,
         LocalDate businessDate,
         LocalDate settlementDate,
         EodProductCashSettlementType type
@@ -48,7 +48,7 @@ public interface ParticipantPositionForPairMapper {
     @Mapping(target = "tradeDate", source = "businessDate")
     @Mapping(target = "valueDate", source = "settlementDate")
     ParticipantPositionEntity toParticipantPosition(
-        ParticipantPositionForPair trade,
+        ParticipantCurrencyPairAmount trade,
         ParticipantPositionType positionType,
         LocalDate businessDate,
         LocalDate settlementDate,
@@ -56,7 +56,7 @@ public interface ParticipantPositionForPairMapper {
     );
 
     @Named(PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
-    default AmountEntity mapAmount(ParticipantPositionForPair trade) {
+    default AmountEntity mapAmount(ParticipantCurrencyPairAmount trade) {
         return AmountEntity.of(trade.getAmount(), trade.getCurrencyPair().getBaseCurrency());
     }
 }

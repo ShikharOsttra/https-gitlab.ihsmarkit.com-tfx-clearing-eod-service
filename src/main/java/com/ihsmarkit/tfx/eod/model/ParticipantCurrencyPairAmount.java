@@ -13,7 +13,7 @@ import lombok.ToString;
 @RequiredArgsConstructor(staticName = "of")
 @Getter
 @ToString
-public class ParticipantPositionForPair implements CcyParticipantAmount {
+public class ParticipantCurrencyPairAmount implements CcyParticipantAmount {
 
     @NonNull
     private final ParticipantEntity participant;

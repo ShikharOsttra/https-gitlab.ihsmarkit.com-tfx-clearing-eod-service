@@ -28,7 +28,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 import lombok.NonNull;
 
@@ -177,7 +177,7 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateNetAmounts() {
-        Stream<ParticipantPositionForPair> mtm =
+        Stream<ParticipantCurrencyPairAmount> mtm =
             eodCalculator.netAllTtrades(
                 Stream.of(A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR, A_SELLS_30_EUR)
                     .map(tradeOrPositionMapper::convertTrade)
@@ -185,9 +185,9 @@ class EODCalculatorTest {
 
         assertThat(mtm)
             .extracting(
-                ParticipantPositionForPair::getParticipant,
-                ParticipantPositionForPair::getCurrencyPair,
-                ParticipantPositionForPair::getAmount
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
             )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
@@ -201,8 +201,11 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
-                .containsExactly(
+                .extracting(
+                    ParticipantCurrencyPairAmount::getParticipant,
+                    ParticipantCurrencyPairAmount::getCurrencyPair,
+                    ParticipantCurrencyPairAmount::getAmount
+                ).containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
                 );
 
@@ -213,8 +216,11 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
-                .containsExactly(
+                .extracting(
+                    ParticipantCurrencyPairAmount::getParticipant,
+                    ParticipantCurrencyPairAmount::getCurrencyPair,
+                    ParticipantCurrencyPairAmount::getAmount
+                ).containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
                 );
 
@@ -224,7 +230,7 @@ class EODCalculatorTest {
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-            .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
+            .extracting(ParticipantCurrencyPairAmount::getParticipant, ParticipantCurrencyPairAmount::getCurrencyPair, ParticipantCurrencyPairAmount::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
@@ -234,14 +240,14 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
-        Stream<ParticipantPositionForPair> mtm =
+        Stream<ParticipantCurrencyPairAmount> mtm =
             eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
         assertThat(mtm)
             .extracting(
-                ParticipantPositionForPair::getParticipant,
-                ParticipantPositionForPair::getCurrencyPair,
-                ParticipantPositionForPair::getAmount
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
             )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),

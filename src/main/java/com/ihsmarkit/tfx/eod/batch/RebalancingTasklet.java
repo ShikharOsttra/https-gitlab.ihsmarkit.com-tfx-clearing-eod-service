@@ -27,7 +27,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
@@ -104,8 +104,8 @@ public class RebalancingTasklet implements Tasklet {
                     tradesByCcy -> tradesByCcy.getValue().stream()
                         .flatMap(
                             trade -> Stream.of(
-                                ParticipantPositionForPair.of(trade.getOriginator(), tradesByCcy.getKey(), trade.getAmount()),
-                                ParticipantPositionForPair.of(trade.getCounterparty(), tradesByCcy.getKey(), trade.getAmount().negate())
+                                ParticipantCurrencyPairAmount.of(trade.getOriginator(), tradesByCcy.getKey(), trade.getAmount()),
+                                ParticipantCurrencyPairAmount.of(trade.getCounterparty(), tradesByCcy.getKey(), trade.getAmount().negate())
                             )
                         )
                 )

@@ -22,10 +22,10 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 @ExtendWith(SpringExtension.class)
-class ParticipantPositionForPairMapperTest {
+class ParticipantCurrencyPairAmountMapperTest {
 
     private static final ParticipantEntity PARTICIPANT_A = EntityTestDataFactory.aParticipantEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
@@ -39,7 +39,7 @@ class ParticipantPositionForPairMapperTest {
     @Test
     void shouldConvertToParticipantPositionEntity() {
         ParticipantPositionEntity position = mapper.toParticipantPosition(
-            ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
+            ParticipantCurrencyPairAmount.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             ParticipantPositionType.NET,
             BUSINESS_DATE,
             SETTLEMENT_DATE,
@@ -61,7 +61,7 @@ class ParticipantPositionForPairMapperTest {
 
 
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
-            ParticipantPositionForPair.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
+            ParticipantCurrencyPairAmount.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             BUSINESS_DATE,
             SETTLEMENT_DATE,
             EodProductCashSettlementType.INITIAL_MTM
