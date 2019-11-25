@@ -36,7 +36,6 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
-import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -91,14 +90,14 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
         final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
         final LocalDate valueDate = businessDate.plusDays(2);
 
-        List<ParticipantPositionEntity> positions = Collections.emptyList();
+        Stream<ParticipantPositionEntity> positions = Stream.empty();
 
         when(settlementDateProvider.getSettlementDateFor(businessDate)).thenReturn(valueDate);
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
             .thenReturn(Collections.singletonMap(EURUSD, EURUSD_RATE));
 
-        when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any())).thenReturn(positions);
+        when(participantPositionRepository.findAllNetPositionsOfLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 
         when(eodCalculator.rebalanceLPPositions(any())).thenReturn(
             Collections.singletonMap(
@@ -123,7 +122,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
 
-        verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.NET, businessDate);
+        verify(participantPositionRepository).findAllNetPositionsOfLPByTradeDateFetchParticipant(businessDate);
 
         verify(eodCalculator).rebalanceLPPositions(positions);
 

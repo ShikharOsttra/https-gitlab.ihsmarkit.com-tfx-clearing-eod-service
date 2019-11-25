@@ -103,9 +103,9 @@ public class EODCalculator {
             .map(t -> calculateMtmValue(t, dsp, jpyRates));
     }
 
-    public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Collection<ParticipantPositionEntity> positions) {
+    public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions) {
 
-        return positions.stream()
+        return positions
             .map(tradeOrPositionMapper::convertPosition)
             .collect(Collectors.groupingBy(
                 TradeOrPositionEssentials::getCurrencyPair,

@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -259,7 +258,7 @@ class EODCalculatorTest {
     void shouldRebalancePositions() {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
             eodCalculator.rebalanceLPPositions(
-                Arrays.asList(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M)
+                Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M)
             );
 
         assertThat(balanceTrades.get(EURUSD))

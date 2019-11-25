@@ -28,10 +28,32 @@
             type="DAILY_MTM"
     />
 
+    <eod_product_cash_settlement
+            participant_id="103"
+            currency_pair_id="13"
+            amount="220947600"
+            currency="JPY"
+            settlement_date="2019-10-10"
+            date="2019-10-07"
+            type="DAILY_MTM"
+    />
+
     <participant_position
             currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="3.12"
+            amount="-1000000"
+            currency="JPY"
+            type="SOD"
+    />
+
+    <participant_position
+            currency_pair_id="13"
+            participant_type="FX_BROKER"
+            participant_id="103"
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="3.12"
@@ -66,6 +88,18 @@
 
     <participant_position
             currency_pair_id="13"
+            participant_type="FX_BROKER"
+            participant_id="103"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
+            amount="-1000000.00"
+            currency="EUR"
+            type="NET"
+    />
+
+    <participant_position
+            currency_pair_id="13"
             type="NET"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="102"
@@ -87,7 +121,6 @@
             amount="300000"
             currency="EUR"
     />
-
 
     <participant_position
             currency_pair_id="13"

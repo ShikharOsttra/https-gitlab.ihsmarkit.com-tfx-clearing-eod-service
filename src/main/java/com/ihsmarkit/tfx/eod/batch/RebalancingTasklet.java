@@ -4,7 +4,6 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -65,8 +64,8 @@ public class RebalancingTasklet implements Tasklet {
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
 
-        final Collection<ParticipantPositionEntity> positions = //FIXME: Limit to LP positions only
-            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.NET, businessDate);
+        final Stream<ParticipantPositionEntity> positions =
+            participantPositionRepository.findAllNetPositionsOfLPByTradeDateFetchParticipant(businessDate);
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions);
 
