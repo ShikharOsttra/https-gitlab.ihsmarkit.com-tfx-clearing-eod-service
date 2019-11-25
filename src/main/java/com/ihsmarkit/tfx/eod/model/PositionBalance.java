@@ -66,7 +66,7 @@ public class PositionBalance {
             .flatMap(
                 trade -> Stream.of(
                     new RawPositionData(trade.getOriginator(), trade.getAmount()),
-                    new RawPositionData(trade.getCounterpart(), trade.getAmount().negate())
+                    new RawPositionData(trade.getCounterparty(), trade.getAmount().negate())
                 )
             ).collect(
                 groupingBy(

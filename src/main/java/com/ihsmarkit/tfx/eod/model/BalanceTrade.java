@@ -11,6 +11,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class BalanceTrade {
     private final ParticipantEntity originator;
-    private final ParticipantEntity counterpart;
+    private final ParticipantEntity counterparty;
     private final BigDecimal amount;
 }

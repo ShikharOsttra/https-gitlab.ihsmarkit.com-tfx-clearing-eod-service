@@ -143,7 +143,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_D, PARTICIPANT_A, BigDecimal.valueOf(-12))
             );
@@ -159,7 +159,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_D, PARTICIPANT_A, BigDecimal.valueOf(12))
             );
@@ -177,7 +177,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_D, PARTICIPANT_A, BigDecimal.valueOf(-12)),
                 tuple(PARTICIPANT_D, PARTICIPANT_B, BigDecimal.valueOf(-1)),
@@ -197,7 +197,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_D, PARTICIPANT_A, BigDecimal.valueOf(-13)),
                 tuple(PARTICIPANT_D, PARTICIPANT_B, BigDecimal.valueOf(-8)),
@@ -217,7 +217,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_B, PARTICIPANT_C, BigDecimal.valueOf(-1)),
                 tuple(PARTICIPANT_A, PARTICIPANT_C, BigDecimal.valueOf(-2)),
@@ -237,7 +237,7 @@ class PositionBalanceTest {
         ).rebalance(0);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, BalanceTrade::getAmount)
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, BalanceTrade::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, PARTICIPANT_C, BigDecimal.valueOf(-4)),
                 tuple(PARTICIPANT_B, PARTICIPANT_D, BigDecimal.valueOf(-3))
@@ -270,7 +270,7 @@ class PositionBalanceTest {
         ).rebalance(1);
 
         assertThat(trades)
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterpart, a -> a.getAmount().intValue())
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, a -> a.getAmount().intValue())
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, PARTICIPANT_D, -40),
                 tuple(PARTICIPANT_B, PARTICIPANT_D, -2),

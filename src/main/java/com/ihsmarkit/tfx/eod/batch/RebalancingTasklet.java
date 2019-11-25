@@ -77,7 +77,7 @@ public class RebalancingTasklet implements Tasklet {
                         Collectors.groupingBy(
                             BalanceTrade::getOriginator,
                             Collectors.groupingBy(
-                                BalanceTrade::getCounterpart,
+                                BalanceTrade::getCounterparty,
                                 Collectors.reducing(BigDecimal.ZERO, BalanceTrade::getAmount, BigDecimal::add)
                             )
                         )
@@ -105,7 +105,7 @@ public class RebalancingTasklet implements Tasklet {
                         .flatMap(
                             trade -> Stream.of(
                                 ParticipantPositionForPair.of(trade.getOriginator(), tradesByCcy.getKey(), trade.getAmount()),
-                                ParticipantPositionForPair.of(trade.getCounterpart(), tradesByCcy.getKey(), trade.getAmount().negate())
+                                ParticipantPositionForPair.of(trade.getCounterparty(), tradesByCcy.getKey(), trade.getAmount().negate())
                             )
                         )
                 )

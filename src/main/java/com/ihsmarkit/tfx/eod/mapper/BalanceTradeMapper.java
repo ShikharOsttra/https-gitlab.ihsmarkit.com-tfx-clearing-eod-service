@@ -54,7 +54,7 @@ public interface BalanceTradeMapper {
     @Mapping(target = "baseAmount", source = TRADE, qualifiedByName = BASE_AMOUNT_MAPPER)
     @Mapping(target = "valueAmount", source = TRADE, qualifiedByName = VALUE_AMOUNT_MAPPER)
     @Mapping(target = "spotRate", source = TRADE)
-    @Mapping(target = "counterparty", source = "trade.counterpart")
+    @Mapping(target = "counterparty", source = "trade.counterparty")
     @Mapping(target = "originator", source = "trade.originator")
     @Mapping(target = "productCode", source = TRADE)
     @Mapping(target = "direction", source = "trade.amount")
