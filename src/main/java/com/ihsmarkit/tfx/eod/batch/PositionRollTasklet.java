@@ -20,6 +20,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,7 @@ public class PositionRollTasklet implements Tasklet {
 
     private final ParticipantPositionForPairMapper participantPositionForPairMapper;
 
+    private final SettlementDateProvider settlementDateProvider;
 
     private final DailySettlementPriceProvider dailySettlementPriceProvider;
 
@@ -45,14 +47,17 @@ public class PositionRollTasklet implements Tasklet {
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
-        Stream<ParticipantPositionEntity> positions = participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate);
-        Stream<ParticipantPositionEntity> aggregated = eodCalculator.aggregatePositions(positions)
+        final LocalDate nextDate = businessDate.plusDays(1);
+        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(nextDate);
+
+        final Stream<ParticipantPositionEntity> positions = participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate);
+        final Stream<ParticipantPositionEntity> aggregated = eodCalculator.aggregatePositions(positions)
             .map(
                 position -> participantPositionForPairMapper.toParticipantPosition(
                     position,
                     ParticipantPositionType.SOD,
-                    businessDate.plusDays(1),
-                    businessDate.plusDays(4), //FIXME: settlement date by ccy?
+                    nextDate,
+                    settlementDate, //FIXME: settlement date by ccy?
                     dsp.get(position.getCurrencyPair())
                 )
             );

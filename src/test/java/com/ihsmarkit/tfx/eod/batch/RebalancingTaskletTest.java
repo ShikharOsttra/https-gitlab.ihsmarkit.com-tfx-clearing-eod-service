@@ -36,6 +36,7 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -165,9 +166,10 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 position -> position.getAmount().getValue(),
                 ParticipantPositionEntity::getPrice,
                 ParticipantPositionEntity::getTradeDate,
-                ParticipantPositionEntity::getValueDate
+                ParticipantPositionEntity::getValueDate,
+                ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, businessDate, valueDate)
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, businessDate, valueDate, ParticipantPositionType.REBALANCING)
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
