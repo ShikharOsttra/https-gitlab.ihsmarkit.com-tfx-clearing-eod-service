@@ -62,7 +62,7 @@ public class RebalancingTasklet implements Tasklet {
 
 
         final Stream<ParticipantPositionEntity> positions =
-            participantPositionRepository.findAllNetPositionsOfLPByTradeDateFetchParticipant(businessDate);
+            participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions);
 

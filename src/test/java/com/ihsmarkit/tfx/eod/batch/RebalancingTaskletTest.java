@@ -97,7 +97,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
             .thenReturn(Collections.singletonMap(EURUSD, EURUSD_RATE));
 
-        when(participantPositionRepository.findAllNetPositionsOfLPByTradeDateFetchParticipant(any())).thenReturn(positions);
+        when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 
         when(eodCalculator.rebalanceLPPositions(any())).thenReturn(
             Collections.singletonMap(
@@ -122,7 +122,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
 
-        verify(participantPositionRepository).findAllNetPositionsOfLPByTradeDateFetchParticipant(businessDate);
+        verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
         verify(eodCalculator).rebalanceLPPositions(positions);
 
