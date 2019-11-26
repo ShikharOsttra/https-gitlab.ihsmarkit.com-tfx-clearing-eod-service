@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -50,11 +48,11 @@ public class NettingTasklet implements Tasklet {
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
     @Value("#{jobParameters['businessDate']}")
-    private final String businessDateStr;
+    private final LocalDate businessDate;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+
         final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate);
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);

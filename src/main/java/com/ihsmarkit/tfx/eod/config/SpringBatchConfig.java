@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @Configuration
-@ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper" })
+@ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper", "com.ihsmarkit.tfx.eod.config"})
 @EnableBatchProcessing
 @AllArgsConstructor
 public class SpringBatchConfig {

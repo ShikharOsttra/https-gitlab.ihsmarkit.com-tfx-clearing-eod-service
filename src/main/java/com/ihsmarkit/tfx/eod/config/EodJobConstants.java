@@ -22,4 +22,5 @@ public final class EodJobConstants {
     public static final String MTM_TRADES_STEP_NAME = "mtmTrades";
     public static final String NET_TRADES_STEP_NAME = "netTrades";
     public static final String REBALANCE_POSITIONS_STEP_NAME = "rebalancePositions";
+    public static final String ROLL_POSITIONS_STEP_NAME = "rollPositions";
 }

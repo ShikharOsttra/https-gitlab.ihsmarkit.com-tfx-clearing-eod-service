@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -38,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 @JobScope
 public class RebalancingTasklet implements Tasklet {
 
-
     private final ParticipantPositionRepository participantPositionRepository;
 
     private final TradeRepository tradeRepositiory;
@@ -54,11 +51,11 @@ public class RebalancingTasklet implements Tasklet {
     private final ParticipantPositionForPairMapper participantPositionForPairMapper;
 
     @Value("#{jobParameters['businessDate']}")
-    private final String businessDateStr;
+    private final LocalDate businessDate;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+
         final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate); //FIXME: settlement date by ccy?
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
