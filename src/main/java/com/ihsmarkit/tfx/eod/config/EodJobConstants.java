@@ -21,4 +21,5 @@ public final class EodJobConstants {
     public static final String CURRENT_TSP_JOB_PARAM_NAME = "currentTimestamp";
     public static final String MTM_TRADES_STEP_NAME = "mtmTrades";
     public static final String NET_TRADES_STEP_NAME = "netTrades";
+    public static final String REBALANCE_POSITIONS_STEP_NAME = "rebalancePositions";
 }

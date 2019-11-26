@@ -18,7 +18,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
@@ -27,7 +26,10 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.BalanceTrade;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
+
+import lombok.NonNull;
 
 @ExtendWith(SpringExtension.class)
 class EODCalculatorTest {
@@ -49,6 +51,9 @@ class EODCalculatorTest {
     private static final LegalEntity ORIGINATOR_B = aLegalEntityBuilder()
         .participant(PARTICIPANT_B)
         .build();
+
+    private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().name("C").build();
+    private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().name("D").build();
 
     private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
         .direction(Side.BUY)
@@ -121,6 +126,48 @@ class EODCalculatorTest {
         .participant(PARTICIPANT_A)
         .build();
 
+    private static final ParticipantPositionEntity A_POS_EUR_L_212M = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(212000000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_A)
+        .build();
+
+    private static final ParticipantPositionEntity B_POS_EUR_L_30M = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(30000000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_B)
+        .build();
+
+    private static final ParticipantPositionEntity C_POS_EUR_S_123M539 = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-123539000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_C)
+        .build();
+
+    private static final ParticipantPositionEntity D_POS_EUR_S_47M = ParticipantPositionEntity.builder()
+        .currencyPair(EURUSD)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-47000000), "EUR"))
+        .price(BigDecimal.valueOf(1.09))
+        .participant(PARTICIPANT_D)
+        .build();
+
+    private static final ParticipantPositionEntity D_POS_USD_S_47M = ParticipantPositionEntity.builder()
+        .currencyPair(USDJPY)
+        .amount(AmountEntity.of(BigDecimal.valueOf(-47000000), "USD"))
+        .price(BigDecimal.valueOf(99))
+        .participant(PARTICIPANT_D)
+        .build();
+
+    private static final ParticipantPositionEntity C_POS_USD_L_37M7 = ParticipantPositionEntity.builder()
+        .currencyPair(USDJPY)
+        .amount(AmountEntity.of(BigDecimal.valueOf(37700000), "USD"))
+        .price(BigDecimal.valueOf(99))
+        .participant(PARTICIPANT_C)
+        .build();
+
     @Autowired
     private EODCalculator eodCalculator;
 
@@ -129,7 +176,7 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateNetAmounts() {
-        Stream<ParticipantPositionForPair> mtm =
+        Stream<ParticipantCurrencyPairAmount> mtm =
             eodCalculator.netAllTtrades(
                 Stream.of(A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR, A_SELLS_30_EUR)
                     .map(tradeOrPositionMapper::convertTrade)
@@ -137,9 +184,9 @@ class EODCalculatorTest {
 
         assertThat(mtm)
             .extracting(
-                ParticipantPositionForPair::getParticipant,
-                ParticipantPositionForPair::getCurrencyPair,
-                ParticipantPositionForPair::getAmount
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
             )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
@@ -153,8 +200,11 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
-                .containsExactly(
+                .extracting(
+                    ParticipantCurrencyPairAmount::getParticipant,
+                    ParticipantCurrencyPairAmount::getCurrencyPair,
+                    ParticipantCurrencyPairAmount::getAmount
+                ).containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
                 );
 
@@ -165,8 +215,11 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-                .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
-                .containsExactly(
+                .extracting(
+                    ParticipantCurrencyPairAmount::getParticipant,
+                    ParticipantCurrencyPairAmount::getCurrencyPair,
+                    ParticipantCurrencyPairAmount::getAmount
+                ).containsExactly(
                         tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
                 );
 
@@ -176,7 +229,7 @@ class EODCalculatorTest {
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
-            .extracting(ParticipantPositionForPair::getParticipant, ParticipantPositionForPair::getCurrencyPair, ParticipantPositionForPair::getAmount)
+            .extracting(ParticipantCurrencyPairAmount::getParticipant, ParticipantCurrencyPairAmount::getCurrencyPair, ParticipantCurrencyPairAmount::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
@@ -186,18 +239,40 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
-        Stream<ParticipantPositionForPair> mtm =
+        Stream<ParticipantCurrencyPairAmount> mtm =
             eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
 
         assertThat(mtm)
             .extracting(
-                ParticipantPositionForPair::getParticipant,
-                ParticipantPositionForPair::getCurrencyPair,
-                ParticipantPositionForPair::getAmount
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
             )
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(99000)),
                 tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-30000))
+            );
+    }
+
+    @Test
+    void shouldRebalancePositions() {
+        Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
+            eodCalculator.rebalanceLPPositions(
+                Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M)
+            );
+
+        assertThat(balanceTrades.get(EURUSD))
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, PARTICIPANT_C, "-123539000"),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, "-25761000"),
+                tuple(PARTICIPANT_B, PARTICIPANT_D, "-21100000"),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, "-100000")
+            );
+        assertThat(balanceTrades.get(USDJPY))
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .containsOnly(
+                tuple(PARTICIPANT_D, PARTICIPANT_C, "37700000")
             );
     }
 

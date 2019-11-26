@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(staticName = "of")
 @Getter
 @Builder
-public class TradeOrPositionEssentials {
+public class TradeOrPositionEssentials implements CcyParticipantAmount {
 
     @NonNull
     private final CurrencyPairEntity currencyPair;
@@ -22,7 +22,7 @@ public class TradeOrPositionEssentials {
     private final ParticipantEntity participant;
 
     @NonNull
-    private final BigDecimal baseAmount;
+    private final BigDecimal amount;
 
     @NonNull
     private final BigDecimal spotRate;
