@@ -20,13 +20,13 @@ public interface TradeOrPositionEssentialsMapper {
     @SuppressWarnings("checkstyle:LineLength")
     @Mapping(target = "currencyPair", source = "currencyPair")
     @Mapping(target = "participant", source = "originator.participant")
-    @Mapping(target = "baseAmount", source = "trade", qualifiedByName = BASE_AMOUNT_TO_SIGNED_VALUE_MAPPER)
+    @Mapping(target = "amount", source = "trade", qualifiedByName = BASE_AMOUNT_TO_SIGNED_VALUE_MAPPER)
     @Mapping(target = "spotRate", source = "spotRate")
     TradeOrPositionEssentials convertTrade(TradeEntity trade);
 
     @Mapping(target = "currencyPair", source = "currencyPair")
     @Mapping(target = "participant", source = "participant")
-    @Mapping(target = "baseAmount", source = "amount.value")
+    @Mapping(target = "amount", source = "amount.value")
     @Mapping(target = "spotRate", source = "price")
     TradeOrPositionEssentials convertPosition(ParticipantPositionEntity position);
 

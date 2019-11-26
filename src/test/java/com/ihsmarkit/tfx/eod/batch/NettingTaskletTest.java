@@ -45,7 +45,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.ParticipantPositionForPair;
+import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -130,8 +130,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(eodCalculator.netAllTtrades(any()))
             .thenReturn(
                 Stream.of(
-                    ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
-                    ParticipantPositionForPair.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
+                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
+                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
                 )
             );
 
@@ -151,7 +151,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 TradeOrPositionEssentials::getParticipant,
                 TradeOrPositionEssentials::getCurrencyPair,
                 TradeOrPositionEssentials::getSpotRate,
-                TradeOrPositionEssentials::getBaseAmount
+                TradeOrPositionEssentials::getAmount
             ).containsExactlyInAnyOrder(
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0)),
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0)),

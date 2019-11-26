@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.config;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_STEP_NAME;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
+import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
@@ -37,6 +39,8 @@ public class SpringBatchConfig {
 
     private final NettingTasklet nettingTasklet;
 
+    private final RebalancingTasklet rebalancingTasklet;
+
     @Bean
     public JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor(final JobRegistry jobRegistry) {
         final JobRegistryBeanPostProcessor jobRegistryBeanPostProcessor = new JobRegistryBeanPostProcessor();
@@ -50,6 +54,7 @@ public class SpringBatchConfig {
         return jobs.get(EOD1_BATCH_JOB_NAME)
             .start(mtmTrades())
             .next(netTrades())
+            .next(rebalancePositions())
             .build();
     }
 
@@ -67,5 +72,13 @@ public class SpringBatchConfig {
         return steps.get(NET_TRADES_STEP_NAME)
                 .tasklet(nettingTasklet)
                 .build();
+    }
+
+    @Bean
+    @JobScope
+    public Step rebalancePositions() {
+        return steps.get(REBALANCE_POSITIONS_STEP_NAME)
+            .tasklet(rebalancingTasklet)
+            .build();
     }
 }
