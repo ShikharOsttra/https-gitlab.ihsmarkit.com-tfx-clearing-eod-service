@@ -140,7 +140,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
                 .toJobParameters());
 
-        assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(participantPositionRepository)
             .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);

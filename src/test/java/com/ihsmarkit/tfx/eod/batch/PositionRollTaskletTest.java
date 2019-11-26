@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -66,7 +66,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
-            .thenReturn(Collections.singletonMap(EURUSD, EURUSD_RATE));
+            .thenReturn(Map.of(EURUSD, EURUSD_RATE));
 
         when(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(any())).thenReturn(positions);
 
@@ -79,7 +79,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
                 .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
                 .toJobParameters());
 
-        assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(eodCalculator).aggregatePositions(positions);
 

@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -96,7 +97,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
         when(settlementDateProvider.getSettlementDateFor(businessDate)).thenReturn(valueDate);
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
-            .thenReturn(Collections.singletonMap(EURUSD, EURUSD_RATE));
+            .thenReturn(Map.of(EURUSD, EURUSD_RATE));
 
         when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 
@@ -121,7 +122,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
                 .toJobParameters());
 
-        assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
