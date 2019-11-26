@@ -262,17 +262,17 @@ class EODCalculatorTest {
             );
 
         assertThat(balanceTrades.get(EURUSD))
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
             .containsExactlyInAnyOrder(
-                tuple(PARTICIPANT_A, PARTICIPANT_C, "-123539000"),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, "-25761000"),
-                tuple(PARTICIPANT_B, PARTICIPANT_D, "-21100000"),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, "-100000")
+                tuple(PARTICIPANT_A, PARTICIPANT_C, -123539000),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, -25761000),
+                tuple(PARTICIPANT_B, PARTICIPANT_D, -21100000),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, -100000)
             );
         assertThat(balanceTrades.get(USDJPY))
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
             .containsOnly(
-                tuple(PARTICIPANT_D, PARTICIPANT_C, "37700000")
+                tuple(PARTICIPANT_D, PARTICIPANT_C, 37700000)
             );
     }
 
