@@ -35,4 +35,5 @@
     <equity_haircut_rate/>
     <eod_product_cash_settlement/>
     <participant_position/>
+    <calendar_trading_swap_point/>
 </dataset>
