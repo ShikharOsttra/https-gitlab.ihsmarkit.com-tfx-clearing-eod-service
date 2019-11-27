@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -95,9 +97,9 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
         when(settlementDateProvider.getSettlementDateFor(businessDate)).thenReturn(valueDate);
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
-            .thenReturn(Collections.singletonMap(EURUSD, EURUSD_RATE));
+            .thenReturn(Map.of(EURUSD, EURUSD_RATE));
 
-        when(participantPositionRepository.findAllNetPositionsOfLPByTradeDateFetchParticipant(any())).thenReturn(positions);
+        when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 
         when(eodCalculator.rebalanceLPPositions(any())).thenReturn(
             Collections.singletonMap(
@@ -120,9 +122,9 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
                 .toJobParameters());
 
-        assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        verify(participantPositionRepository).findAllNetPositionsOfLPByTradeDateFetchParticipant(businessDate);
+        verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
         verify(eodCalculator).rebalanceLPPositions(positions);
 
@@ -165,9 +167,10 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 position -> position.getAmount().getValue(),
                 ParticipantPositionEntity::getPrice,
                 ParticipantPositionEntity::getTradeDate,
-                ParticipantPositionEntity::getValueDate
+                ParticipantPositionEntity::getValueDate,
+                ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, businessDate, valueDate)
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, businessDate, valueDate, ParticipantPositionType.REBALANCING)
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);

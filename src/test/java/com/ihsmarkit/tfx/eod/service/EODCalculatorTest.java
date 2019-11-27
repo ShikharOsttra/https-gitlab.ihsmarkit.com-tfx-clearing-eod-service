@@ -112,14 +112,14 @@ class EODCalculatorTest {
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POSITION_USD = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_USD_L_100k = ParticipantPositionEntity.builder()
         .currencyPair(USDJPY)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "USD"))
         .price(BigDecimal.valueOf(99.3))
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POSITION_EUR = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_EUR_L_100k = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
@@ -240,7 +240,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
         Stream<ParticipantCurrencyPairAmount> mtm =
-            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POSITION_EUR, A_POSITION_USD), PRICE_MAP);
+            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100k, A_POS_USD_L_100k), PRICE_MAP);
 
         assertThat(mtm)
             .extracting(
@@ -262,18 +262,35 @@ class EODCalculatorTest {
             );
 
         assertThat(balanceTrades.get(EURUSD))
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
             .containsExactlyInAnyOrder(
-                tuple(PARTICIPANT_A, PARTICIPANT_C, "-123539000"),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, "-25761000"),
-                tuple(PARTICIPANT_B, PARTICIPANT_D, "-21100000"),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, "-100000")
+                tuple(PARTICIPANT_A, PARTICIPANT_C, -123539000),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, -25761000),
+                tuple(PARTICIPANT_B, PARTICIPANT_D, -21100000),
+                tuple(PARTICIPANT_A, PARTICIPANT_D, -100000)
             );
         assertThat(balanceTrades.get(USDJPY))
-            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().toPlainString())
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
             .containsOnly(
-                tuple(PARTICIPANT_D, PARTICIPANT_C, "37700000")
+                tuple(PARTICIPANT_D, PARTICIPANT_C, 37700000)
             );
+    }
+
+    @Test
+    void shouldAggregatePositions() {
+        assertThat(
+            eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100k, A_POS_EUR_L_212M, A_POS_USD_L_100k, B_POS_EUR_L_30M))
+        )
+        .extracting(
+            ParticipantCurrencyPairAmount::getParticipant,
+            ParticipantCurrencyPairAmount::getCurrencyPair,
+            participantCcyAmount -> participantCcyAmount.getAmount().intValue()
+        ).containsExactlyInAnyOrder(
+            tuple(PARTICIPANT_A, EURUSD, 212100000),
+            tuple(PARTICIPANT_A, USDJPY, 100000),
+            tuple(PARTICIPANT_B, EURUSD, 30000000)
+        );
+
     }
 
     @TestConfiguration

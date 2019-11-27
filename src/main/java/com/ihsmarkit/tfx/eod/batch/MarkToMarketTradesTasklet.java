@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -52,11 +50,11 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     private final SettlementDateProvider settlementDateProvider;
 
     @Value("#{jobParameters['businessDate']}")
-    private final String businessDateJobParameter;
+    private final LocalDate businessDate;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        final LocalDate businessDate = LocalDate.parse(businessDateJobParameter, BUSINESS_DATE_FMT);
+
         final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate); //FIXME: settlement date by ccy?
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
