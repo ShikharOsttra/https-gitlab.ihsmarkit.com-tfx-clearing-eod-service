@@ -89,6 +89,10 @@ public class EODCalculator {
             );
     }
 
+    public Stream<ParticipantCurrencyPairAmount> aggregatePositions(final Stream<ParticipantPositionEntity> positions) {
+        return flatten(aggregate(positions.map(tradeOrPositionMapper::convertPosition)));
+    }
+
     public Stream<ParticipantCurrencyPairAmount> netAllTtrades(final Stream<? extends CcyParticipantAmount> trades) {
         return flatten(aggregate(trades));
     }

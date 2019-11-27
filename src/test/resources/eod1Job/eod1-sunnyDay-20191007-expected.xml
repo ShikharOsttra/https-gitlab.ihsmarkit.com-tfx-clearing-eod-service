@@ -270,4 +270,39 @@
             message_id="test"
     />
 
+    <participant_position
+            currency_pair_id="13"
+            participant_type="FX_BROKER"
+            participant_id="103"
+            trade_date="2019-10-08"
+            value_date="2019-10-11"
+            price="1.1"
+            amount="-1000000.00"
+            currency="EUR"
+            type="SOD"
+    />
+
+    <participant_position
+            currency_pair_id="13"
+            type="SOD"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="102"
+            trade_date="2019-10-08"
+            value_date="2019-10-11"
+            price="1.1"
+            amount="30000.00"
+            currency="EUR"
+    />
+
+    <participant_position
+            currency_pair_id="13"
+            type="SOD"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-08"
+            value_date="2019-10-11"
+            price="1.1"
+            amount="-699999.94"
+            currency="EUR"
+    />
 </dataset>

@@ -110,7 +110,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 .addString("businessDate", businessDateStr)
                 .toJobParameters());
 
-        assertThat(execution.getStatus()).isSameAs(BatchStatus.COMPLETED);
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(eodCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
         verify(eodCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);

@@ -14,14 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
-import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
-import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
@@ -31,21 +27,17 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @JobScope
-public class NettingTasklet implements Tasklet {
-
-    private final TradeRepository tradeRepository;
+public class PositionRollTasklet implements Tasklet {
 
     private final ParticipantPositionRepository participantPositionRepository;
 
-    private final DailySettlementPriceProvider dailySettlementPriceProvider;
-
     private final EODCalculator eodCalculator;
-
-    private final SettlementDateProvider settlementDateProvider;
 
     private final ParticipantPositionForPairMapper participantPositionForPairMapper;
 
-    private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
+    private final SettlementDateProvider settlementDateProvider;
+
+    private final DailySettlementPriceProvider dailySettlementPriceProvider;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -53,32 +45,25 @@ public class NettingTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
-        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate);
-
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
-        final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
-        final Stream<ParticipantPositionEntity> positions =
-            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
-            .stream();
+        final LocalDate nextDate = businessDate.plusDays(1);
+        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(nextDate);
 
-        final Stream<TradeOrPositionEssentials> tradesToNet = Stream.concat(
-            novatedTrades.map(tradeOrPositionMapper::convertTrade),
-            positions.map(tradeOrPositionMapper::convertPosition)
-        );
+        final Stream<ParticipantPositionEntity> positions = participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate);
+        final Stream<ParticipantPositionEntity> aggregated = eodCalculator.aggregatePositions(positions)
+            .map(
+                position -> participantPositionForPairMapper.toParticipantPosition(
+                    position,
+                    ParticipantPositionType.SOD,
+                    nextDate,
+                    settlementDate, //FIXME: settlement date by ccy?
+                    dsp.get(position.getCurrencyPair())
+                )
+            );
 
-        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllTtrades(tradesToNet)
-            .map(trade -> participantPositionForPairMapper.toParticipantPosition(
-                trade,
-                ParticipantPositionType.NET,
-                businessDate,
-                settlementDate, //FIXME: settlement date by ccy?
-                dsp.get(trade.getCurrencyPair())
-            ));
-
-        participantPositionRepository.saveAll(netted::iterator);
+        participantPositionRepository.saveAll(aggregated::iterator);
 
         return RepeatStatus.FINISHED;
     }
-
 }
