@@ -49,6 +49,10 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
+    private static final String BUSINESS_DATE_STR = "20191006";
+    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
+
     private static final CurrencyPairEntity EURUSD = CurrencyPairEntity.of(2L, "EUR", "USD");
     private static final BigDecimal EURUSD_RATE = BigDecimal.valueOf(1.1);
 
@@ -88,15 +92,12 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldRebalanceTrades() {
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
-        final LocalDate valueDate = businessDate.plusDays(2);
 
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
-        when(tradeAndSettlementDateService.getValueDate(businessDate, EURUSD)).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, EURUSD)).thenReturn(VALUE_DATE);
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(Map.of(EURUSD, EURUSD_RATE));
 
         when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
@@ -119,12 +120,12 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(REBALANCE_POSITIONS_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE_STR)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
+        verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(BUSINESS_DATE);
 
         verify(eodCalculator).rebalanceLPPositions(positions);
 
@@ -140,9 +141,9 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 TradeEntity::getTradeDate,
                 TradeEntity::getValueDate
             ).containsExactlyInAnyOrder(
-                tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_A, ORIG_D, 25861000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate),
-                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, businessDate, valueDate)
+                tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
+                tuple(ORIG_A, ORIG_D, 25861000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
+                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE)
             );
 
         verify(eodCalculator).netAllTtrades(netCaptor.capture());
@@ -170,7 +171,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 ParticipantPositionEntity::getValueDate,
                 ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, businessDate, valueDate, ParticipantPositionType.REBALANCING)
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, BUSINESS_DATE, VALUE_DATE, ParticipantPositionType.REBALANCING)
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);

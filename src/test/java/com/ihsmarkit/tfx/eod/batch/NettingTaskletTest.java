@@ -53,6 +53,10 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class NettingTaskletTest extends AbstractSpringBatchTest {
 
+    private static final String BUSINESS_DATE_STR = "20191006";
+    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
+
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().valueCurrency(JPY).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
@@ -112,12 +116,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
-        final LocalDate valueDate = businessDate.plusDays(2);
 
-        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_USD)).thenReturn(valueDate);
-        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_JPY)).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
         when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(
             Stream.of(A_BUYS_20_USD, A_SELLS_10_USD)
@@ -127,7 +128,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
             List.of(POSITION)
         );
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(dailySettlementPrices);
 
         when(dailySettlementPrices.get(CURRENCY_PAIR_USD))
@@ -145,13 +146,13 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(NET_TRADES_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE_STR)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(participantPositionRepository)
-            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
+            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, BUSINESS_DATE);
 
         verify(eodCalculator).netAllTtrades(tradeCaptor.capture());
         assertThat(tradeCaptor.getValue())
@@ -166,7 +167,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.5), BigDecimal.valueOf(-10.0))
             );
 
-        verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
+        verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
 
         verify(participantPositionRepository).saveAll(positionCaptor.capture());
         assertThat(positionCaptor.getValue())
@@ -188,8 +189,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantPositionType.NET,
                     AmountEntity.of(BigDecimal.ONE, USD),
                     BigDecimal.valueOf(2),
-                    businessDate,
-                    valueDate
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 tuple(
                     PARTICIPANT,
@@ -198,8 +199,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantPositionType.NET,
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     BigDecimal.valueOf(3),
-                    businessDate,
-                    valueDate
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 )
             );
 
