@@ -24,7 +24,7 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
-import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,7 +41,7 @@ public class NettingTasklet implements Tasklet {
 
     private final EODCalculator eodCalculator;
 
-    private final SettlementDateProvider settlementDateProvider;
+    private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
     private final ParticipantPositionForPairMapper participantPositionForPairMapper;
 
@@ -52,8 +52,6 @@ public class NettingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-
-        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate);
 
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
@@ -72,7 +70,7 @@ public class NettingTasklet implements Tasklet {
                 trade,
                 ParticipantPositionType.NET,
                 businessDate,
-                settlementDate, //FIXME: settlement date by ccy?
+                tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
                 dsp.get(trade.getCurrencyPair())
             ));
 
