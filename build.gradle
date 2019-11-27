@@ -60,8 +60,7 @@ dependencies {
         [group: 'org.springframework.boot', name: 'spring-boot-starter-quartz'],
         [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
         [group: 'org.springframework', name: 'spring-jms'],
-        [group: 'org.yaml', name: 'snakeyaml'],
-        [group: 'org.quartz-scheduler', name: 'quartz', version: quartzSchedulerVersion]
+        [group: 'org.yaml', name: 'snakeyaml']
     )
 
     testImplementation(
