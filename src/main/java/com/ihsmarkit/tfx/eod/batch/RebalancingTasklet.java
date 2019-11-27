@@ -27,7 +27,7 @@ import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
-import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,7 +44,7 @@ public class RebalancingTasklet implements Tasklet {
 
     private final EODCalculator eodCalculator;
 
-    private final SettlementDateProvider settlementDateProvider;
+    private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
     private final BalanceTradeMapper balanceTradeMapper;
 
@@ -56,10 +56,7 @@ public class RebalancingTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
-        final LocalDate settlementDate = settlementDateProvider.getSettlementDateFor(businessDate); //FIXME: settlement date by ccy?
-
         final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
-
 
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
@@ -85,7 +82,7 @@ public class RebalancingTasklet implements Tasklet {
                         trade -> balanceTradeMapper.toTrade(
                             trade,
                             businessDate,
-                            settlementDate, //FIXME: settlement date by ccy?
+                            tradeAndSettlementDateService.getValueDate(businessDate, tradesByCcy.getKey()),
                             tradesByCcy.getKey(),
                             dsp.get(tradesByCcy.getKey())
                         )
@@ -110,7 +107,7 @@ public class RebalancingTasklet implements Tasklet {
             trade,
             ParticipantPositionType.REBALANCING,
             businessDate,
-            settlementDate, //FIXME: settlement date by ccy?
+            tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
             dsp.get(trade.getCurrencyPair())
         ));
 

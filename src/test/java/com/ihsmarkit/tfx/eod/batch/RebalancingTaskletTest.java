@@ -45,7 +45,7 @@ import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
-import com.ihsmarkit.tfx.eod.service.SettlementDateProvider;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
@@ -75,7 +75,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
     private EODCalculator eodCalculator;
 
     @MockBean
-    private SettlementDateProvider settlementDateProvider;
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @Captor
     private ArgumentCaptor<Iterable<ParticipantPositionEntity>> positionCaptor;
@@ -94,7 +94,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
-        when(settlementDateProvider.getSettlementDateFor(businessDate)).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getValueDate(businessDate, EURUSD)).thenReturn(valueDate);
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
             .thenReturn(Map.of(EURUSD, EURUSD_RATE));
