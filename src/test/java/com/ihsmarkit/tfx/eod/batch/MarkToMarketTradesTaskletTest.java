@@ -54,6 +54,10 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
 
+    private static final String BUSINESS_DATE_STR = "20191006";
+    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
+
     @MockBean
     private TradeRepository tradeRepository;
 
@@ -88,18 +92,14 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldCalculateAndStoreDailyAndInitialMtm() {
 
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
-        final LocalDate valueDate = businessDate.plusDays(2);
-
-        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_USD)).thenReturn(valueDate);
-        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_JPY)).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
         when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(trades);
 
         when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
             .thenReturn(positions);
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(dailySettlementPrices);
 
         when(eodCalculator.calculateAndAggregateInitialMtm(any(), any()))
@@ -115,7 +115,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("businessDate", businessDateStr)
+                .addString("businessDate", BUSINESS_DATE_STR)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
@@ -123,9 +123,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         verify(eodCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
         verify(eodCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
 
-        verify(dailySettlementPriceProvider).getDailySettlementPrices(businessDate);
-        verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
-        verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, businessDate);
+        verify(dailySettlementPriceProvider).getDailySettlementPrices(BUSINESS_DATE);
+        verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
+        verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, BUSINESS_DATE);
 
         verify(eodProductCashSettlementRepository).saveAll(captor.capture());
         assertThat(captor.getValue())
@@ -142,22 +142,22 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
                     EodProductCashSettlementType.DAILY_MTM, AmountEntity.of(BigDecimal.TEN, JPY),
-                    businessDate,
-                    valueDate
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
                     EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.ONE, JPY),
-                    businessDate,
-                    valueDate
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_JPY,
                     EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.valueOf(2), JPY),
-                    businessDate,
-                    valueDate
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 )
             );
 

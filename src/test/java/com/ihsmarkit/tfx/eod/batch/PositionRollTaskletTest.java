@@ -40,11 +40,15 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
+    private static final String BUSINESS_DATE_STR = "20191006";
+    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate NEXT_DATE = LocalDate.of(2019, 10, 8);
+    private static final LocalDate VALUE_DATE = LocalDate.of(2019, 10, 10);
+
     private static final CurrencyPairEntity EURUSD = CurrencyPairEntity.of(2L, "EUR", "USD");
     private static final BigDecimal EURUSD_RATE = BigDecimal.valueOf(1.1);
 
     private static final ParticipantEntity PARTICIPANT_A = aParticipantEntityBuilder().name("A").build();
-    private static final ParticipantEntity PARTICIPANT_B = aParticipantEntityBuilder().name("B").build();
 
     @MockBean
     private ParticipantPositionRepository participantPositionRepository;
@@ -64,14 +68,9 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
     @Test
     void shouldRollPositions() {
 
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.of(2019, 10, 6);
-        final LocalDate nextDate = LocalDate.of(2019, 10, 8);
-        final LocalDate valueDate = LocalDate.of(2019, 10, 10);
-
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(Map.of(EURUSD, EURUSD_RATE));
 
         when(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(any())).thenReturn(positions);
@@ -80,19 +79,19 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
             Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
 
-        when(tradeAndSettlementDateService.getNextTradeDate(any(), any())).thenReturn(nextDate);
-        when(tradeAndSettlementDateService.getValueDate(any(), any())).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getNextTradeDate(any(), any())).thenReturn(NEXT_DATE);
+        when(tradeAndSettlementDateService.getValueDate(any(), any())).thenReturn(VALUE_DATE);
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(ROLL_POSITIONS_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE_STR)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(eodCalculator).aggregatePositions(positions);
 
-        verify(participantPositionRepository).findAllNetAndRebalancingPositionsByTradeDate(businessDate);
+        verify(participantPositionRepository).findAllNetAndRebalancingPositionsByTradeDate(BUSINESS_DATE);
 
         verify(participantPositionRepository).saveAll(positionCaptor.capture());
         assertThat(positionCaptor.getValue())
@@ -101,11 +100,11 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
                 ParticipantPositionEntity::getParticipant,
                 position -> position.getAmount().getValue(),
                 ParticipantPositionEntity::getPrice,
-                position -> position.getTradeDate().format(BUSINESS_DATE_FMT),
-                position -> position.getValueDate().format(BUSINESS_DATE_FMT),
+                ParticipantPositionEntity::getTradeDate,
+                ParticipantPositionEntity::getValueDate,
                 ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, "20191008", "20191010", ParticipantPositionType.SOD)
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, NEXT_DATE, VALUE_DATE, ParticipantPositionType.SOD)
             );
 
         verifyNoMoreInteractions(eodCalculator, participantPositionRepository);
