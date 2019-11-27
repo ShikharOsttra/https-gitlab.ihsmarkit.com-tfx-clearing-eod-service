@@ -49,6 +49,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class NettingTaskletTest extends AbstractSpringBatchTest {
 
@@ -94,6 +95,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     @MockBean
     private EODCalculator eodCalculator;
 
+    @MockBean
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
+
     @Mock
     private Stream<TradeEntity> trades;
 
@@ -110,6 +114,10 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     void shouldCalculateAndStoreNetPosition() {
         final String businessDateStr = "20191006";
         final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+        final LocalDate valueDate = businessDate.plusDays(2);
+
+        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_USD)).thenReturn(valueDate);
+        when(tradeAndSettlementDateService.getValueDate(businessDate, CURRENCY_PAIR_JPY)).thenReturn(valueDate);
 
         when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(
             Stream.of(A_BUYS_20_USD, A_SELLS_10_USD)
@@ -181,7 +189,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     AmountEntity.of(BigDecimal.ONE, USD),
                     BigDecimal.valueOf(2),
                     businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    valueDate
                 ),
                 tuple(
                     PARTICIPANT,
@@ -191,7 +199,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     BigDecimal.valueOf(3),
                     businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    valueDate
                 )
             );
 
