@@ -36,6 +36,7 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
@@ -52,6 +53,9 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
     private DailySettlementPriceProvider dailySettlementPriceProvider;
 
     @MockBean
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
+
+    @MockBean
     private EODCalculator eodCalculator;
 
     @Captor
@@ -61,7 +65,9 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
     void shouldRollPositions() {
 
         final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+        final LocalDate businessDate = LocalDate.of(2019, 10, 6);
+        final LocalDate nextDate = LocalDate.of(2019, 10, 8);
+        final LocalDate valueDate = LocalDate.of(2019, 10, 10);
 
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
@@ -73,6 +79,9 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
         when(eodCalculator.aggregatePositions(any())).thenReturn(
             Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
+
+        when(tradeAndSettlementDateService.getNextTradeDate(any(), any())).thenReturn(nextDate);
+        when(tradeAndSettlementDateService.getValueDate(any(), any())).thenReturn(valueDate);
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(ROLL_POSITIONS_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
@@ -96,7 +105,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
                 position -> position.getValueDate().format(BUSINESS_DATE_FMT),
                 ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, "20191007", "20191010", ParticipantPositionType.SOD)
+                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, "20191008", "20191010", ParticipantPositionType.SOD)
             );
 
         verifyNoMoreInteractions(eodCalculator, participantPositionRepository);
