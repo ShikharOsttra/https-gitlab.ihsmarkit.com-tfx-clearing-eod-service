@@ -3,12 +3,14 @@ package com.ihsmarkit.tfx.eod.config;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.cache.interceptor.SimpleCacheResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@EnableCaching
 @Configuration
 public class CacheConfig extends CachingConfigurerSupport {
 
@@ -22,7 +24,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     @JobScope
     @Override
     public CacheResolver cacheResolver() {
-        return  new SimpleCacheResolver(jobCacheManager());
+        return new SimpleCacheResolver(jobCacheManager());
     }
 
 }

@@ -40,6 +40,8 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
@@ -173,7 +175,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         MarkToMarketTradesTasklet.class, TradeOrPositionEssentialsMapper.class, EodProductCashSettlementRepository.class,
-        EODCalculator.class
+        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
@@ -181,7 +183,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 MarkToMarketTradesTasklet.class,
                 EODCalculator.class,
                 TradeOrPositionEssentialsMapper.class,
-                EodProductCashSettlementRepository.class
+                EodProductCashSettlementRepository.class,
+                EOD1JobConfig.class,
+                DateConfig.class
         })
     )
     static class TestConfig {

@@ -32,6 +32,8 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
@@ -114,7 +116,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         RebalancingTasklet.class, TradeOrPositionEssentialsMapper.class, ParticipantPositionRepository.class,
-        EODCalculator.class
+        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
@@ -122,7 +124,9 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
                 PositionRollTasklet.class,
                 EODCalculator.class,
                 TradeOrPositionEssentialsMapper.class,
-                ParticipantPositionRepository.class
+                ParticipantPositionRepository.class,
+                EOD1JobConfig.class,
+                DateConfig.class
             })
     )
     static class TestConfig {
