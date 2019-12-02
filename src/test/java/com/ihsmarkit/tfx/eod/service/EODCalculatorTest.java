@@ -117,14 +117,14 @@ class EODCalculatorTest {
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POS_USD_L_100k = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_USD_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(USDJPY)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "USD"))
         .price(BigDecimal.valueOf(99.3))
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POS_EUR_L_100k = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_EUR_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
@@ -245,7 +245,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
         Stream<ParticipantCurrencyPairAmount> mtm =
-            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100k, A_POS_USD_L_100k), PRICE_MAP::get, JPY_PRICE_MAP::get);
+            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100K, A_POS_USD_L_100K), PRICE_MAP::get, JPY_PRICE_MAP::get);
 
         assertThat(mtm)
             .extracting(
@@ -284,7 +284,7 @@ class EODCalculatorTest {
     @Test
     void shouldAggregatePositions() {
         assertThat(
-            eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100k, A_POS_EUR_L_212M, A_POS_USD_L_100k, B_POS_EUR_L_30M))
+            eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100K, A_POS_EUR_L_212M, A_POS_USD_L_100K, B_POS_EUR_L_30M))
         )
         .extracting(
             ParticipantCurrencyPairAmount::getParticipant,
