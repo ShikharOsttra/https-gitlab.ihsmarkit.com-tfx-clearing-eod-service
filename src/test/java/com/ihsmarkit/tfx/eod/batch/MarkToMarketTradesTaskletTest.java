@@ -6,6 +6,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -14,7 +15,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.assertj.core.groups.Tuple;
@@ -44,7 +44,7 @@ import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -63,7 +63,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private TradeRepository tradeRepository;
 
     @MockBean
-    private DailySettlementPriceProvider dailySettlementPriceProvider;
+    private DailySettlementPriceService dailySettlementPriceService;
 
     @MockBean
     private EodProductCashSettlementRepository eodProductCashSettlementRepository;
@@ -86,9 +86,6 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @Mock
     private Collection<ParticipantPositionEntity> positions;
 
-    @Mock
-    private Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices;
-
     @Test
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldCalculateAndStoreDailyAndInitialMtm() {
@@ -100,10 +97,12 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
             .thenReturn(positions);
-        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
-            .thenReturn(dailySettlementPrices);
 
-        when(eodCalculator.calculateAndAggregateInitialMtm(any(), any()))
+
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_USD))
+            .thenReturn(BigDecimal.ONE);
+
+        when(eodCalculator.calculateAndAggregateInitialMtm(any(), any(), any()))
             .thenReturn(
                 Stream.of(
                     ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
@@ -111,7 +110,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 )
             );
 
-        when(eodCalculator.calculateAndAggregateDailyMtm(any(), any()))
+        when(eodCalculator.calculateAndAggregateDailyMtm(any(), any(), any()))
             .thenReturn(Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN)));
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
@@ -121,10 +120,10 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        verify(eodCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
-        verify(eodCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
+        verify(eodCalculator).calculateAndAggregateDailyMtm(eq(positions), any(), any());
+        verify(eodCalculator).calculateAndAggregateInitialMtm(eq(trades), any(), any());
 
-        verify(dailySettlementPriceProvider).getDailySettlementPrices(BUSINESS_DATE);
+        //verify(dailySettlementPriceProvider).getDailySettlementPrices(BUSINESS_DATE);
         verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
         verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, BUSINESS_DATE);
 
@@ -165,7 +164,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         verifyNoMoreInteractions(
             tradeRepository,
             participantPositionRepository,
-            dailySettlementPriceProvider,
+         //   dailySettlementPriceProvider,
             eodCalculator,
             eodProductCashSettlementRepository
         );

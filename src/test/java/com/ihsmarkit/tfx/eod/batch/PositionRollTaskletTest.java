@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -55,7 +54,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
     private ParticipantPositionRepository participantPositionRepository;
 
     @MockBean
-    private DailySettlementPriceProvider dailySettlementPriceProvider;
+    private DailySettlementPriceService dailySettlementPriceService;
 
     @MockBean
     private TradeAndSettlementDateService tradeAndSettlementDateService;
@@ -71,8 +70,7 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
         Stream<ParticipantPositionEntity> positions = Stream.empty();
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
-            .thenReturn(Map.of(EURUSD, EURUSD_RATE));
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, EURUSD)).thenReturn(EURUSD_RATE);
 
         when(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(any())).thenReturn(positions);
 

@@ -5,18 +5,23 @@ import static com.google.common.collect.Maps.newHashMap;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 
-@SuppressWarnings({ "checkstyle:MagicNumber", "PMD.AvoidDuplicateLiterals", "PMD.NonStaticInitializer" })
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressWarnings({ "checkstyle:MagicNumber", "PMD.AvoidDuplicateLiterals", "PMD.NonStaticInitializer"})
+@SuppressFBWarnings("DMC_DUBIOUS_MAP_COLLECTION")
 @Service
 public class DailySettlementPriceProvider {
 
     // mock data which will be removed when we have DailySettlementPriceRepository ready in core-dl
     private static final Map<CurrencyPairEntity, BigDecimal> PRICE_MAP = newHashMap();
-    {
+    private static final Map<String, BigDecimal> PRICE_MAP_BY_STR;
+    static {
         PRICE_MAP.put(CurrencyPairEntity.of(1L, "USD", "JPY"), new BigDecimal("109.38"));
         PRICE_MAP.put(CurrencyPairEntity.of(2L, "EUR", "JPY"), new BigDecimal("120.66"));
         PRICE_MAP.put(CurrencyPairEntity.of(3L, "GBP", "JPY"), new BigDecimal("139.99"));
@@ -50,9 +55,15 @@ public class DailySettlementPriceProvider {
         PRICE_MAP.put(CurrencyPairEntity.of(31L, "AUD", "CAD"), new BigDecimal("0.91"));
         PRICE_MAP.put(CurrencyPairEntity.of(32L, "EUR", "CAD"), new BigDecimal("1.45"));
         PRICE_MAP.put(CurrencyPairEntity.of(33L, "CAD", "CHF"), new BigDecimal("0.76"));
+
+        PRICE_MAP_BY_STR = PRICE_MAP.entrySet().stream().collect(Collectors.toMap(e -> createKey(e.getKey()), Map.Entry::getValue));
     }
 
-    public Map<CurrencyPairEntity, BigDecimal> getDailySettlementPrices(final LocalDate businessDate) {
-        return PRICE_MAP;
+    private static String createKey(final CurrencyPairEntity currencyPair) {
+        return currencyPair.getBaseCurrency() + currencyPair.getValueCurrency();
+    }
+
+    public Map<String, BigDecimal> getDailySettlementPrices(final LocalDate businessDate) {
+        return PRICE_MAP_BY_STR;
     }
 }

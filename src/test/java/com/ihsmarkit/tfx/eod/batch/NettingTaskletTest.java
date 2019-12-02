@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -95,7 +94,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private ParticipantPositionRepository participantPositionRepository;
 
     @MockBean
-    private DailySettlementPriceProvider dailySettlementPriceProvider;
+    private DailySettlementPriceService dailySettlementPriceService;
 
     @MockBean
     private EODCalculator eodCalculator;
@@ -105,9 +104,6 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @Mock
     private Stream<TradeEntity> trades;
-
-    @Mock
-    private Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices;
 
     @Captor
     private ArgumentCaptor<Iterable<ParticipantPositionEntity>> positionCaptor;
@@ -129,12 +125,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
             List.of(POSITION)
         );
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
-            .thenReturn(dailySettlementPrices);
-
-        when(dailySettlementPrices.get(CURRENCY_PAIR_USD))
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_USD))
             .thenReturn(BigDecimal.valueOf(2));
-        when(dailySettlementPrices.get(CURRENCY_PAIR_JPY))
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY))
             .thenReturn(BigDecimal.valueOf(3));
 
         when(eodCalculator.netAllTtrades(any()))
