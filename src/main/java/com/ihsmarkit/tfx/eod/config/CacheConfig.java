@@ -17,7 +17,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     @Bean
     @JobScope
     public CacheManager jobCacheManager() {
-        return new ConcurrentMapCacheManager("tradeDates", "valueDates");
+        return new ConcurrentMapCacheManager("tradeDates", "valueDates", "dsp", "jpyRates");
     }
 
     @Bean
