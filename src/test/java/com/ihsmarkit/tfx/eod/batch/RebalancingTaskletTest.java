@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -45,7 +44,7 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -75,7 +74,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
     private ParticipantPositionRepository participantPositionRepository;
 
     @MockBean
-    private DailySettlementPriceProvider dailySettlementPriceProvider;
+    private DailySettlementPriceService dailySettlementPriceService;
 
     @MockBean
     private EODCalculator eodCalculator;
@@ -99,8 +98,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, EURUSD)).thenReturn(VALUE_DATE);
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
-            .thenReturn(Map.of(EURUSD, EURUSD_RATE));
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, EURUSD)).thenReturn(EURUSD_RATE);
 
         when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 

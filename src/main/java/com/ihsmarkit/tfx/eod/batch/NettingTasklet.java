@@ -1,8 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.springframework.batch.core.StepContribution;
@@ -13,7 +11,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
@@ -22,7 +19,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -37,7 +34,7 @@ public class NettingTasklet implements Tasklet {
 
     private final ParticipantPositionRepository participantPositionRepository;
 
-    private final DailySettlementPriceProvider dailySettlementPriceProvider;
+    private final DailySettlementPriceService dailySettlementPriceService;
 
     private final EODCalculator eodCalculator;
 
@@ -52,8 +49,6 @@ public class NettingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-
-        final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<ParticipantPositionEntity> positions =
@@ -71,7 +66,7 @@ public class NettingTasklet implements Tasklet {
                 ParticipantPositionType.NET,
                 businessDate,
                 tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
-                dsp.get(trade.getCurrencyPair())
+                dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
             ));
 
         participantPositionRepository.saveAll(netted::iterator);
