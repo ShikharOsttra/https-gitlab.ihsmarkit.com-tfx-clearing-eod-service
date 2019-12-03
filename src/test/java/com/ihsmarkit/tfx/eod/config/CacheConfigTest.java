@@ -58,7 +58,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         when(calendarTradingSwapPointRepository.findNextTradingDate(any(), any())).thenReturn(Optional.of(OCT_11));
 
         assertThat(
-            Stream.generate(this::launchJob).limit(2)
+            Stream.generate(this::launchJobAndGetStatus).limit(2)
         ).containsExactly(
             BatchStatus.COMPLETED, BatchStatus.COMPLETED
         );
@@ -68,7 +68,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     };
 
     @SneakyThrows(Exception.class)
-    private BatchStatus launchJob() {
+    private BatchStatus launchJobAndGetStatus() {
         return jobLauncherTestUtils.launchJob().getStatus();
     }
 
