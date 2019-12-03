@@ -9,7 +9,6 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_N
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +35,7 @@ public class EOD1JobConfig {
     private final RebalancingTasklet rebalancingTasklet;
 
     private final PositionRollTasklet positionRollTasklet;
+
     @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
         return jobs.get(EOD1_BATCH_JOB_NAME)
@@ -46,33 +46,25 @@ public class EOD1JobConfig {
             .build();
     }
 
-    @Bean
-    @JobScope
-    public Step mtmTrades() {
+    private Step mtmTrades() {
         return steps.get(MTM_TRADES_STEP_NAME)
             .tasklet(markToMarketTradesTasklet)
             .build();
     }
 
-    @Bean
-    @JobScope
-    public Step netTrades() {
+    private Step netTrades() {
         return steps.get(NET_TRADES_STEP_NAME)
             .tasklet(nettingTasklet)
             .build();
     }
 
-    @Bean
-    @JobScope
-    public Step rebalancePositions() {
+    private Step rebalancePositions() {
         return steps.get(REBALANCE_POSITIONS_STEP_NAME)
             .tasklet(rebalancingTasklet)
             .build();
     }
 
-    @Bean
-    @JobScope
-    public Step rollPositions() {
+    private Step rollPositions() {
         return steps.get(ROLL_POSITIONS_STEP_NAME)
             .tasklet(positionRollTasklet)
             .build();
