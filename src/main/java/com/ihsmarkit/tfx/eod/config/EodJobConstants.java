@@ -12,7 +12,7 @@ public final class EodJobConstants {
     public static final DateTimeFormatter BUSINESS_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public static final String USD = "USD";
-
+    public static final String EUR = "EUR";
     public static final String JPY = "JPY";
 
     public static final String EOD1_BATCH_JOB_NAME = "eod1Job";
