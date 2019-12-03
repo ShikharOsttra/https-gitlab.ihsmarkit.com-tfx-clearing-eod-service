@@ -4,11 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
@@ -33,6 +34,7 @@ import com.ihsmarkit.tfx.eod.batch.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
 class CacheConfigTest extends AbstractSpringBatchTest {
 
@@ -51,19 +53,24 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
 
     @Test
-    void shouldHaveSeparateCachesForJobs() throws Exception {
+    void shouldHaveSeparateCachesForJobs() {
 
         when(calendarTradingSwapPointRepository.findNextTradingDate(any(), any())).thenReturn(Optional.of(OCT_11));
 
         assertThat(
-            List.of(
-                jobLauncherTestUtils.getJobLauncher().run(job, jobLauncherTestUtils.getUniqueJobParameters()).getStatus(),
-                jobLauncherTestUtils.getJobLauncher().run(job, jobLauncherTestUtils.getUniqueJobParameters()).getStatus()
-            )
-        ).containsExactly(BatchStatus.COMPLETED, BatchStatus.COMPLETED);
+            Stream.generate(this::launchJob).limit(2)
+        ).containsExactly(
+            BatchStatus.COMPLETED, BatchStatus.COMPLETED
+        );
 
         verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDate(OCT_10, USDJPY);
+        verifyNoMoreInteractions(calendarTradingSwapPointRepository);
     };
+
+    @SneakyThrows(Exception.class)
+    private BatchStatus launchJob() {
+        return jobLauncherTestUtils.launchJob().getStatus();
+    }
 
     @Component
     @RequiredArgsConstructor
@@ -74,10 +81,9 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
             assertThat(
-                List.of(
-                    tradeAndSettlementDateService.getNextTradeDate(OCT_10, USDJPY),
-                    tradeAndSettlementDateService.getNextTradeDate(OCT_10, USDJPY)
-                )
+                Stream
+                    .generate(() -> tradeAndSettlementDateService.getNextTradeDate(OCT_10, USDJPY))
+                    .limit(2)
             ).containsExactly(OCT_11, OCT_11);
 
             return RepeatStatus.FINISHED;

@@ -14,10 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CacheConfig extends CachingConfigurerSupport {
 
+    public static final String TRADE_DATES_CACHE = "tradeDates";
+    public static final String VALUE_DATES_CACHE = "valueDates";
+
     @Bean
     @JobScope
     public CacheManager jobCacheManager() {
-        return new ConcurrentMapCacheManager("tradeDates", "valueDates");
+        return new ConcurrentMapCacheManager(TRADE_DATES_CACHE, VALUE_DATES_CACHE);
     }
 
     @Bean

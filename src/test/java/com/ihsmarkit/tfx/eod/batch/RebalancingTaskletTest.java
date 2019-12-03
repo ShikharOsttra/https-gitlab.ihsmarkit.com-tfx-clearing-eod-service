@@ -51,8 +51,7 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
-    private static final String BUSINESS_DATE_STR = "20191006";
-    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
     private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
 
     private static final CurrencyPairEntity EURUSD = CurrencyPairEntity.of(2L, "EUR", "USD");
@@ -122,7 +121,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(REBALANCE_POSITIONS_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE_STR)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);

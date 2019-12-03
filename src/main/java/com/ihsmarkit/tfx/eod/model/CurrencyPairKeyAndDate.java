@@ -2,13 +2,9 @@ package com.ihsmarkit.tfx.eod.model;
 
 import java.time.LocalDate;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@RequiredArgsConstructor(staticName = "of")
-@Getter
-@EqualsAndHashCode
+@Value(staticConstructor = "of")
 public class CurrencyPairKeyAndDate {
     private final Long currencyPairId;
     private final LocalDate date;

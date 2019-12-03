@@ -11,6 +11,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -54,13 +55,16 @@ public class PositionRollTasklet implements Tasklet {
     }
 
     private ParticipantPositionEntity mapToParticipantPositionEntity(final ParticipantCurrencyPairAmount position) {
-        final LocalDate nextDate = tradeAndSettlementDateService.getNextTradeDate(businessDate, position.getCurrencyPair());
+
+        final CurrencyPairEntity currencyPair = position.getCurrencyPair();
+        final LocalDate nextDate = tradeAndSettlementDateService.getNextTradeDate(businessDate, currencyPair);
+
         return participantPositionForPairMapper.toParticipantPosition(
             position,
             ParticipantPositionType.SOD,
             nextDate,
-            tradeAndSettlementDateService.getValueDate(nextDate, position.getCurrencyPair()),
-            dailySettlementPriceProvider.getDailySettlementPrices(businessDate).get(position.getCurrencyPair())
+            tradeAndSettlementDateService.getValueDate(nextDate, currencyPair),
+            dailySettlementPriceProvider.getDailySettlementPrices(businessDate).get(currencyPair)
         );
     }
 }

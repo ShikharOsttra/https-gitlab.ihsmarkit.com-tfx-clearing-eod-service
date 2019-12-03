@@ -56,8 +56,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
 
-    private static final String BUSINESS_DATE_STR = "20191006";
-    private static final LocalDate BUSINESS_DATE = LocalDate.parse(BUSINESS_DATE_STR, BUSINESS_DATE_FMT);
+    private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
     private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
 
     @MockBean
@@ -117,7 +116,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("businessDate", BUSINESS_DATE_STR)
+                .addString("businessDate", BUSINESS_DATE.format(BUSINESS_DATE_FMT))
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
