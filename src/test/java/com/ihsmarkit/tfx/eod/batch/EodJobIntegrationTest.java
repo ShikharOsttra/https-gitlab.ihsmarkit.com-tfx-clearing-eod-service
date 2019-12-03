@@ -10,15 +10,20 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Import;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.ihsmarkit.tfx.eod.config.CacheConfig;
+import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.test.db.util.DbUnitTestListeners;
 
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
+@Import({EOD1JobConfig.class, DateConfig.class, CacheConfig.class})
 class EodJobIntegrationTest extends AbstractSpringBatchTest {
 
     @Autowired

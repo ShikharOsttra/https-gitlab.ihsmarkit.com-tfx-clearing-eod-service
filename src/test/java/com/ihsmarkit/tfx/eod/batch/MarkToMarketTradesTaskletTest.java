@@ -40,10 +40,13 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -52,6 +55,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().build();
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
+
+    private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
+    private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
 
     @MockBean
     private TradeRepository tradeRepository;
@@ -67,6 +73,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private EODCalculator eodCalculator;
+
+    @MockBean
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
@@ -84,14 +93,14 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldCalculateAndStoreDailyAndInitialMtm() {
 
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
         when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(trades);
 
         when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
             .thenReturn(positions);
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(dailySettlementPrices);
 
         when(eodCalculator.calculateAndAggregateInitialMtm(any(), any()))
@@ -107,7 +116,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep("mtmTrades",
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("businessDate", businessDateStr)
+                .addString("businessDate", BUSINESS_DATE.format(BUSINESS_DATE_FMT))
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
@@ -115,9 +124,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         verify(eodCalculator).calculateAndAggregateDailyMtm(positions, dailySettlementPrices);
         verify(eodCalculator).calculateAndAggregateInitialMtm(trades, dailySettlementPrices);
 
-        verify(dailySettlementPriceProvider).getDailySettlementPrices(businessDate);
-        verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
-        verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, businessDate);
+        verify(dailySettlementPriceProvider).getDailySettlementPrices(BUSINESS_DATE);
+        verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
+        verify(participantPositionRepository).findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, BUSINESS_DATE);
 
         verify(eodProductCashSettlementRepository).saveAll(captor.capture());
         assertThat(captor.getValue())
@@ -134,22 +143,22 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
                     EodProductCashSettlementType.DAILY_MTM, AmountEntity.of(BigDecimal.TEN, JPY),
-                    businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_USD,
                     EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.ONE, JPY),
-                    businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 Tuple.tuple(
                     PARTICIPANT,
                     CURRENCY_PAIR_JPY,
                     EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.valueOf(2), JPY),
-                    businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 )
             );
 
@@ -165,7 +174,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         MarkToMarketTradesTasklet.class, TradeOrPositionEssentialsMapper.class, EodProductCashSettlementRepository.class,
-        EODCalculator.class
+        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
@@ -173,7 +182,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 MarkToMarketTradesTasklet.class,
                 EODCalculator.class,
                 TradeOrPositionEssentialsMapper.class,
-                EodProductCashSettlementRepository.class
+                EodProductCashSettlementRepository.class,
+                EOD1JobConfig.class,
+                DateConfig.class
         })
     )
     static class TestConfig {

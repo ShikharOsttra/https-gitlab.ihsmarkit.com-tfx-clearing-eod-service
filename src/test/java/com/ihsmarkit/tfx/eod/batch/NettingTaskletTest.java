@@ -44,13 +44,19 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class NettingTaskletTest extends AbstractSpringBatchTest {
+
+    private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
+    private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);
 
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().valueCurrency(JPY).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_JPY = aCurrencyPairEntityBuilder().baseCurrency(JPY).build();
@@ -94,6 +100,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     @MockBean
     private EODCalculator eodCalculator;
 
+    @MockBean
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
+
     @Mock
     private Stream<TradeEntity> trades;
 
@@ -108,8 +117,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
-        final String businessDateStr = "20191006";
-        final LocalDate businessDate = LocalDate.parse(businessDateStr, BUSINESS_DATE_FMT);
+
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
+        when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
         when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(
             Stream.of(A_BUYS_20_USD, A_SELLS_10_USD)
@@ -119,7 +129,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
             List.of(POSITION)
         );
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(businessDate))
+        when(dailySettlementPriceProvider.getDailySettlementPrices(BUSINESS_DATE))
             .thenReturn(dailySettlementPrices);
 
         when(dailySettlementPrices.get(CURRENCY_PAIR_USD))
@@ -137,13 +147,13 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(NET_TRADES_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDateStr)
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(participantPositionRepository)
-            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
+            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, BUSINESS_DATE);
 
         verify(eodCalculator).netAllTtrades(tradeCaptor.capture());
         assertThat(tradeCaptor.getValue())
@@ -158,7 +168,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.5), BigDecimal.valueOf(-10.0))
             );
 
-        verify(tradeRepository).findAllNovatedForTradeDate(businessDate);
+        verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
 
         verify(participantPositionRepository).saveAll(positionCaptor.capture());
         assertThat(positionCaptor.getValue())
@@ -180,8 +190,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantPositionType.NET,
                     AmountEntity.of(BigDecimal.ONE, USD),
                     BigDecimal.valueOf(2),
-                    businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 ),
                 tuple(
                     PARTICIPANT,
@@ -190,8 +200,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     ParticipantPositionType.NET,
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     BigDecimal.valueOf(3),
-                    businessDate,
-                    LocalDate.of(2019, 10, 9)
+                    BUSINESS_DATE,
+                    VALUE_DATE
                 )
             );
 
@@ -202,7 +212,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     @TestConfiguration
     @ComponentScan(basePackageClasses = {
         NettingTasklet.class, TradeOrPositionEssentialsMapper.class, ParticipantPositionRepository.class,
-        EODCalculator.class
+        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
     },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
@@ -211,7 +221,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 EODCalculator.class,
                 TradeRepository.class,
                 TradeOrPositionEssentialsMapper.class,
-                ParticipantPositionRepository.class
+                ParticipantPositionRepository.class,
+                EOD1JobConfig.class,
+                DateConfig.class
             })
     )
     static class TestConfig {
