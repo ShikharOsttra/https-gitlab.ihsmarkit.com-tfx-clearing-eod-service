@@ -101,7 +101,6 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private Collection<ParticipantPositionEntity> positions;
 
     @Test
-//    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldCalculateAndStoreDailyAndInitialMtm() {
 
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
