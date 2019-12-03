@@ -2,13 +2,11 @@ package com.ihsmarkit.tfx.eod.model;
 
 import java.time.LocalDate;
 
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+
 import lombok.Value;
-import lombok.ToString;
-import lombok.ToString;
 
 @Value(staticConstructor = "of")
-@ToString
-@ToString
 public class CurrencyPairKeyAndDate {
     private final String baseCurrency;
     private final String valueCurrency;
