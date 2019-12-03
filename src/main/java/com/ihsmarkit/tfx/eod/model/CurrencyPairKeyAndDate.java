@@ -4,8 +4,10 @@ import java.time.LocalDate;
 
 import lombok.Value;
 import lombok.ToString;
+import lombok.ToString;
 
 @Value(staticConstructor = "of")
+@ToString
 @ToString
 public class CurrencyPairKeyAndDate {
     private final String baseCurrency;

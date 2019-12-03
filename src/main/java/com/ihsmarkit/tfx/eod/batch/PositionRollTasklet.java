@@ -64,7 +64,7 @@ public class PositionRollTasklet implements Tasklet {
             ParticipantPositionType.SOD,
             nextDate,
             tradeAndSettlementDateService.getValueDate(nextDate, currencyPair),
-            dailySettlementPriceProvider.getDailySettlementPrices(businessDate).get(currencyPair)
+            dailySettlementPriceService.getPrice(businessDate, currencyPair)
         );
     }
 }

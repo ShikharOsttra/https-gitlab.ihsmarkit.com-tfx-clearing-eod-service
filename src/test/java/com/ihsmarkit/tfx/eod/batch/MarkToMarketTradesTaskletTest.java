@@ -129,7 +129,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(MTM_TRADES_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
-                .addString("businessDate", BUSINESS_DATE.format(BUSINESS_DATE_FMT))
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE_STR)
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
