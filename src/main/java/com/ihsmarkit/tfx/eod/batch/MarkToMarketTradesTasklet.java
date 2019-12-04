@@ -59,10 +59,10 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
-        final Function<String, BigDecimal> jpyRates = ccy -> jpyRatesService.getJpyRate(businessDate, ccy);
+        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRatesService.getJpyRate(businessDate, ccy);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
-        final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRates)
+        final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
             .map(
                 mtm -> mtmMapper.toEodProductCashSettlement(
                     mtm,
@@ -75,7 +75,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
-        final Stream<EodProductCashSettlementEntity> daily = eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRates)
+        final Stream<EodProductCashSettlementEntity> daily = eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
             .map(
                 mtm -> mtmMapper.toEodProductCashSettlement(
                     mtm,
