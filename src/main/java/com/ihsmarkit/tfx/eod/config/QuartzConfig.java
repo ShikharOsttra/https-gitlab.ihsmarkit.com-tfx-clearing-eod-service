@@ -25,7 +25,7 @@ import lombok.AllArgsConstructor;
 @Configuration
 @AllArgsConstructor
 public class QuartzConfig {
-    private static final String EOD1_JOB_CONFIG = "eod1.job.enabled";
+    private static final String EOD1_JOB_IS_ENABLED_PROPERTY = "eod1.job.enabled";
     private static final String EOD1_JOB_DETAIL_NAME = "eod1JobDetail";
     private static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
     private static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
@@ -38,7 +38,7 @@ public class QuartzConfig {
     private final String eod1JobTrigger2Cron;
 
     @Bean(EOD1_JOB_DETAIL_NAME)
-    @ConditionalOnProperty(EOD1_JOB_CONFIG)
+    @ConditionalOnProperty(EOD1_JOB_IS_ENABLED_PROPERTY)
     public JobDetail eod1JobDetail() {
         final JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put(JOB_NAME_PARAM_NAME, EOD1_BATCH_JOB_NAME);
