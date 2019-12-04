@@ -3,7 +3,7 @@ package com.ihsmarkit.tfx.eod.batch;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.springframework.batch.core.StepContribution;
@@ -24,8 +24,9 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.AllArgsConstructor;
@@ -41,13 +42,15 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final ParticipantPositionRepository participantPositionRepository;
 
-    private final DailySettlementPriceProvider dailySettlementPriceProvider;
-
     private final EODCalculator eodCalculator;
 
     private final ParticipantPositionForPairMapper mtmMapper;
 
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
+
+    private final DailySettlementPriceService dailySettlementPriceService;
+
+    private final JPYRateService jpyRateService;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -55,10 +58,11 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
-        final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
+        final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
+        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
-        final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dsp)
+        final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
             .map(
                 mtm -> mtmMapper.toEodProductCashSettlement(
                     mtm,
@@ -71,7 +75,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
         final Collection<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
-        final Stream<EodProductCashSettlementEntity> daily = eodCalculator.calculateAndAggregateDailyMtm(positions, dsp)
+        final Stream<EodProductCashSettlementEntity> daily = eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
             .map(
                 mtm -> mtmMapper.toEodProductCashSettlement(
                     mtm,

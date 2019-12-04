@@ -25,7 +25,7 @@ import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -40,7 +40,7 @@ public class RebalancingTasklet implements Tasklet {
 
     private final TradeRepository tradeRepositiory;
 
-    private final DailySettlementPriceProvider dailySettlementPriceProvider;
+    private final DailySettlementPriceService dailySettlementPriceService;
 
     private final EODCalculator eodCalculator;
 
@@ -55,8 +55,6 @@ public class RebalancingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-
-        final Map<CurrencyPairEntity, BigDecimal> dsp = dailySettlementPriceProvider.getDailySettlementPrices(businessDate);
 
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
@@ -84,7 +82,7 @@ public class RebalancingTasklet implements Tasklet {
                             businessDate,
                             tradeAndSettlementDateService.getValueDate(businessDate, tradesByCcy.getKey()),
                             tradesByCcy.getKey(),
-                            dsp.get(tradesByCcy.getKey())
+                            dailySettlementPriceService.getPrice(businessDate, tradesByCcy.getKey())
                         )
                     )
                 );
@@ -108,7 +106,7 @@ public class RebalancingTasklet implements Tasklet {
             ParticipantPositionType.REBALANCING,
             businessDate,
             tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
-            dsp.get(trade.getCurrencyPair())
+            dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
         ));
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);

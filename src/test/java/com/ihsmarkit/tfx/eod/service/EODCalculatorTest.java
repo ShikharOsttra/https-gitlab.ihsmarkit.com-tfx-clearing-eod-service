@@ -25,6 +25,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
@@ -40,6 +41,10 @@ class EODCalculatorTest {
     private static final Map<CurrencyPairEntity, BigDecimal> PRICE_MAP = Map.of(
         USDJPY, BigDecimal.valueOf(99.0),
         EURUSD, BigDecimal.valueOf(1.1)
+    );
+
+    private static final Map<String, BigDecimal> JPY_PRICE_MAP = Map.of(
+        EodJobConstants.USD, BigDecimal.valueOf(99.0)
     );
 
     private static final ParticipantEntity PARTICIPANT_A = aParticipantEntityBuilder().name("A").build();
@@ -112,14 +117,14 @@ class EODCalculatorTest {
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POS_USD_L_100k = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_USD_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(USDJPY)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "USD"))
         .price(BigDecimal.valueOf(99.3))
         .participant(PARTICIPANT_A)
         .build();
 
-    private static final ParticipantPositionEntity A_POS_EUR_L_100k = ParticipantPositionEntity.builder()
+    private static final ParticipantPositionEntity A_POS_EUR_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
         .amount(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
@@ -199,7 +204,7 @@ class EODCalculatorTest {
     void shouldRoundPositiveFractionalPYDown() {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
-        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
                 .extracting(
                     ParticipantCurrencyPairAmount::getParticipant,
                     ParticipantCurrencyPairAmount::getCurrencyPair,
@@ -214,7 +219,7 @@ class EODCalculatorTest {
     void shouldRoundNegativeFractionalPYUp() {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
-        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
                 .extracting(
                     ParticipantCurrencyPairAmount::getParticipant,
                     ParticipantCurrencyPairAmount::getCurrencyPair,
@@ -228,7 +233,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultipleTrades() {
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
-        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP))
+        assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
             .extracting(ParticipantCurrencyPairAmount::getParticipant, ParticipantCurrencyPairAmount::getCurrencyPair, ParticipantCurrencyPairAmount::getAmount)
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
@@ -240,7 +245,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
         Stream<ParticipantCurrencyPairAmount> mtm =
-            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100k, A_POS_USD_L_100k), PRICE_MAP);
+            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100K, A_POS_USD_L_100K), PRICE_MAP::get, JPY_PRICE_MAP::get);
 
         assertThat(mtm)
             .extracting(
@@ -279,7 +284,7 @@ class EODCalculatorTest {
     @Test
     void shouldAggregatePositions() {
         assertThat(
-            eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100k, A_POS_EUR_L_212M, A_POS_USD_L_100k, B_POS_EUR_L_30M))
+            eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100K, A_POS_EUR_L_212M, A_POS_USD_L_100K, B_POS_EUR_L_30M))
         )
         .extracting(
             ParticipantCurrencyPairAmount::getParticipant,

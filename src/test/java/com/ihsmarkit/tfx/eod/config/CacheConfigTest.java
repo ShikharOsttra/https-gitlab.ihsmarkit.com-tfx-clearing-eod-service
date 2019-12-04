@@ -7,11 +7,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.StepContribution;
@@ -31,8 +34,12 @@ import org.springframework.stereotype.Component;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.eod.batch.AbstractSpringBatchTest;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -41,7 +48,12 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     private static final String TEST_STEP = "TEST_STEP";
     private static final String TEST_STEP_NEXT = "TEST_STEP_NEXT";
     private static final String TEST_JOB_NAME = "TEST_JOB_NAME";
+    private static final BigDecimal USD_RATE = BigDecimal.valueOf(99.45);
+    private static final BigDecimal EUR_RATE = BigDecimal.valueOf(104.98);
     private static final CurrencyPairEntity USDJPY = CurrencyPairEntity.of(1L, "USD", "JPY");
+    private static final CurrencyPairEntity EURJPY = CurrencyPairEntity.of(2L, "EUR", "JPY");
+    private static final String EURJPY_CODE = "EURJPY";
+    private static final String USDJPY_CODE = "USDJPY";
     private static final LocalDate OCT_10 = LocalDate.of(2019, 10, 10);
     private static final LocalDate OCT_11 = OCT_10.plusDays(1);
 
@@ -51,11 +63,23 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     @MockBean
     private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
+    @MockBean
+    private DailySettlementPriceProvider dailySettlementPriceProvider;
+
+    @Mock
+    private Map<String, BigDecimal> ratesMap;
+
 
     @Test
+    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldHaveSeparateCachesForJobs() {
 
         when(calendarTradingSwapPointRepository.findNextTradingDate(any(), any())).thenReturn(Optional.of(OCT_11));
+
+        when(dailySettlementPriceProvider.getDailySettlementPrices(OCT_10)).thenReturn(ratesMap);
+
+        when(ratesMap.get(EURJPY_CODE)).thenReturn(EUR_RATE);
+        when(ratesMap.get(USDJPY_CODE)).thenReturn(USD_RATE);
 
         assertThat(
             Stream.generate(this::launchJobAndGetStatus).limit(2)
@@ -64,7 +88,9 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         );
 
         verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDate(OCT_10, USDJPY);
-        verifyNoMoreInteractions(calendarTradingSwapPointRepository);
+        verify(ratesMap, times(2)).get(EURJPY_CODE);
+        verify(ratesMap, times(2)).get(USDJPY_CODE);
+        verifyNoMoreInteractions(calendarTradingSwapPointRepository, ratesMap);
     };
 
     @SneakyThrows(Exception.class)
@@ -77,6 +103,8 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     static class TestTasklet implements Tasklet {
 
         private final TradeAndSettlementDateService tradeAndSettlementDateService;
+        private final DailySettlementPriceService dailySettlementPriceService;
+        private final JPYRateService jpyRateService;
 
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -85,6 +113,10 @@ class CacheConfigTest extends AbstractSpringBatchTest {
                     .generate(() -> tradeAndSettlementDateService.getNextTradeDate(OCT_10, USDJPY))
                     .limit(2)
             ).containsExactly(OCT_11, OCT_11);
+
+            assertThat(jpyRateService.getJpyRate(OCT_10, EodJobConstants.USD)).isEqualByComparingTo(USD_RATE);
+            assertThat(dailySettlementPriceService.getPrice(OCT_10, EURJPY)).isEqualByComparingTo(EUR_RATE);
+            assertThat(dailySettlementPriceService.getPrice(OCT_10, USDJPY)).isEqualByComparingTo(USD_RATE);
 
             return RepeatStatus.FINISHED;
         }

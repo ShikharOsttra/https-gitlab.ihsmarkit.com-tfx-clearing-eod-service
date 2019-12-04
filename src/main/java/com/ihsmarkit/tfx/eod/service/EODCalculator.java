@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,17 +36,17 @@ public class EODCalculator {
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
-    private ParticipantCurrencyPairAmount calculateMtmValue(final TradeOrPositionEssentials trade, final Map<CurrencyPairEntity, BigDecimal> dsp,
-                                                            final Map<String, BigDecimal> jpyRates) {
+    private ParticipantCurrencyPairAmount calculateMtmValue(final TradeOrPositionEssentials trade, final Function<CurrencyPairEntity, BigDecimal> dsp,
+                                                            final Function<String, BigDecimal> jpyRates) {
 
         final var currencyPair = trade.getCurrencyPair();
         final var valueCurrency = currencyPair.getValueCurrency();
 
-        final var rate = dsp.get(currencyPair);
+        final var rate = dsp.apply(currencyPair);
 
         final var mtmAmount = rate.subtract(trade.getSpotRate())
             .multiply(trade.getAmount())
-            .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.get(valueCurrency))
+            .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.apply(valueCurrency))
             .setScale(0, RoundingMode.FLOOR);
 
         return ParticipantCurrencyPairAmount.of(trade.getParticipant(), currencyPair, mtmAmount);
@@ -53,11 +54,9 @@ public class EODCalculator {
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateInitialMtm(
         final Stream<TradeEntity> trades,
-        final Map<CurrencyPairEntity,
-            BigDecimal> dsp
+        final Function<CurrencyPairEntity, BigDecimal> dsp,
+        final Function<String, BigDecimal> jpyRates
     ) {
-
-        final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
 
         return flatten(
             aggregate(
@@ -98,9 +97,8 @@ public class EODCalculator {
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
-                                                                               final Map<CurrencyPairEntity, BigDecimal> dsp) {
-
-        final Map<String, BigDecimal> jpyRates = getJpyRatesFromDsp(dsp);
+                                                                               final Function<CurrencyPairEntity, BigDecimal> dsp,
+                                                                               final Function<String, BigDecimal> jpyRates) {
 
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
@@ -147,12 +145,4 @@ public class EODCalculator {
 
     }
 
-    private Map<String, BigDecimal> getJpyRatesFromDsp(final Map<CurrencyPairEntity, BigDecimal> dailySettlementPrices) {
-        return dailySettlementPrices.entrySet().stream()
-            .filter(a -> JPY.equals(a.getKey().getValueCurrency()))
-            .collect(Collectors.toMap(
-                ccyPairBalance -> ccyPairBalance.getKey().getBaseCurrency(),
-                Map.Entry::getValue
-            ));
-    }
 }

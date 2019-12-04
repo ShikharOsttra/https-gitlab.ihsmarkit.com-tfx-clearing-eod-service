@@ -20,14 +20,14 @@ public class TradeAndSettlementDateService {
 
     private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
-    @Cacheable(value = CacheConfig.VALUE_DATES_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair.id, #tradeDate)")
+    @Cacheable(value = CacheConfig.VALUE_DATES_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair, #tradeDate)")
     public LocalDate getValueDate(final LocalDate tradeDate, final CurrencyPairEntity currencyPair) {
         //fixme: use proper method
         return calendarTradingSwapPointRepository
             .findValueDateByTradeDateAndCurrencyPairFailFast(tradeDate, CurrencyPair.of(currencyPair.getBaseCurrency(), currencyPair.getValueCurrency()));
     }
 
-    @Cacheable(value = CacheConfig.TRADE_DATES_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair.id, #tradeDate)")
+    @Cacheable(value = CacheConfig.TRADE_DATES_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair, #tradeDate)")
     public LocalDate getNextTradeDate(final LocalDate tradeDate, final CurrencyPairEntity currencyPair) {
         return calendarTradingSwapPointRepository.findNextTradingDate(tradeDate, currencyPair)
             .orElseThrow(() -> new RuntimeException("unable to find new trading date")); //Fixme: move to Core
