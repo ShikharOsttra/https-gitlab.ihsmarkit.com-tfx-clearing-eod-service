@@ -36,7 +36,7 @@ import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRep
 import com.ihsmarkit.tfx.eod.batch.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
-import com.ihsmarkit.tfx.eod.service.JPYRatesService;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -104,7 +104,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
         private final TradeAndSettlementDateService tradeAndSettlementDateService;
         private final DailySettlementPriceService dailySettlementPriceService;
-        private final JPYRatesService jpyRatesService;
+        private final JPYRateService jpyRateService;
 
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -114,7 +114,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
                     .limit(2)
             ).containsExactly(OCT_11, OCT_11);
 
-            assertThat(jpyRatesService.getJpyRate(OCT_10, EodJobConstants.USD)).isEqualByComparingTo(USD_RATE);
+            assertThat(jpyRateService.getJpyRate(OCT_10, EodJobConstants.USD)).isEqualByComparingTo(USD_RATE);
             assertThat(dailySettlementPriceService.getPrice(OCT_10, EURJPY)).isEqualByComparingTo(EUR_RATE);
             assertThat(dailySettlementPriceService.getPrice(OCT_10, USDJPY)).isEqualByComparingTo(USD_RATE);
 

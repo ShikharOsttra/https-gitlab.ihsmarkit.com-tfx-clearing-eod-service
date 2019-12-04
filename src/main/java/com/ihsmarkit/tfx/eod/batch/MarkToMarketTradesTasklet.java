@@ -26,7 +26,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
-import com.ihsmarkit.tfx.eod.service.JPYRatesService;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.AllArgsConstructor;
@@ -50,7 +50,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final DailySettlementPriceService dailySettlementPriceService;
 
-    private final JPYRatesService jpyRatesService;
+    private final JPYRateService jpyRateService;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -59,7 +59,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
-        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRatesService.getJpyRate(businessDate, ccy);
+        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<EodProductCashSettlementEntity> initial = eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)

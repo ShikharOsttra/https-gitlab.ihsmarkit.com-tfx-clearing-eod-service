@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @JobScope
 @RequiredArgsConstructor
-public class JPYRatesService {
+public class JPYRateService {
 
     private final DailySettlementPriceService dailySettlementPriceService;
 

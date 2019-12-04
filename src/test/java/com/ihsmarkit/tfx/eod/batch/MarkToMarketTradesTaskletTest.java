@@ -55,7 +55,7 @@ import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
-import com.ihsmarkit.tfx.eod.service.JPYRatesService;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
@@ -77,7 +77,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private DailySettlementPriceService dailySettlementPriceService;
 
     @MockBean
-    private JPYRatesService jpyRatesService;
+    private JPYRateService jpyRateService;
 
     @MockBean
     private EodProductCashSettlementRepository eodProductCashSettlementRepository;
@@ -113,7 +113,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(USD_RATE);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(JPY_RATE);
-        when(jpyRatesService.getJpyRate(BUSINESS_DATE, USD)).thenReturn(JPY_RATE);
+        when(jpyRateService.getJpyRate(BUSINESS_DATE, USD)).thenReturn(JPY_RATE);
 
         when(eodCalculator.calculateAndAggregateInitialMtm(any(), any(), any()))
             .thenReturn(
@@ -191,7 +191,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 )
             );
 
-        verify(jpyRatesService, atLeastOnce()).getJpyRate(BUSINESS_DATE, USD);
+        verify(jpyRateService, atLeastOnce()).getJpyRate(BUSINESS_DATE, USD);
         verify(dailySettlementPriceService, atLeastOnce()).getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY);
         verify(dailySettlementPriceService, atLeastOnce()).getPrice(BUSINESS_DATE, CURRENCY_PAIR_USD);
 
@@ -200,7 +200,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
             participantPositionRepository,
             eodCalculator,
             eodProductCashSettlementRepository,
-            jpyRatesService,
+            jpyRateService,
             dailySettlementPriceService
         );
     }
