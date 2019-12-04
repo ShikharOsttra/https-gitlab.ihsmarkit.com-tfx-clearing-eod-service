@@ -89,7 +89,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
         verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDate(OCT_10, USDJPY);
         verify(ratesMap, times(2)).get(EURJPY_CODE);
-        verify(ratesMap, times(4)).get(USDJPY_CODE); //FIXME: Should be 2!!!
+        verify(ratesMap, times(2)).get(USDJPY_CODE);
         verifyNoMoreInteractions(calendarTradingSwapPointRepository, ratesMap);
     };
 

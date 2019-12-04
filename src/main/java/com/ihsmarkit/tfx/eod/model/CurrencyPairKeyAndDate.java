@@ -13,6 +13,6 @@ public class CurrencyPairKeyAndDate {
     private final LocalDate date;
 
     public static CurrencyPairKeyAndDate of(final CurrencyPairEntity currencyPair, final LocalDate date) {
-        return of(currencyPair.getBaseCurrency(), currencyPair.getBaseCurrency(), date);
+        return of(currencyPair.getBaseCurrency(), currencyPair.getValueCurrency(), date);
     }
 }
