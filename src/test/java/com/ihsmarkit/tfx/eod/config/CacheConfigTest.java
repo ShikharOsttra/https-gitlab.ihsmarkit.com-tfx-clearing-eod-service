@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -74,7 +73,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     void shouldHaveSeparateCachesForJobs() {
 
-        when(calendarTradingSwapPointRepository.findNextTradingDate(any(), any())).thenReturn(Optional.of(OCT_11));
+        when(calendarTradingSwapPointRepository.findNextTradingDateFailFast(any(), any())).thenReturn(OCT_11);
 
         when(dailySettlementPriceProvider.getDailySettlementPrices(OCT_10)).thenReturn(ratesMap);
 
@@ -87,7 +86,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
             BatchStatus.COMPLETED, BatchStatus.COMPLETED
         );
 
-        verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDate(OCT_10, USDJPY);
+        verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDateFailFast(OCT_10, USDJPY);
         verify(ratesMap, times(2)).get(EURJPY_CODE);
         verify(ratesMap, times(2)).get(USDJPY_CODE);
         verifyNoMoreInteractions(calendarTradingSwapPointRepository, ratesMap);
