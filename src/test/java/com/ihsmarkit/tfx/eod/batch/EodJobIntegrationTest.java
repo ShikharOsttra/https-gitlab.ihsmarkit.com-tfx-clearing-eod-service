@@ -19,7 +19,7 @@ import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.test.db.util.DbUnitTestListeners;
+import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
