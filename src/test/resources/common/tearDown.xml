@@ -33,7 +33,13 @@
     <bond_haircut_rate/>
     <log_haircut_rate/>
     <equity_haircut_rate/>
-    <eod_product_cash_settlement/>
     <participant_position/>
+    <eod_product_cash_settlement/>
     <calendar_trading_swap_point/>
+    <BATCH_JOB_INSTANCE/>
+    <BATCH_JOB_EXECUTION/>
+    <BATCH_JOB_EXECUTION_PARAMS/>
+    <BATCH_JOB_EXECUTION_CONTEXT/>
+    <BATCH_STEP_EXECUTION/>
+    <BATCH_STEP_EXECUTION_CONTEXT/>
 </dataset>

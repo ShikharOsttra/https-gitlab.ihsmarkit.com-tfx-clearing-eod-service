@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.assertj.core.groups.Tuple;
 import org.assertj.core.matcher.AssertionMatcher;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
@@ -34,12 +33,9 @@ import org.mockito.hamcrest.MockitoHamcrest;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 
-import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -48,16 +44,18 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
-import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
+@Import({DateConfig.class, SpringBatchConfig.class, EOD1JobConfig.class})
 class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     private static final CurrencyPairEntity CURRENCY_PAIR_USD = aCurrencyPairEntityBuilder().build();
@@ -69,6 +67,14 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     private static final BigDecimal JPY_RATE = BigDecimal.valueOf(99);
     private static final BigDecimal USD_RATE = BigDecimal.valueOf(1.177);
+
+    private static final ParticipantCurrencyPairAmount INITIAL_POS_1 = ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE);
+    private static final ParticipantCurrencyPairAmount INITIAL_POS_2 = ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2));
+    private static final ParticipantCurrencyPairAmount DAILY_POS_1 = ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN);
+
+    private static final EodProductCashSettlementEntity POS_ENTITY_1 = new EodProductCashSettlementEntity();
+    private static final EodProductCashSettlementEntity POS_ENTITY_2 = new EodProductCashSettlementEntity();
+    private static final EodProductCashSettlementEntity POS_ENTITY_3 = new EodProductCashSettlementEntity();
 
     @MockBean
     private TradeRepository tradeRepository;
@@ -90,6 +96,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private TradeAndSettlementDateService tradeAndSettlementDateService;
+
+    @MockBean
+    private EodCashSettlementMappingService eodCashSettlementMappingService;
 
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
@@ -116,15 +125,14 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         when(jpyRateService.getJpyRate(BUSINESS_DATE, USD)).thenReturn(JPY_RATE);
 
         when(eodCalculator.calculateAndAggregateInitialMtm(any(), any(), any()))
-            .thenReturn(
-                Stream.of(
-                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
-                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
-                )
-            );
+            .thenReturn(Stream.of(INITIAL_POS_1, INITIAL_POS_2));
 
         when(eodCalculator.calculateAndAggregateDailyMtm(any(), any(), any()))
-            .thenReturn(Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.TEN)));
+            .thenReturn(Stream.of(DAILY_POS_1));
+
+        when(eodCashSettlementMappingService.mapInitialMtm(INITIAL_POS_1)).thenReturn(POS_ENTITY_1);
+        when(eodCashSettlementMappingService.mapInitialMtm(INITIAL_POS_2)).thenReturn(POS_ENTITY_2);
+        when(eodCashSettlementMappingService.mapDailyMtm(DAILY_POS_1)).thenReturn(POS_ENTITY_3);
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(MTM_TRADES_STEP_NAME,
             new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
@@ -159,37 +167,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         verify(eodProductCashSettlementRepository).saveAll(captor.capture());
         assertThat(captor.getValue())
-            .extracting(
-                EodProductCashSettlementEntity::getParticipant,
-                EodProductCashSettlementEntity::getCurrencyPair,
-                EodProductCashSettlementEntity::getType,
-                EodProductCashSettlementEntity::getAmount,
-                EodProductCashSettlementEntity::getDate,
-                EodProductCashSettlementEntity::getSettlementDate
-            )
-            .containsExactlyInAnyOrder(
-                Tuple.tuple(
-                    PARTICIPANT,
-                    CURRENCY_PAIR_USD,
-                    EodProductCashSettlementType.DAILY_MTM, AmountEntity.of(BigDecimal.TEN, JPY),
-                    BUSINESS_DATE,
-                    VALUE_DATE
-                ),
-                Tuple.tuple(
-                    PARTICIPANT,
-                    CURRENCY_PAIR_USD,
-                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.ONE, JPY),
-                    BUSINESS_DATE,
-                    VALUE_DATE
-                ),
-                Tuple.tuple(
-                    PARTICIPANT,
-                    CURRENCY_PAIR_JPY,
-                    EodProductCashSettlementType.INITIAL_MTM, AmountEntity.of(BigDecimal.valueOf(2), JPY),
-                    BUSINESS_DATE,
-                    VALUE_DATE
-                )
-            );
+            .containsExactlyInAnyOrder(POS_ENTITY_1, POS_ENTITY_3, POS_ENTITY_3);
 
         verify(jpyRateService, atLeastOnce()).getJpyRate(BUSINESS_DATE, USD);
         verify(dailySettlementPriceService, atLeastOnce()).getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY);
@@ -214,23 +192,4 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
         };
     }
 
-    @TestConfiguration
-    @ComponentScan(basePackageClasses = {
-        MarkToMarketTradesTasklet.class, TradeOrPositionEssentialsMapper.class, EodProductCashSettlementRepository.class,
-        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
-    },
-        useDefaultFilters = false,
-        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = {
-                MarkToMarketTradesTasklet.class,
-                EODCalculator.class,
-                TradeOrPositionEssentialsMapper.class,
-                EodProductCashSettlementRepository.class,
-                EOD1JobConfig.class,
-                DateConfig.class
-        })
-    )
-    static class TestConfig {
-
-    }
 }

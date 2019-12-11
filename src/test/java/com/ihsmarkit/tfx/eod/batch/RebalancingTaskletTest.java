@@ -23,10 +23,8 @@ import org.mockito.Captor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 
 import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
@@ -38,9 +36,10 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
@@ -48,6 +47,7 @@ import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
+@Import({DateConfig.class, SpringBatchConfig.class, EOD1JobConfig.class})
 class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
@@ -177,24 +177,4 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
     }
 
-    @TestConfiguration
-    @ComponentScan(basePackageClasses = {
-        RebalancingTasklet.class, TradeOrPositionEssentialsMapper.class, ParticipantPositionRepository.class,
-        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
-    },
-        useDefaultFilters = false,
-        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = {
-                RebalancingTasklet.class,
-                EODCalculator.class,
-                TradeRepository.class,
-                TradeOrPositionEssentialsMapper.class,
-                ParticipantPositionRepository.class,
-                EOD1JobConfig.class,
-                DateConfig.class
-            })
-    )
-    static class TestConfig {
-
-    }
 }
