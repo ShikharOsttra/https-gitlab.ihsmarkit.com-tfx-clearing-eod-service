@@ -67,6 +67,7 @@ dependencies {
         [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
         [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreDlVersion],
         [group: 'com.ihsmarkit.tfx', name: 'core-domain', classifier: 'tests', version: coreDomainVersion],
+        [group: 'com.ihsmarkit.tfx', name: 'core-config', classifier: 'tests', version: coreConfigVersion],
         [group: 'org.apache.activemq', name: 'activemq-pool'],
         [group: 'org.apache.activemq.tooling', name: 'activemq-junit'],
         [group: 'org.dbunit', name: 'dbunit'],
