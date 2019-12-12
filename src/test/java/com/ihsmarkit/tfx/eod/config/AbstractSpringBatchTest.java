@@ -25,7 +25,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @ExtendWith(SpringExtension.class)
 @ImportAutoConfiguration(classes = CoreDlAutoConfiguration.class)
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
-@Import({SpringBatchConfig.class, DateConfig.class, SpringBatchConfig.class})
+@Import({SpringBatchConfig.class, DateConfig.class})
 @SpringBatchTest
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper"})
 @TestPropertySource("classpath:/application.properties")
