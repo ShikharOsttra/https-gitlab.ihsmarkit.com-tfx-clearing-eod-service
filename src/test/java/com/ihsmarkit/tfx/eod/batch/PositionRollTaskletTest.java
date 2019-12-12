@@ -30,15 +30,13 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
-import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
-@Import({DateConfig.class, SpringBatchConfig.class, EOD1JobConfig.class})
+@Import(EOD1JobConfig.class)
 class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
