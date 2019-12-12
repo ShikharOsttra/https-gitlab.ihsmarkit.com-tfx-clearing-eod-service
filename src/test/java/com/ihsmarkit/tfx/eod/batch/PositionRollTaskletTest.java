@@ -21,24 +21,22 @@ import org.mockito.Captor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.config.DateConfig;
+import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
+@Import(EOD1JobConfig.class)
 class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
@@ -110,23 +108,4 @@ class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
     }
 
-    @TestConfiguration
-    @ComponentScan(basePackageClasses = {
-        RebalancingTasklet.class, TradeOrPositionEssentialsMapper.class, ParticipantPositionRepository.class,
-        EODCalculator.class, EOD1JobConfig.class, DateConfig.class
-    },
-        useDefaultFilters = false,
-        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = {
-                PositionRollTasklet.class,
-                EODCalculator.class,
-                TradeOrPositionEssentialsMapper.class,
-                ParticipantPositionRepository.class,
-                EOD1JobConfig.class,
-                DateConfig.class
-            })
-    )
-    static class TestConfig {
-
-    }
 }

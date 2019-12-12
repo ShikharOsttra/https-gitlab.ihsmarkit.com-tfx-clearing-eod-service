@@ -43,6 +43,11 @@ class EODCalculatorTest {
         EURUSD, BigDecimal.valueOf(1.1)
     );
 
+    private static final Map<CurrencyPairEntity, BigDecimal> SWP_PNT_MAP = Map.of(
+        USDJPY, BigDecimal.valueOf(4.1),
+        EURUSD, BigDecimal.valueOf(-0.31)
+    );
+
     private static final Map<String, BigDecimal> JPY_PRICE_MAP = Map.of(
         EodJobConstants.USD, BigDecimal.valueOf(99.0)
     );
@@ -60,35 +65,35 @@ class EODCalculatorTest {
     private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().name("C").build();
     private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().name("D").build();
 
-    private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
+    private static final TradeEntity A_BUYS_20K_USD = TradeEntity.builder()
         .direction(Side.BUY)
         .currencyPair(USDJPY)
         .spotRate(BigDecimal.valueOf(99.5))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20.0), "USD"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20000), "USD"))
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final TradeEntity A_SELLS_10_USD = TradeEntity.builder()
+    private static final TradeEntity A_SELLS_10K_USD = TradeEntity.builder()
         .direction(Side.SELL)
         .currencyPair(USDJPY)
         .spotRate(BigDecimal.valueOf(99.6))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10.0), "USD"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10000), "USD"))
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final TradeEntity A_BUYS_10_EUR = TradeEntity.builder()
+    private static final TradeEntity A_BUYS_10K_EUR = TradeEntity.builder()
         .direction(Side.BUY)
         .currencyPair(EURUSD)
         .spotRate(BigDecimal.valueOf(1.2))
-        .baseAmount(AmountEntity.of(BigDecimal.TEN, "EUR"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(10000), "EUR"))
         .originator(ORIGINATOR_A)
         .build();
 
-    private static final TradeEntity B_SELLS_20_EUR = TradeEntity.builder()
+    private static final TradeEntity B_SELLS_20K_EUR = TradeEntity.builder()
         .direction(Side.SELL)
         .currencyPair(EURUSD)
         .spotRate(BigDecimal.valueOf(1.2))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20), "EUR"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(20000), "EUR"))
         .originator(ORIGINATOR_B)
         .build();
 
@@ -109,11 +114,11 @@ class EODCalculatorTest {
         .build();
 
 
-    private static final TradeEntity A_SELLS_30_EUR = TradeEntity.builder()
+    private static final TradeEntity A_SELLS_30K_EUR = TradeEntity.builder()
         .direction(Side.SELL)
         .currencyPair(EURUSD)
         .spotRate(BigDecimal.valueOf(1.2))
-        .baseAmount(AmountEntity.of(BigDecimal.valueOf(30), "EUR"))
+        .baseAmount(AmountEntity.of(BigDecimal.valueOf(30000), "EUR"))
         .originator(ORIGINATOR_A)
         .build();
 
@@ -183,7 +188,7 @@ class EODCalculatorTest {
     void shouldCalculateNetAmounts() {
         Stream<ParticipantCurrencyPairAmount> mtm =
             eodCalculator.netAllTtrades(
-                Stream.of(A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR, A_SELLS_30_EUR)
+                Stream.of(A_BUYS_20K_USD, A_SELLS_10K_USD, B_SELLS_20K_EUR, A_SELLS_30K_EUR)
                     .map(tradeOrPositionMapper::convertTrade)
             );
 
@@ -194,10 +199,28 @@ class EODCalculatorTest {
                 ParticipantCurrencyPairAmount::getAmount
             )
             .containsExactlyInAnyOrder(
-                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30)),
-                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(10.0)),
-                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(-20))
+                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-30000)),
+                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(10000)),
+                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(-20000))
             );
+    }
+
+    @Test
+    void shouldCalculateSwapPoint() {
+        assertThat(
+            eodCalculator.calculateAndAggregateSwapPnL(
+                Stream.of(A_BUYS_20K_USD, A_SELLS_10K_USD, B_SELLS_20K_EUR, A_SELLS_30K_EUR),
+                SWP_PNT_MAP::get,
+                JPY_PRICE_MAP::get)
+        ).extracting(
+            ParticipantCurrencyPairAmount::getParticipant,
+            ParticipantCurrencyPairAmount::getCurrencyPair,
+            ParticipantCurrencyPairAmount::getAmount
+        ).containsExactlyInAnyOrder(
+            tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(920)),
+            tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(41)),
+            tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(613))
+        );
     }
 
     @Test
@@ -232,13 +255,13 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateAndAggregateMultipleTrades() {
-        final Stream<TradeEntity> trades = Stream.of(A_BUYS_10_EUR, A_BUYS_20_USD, A_SELLS_10_USD, B_SELLS_20_EUR);
+        final Stream<TradeEntity> trades = Stream.of(A_BUYS_10K_EUR, A_BUYS_20K_USD, A_SELLS_10K_USD, B_SELLS_20K_EUR);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
             .extracting(ParticipantCurrencyPairAmount::getParticipant, ParticipantCurrencyPairAmount::getCurrencyPair, ParticipantCurrencyPairAmount::getAmount)
             .containsExactlyInAnyOrder(
-                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99)),
-                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4)),
-                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(198))
+                tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(-99000)),
+                tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-4000)),
+                tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(198000))
             );
     }
 

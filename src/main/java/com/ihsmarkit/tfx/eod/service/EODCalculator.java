@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,26 +32,62 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.TooManyMethods")
 public class EODCalculator {
 
     private static final int DEFAULT_ROUNDING = 5;
+    private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
-    private ParticipantCurrencyPairAmount calculateMtmValue(final TradeOrPositionEssentials trade, final Function<CurrencyPairEntity, BigDecimal> dsp,
-                                                            final Function<String, BigDecimal> jpyRates) {
+    private BigDecimal getJpyAmount(final CurrencyPairEntity currencyPair, final BigDecimal amount, final Function<String, BigDecimal> jpyRates) {
+        return Optional.of(currencyPair)
+            .map(CurrencyPairEntity::getValueCurrency)
+            .filter(Predicate.not(JPY::equals))
+            .map(jpyRates)
+            .map(amount::multiply)
+            .orElse(amount);
+    }
 
-        final var currencyPair = trade.getCurrencyPair();
-        final var valueCurrency = currencyPair.getValueCurrency();
+    private ParticipantCurrencyPairAmount calc(
+        final TradeOrPositionEssentials trade,
+        final Function<String, BigDecimal> jpyRates,
+        final BigDecimal multiplier
+    ) {
 
-        final var rate = dsp.apply(currencyPair);
+        return ParticipantCurrencyPairAmount.of(
+            trade.getParticipant(),
+            trade.getCurrencyPair(),
+            getJpyAmount(trade.getCurrencyPair(), trade.getAmount(), jpyRates)
+                .multiply(multiplier)
+                .setScale(0, RoundingMode.FLOOR)
+        );
 
-        final var mtmAmount = rate.subtract(trade.getSpotRate())
-            .multiply(trade.getAmount())
-            .multiply(JPY.equals(valueCurrency) ? BigDecimal.ONE : jpyRates.apply(valueCurrency))
-            .setScale(0, RoundingMode.FLOOR);
+    }
 
-        return ParticipantCurrencyPairAmount.of(trade.getParticipant(), currencyPair, mtmAmount);
+    private ParticipantCurrencyPairAmount calculateMtmValue(
+        final TradeOrPositionEssentials trade,
+        final Function<CurrencyPairEntity, BigDecimal> dsp,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return calc(
+            trade,
+            jpyRates,
+            dsp.apply(trade.getCurrencyPair()).subtract(trade.getSpotRate())
+        );
+    }
+
+
+    private ParticipantCurrencyPairAmount calculateSwapPoint(
+        final TradeOrPositionEssentials trade,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return calc(
+            trade,
+            jpyRates,
+            SWAP_POINT_UNIT.multiply(swapPointResolver.apply(trade.getCurrencyPair()))
+        );
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateInitialMtm(
@@ -65,7 +103,21 @@ public class EODCalculator {
                     .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
             )
         );
+    }
 
+    public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateSwapPnL(
+        final Stream<TradeEntity> trades,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates
+    ) {
+
+        return flatten(
+            aggregate(
+                trades
+                    .map(tradeOrPositionMapper::convertTrade)
+                    .map(essentials -> calculateSwapPoint(essentials, swapPointResolver, jpyRates))
+            )
+        );
     }
 
     private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {

@@ -2,7 +2,6 @@ package com.ihsmarkit.tfx.eod.batch;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -17,12 +16,9 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
-import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
-import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
-import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
@@ -32,17 +28,15 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 @JobScope
-public class MarkToMarketTradesTasklet implements Tasklet {
+public class SwapPnLTasklet implements Tasklet {
 
     private final TradeRepository tradeRepository;
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
-    private final ParticipantPositionRepository participantPositionRepository;
-
     private final EODCalculator eodCalculator;
 
-    private final DailySettlementPriceService dailySettlementPriceService;
+    private final CurrencyPairSwapPointService currencyPairSwapPointService;
 
     private final JPYRateService jpyRateService;
 
@@ -54,23 +48,16 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
-        final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver = ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
         final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
-        final Stream<EodProductCashSettlementEntity> initial =
-            eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
-                .map(eodCashSettlementMappingService::mapInitialMtm);
+        final Stream<EodProductCashSettlementEntity> swapPnL =
+            eodCalculator.calculateAndAggregateSwapPnL(novatedTrades, swapPointResolver, jpyRatesResolver)
+                .map(eodCashSettlementMappingService::mapSwapPnL);
 
-        final Collection<ParticipantPositionEntity> positions =
-            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
-
-        final Stream<EodProductCashSettlementEntity> daily =
-            eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
-                .map(eodCashSettlementMappingService::mapDailyMtm);
-
-        eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
+        eodProductCashSettlementRepository.saveAll(swapPnL::iterator);
 
         return RepeatStatus.FINISHED;
     }
