@@ -39,14 +39,14 @@ public class EodCashSettlementMappingService {
     }
 
     public EodProductCashSettlementEntity mapInitialMtm(final ParticipantCurrencyPairAmount mtm) {
-        return this.map(mtm, INITIAL_MTM);
+        return map(mtm, INITIAL_MTM);
     }
 
     public EodProductCashSettlementEntity mapDailyMtm(final ParticipantCurrencyPairAmount mtm) {
-        return this.map(mtm, DAILY_MTM);
+        return map(mtm, DAILY_MTM);
     }
 
     public EodProductCashSettlementEntity mapSwapPnL(final ParticipantCurrencyPairAmount mtm) {
-        return this.map(mtm, SWAP_PNL);
+        return map(mtm, SWAP_PNL);
     }
 }
