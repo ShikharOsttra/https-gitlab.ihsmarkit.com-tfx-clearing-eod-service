@@ -111,7 +111,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             )
         );
 
-        when(eodCalculator.netAllTtrades(any())).thenReturn(
+        when(eodCalculator.netAll(any())).thenReturn(
             Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
 
@@ -143,7 +143,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE)
             );
 
-        verify(eodCalculator).netAllTtrades(netCaptor.capture());
+        verify(eodCalculator).netAll(netCaptor.capture());
         assertThat(netCaptor.getValue())
             .extracting(CcyParticipantAmount::getCurrencyPair, CcyParticipantAmount::getParticipant, CcyParticipantAmount::getAmount)
             .containsExactlyInAnyOrder(

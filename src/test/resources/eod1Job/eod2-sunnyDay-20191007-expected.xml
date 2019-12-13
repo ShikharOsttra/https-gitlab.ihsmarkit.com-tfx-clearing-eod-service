@@ -18,6 +18,25 @@
             type="SWAP_PNL"
     />
 
+    <eod_product_cash_settlement
+            participant_id="102"
+            currency_pair_id="13"
+            amount="-31043.00"
+            currency="JPY"
+            settlement_date="2019-10-10"
+            date="2019-10-07"
+            type="TOTAL_VM"
+    />
+    <eod_product_cash_settlement
+            participant_id="101"
+            currency_pair_id="13"
+            amount="-28222.00"
+            currency="JPY"
+            settlement_date="2019-10-10"
+            date="2019-10-07"
+            type="TOTAL_VM"
+    />
+
     <participant_position
             currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"

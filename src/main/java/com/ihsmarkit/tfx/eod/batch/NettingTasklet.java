@@ -60,7 +60,7 @@ public class NettingTasklet implements Tasklet {
             positions.map(tradeOrPositionMapper::convertPosition)
         );
 
-        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllTtrades(tradesToNet)
+        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAll(tradesToNet)
             .map(trade -> participantPositionForPairMapper.toParticipantPosition(
                 trade,
                 ParticipantPositionType.NET,

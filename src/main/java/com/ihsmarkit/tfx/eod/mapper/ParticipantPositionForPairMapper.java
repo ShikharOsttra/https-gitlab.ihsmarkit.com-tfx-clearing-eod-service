@@ -16,6 +16,7 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 @Mapper(config = DefaultMapperConfig.class)
 public interface ParticipantPositionForPairMapper {
 
@@ -36,6 +37,11 @@ public interface ParticipantPositionForPairMapper {
         LocalDate settlementDate,
         EodProductCashSettlementType type
     );
+
+    @Mapping(target = "amount", source = "amount.value")
+    @Mapping(target = "currencyPair", source = "currencyPair")
+    @Mapping(target = "participant", source = "participant")
+    ParticipantCurrencyPairAmount toParticipantCurrencyPairAmount(EodProductCashSettlementEntity entity);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "timestamp", ignore = true)

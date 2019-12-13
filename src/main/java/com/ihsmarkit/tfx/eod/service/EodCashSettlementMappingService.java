@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.service;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DAILY_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
+import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 
 import java.time.LocalDate;
 
@@ -48,5 +49,9 @@ public class EodCashSettlementMappingService {
 
     public EodProductCashSettlementEntity mapSwapPnL(final ParticipantCurrencyPairAmount mtm) {
         return map(mtm, SWAP_PNL);
+    }
+
+    public EodProductCashSettlementEntity mapTotalVM(final ParticipantCurrencyPairAmount mtm) {
+        return map(mtm, TOTAL_VM);
     }
 }

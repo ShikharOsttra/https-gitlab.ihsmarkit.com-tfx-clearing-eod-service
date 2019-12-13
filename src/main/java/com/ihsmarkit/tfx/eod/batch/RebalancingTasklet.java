@@ -89,7 +89,7 @@ public class RebalancingTasklet implements Tasklet {
 
         tradeRepositiory.saveAll(trades::iterator);
 
-        final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAllTtrades(
+        final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             balanceTrades.entrySet().stream()
                 .flatMap(
                     tradesByCcy -> tradesByCcy.getValue().stream()
