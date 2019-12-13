@@ -15,7 +15,7 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -32,7 +32,7 @@ public class PositionRollTasklet implements Tasklet {
 
     private final EODCalculator eodCalculator;
 
-    private final ParticipantPositionForPairMapper participantPositionForPairMapper;
+    private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
 
     private final DailySettlementPriceService dailySettlementPriceService;
 
@@ -59,7 +59,7 @@ public class PositionRollTasklet implements Tasklet {
         final CurrencyPairEntity currencyPair = position.getCurrencyPair();
         final LocalDate nextDate = tradeAndSettlementDateService.getNextTradeDate(businessDate, currencyPair);
 
-        return participantPositionForPairMapper.toParticipantPosition(
+        return participantCurrencyPairAmountMapper.toParticipantPosition(
             position,
             ParticipantPositionType.SOD,
             nextDate,

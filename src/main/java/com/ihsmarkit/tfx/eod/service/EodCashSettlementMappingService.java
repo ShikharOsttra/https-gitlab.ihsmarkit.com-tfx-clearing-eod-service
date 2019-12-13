@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ import lombok.AllArgsConstructor;
 @JobScope
 public class EodCashSettlementMappingService {
 
-    private final ParticipantPositionForPairMapper mtmMapper;
+    private final ParticipantCurrencyPairAmountMapper mtmMapper;
 
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
 

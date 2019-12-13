@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 
@@ -34,7 +34,7 @@ public class TotalVMTasklet implements Tasklet {
 
     private final EodCashSettlementMappingService eodCashSettlementMappingService;
 
-    private final ParticipantPositionForPairMapper mapper;
+    private final ParticipantCurrencyPairAmountMapper mapper;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;

@@ -16,7 +16,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -40,7 +40,7 @@ public class NettingTasklet implements Tasklet {
 
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
-    private final ParticipantPositionForPairMapper participantPositionForPairMapper;
+    private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
@@ -61,7 +61,7 @@ public class NettingTasklet implements Tasklet {
         );
 
         final Stream<ParticipantPositionEntity> netted = eodCalculator.netAll(tradesToNet)
-            .map(trade -> participantPositionForPairMapper.toParticipantPosition(
+            .map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
                 trade,
                 ParticipantPositionType.NET,
                 businessDate,

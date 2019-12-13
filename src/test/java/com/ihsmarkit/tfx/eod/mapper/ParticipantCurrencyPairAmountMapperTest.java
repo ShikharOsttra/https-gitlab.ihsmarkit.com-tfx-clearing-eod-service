@@ -34,7 +34,7 @@ class ParticipantCurrencyPairAmountMapperTest {
     private static final LocalDate SETTLEMENT_DATE = LocalDate.of(2019, 11, 8);
 
     @Autowired
-    private ParticipantPositionForPairMapper mapper;
+    private ParticipantCurrencyPairAmountMapper mapper;
 
     @Test
     void shouldConvertToParticipantPositionEntity() {
@@ -76,7 +76,7 @@ class ParticipantCurrencyPairAmountMapperTest {
 
     }
     @TestConfiguration
-    @ComponentScan(basePackageClasses = ParticipantPositionForPairMapper.class)
+    @ComponentScan(basePackageClasses = ParticipantCurrencyPairAmountMapper.class)
     static class TestConfig {
 
     }

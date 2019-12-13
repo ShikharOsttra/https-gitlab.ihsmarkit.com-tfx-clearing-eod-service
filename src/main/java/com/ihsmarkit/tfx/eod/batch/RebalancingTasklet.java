@@ -22,7 +22,7 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -48,7 +48,7 @@ public class RebalancingTasklet implements Tasklet {
 
     private final BalanceTradeMapper balanceTradeMapper;
 
-    private final ParticipantPositionForPairMapper participantPositionForPairMapper;
+    private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -101,7 +101,7 @@ public class RebalancingTasklet implements Tasklet {
                         )
                 )
 
-        ).map(trade -> participantPositionForPairMapper.toParticipantPosition(
+        ).map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
             trade,
             ParticipantPositionType.REBALANCING,
             businessDate,

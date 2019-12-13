@@ -18,7 +18,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 @Mapper(config = DefaultMapperConfig.class)
-public interface ParticipantPositionForPairMapper {
+public interface ParticipantCurrencyPairAmountMapper {
 
     String PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR = "participantPOsForPairAmountConvertor";
 
