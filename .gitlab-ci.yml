@@ -62,7 +62,7 @@ gconf:deliver:
   stage: deliver
   image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
   script:
-    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.0.5
+    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.0.6
   only:
     - master
     - develop
