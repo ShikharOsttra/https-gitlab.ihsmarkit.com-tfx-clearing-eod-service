@@ -31,56 +31,57 @@ dependencyManagement {
 
 dependencies {
     annotationProcessor(
-        [group: 'org.mapstruct', name: 'mapstruct-processor'],
-        [group: 'org.projectlombok', name: 'lombok']
+            [group: 'org.mapstruct', name: 'mapstruct-processor'],
+            [group: 'org.projectlombok', name: 'lombok']
     )
 
     testAnnotationProcessor(
-        [group: 'org.mapstruct', name: 'mapstruct-processor'],
-        [group: 'org.projectlombok', name: 'lombok']
+            [group: 'org.mapstruct', name: 'mapstruct-processor'],
+            [group: 'org.projectlombok', name: 'lombok']
     )
 
     implementation(
-        [group: 'com.ihsmarkit.tfx', name: 'common', version: tfxCommonVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreDomainVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreConfigVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreDlVersion],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'],
-        [group: 'org.apache.activemq', name: 'activemq-client'],
-        [group: 'mysql', name: 'mysql-connector-java', version: mysqlVersion],
-        [group: 'com.zaxxer', name: 'HikariCP'],
-        [group: 'com.google.guava', name: 'guava'],
-        [group: 'org.projectlombok', name: 'lombok'],
-        [group: 'org.mapstruct', name: 'mapstruct'],
-        [group: 'org.apache.commons', name: 'commons-lang3'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-web'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-batch'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-quartz'],
-        [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
-        [group: 'org.springframework', name: 'spring-jms'],
-        [group: 'org.yaml', name: 'snakeyaml']
+            [group: 'com.ihsmarkit.tfx', name: 'common', version: tfxCommonVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreDomainVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreConfigVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreDlVersion],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'],
+            [group: 'org.apache.activemq', name: 'activemq-client'],
+            [group: 'mysql', name: 'mysql-connector-java', version: mysqlVersion],
+            [group: 'com.zaxxer', name: 'HikariCP'],
+            [group: 'com.google.guava', name: 'guava'],
+            [group: 'org.projectlombok', name: 'lombok'],
+            [group: 'org.mapstruct', name: 'mapstruct'],
+            [group: 'org.apache.commons', name: 'commons-lang3'],
+            [group: 'commons-io', name: 'commons-io'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-web'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-batch'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-quartz'],
+            [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
+            [group: 'org.springframework', name: 'spring-jms'],
+            [group: 'org.yaml', name: 'snakeyaml']
     )
 
     testImplementation(
-        [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreDlVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-domain', classifier: 'tests', version: coreDomainVersion],
-        [group: 'com.ihsmarkit.tfx', name: 'core-config', classifier: 'tests', version: coreConfigVersion],
-        [group: 'org.apache.activemq', name: 'activemq-pool'],
-        [group: 'org.apache.activemq.tooling', name: 'activemq-junit'],
-        [group: 'org.dbunit', name: 'dbunit'],
-        [group: 'com.github.springtestdbunit', name: 'spring-test-dbunit'],
-        [group: 'net.ttddyy', name: 'datasource-assert'],
-        [group: 'org.springframework.boot', name: 'spring-boot-starter-test'],
-        [group: 'org.springframework.batch', name: 'spring-batch-test'],
-        [group: 'org.junit.jupiter', name: 'junit-jupiter-api'],
-        [group: 'org.junit.jupiter', name: 'junit-jupiter-engine'],
-        [group: 'org.junit.jupiter', name: 'junit-jupiter-params'],
-        [group: 'org.assertj', name: 'assertj-core'],
-        [group: 'org.mockito', name: 'mockito-junit-jupiter'],
-        [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
+            [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreDlVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-domain', classifier: 'tests', version: coreDomainVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-config', classifier: 'tests', version: coreConfigVersion],
+            [group: 'org.apache.activemq', name: 'activemq-pool'],
+            [group: 'org.apache.activemq.tooling', name: 'activemq-junit'],
+            [group: 'org.dbunit', name: 'dbunit'],
+            [group: 'com.github.springtestdbunit', name: 'spring-test-dbunit'],
+            [group: 'net.ttddyy', name: 'datasource-assert'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-test'],
+            [group: 'org.springframework.batch', name: 'spring-batch-test'],
+            [group: 'org.junit.jupiter', name: 'junit-jupiter-api'],
+            [group: 'org.junit.jupiter', name: 'junit-jupiter-engine'],
+            [group: 'org.junit.jupiter', name: 'junit-jupiter-params'],
+            [group: 'org.assertj', name: 'assertj-core'],
+            [group: 'org.mockito', name: 'mockito-junit-jupiter'],
+            [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
 }
 

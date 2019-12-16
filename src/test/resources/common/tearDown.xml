@@ -42,4 +42,5 @@
     <BATCH_JOB_EXECUTION_CONTEXT/>
     <BATCH_STEP_EXECUTION/>
     <BATCH_STEP_EXECUTION_CONTEXT/>
+    <eod_ledger_collateral_list/>
 </dataset>
