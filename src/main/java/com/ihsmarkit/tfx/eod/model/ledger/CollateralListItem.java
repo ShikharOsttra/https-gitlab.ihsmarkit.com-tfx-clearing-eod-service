@@ -9,6 +9,7 @@ import lombok.Value;
 @AllArgsConstructor
 @Value
 @Builder
+@SuppressWarnings("PMD.TooManyFields")
 public class CollateralListItem {
 
     private final LocalDate businessDate;

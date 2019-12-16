@@ -31,7 +31,7 @@ public class LedgerFormattingUtils {
         return MONTH_DAY_FORMATTER.format(monthDay);
     }
 
-    public static String formatEnum(Enum value) {
+    public static String formatEnum(final Enum value) {
         return RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name());
     }
 
