@@ -18,7 +18,9 @@ import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
+import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -29,6 +31,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SpringBatchTest
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper"})
 @TestPropertySource("classpath:/application.properties")
+@DbUnitTestListeners
+@DatabaseTearDown("/common/tearDown.xml")
 @SuppressWarnings("VisibilityModifier")
 public abstract class AbstractSpringBatchTest  {
 
