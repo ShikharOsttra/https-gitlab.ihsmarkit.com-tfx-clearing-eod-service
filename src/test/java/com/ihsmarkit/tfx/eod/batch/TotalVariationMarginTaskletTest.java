@@ -42,7 +42,7 @@ import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 @Import(EOD2JobConfig.class)
-class TotalVMTaskletTest extends AbstractSpringBatchTest {
+class TotalVariationMarginTaskletTest extends AbstractSpringBatchTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);
     private static final LocalDate VALUE_DATE = BUSINESS_DATE.plusDays(2);

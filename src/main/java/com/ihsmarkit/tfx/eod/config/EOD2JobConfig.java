@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
-import com.ihsmarkit.tfx.eod.batch.TotalVMTasklet;
+import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 
 import lombok.AllArgsConstructor;
 
@@ -26,7 +26,7 @@ public class EOD2JobConfig {
 
     private final SwapPnLTasklet swapPnLTasklet;
 
-    private final TotalVMTasklet totalVMTasklet;
+    private final TotalVariationMarginTasklet totalVariationMarginTasklet;
 
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
@@ -44,7 +44,7 @@ public class EOD2JobConfig {
 
     private Step totalVM() {
         return steps.get(TOTAL_VM_STEP_NAME)
-            .tasklet(totalVMTasklet)
+            .tasklet(totalVariationMarginTasklet)
             .build();
     }
 

@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 @JobScope
-public class TotalVMTasklet implements Tasklet {
+public class TotalVariationMarginTasklet implements Tasklet {
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
