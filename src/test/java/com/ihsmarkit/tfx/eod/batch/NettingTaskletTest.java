@@ -128,7 +128,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY))
             .thenReturn(BigDecimal.valueOf(3));
 
-        when(eodCalculator.netAllTtrades(any()))
+        when(eodCalculator.netAll(any()))
             .thenReturn(
                 Stream.of(
                     ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
@@ -146,7 +146,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         verify(participantPositionRepository)
             .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, BUSINESS_DATE);
 
-        verify(eodCalculator).netAllTtrades(tradeCaptor.capture());
+        verify(eodCalculator).netAll(tradeCaptor.capture());
         assertThat(tradeCaptor.getValue())
             .extracting(
                 TradeOrPositionEssentials::getParticipant,

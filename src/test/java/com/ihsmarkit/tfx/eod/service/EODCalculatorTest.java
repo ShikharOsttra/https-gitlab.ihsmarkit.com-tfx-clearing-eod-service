@@ -187,7 +187,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateNetAmounts() {
         Stream<ParticipantCurrencyPairAmount> mtm =
-            eodCalculator.netAllTtrades(
+            eodCalculator.netAll(
                 Stream.of(A_BUYS_20K_USD, A_SELLS_10K_USD, B_SELLS_20K_EUR, A_SELLS_30K_EUR)
                     .map(tradeOrPositionMapper::convertTrade)
             );
