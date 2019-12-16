@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.service;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DAILY_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
+import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 
 import java.time.LocalDate;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
-import com.ihsmarkit.tfx.eod.mapper.ParticipantPositionForPairMapper;
+import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 
 import lombok.AllArgsConstructor;
@@ -22,7 +23,7 @@ import lombok.AllArgsConstructor;
 @JobScope
 public class EodCashSettlementMappingService {
 
-    private final ParticipantPositionForPairMapper mtmMapper;
+    private final ParticipantCurrencyPairAmountMapper mtmMapper;
 
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
@@ -48,5 +49,9 @@ public class EodCashSettlementMappingService {
 
     public EodProductCashSettlementEntity mapSwapPnL(final ParticipantCurrencyPairAmount mtm) {
         return map(mtm, SWAP_PNL);
+    }
+
+    public EodProductCashSettlementEntity mapTotalVM(final ParticipantCurrencyPairAmount mtm) {
+        return map(mtm, TOTAL_VM);
     }
 }

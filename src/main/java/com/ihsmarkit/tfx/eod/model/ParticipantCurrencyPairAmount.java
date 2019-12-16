@@ -5,12 +5,14 @@ import java.math.BigDecimal;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @RequiredArgsConstructor(staticName = "of")
+@Builder
 @Getter
 @ToString
 public class ParticipantCurrencyPairAmount implements CcyParticipantAmount {

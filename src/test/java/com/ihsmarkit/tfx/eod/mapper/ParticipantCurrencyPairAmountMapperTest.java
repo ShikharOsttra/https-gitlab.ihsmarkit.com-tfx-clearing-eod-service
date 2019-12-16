@@ -34,7 +34,7 @@ class ParticipantCurrencyPairAmountMapperTest {
     private static final LocalDate SETTLEMENT_DATE = LocalDate.of(2019, 11, 8);
 
     @Autowired
-    private ParticipantPositionForPairMapper mapper;
+    private ParticipantCurrencyPairAmountMapper mapper;
 
     @Test
     void shouldConvertToParticipantPositionEntity() {
@@ -59,7 +59,6 @@ class ParticipantCurrencyPairAmountMapperTest {
     @Test
     void shouldConvertToEodProductCashSettlementEntity() {
 
-
         EodProductCashSettlementEntity eod = mapper.toEodProductCashSettlement(
             ParticipantCurrencyPairAmount.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             BUSINESS_DATE,
@@ -75,8 +74,22 @@ class ParticipantCurrencyPairAmountMapperTest {
         assertThat(eod.getType()).isSameAs(EodProductCashSettlementType.INITIAL_MTM);
 
     }
+
+    @Test
+    void shouldConvertEodProductCashSettlementEntity() {
+        EodProductCashSettlementEntity eod =
+            EodProductCashSettlementEntity.builder()
+                .participant(PARTICIPANT_A)
+                .currencyPair(CURRENCY_PAIR)
+                .amount(AmountEntity.of(BigDecimal.ONE, "JPY"))
+            .build();
+        assertThat(mapper.toParticipantCurrencyPairAmount(eod))
+            .extracting("participant", "currencyPair", "amount")
+            .containsExactly(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE);
+    }
+
     @TestConfiguration
-    @ComponentScan(basePackageClasses = ParticipantPositionForPairMapper.class)
+    @ComponentScan(basePackageClasses = ParticipantCurrencyPairAmountMapper.class)
     static class TestConfig {
 
     }

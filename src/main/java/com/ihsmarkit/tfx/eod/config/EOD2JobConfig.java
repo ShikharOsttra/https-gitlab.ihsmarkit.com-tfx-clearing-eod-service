@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.config;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -26,6 +27,7 @@ import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,6 +45,8 @@ public class EOD2JobConfig {
 
     private final SwapPnLTasklet swapPnLTasklet;
 
+    private final TotalVariationMarginTasklet totalVariationMarginTasklet;
+
     @Value("${eod.ledger.collateral.list.chunk.size:1000}")
     private final int collateralListChunkSize;
     private final CollateralListLedgerProcessor collateralListProcessor;
@@ -53,6 +57,7 @@ public class EOD2JobConfig {
     public Job eod2Job() {
         return jobs.get(EOD2_BATCH_JOB_NAME)
             .start(swapPnL())
+            .next(totalVM())
 
             //ledgers
             .next(collateralListLedger())
@@ -63,6 +68,12 @@ public class EOD2JobConfig {
     private Step swapPnL() {
         return steps.get(SWAP_PNL_STEP_NAME)
             .tasklet(swapPnLTasklet)
+            .build();
+    }
+
+    private Step totalVM() {
+        return steps.get(TOTAL_VM_STEP_NAME)
+            .tasklet(totalVariationMarginTasklet)
             .build();
     }
 
