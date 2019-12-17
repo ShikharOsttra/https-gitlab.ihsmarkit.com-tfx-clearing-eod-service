@@ -11,10 +11,10 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.configuration.annotation.BatchConfigurer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
@@ -26,7 +26,12 @@ import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @Import(EOD2JobConfig.class)
+@DbUnitTestListeners
+@DatabaseTearDown("/common/tearDown.xml")
 class CollateralListLedgerStepTest extends AbstractSpringBatchTest {
+
+    @Autowired
+    private BatchConfigurer batchConfigurer;
 
     @MockBean
     private ClockService clockService;

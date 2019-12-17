@@ -9,6 +9,8 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMon
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.springframework.batch.core.configuration.annotation.JobScope;
@@ -21,6 +23,8 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
+import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
+import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
@@ -72,20 +76,23 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
     }
 
     private String getJasdecCode(final CollateralBalanceEntity balance) {
-        if (balance.getProduct().getType() != EQUITY) {
-            return EMPTY;
-        }
-
-        return jasdecCodeProvider.getCode(balance.getParticipant().getCode(), balance.getPurpose())
-            .orElse(EMPTY);
+        return getCustodianAccountCode(balance, EQUITY, jasdecCodeProvider::getCode);
     }
 
     private String getBojCode(final CollateralBalanceEntity balance) {
-        if (balance.getProduct().getType() != BOND) {
+        return getCustodianAccountCode(balance, BOND, bojCodeProvider::getCode);
+    }
+
+    private static String getCustodianAccountCode(
+        final CollateralBalanceEntity balance,
+        final CollateralProductType type,
+        final BiFunction<String, CollateralPurpose, Optional<String>> codeProvider
+    ) {
+        if (balance.getProduct().getType() != type) {
             return EMPTY;
         }
 
-        return bojCodeProvider.getCode(balance.getParticipant().getCode(), balance.getPurpose())
+        return codeProvider.apply(balance.getParticipant().getCode(), balance.getPurpose())
             .orElse(EMPTY);
     }
 
