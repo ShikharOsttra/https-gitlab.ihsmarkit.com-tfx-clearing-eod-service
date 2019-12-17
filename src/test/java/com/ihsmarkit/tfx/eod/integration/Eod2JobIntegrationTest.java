@@ -41,6 +41,7 @@ class Eod2JobIntegrationTest {
     @Autowired
     private JobLauncher jobLauncher;
 
+    //todo: add collateral list ledger sunny day scenario
     @Test
     @DatabaseSetup("/eod1Job/eod2-sunnyDay-20191007.xml")
     @ExpectedDatabase(value = "/eod1Job/eod2-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)

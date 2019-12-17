@@ -1,0 +1,30 @@
+<dataset>
+    <participant id="1" code="P11" name="TEST_PARTY1" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="2" code="P12" name="TEST_PARTY2" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+
+    <custodian_account id="1" participant_id="1" purpose="MARKET_ENTRY_DEPOSIT"/>
+    <bond_custodian_account id="1" boj_participant_code="0001" boj_type="12" boj_classification_code="12"/>
+
+    <custodian_account id="2" participant_id="2" purpose="CLEARING_DEPOSIT"/>
+    <equity_custodian_account id="2" institution_code="12345" account_type="12"/>
+
+    <collateral_product id="1" enabled="true" deleted="false" type="1"/>
+    <cash_collateral_product id="1" currency="JPY"/>
+
+    <collateral_product id="2" enabled="true" deleted="false" type="3"/>
+    <security_collateral_product id="2" isin="JP11111111" security_code="5678" security_name="bond1" eod_price="10.55" reference_date="2020-02-02"/>
+    <bond_collateral_product id="2" bond_type="JGB" maturity_date="2022-10-10" coupon_payment_date1="1980-10-10" coupon_payment_date2="1980-12-10"/>
+
+    <collateral_product id="3" enabled="true" deleted="false" type="4"/>
+    <security_collateral_product id="3" isin="JP22222222" security_name="equity1" security_code="1234" reference_date="2020-02-02" eod_price="123.43"/>
+    <equity_collateral_product id="3"/>
+
+    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
+    <collateral_product id="4" enabled="true" deleted="false" type="2"/>
+    <log_collateral_product id="4" issuer_bank_id="1" deposit_date="2020-2-2" maturity_date="2020-2-2"/>
+
+    <collateral_balance id="1" purpose="1" participant_id="1" product_id="1" amount="10001" version="1"/>
+    <collateral_balance id="2" purpose="2" participant_id="1" product_id="2" amount="10002" version="1"/>
+    <collateral_balance id="3" purpose="3" participant_id="2" product_id="3" amount="10003" version="1"/>
+    <collateral_balance id="4" purpose="4" participant_id="2" product_id="4" amount="10004" version="1"/>
+</dataset>
