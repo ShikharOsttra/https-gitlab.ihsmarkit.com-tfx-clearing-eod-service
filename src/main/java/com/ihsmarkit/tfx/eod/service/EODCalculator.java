@@ -1,11 +1,19 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
+import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
+import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +27,10 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
+import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
@@ -123,11 +134,11 @@ public class EODCalculator {
     private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
         return input
             .collect(
-                Collectors.groupingBy(
+                groupingBy(
                     CcyParticipantAmount::getParticipant,
-                    Collectors.groupingBy(
+                    groupingBy(
                         CcyParticipantAmount::getCurrencyPair,
-                        Collectors.reducing(BigDecimal.ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
+                        reducing(BigDecimal.ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
                     )
                 )
             );
@@ -142,6 +153,28 @@ public class EODCalculator {
 
     public Stream<ParticipantCurrencyPairAmount> aggregatePositions(final Stream<ParticipantPositionEntity> positions) {
         return flatten(aggregate(positions.map(tradeOrPositionMapper::convertPosition)));
+    }
+
+    public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
+                            aggregateRequiredMargin(final Stream<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
+        return margins
+            .collect(
+                groupingBy(
+                    EodProductCashSettlementEntity::getParticipant,
+                    groupingBy(
+                        EodProductCashSettlementEntity::getType,
+                        () -> new EnumMap<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>(EodProductCashSettlementType.class),
+                        collectingAndThen(
+                            groupingBy(
+                                margin -> businessDate.isEqual(margin.getSettlementDate()) ? DAY : FOLLOWING,
+                                () -> new EnumMap<EodCashSettlementDateType, BigDecimal>(EodCashSettlementDateType.class),
+                                reducing(BigDecimal.ZERO, margin -> margin.getAmount().getValue(), BigDecimal::add)
+                            ),
+                            res -> {res.put(TOTAL, res.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add)); return res;}
+                        )
+                    )
+                )
+            );
     }
 
     public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
@@ -161,7 +194,7 @@ public class EODCalculator {
 
         return positions
             .map(tradeOrPositionMapper::convertPosition)
-            .collect(Collectors.groupingBy(
+            .collect(groupingBy(
                 TradeOrPositionEssentials::getCurrencyPair,
                 Collectors.toList()
             )).entrySet().stream()
