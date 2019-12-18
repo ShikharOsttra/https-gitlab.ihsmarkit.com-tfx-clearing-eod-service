@@ -29,7 +29,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @DatabaseTearDown("/common/tearDown.xml")
 @ContextHierarchy({
     @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = EOD2JobConfig.class)}
+    @ContextConfiguration(classes = EOD2JobConfig.class) }
 )
 @TestPropertySource("classpath:/application.properties")
 class Eod2JobIntegrationTest {
@@ -41,9 +41,13 @@ class Eod2JobIntegrationTest {
     @Autowired
     private JobLauncher jobLauncher;
 
-    //todo: add collateral list ledger sunny day scenario
     @Test
-    @DatabaseSetup("/eod1Job/eod2-sunnyDay-20191007.xml")
+    @DatabaseSetup({
+        "/common/business_date_2019_1_1.xml",
+        "/common/issuerBanks.xml",
+        "/common/haircuts.xml",
+        "/eod1Job/eod2-sunnyDay-20191007.xml"
+    })
     @ExpectedDatabase(value = "/eod1Job/eod2-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testEodJob() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();

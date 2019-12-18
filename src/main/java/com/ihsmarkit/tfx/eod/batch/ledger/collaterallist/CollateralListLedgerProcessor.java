@@ -9,11 +9,12 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMon
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,24 +26,26 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
-import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@JobScope
+@StepScope
 public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBalanceEntity, CollateralListItem> {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
-    private final ClockService clockService;
+    @Value("#{stepExecutionContext['recordDate']}")
+    private final LocalDateTime recordDate;
 
     private final BojCodeProvider bojCodeProvider;
 
     private final JasdecCodeProvider jasdecCodeProvider;
+
+    private final CollateralCalculator collateralCalculator;
 
     @Override
     public CollateralListItem process(final CollateralBalanceEntity balance) {
@@ -50,8 +53,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .evaluationDate(formatDate(businessDate))
-            //todo: confirm
-            .recordDate(formatDateTime(clockService.getCurrentDateTime()))
+            .recordDate(formatDateTime(recordDate))
             .participantCode(balance.getParticipant().getCode())
             .participantName(balance.getParticipant().getName())
             .participantType(formatEnum(balance.getParticipant().getType()))
@@ -63,16 +65,22 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
             .amount(balance.getAmount().toString())
             .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toString()))
-            //todo: get evaluated price
-            .evaluatedPrice(EMPTY)
-            //todo: get evaluated amount
-            .evaluatedAmount(EMPTY)
+            .evaluatedPrice(calculateEvaluatedPrice(balance))
+            .evaluatedAmount(collateralCalculator.calculateEvaluatedAmount(balance).toString())
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))
             .interestPaymentDay(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate1())))
             .interestPaymentDay2(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate2())))
             .maturityDate(getMaturityDate(balance.getProduct()))
             .build();
+    }
+
+    private String calculateEvaluatedPrice(final CollateralBalanceEntity balance) {
+        if (balance.getProduct().getType() != EQUITY && balance.getProduct().getType() != BOND) {
+            return EMPTY;
+        }
+
+        return collateralCalculator.calculateEvaluatedPrice(balance).toString();
     }
 
     private String getJasdecCode(final CollateralBalanceEntity balance) {

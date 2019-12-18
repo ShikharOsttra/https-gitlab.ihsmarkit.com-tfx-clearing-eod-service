@@ -1,0 +1,51 @@
+<dataset>
+    <haircut_rate id="1" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <log_haircut_rate id="1" issuer_bank_id="1"/>
+    <haircut_rate id="2" value="98.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <log_haircut_rate id="2" issuer_bank_id="2"/>
+    <haircut_rate id="3" value="97.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <log_haircut_rate id="3" issuer_bank_id="3"/>
+
+    <haircut_rate id="4" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="4" bond_type="JGB" remaining_duration="ONE"/>
+    <haircut_rate id="5" value="98.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="5" bond_type="JGB" remaining_duration="ONE_TO_FIVE"/>
+    <haircut_rate id="6" value="97.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="6" bond_type="JGB" remaining_duration="FIVE_TO_TEN"/>
+    <haircut_rate id="7" value="96.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="7" bond_type="JGB" remaining_duration="TEN_TO_TWENTY"/>
+    <haircut_rate id="8" value="95.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="8" bond_type="JGB" remaining_duration="TWENTY_TO_THIRTY"/>
+    <haircut_rate id="9" value="94.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="9" bond_type="JGB" remaining_duration="THIRTY"/>
+
+    <haircut_rate id="10" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="10" bond_type="FLOATING" remaining_duration="ONE"/>
+    <haircut_rate id="11" value="98.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="11" bond_type="FLOATING" remaining_duration="ONE_TO_FIVE"/>
+    <haircut_rate id="12" value="97.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="12" bond_type="FLOATING" remaining_duration="FIVE_TO_TEN"/>
+    <haircut_rate id="13" value="96.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="13" bond_type="FLOATING" remaining_duration="TEN_TO_TWENTY"/>
+    <haircut_rate id="14" value="95.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="14" bond_type="FLOATING" remaining_duration="TWENTY_TO_THIRTY"/>
+    <haircut_rate id="15" value="94.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="15" bond_type="FLOATING" remaining_duration="THIRTY"/>
+
+    <haircut_rate id="16" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="16" bond_type="STRIP" remaining_duration="ONE"/>
+    <haircut_rate id="17" value="95.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="17" bond_type="STRIP" remaining_duration="ONE_TO_FIVE"/>
+    <haircut_rate id="18" value="91.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="18" bond_type="STRIP" remaining_duration="FIVE_TO_TEN"/>
+    <haircut_rate id="19" value="87.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="19" bond_type="STRIP" remaining_duration="TEN_TO_TWENTY"/>
+    <haircut_rate id="20" value="83.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="20" bond_type="STRIP" remaining_duration="TWENTY_TO_THIRTY"/>
+    <haircut_rate id="21" value="79.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="21" bond_type="STRIP" remaining_duration="THIRTY"/>
+
+    <haircut_rate id="22" value="79.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <equity_haircut_rate id="22"/>
+
+</dataset>
