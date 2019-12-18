@@ -10,6 +10,7 @@ import com.ihsmarkit.tfx.collateral.calculator.EvaluatedAmountCalculator;
 import com.ihsmarkit.tfx.collateral.calculator.EvaluatedUnitPriceCalculator;
 import com.ihsmarkit.tfx.collateral.calculator.domain.ProductDetailsAdapterFactory;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
+import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 
 @Component
 @StepScope
@@ -28,7 +29,7 @@ public class CollateralCalculator {
         return evaluatedAmountCalculator.calculate(balance.getAmount(), ProductDetailsAdapterFactory.fromEntity(balance.getProduct()));
     }
 
-    public BigDecimal calculateEvaluatedPrice(final CollateralBalanceEntity balance) {
-        return evaluatedUnitPriceCalculator.calculate(ProductDetailsAdapterFactory.fromEntity(balance.getProduct()));
+    public BigDecimal calculateEvaluatedPrice(final SecurityCollateralProductEntity securityProduct) {
+        return evaluatedUnitPriceCalculator.calculate(ProductDetailsAdapterFactory.fromEntity(securityProduct));
     }
 }

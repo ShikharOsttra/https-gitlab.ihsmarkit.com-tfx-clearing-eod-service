@@ -65,7 +65,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
             .amount(balance.getAmount().toString())
             .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toString()))
-            .evaluatedPrice(calculateEvaluatedPrice(balance))
+            .evaluatedPrice(getFromSecurityProduct(balance.getProduct(), product -> collateralCalculator.calculateEvaluatedPrice(product).toString()))
             .evaluatedAmount(collateralCalculator.calculateEvaluatedAmount(balance).toString())
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))
@@ -73,14 +73,6 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .interestPaymentDay2(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate2())))
             .maturityDate(getMaturityDate(balance.getProduct()))
             .build();
-    }
-
-    private String calculateEvaluatedPrice(final CollateralBalanceEntity balance) {
-        if (balance.getProduct().getType() != EQUITY && balance.getProduct().getType() != BOND) {
-            return EMPTY;
-        }
-
-        return collateralCalculator.calculateEvaluatedPrice(balance).toString();
     }
 
     private String getJasdecCode(final CollateralBalanceEntity balance) {

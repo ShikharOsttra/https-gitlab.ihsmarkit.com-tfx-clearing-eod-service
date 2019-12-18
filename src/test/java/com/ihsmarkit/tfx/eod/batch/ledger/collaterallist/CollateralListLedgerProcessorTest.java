@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
+import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +63,10 @@ class CollateralListLedgerProcessorTest {
     @ParameterizedTest
     @MethodSource("collateralList")
     void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem collateralListItem) {
-        lenient().when(collateralCalculator.calculateEvaluatedPrice(balance)).thenReturn(new BigDecimal("10.01"));
+        if (balance.getProduct() instanceof SecurityCollateralProductEntity) {
+            when(collateralCalculator.calculateEvaluatedPrice((SecurityCollateralProductEntity) balance.getProduct())).thenReturn(new BigDecimal("10.01"));
+        }
+
         when(collateralCalculator.calculateEvaluatedAmount(balance)).thenReturn(new BigDecimal("1300"));
 
         assertThat(processor.process(balance)).isEqualTo(collateralListItem);
