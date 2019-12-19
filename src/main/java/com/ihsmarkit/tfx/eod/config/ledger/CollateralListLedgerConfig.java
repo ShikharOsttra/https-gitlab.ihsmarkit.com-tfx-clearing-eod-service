@@ -1,84 +1,55 @@
-package com.ihsmarkit.tfx.eod.config;
+package com.ihsmarkit.tfx.eod.config.ledger;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 
-import org.springframework.batch.core.Job;
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+
+import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
+import org.springframework.core.io.Resource;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
-import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
-import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
-import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
+import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 
-@AllArgsConstructor
 @Configuration
-@Import(CollateralListLedgerConfig.class)
-public class EOD2JobConfig {
-
-    private final JobBuilderFactory jobs;
+@AllArgsConstructor
+public class CollateralListLedgerConfig {
 
     private final StepBuilderFactory steps;
 
-    private final SwapPnLTasklet swapPnLTasklet;
+    private final EntityManagerFactory entityManagerFactory;
 
-    private final TotalVariationMarginTasklet totalVariationMarginTasklet;
-
-    private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
+    private final DataSource dataSource;
 
     @Value("${eod.ledger.collateral.list.chunk.size:1000}")
     private final int collateralListChunkSize;
+
     private final CollateralListLedgerProcessor collateralListProcessor;
+
     @Value("classpath:/ledger/sql/eod_ledger_collateral_list_insert.sql")
     private final Resource collateralListLedgerSql;
 
-    @Bean(name = EOD2_BATCH_JOB_NAME)
-    public Job eod2Job() {
-        return jobs.get(EOD2_BATCH_JOB_NAME)
-            .start(swapPnL())
-            .next(totalVM())
-            .next(marginCollateralExcessOrDeficiency())
-            //ledgers
-            .next(collateralListLedger)
+    private final RecordDateSetter recordDateSetter;
 
-            .build();
-    }
-
-    private Step swapPnL() {
-        return steps.get(SWAP_PNL_STEP_NAME)
-            .tasklet(swapPnLTasklet)
-            .build();
-    }
-
-    private Step totalVM() {
-        return steps.get(TOTAL_VM_STEP_NAME)
-            .tasklet(totalVariationMarginTasklet)
-            .build();
-    }
-
-    private Step marginCollateralExcessOrDeficiency() {
-        return steps.get(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY)
-            .tasklet(marginCollateralExcessDeficiencyTasklet)
-            .build();
-    }
-
-    private Step collateralListLedger() {
+    @Bean(COLLATERAL_LIST_LEDGER_STEP_NAME)
+    protected Step collateralListLedger() {
         return steps.get(COLLATERAL_LIST_LEDGER_STEP_NAME)
+            .listener(recordDateSetter)
             .<CollateralBalanceEntity, CollateralListItem>chunk(collateralListChunkSize)
             .reader(collateralListReader())
             .processor(collateralListProcessor)
@@ -108,5 +79,4 @@ public class EOD2JobConfig {
             .dataSource(dataSource)
             .build();
     }
-
 }

@@ -5,11 +5,13 @@
   "maintainerEmail": "oleksandr.berezovskyi@ihsmarkit.com",
   "copyPaths": {
     "build/libs/": "/opt/app/",
-    "entrypoint.sh": "/opt/app/"
+    "entrypoint.sh": "/opt/app/",
+    "credentials.tpl": "/opt/app/"
   },
   "run": [
     "for i in $(ls /opt/app | egrep '.*-(tests|sources|javadoc).jar$'); do rm -f /opt/app/$i; done",
-    "mv `ls /opt/app/*.jar` $(echo `ls /opt/app/*.jar` | sed -En s/-[0-9]+\\.[0-9]+\\.[0-9]+\\(-SNAPSHOT\\)?.jar//p).jar"
+    "mv `ls /opt/app/*.jar` $(echo `ls /opt/app/*.jar` | sed -En s/-[0-9]+\\.[0-9]+\\.[0-9]+\\(-SNAPSHOT\\)?.jar//p).jar",
+    "mkdir /etc/.creds"
   ],
   "entrypoint": "/opt/app/entrypoint.sh",
   "containerConfig": {
@@ -26,6 +28,18 @@
     "spec": {
       "serviceAccount": "tfx-clearing-systemuser",
       "volumes": [
+        {
+          "name": "db-credentials",
+          "secret": {
+            "secretName": "db-user"
+          }
+        },
+        {
+          "name": "amq-credentials",
+          "secret": {
+            "secretName": "amq-user"
+          }
+        },
         {
           "name": "logs-storage",
           "persistentVolumeClaim": {
@@ -59,24 +73,6 @@
             }
           },
           {
-            "name": "DB_USER",
-            "valueFrom": {
-              "secretKeyRef": {
-                "name": "db-user",
-                "key": "username"
-              }
-            }
-          },
-          {
-            "name": "DB_PASSWORD",
-            "valueFrom": {
-              "secretKeyRef": {
-                "name": "db-user",
-                "key": "password"
-              }
-            }
-          },
-          {
             "name": "DB_SCHEMA",
             "valueFrom": {
               "configMapKeyRef": {
@@ -91,24 +87,6 @@
               "configMapKeyRef": {
                 "name": "environment-config",
                 "key": "tfx.amq.url"
-              }
-            }
-          },
-          {
-            "name": "AMQ_USER",
-            "valueFrom": {
-              "secretKeyRef": {
-                "name": "amq-user",
-                "key": "username"
-              }
-            }
-          },
-          {
-            "name": "AMQ_PASSWORD",
-            "valueFrom": {
-              "secretKeyRef": {
-                "name": "amq-user",
-                "key": "password"
               }
             }
           },
@@ -157,6 +135,16 @@
         "resources": {
         },
         "volumeMounts": [
+          {
+            "name": "db-credentials",
+            "readOnly": true,
+            "mountPath": "/etc/.db_creds"
+          },
+          {
+            "name": "amq-credentials",
+            "readOnly": true,
+            "mountPath": "/etc/.amq_creds"
+          },
           {
             "name": "logs-storage",
             "mountPath": "/logs"

@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -25,16 +26,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
-import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 @ExtendWith(MockitoExtension.class)
 class CollateralListLedgerProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
-
-    @Mock
-    private ClockService clockService;
+    private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
 
     @Mock
     private BojCodeProvider bojCodeProvider;
@@ -42,18 +41,21 @@ class CollateralListLedgerProcessorTest {
     @Mock
     private JasdecCodeProvider jasdecCodeProvider;
 
+    @Mock
+    private CollateralCalculator collateralCalculator;
+
     private CollateralListLedgerProcessor processor;
 
     @BeforeEach
     void setUp() {
         processor = new CollateralListLedgerProcessor(
             BUSINESS_DATE,
-            clockService,
+            RECORD_DATE,
             bojCodeProvider,
-            jasdecCodeProvider
+            jasdecCodeProvider,
+            collateralCalculator
         );
 
-        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 1, 2, 11, 30));
         lenient().when(bojCodeProvider.getCode(any(), any())).thenReturn(Optional.of("bojc"));
         lenient().when(jasdecCodeProvider.getCode(any(), any())).thenReturn(Optional.of("jasdec1"));
     }
@@ -61,6 +63,12 @@ class CollateralListLedgerProcessorTest {
     @ParameterizedTest
     @MethodSource("collateralList")
     void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem collateralListItem) {
+        if (balance.getProduct() instanceof SecurityCollateralProductEntity) {
+            when(collateralCalculator.calculateEvaluatedPrice((SecurityCollateralProductEntity) balance.getProduct())).thenReturn(new BigDecimal("10.01"));
+        }
+
+        when(collateralCalculator.calculateEvaluatedAmount(balance)).thenReturn(new BigDecimal("1300"));
+
         assertThat(processor.process(balance)).isEqualTo(collateralListItem);
     }
 
@@ -109,6 +117,7 @@ class CollateralListLedgerProcessorTest {
             .securityCode("1234")
             .isinCode("JP1150481859")
             .marketPrice("1.0")
+            .evaluatedPrice("10.01")
             .jasdecCode("jasdec1")
             .build();
     }
@@ -120,6 +129,7 @@ class CollateralListLedgerProcessorTest {
             .securityCode("123456789")
             .isinCode("JP1150481859")
             .marketPrice("1.0")
+            .evaluatedPrice("10.01")
             .bojCode("bojc")
             .interestPaymentDay("01/01")
             .interestPaymentDay2("02/02")
@@ -145,7 +155,7 @@ class CollateralListLedgerProcessorTest {
             .amount("1200")
             .marketPrice(EMPTY)
             .evaluatedPrice(EMPTY)
-            .evaluatedAmount(EMPTY)
+            .evaluatedAmount("1300")
             .bojCode(EMPTY)
             .jasdecCode(EMPTY)
             .interestPaymentDay(EMPTY)

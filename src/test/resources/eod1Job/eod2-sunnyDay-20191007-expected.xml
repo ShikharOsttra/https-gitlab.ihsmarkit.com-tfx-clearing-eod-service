@@ -62,4 +62,27 @@
             type="TOTAL_VM"
     />
 
+    <eod_ledger_collateral_list
+        business_date="2019-10-07"
+        trade_date="2019/10/07"
+        evaluation_date="2019/10/07"
+        participant_code="P11"
+        participant_name="Party_123"
+        participant_type="LP"
+        collateral_purpose_type="1"
+        collateral_purpose="Margin"
+        collateral_name=""
+        collateral_type="Cash"
+        security_code=""
+        isin_code=""
+        amount="10001"
+        market_price=""
+        evaluated_price=""
+        evaluated_amount="10001"
+        boj_code=""
+        jasdec_code=""
+        interest_payment_day=""
+        interest_payment_day2=""
+        maturity_date=""/>
+
 </dataset>
