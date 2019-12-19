@@ -22,6 +22,29 @@
             type="INITIAL_MTM"
     />
 
+    <!--id="3"-->
+    <eod_product_cash_settlement
+
+            participant_id="101"
+            currency_pair_id="13"
+            amount="9500"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
+    <!--id="4"-->
+    <eod_product_cash_settlement
+
+            participant_id="102"
+            currency_pair_id="13"
+            amount="9700"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
+
     <eod_product_cash_settlement
             participant_id="102"
             currency_pair_id="13"
@@ -84,5 +107,74 @@
         interest_payment_day=""
         interest_payment_day2=""
         maturity_date=""/>
+
+    <eod_ledger_collateral_list
+            business_date="2019-10-07"
+            trade_date="2019/10/07"
+            evaluation_date="2019/10/07"
+            participant_code="P22"
+            participant_name="Party_422"
+            participant_type="LP"
+            collateral_purpose_type="1"
+            collateral_purpose="Margin"
+            collateral_name=""
+            collateral_type="Cash"
+            security_code=""
+            isin_code=""
+            amount="11000"
+            market_price=""
+            evaluated_price=""
+            evaluated_amount="11000"
+            boj_code=""
+            jasdec_code=""
+            interest_payment_day=""
+            interest_payment_day2=""
+            maturity_date=""/>
+
+    <eod_ledger_collateral_list
+            business_date="2019-10-07"
+            trade_date="2019/10/07"
+            evaluation_date="2019/10/07"
+            participant_code="P23"
+            participant_name="Party_423"
+            participant_type="FXB"
+            collateral_purpose_type="1"
+            collateral_purpose="Margin"
+            collateral_name=""
+            collateral_type="Cash"
+            security_code=""
+            isin_code=""
+            amount="12000"
+            market_price=""
+            evaluated_price=""
+            evaluated_amount="12000"
+            boj_code=""
+            jasdec_code=""
+            interest_payment_day=""
+            interest_payment_day2=""
+            maturity_date=""/>
+
+    <eod_ledger_collateral_list
+            business_date="2019-10-07"
+            trade_date="2019/10/07"
+            evaluation_date="2019/10/07"
+            participant_code="P11"
+            participant_name="Party_123"
+            participant_type="LP"
+            collateral_purpose_type="1"
+            collateral_purpose="Margin"
+            collateral_name=""
+            collateral_type="LG"
+            security_code=""
+            isin_code=""
+            amount="20000"
+            market_price=""
+            evaluated_price=""
+            evaluated_amount="19800"
+            boj_code=""
+            jasdec_code=""
+            interest_payment_day=""
+            interest_payment_day2=""
+            maturity_date="2020/02/02"/>
 
 </dataset>

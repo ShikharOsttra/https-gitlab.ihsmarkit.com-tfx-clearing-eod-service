@@ -252,6 +252,27 @@
             type="INITIAL_MTM"
     />
 
+    <eod_product_cash_settlement
+            id="3"
+            participant_id="101"
+            currency_pair_id="13"
+            amount="9500"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
+
+    <eod_product_cash_settlement
+            id="4"
+            participant_id="102"
+            currency_pair_id="13"
+            amount="9700"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
 
 
 </dataset>
