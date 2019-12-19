@@ -14,7 +14,6 @@
     <margin_ratio_multiplier id="2" participant_id="102" currency_pair_id="13" value="0.91" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="3" participant_id="103" currency_pair_id="13" value="0.92" applicable_date="2019-10-07" business_date="2019-10-07"/>
 
-    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
     <collateral_product id="4" enabled="true" deleted="false" type="2"/>
     <log_collateral_product id="4" issuer_bank_id="1" deposit_date="2020-2-2" maturity_date="2020-2-2"/>
 
@@ -25,7 +24,6 @@
     <collateral_balance id="2" purpose="1" participant_id="102" product_id="1" amount="11000" version="1"/>
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
-
 
     <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" />
     <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" value_date="2019-10-11" />
