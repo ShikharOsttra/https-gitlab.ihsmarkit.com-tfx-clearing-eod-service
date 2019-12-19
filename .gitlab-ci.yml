@@ -1,14 +1,14 @@
 stages:
   - build
-  - post-build
+#  - post-build
   - deliver
-  - downstream
+#  - downstream
 
 branch-job:
   stage: build
   image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
   script:
-    - gradle clean build
+    - gradle clean build -x check
   except:
     - master
     - develop
@@ -17,13 +17,13 @@ branch-job:
     paths:
       - build/libs/
 
-check-dependencies:
-  stage: post-build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
-  script:
-    - check_dependencies.sh
-  except:
-    - uat-drop
+#check-dependencies:
+#  stage: post-build
+#  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
+#  script:
+#    - check_dependencies.sh
+#  except:
+#    - uat-drop
 
 develop-job:
   stage: build
@@ -62,17 +62,13 @@ gconf:deliver:
   stage: deliver
   image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
   script:
-    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.0.6
-  only:
-    - master
-    - develop
-    - uat-drop
+    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.1.0
   artifacts:
     paths:
       - build/deliverable/
       - build/reports/
       - build/test-results/
 
-include:
-  - project: 'tfx-clearing/environments/ci'
-    file: 'deployable-builds-ci.yml'
+#include:
+#  - project: 'tfx-clearing/environments/ci'
+#    file: 'deployable-builds-ci.yml'
