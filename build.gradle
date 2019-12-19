@@ -45,6 +45,7 @@ dependencies {
             [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreDomainVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreConfigVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreDlVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'collateral-calculator', version: collateralCalculatorVersion],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'],
             [group: 'org.apache.activemq', name: 'activemq-client'],

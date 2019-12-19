@@ -223,5 +223,8 @@
             type="INITIAL_MTM"
     />
 
+    <collateral_product id="1" enabled="true" deleted="false" type="1"/>
+    <cash_collateral_product id="1" currency="JPY"/>
+    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
 
 </dataset>
