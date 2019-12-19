@@ -78,7 +78,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final Stream<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findBySettlementDateIsGreaterThanEqual(businessDate);
 
-        var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
+        final var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
 
         final Stream<EodCashSettlementEntity> cashSettlement = aggregated.entrySet().stream()
             .flatMap(
@@ -95,7 +95,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final var dayCashSettlement = aggregated.entrySet().stream()
             .flatMap(
                 byParticipant -> Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
-                    .flatMap(byType -> a(Optional.ofNullable(byType.get(DAY)), Optional.ofNullable(byType.get(TOTAL))))
+                    .flatMap(byType -> optionalPair(Optional.ofNullable(byType.get(DAY)), Optional.ofNullable(byType.get(TOTAL))))
                     .map(amount -> ImmutablePair.of(byParticipant.getKey(), amount))
                     .stream()
             ).collect(
@@ -130,7 +130,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                     )
                 );
 
-        var participantMargin = Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
+        final var participantMargin = Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
             .map(Map::keySet)
             .flatMap(Set::stream)
             .distinct()
@@ -148,7 +148,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private Optional<Pair<Optional<BigDecimal>, Optional<BigDecimal>>> a(Optional<BigDecimal> left, Optional<BigDecimal> right) {
+    private Optional<Pair<Optional<BigDecimal>, Optional<BigDecimal>>> optionalPair(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
         return left.isEmpty() && right.isEmpty() ? Optional.empty() : Optional.of(Pair.of(left, right));
     }
 
