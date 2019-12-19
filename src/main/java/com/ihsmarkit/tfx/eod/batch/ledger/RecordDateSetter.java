@@ -18,6 +18,7 @@ public class RecordDateSetter extends StepExecutionListenerSupport {
 
     @Override
     public void beforeStep(final StepExecution stepExecution) {
-        stepExecution.getExecutionContext().put(RECORD_DATE, clockService.getCurrentDateTime());
+        //todo: configure execution context serializer with proper object mapper
+        stepExecution.getExecutionContext().put(RECORD_DATE, clockService.getCurrentDateTime().toString());
     }
 }
