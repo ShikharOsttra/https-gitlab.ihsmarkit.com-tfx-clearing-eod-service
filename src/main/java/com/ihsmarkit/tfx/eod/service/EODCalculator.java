@@ -17,11 +17,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
@@ -101,6 +103,22 @@ public class EODCalculator {
         );
     }
 
+    public Map<ParticipantEntity, BigDecimal> calculateRequiredInitialMargin(
+        final Stream<ParticipantPositionEntity> positions,
+        final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver,
+        final Function<String, BigDecimal> jpyRates
+    ) {
+        return aggregatePositions(positions)
+            .map(position -> ImmutablePair.of(
+                position.getParticipant(),
+                getJpyAmount(position.getCurrencyPair(), position.getAmount().abs(), jpyRates)
+                    .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant()))
+                    .setScale(0, RoundingMode.CEILING)
+            )).collect(
+                Collectors.toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
+            );
+    }
+
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateInitialMtm(
         final Stream<TradeEntity> trades,
         final Function<CurrencyPairEntity, BigDecimal> dsp,
@@ -170,7 +188,10 @@ public class EODCalculator {
                                 () -> new EnumMap<EodCashSettlementDateType, BigDecimal>(EodCashSettlementDateType.class),
                                 reducing(BigDecimal.ZERO, margin -> margin.getAmount().getValue(), BigDecimal::add)
                             ),
-                            res -> {res.put(TOTAL, res.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add)); return res;}
+                            res -> {
+                                res.put(TOTAL, res.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add));
+                                return res;
+                            }
                         )
                     )
                 )

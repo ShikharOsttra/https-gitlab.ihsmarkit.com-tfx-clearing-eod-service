@@ -27,6 +27,7 @@ public final class EodJobConstants {
     public static final String ROLL_POSITIONS_STEP_NAME = "rollPositions";
     public static final String SWAP_PNL_STEP_NAME = "swapPnL";
     public static final String TOTAL_VM_STEP_NAME = "totalVM";
+    public static final String MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY = "marginCollateralExcessOrDeficiency";
     public static final String COLLATERAL_LIST_LEDGER_STEP_NAME = "collateralListLedger";
 
 }

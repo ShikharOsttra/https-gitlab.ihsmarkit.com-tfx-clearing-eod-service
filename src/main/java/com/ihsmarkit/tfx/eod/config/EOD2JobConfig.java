@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 
@@ -23,11 +24,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
+import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
+import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
-import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,6 +49,8 @@ public class EOD2JobConfig {
 
     private final TotalVariationMarginTasklet totalVariationMarginTasklet;
 
+    private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
+
     @Value("${eod.ledger.collateral.list.chunk.size:1000}")
     private final int collateralListChunkSize;
     private final CollateralListLedgerProcessor collateralListProcessor;
@@ -58,7 +62,7 @@ public class EOD2JobConfig {
         return jobs.get(EOD2_BATCH_JOB_NAME)
             .start(swapPnL())
             .next(totalVM())
-
+            .next(marginCollateralExcessOrDeficiency())
             //ledgers
             .next(collateralListLedger())
 
@@ -74,6 +78,12 @@ public class EOD2JobConfig {
     private Step totalVM() {
         return steps.get(TOTAL_VM_STEP_NAME)
             .tasklet(totalVariationMarginTasklet)
+            .build();
+    }
+
+    private Step marginCollateralExcessOrDeficiency() {
+        return steps.get(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY)
+            .tasklet(marginCollateralExcessDeficiencyTasklet)
             .build();
     }
 
