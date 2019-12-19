@@ -95,7 +95,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final var dayCashSettlement = aggregated.entrySet().stream()
             .flatMap(
                 byParticipant -> Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
-                    .flatMap(byType -> optionalPair(Optional.ofNullable(byType.get(DAY)), Optional.ofNullable(byType.get(TOTAL))))
+                    .map(byType -> Pair.of(Optional.ofNullable(byType.get(DAY)), byType.get(TOTAL)))
                     .map(amount -> ImmutablePair.of(byParticipant.getKey(), amount))
                     .stream()
             ).collect(
@@ -148,14 +148,10 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private Optional<Pair<Optional<BigDecimal>, Optional<BigDecimal>>> optionalPair(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
-        return left.isEmpty() && right.isEmpty() ? Optional.empty() : Optional.of(Pair.of(left, right));
-    }
-
     private EodParticipantMarginEntity creaetEodParticipantMargin(
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
-        final Optional<Pair<Optional<BigDecimal>, Optional<BigDecimal>>> dayCashSettlement,
+        final Optional<Pair<Optional<BigDecimal>, BigDecimal>> dayCashSettlement,
         final Optional<Pair<BigDecimal, BigDecimal>> balance) {
 
         return EodParticipantMarginEntity.builder()
@@ -164,7 +160,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .timestamp(clockService.getCurrentDateTimeUTC())
             .initialMargin(jpyAmountOf(requiredInitialMargin))
             .requiredAmount(jpyAmountOfDifference(requiredInitialMargin, dayCashSettlement.flatMap(Pair::getLeft)))
-            .totalDeficit(jpyAmountOfDifference(balance.map(Pair::getLeft), dayCashSettlement.flatMap(Pair::getRight)))
+            .totalDeficit(jpyAmountOfDifference(balance.map(Pair::getLeft), dayCashSettlement.map(Pair::getRight)))
             .cashDeficit(jpyAmountOfDifference(balance.map(Pair::getRight), dayCashSettlement.flatMap(Pair::getLeft)))
             .build();
     }
