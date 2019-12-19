@@ -15,14 +15,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-
-import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
-import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
-import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 
 import lombok.AllArgsConstructor;
 
@@ -41,11 +37,8 @@ public class EOD2JobConfig {
 
     private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
 
-    @Value("${eod.ledger.collateral.list.chunk.size:1000}")
-    private final int collateralListChunkSize;
-    private final CollateralListLedgerProcessor collateralListProcessor;
-    @Value("classpath:/ledger/sql/eod_ledger_collateral_list_insert.sql")
-    private final Resource collateralListLedgerSql;
+    @Qualifier(COLLATERAL_LIST_LEDGER_STEP_NAME)
+    private Step collateralListLedger;
 
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
@@ -74,38 +67,6 @@ public class EOD2JobConfig {
     private Step marginCollateralExcessOrDeficiency() {
         return steps.get(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY)
             .tasklet(marginCollateralExcessDeficiencyTasklet)
-            .build();
-    }
-
-    private Step collateralListLedger() {
-        return steps.get(COLLATERAL_LIST_LEDGER_STEP_NAME)
-            .<CollateralBalanceEntity, CollateralListItem>chunk(collateralListChunkSize)
-            .reader(collateralListReader())
-            .processor(collateralListProcessor)
-            .writer(collateralListWriter())
-            .build();
-    }
-
-    @Bean
-    protected ItemReader<CollateralBalanceEntity> collateralListReader() {
-        //todo: hibernate cursor ?
-        return new JpaPagingItemReaderBuilder<CollateralBalanceEntity>()
-            .pageSize(collateralListChunkSize)
-            .entityManagerFactory(entityManagerFactory)
-            .saveState(false)
-            .transacted(false)
-            .queryProvider(new CollateralListQueryProvider())
-            .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Bean
-    @SneakyThrows
-    protected ItemWriter<CollateralListItem> collateralListWriter() {
-        return new JdbcBatchItemWriterBuilder<CollateralListItem>()
-            .beanMapped()
-            .sql(IOUtils.toString(collateralListLedgerSql.getInputStream()))
-            .dataSource(dataSource)
             .build();
     }
 
