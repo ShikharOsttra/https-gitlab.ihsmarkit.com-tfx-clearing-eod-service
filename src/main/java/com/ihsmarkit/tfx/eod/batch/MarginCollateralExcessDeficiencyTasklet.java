@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
@@ -40,6 +41,7 @@ import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.MarginRatioService;
@@ -68,6 +70,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     private final MarginRatioService marginRatioService;
 
     private final EODCalculator eodCalculator;
+
+    private final CollateralCalculator collateralCalculator;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -123,9 +127,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                     Collectors.groupingBy(
                         CollateralBalanceEntity::getParticipant,
                         Collectors.reducing(
-                            Pair.of(BigDecimal.ZERO, BigDecimal.ZERO),
-                            balance -> Pair.of(balance.getAmount(), balance.getProduct().getType() == CASH ? balance.getAmount() : BigDecimal.ZERO),
-                            (a, b) -> Pair.of(a.getLeft().add(b.getLeft()), a.getRight().add(b.getRight()))
+                            Pair.of(ZERO, ZERO),
+                            this::cashAndTotalContrubutions,
+                            MarginCollateralExcessDeficiencyTasklet::sumPairs
                         )
                     )
                 );
@@ -165,9 +169,12 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .build();
     }
 
+    private static Pair<BigDecimal, BigDecimal> sumPairs(final Pair<BigDecimal, BigDecimal> a, final Pair<BigDecimal, BigDecimal> b) {
+        return Pair.of(a.getLeft().add(b.getLeft()), a.getRight().add(b.getRight()));
+    }
 
     private static AmountEntity jpyAmountOf(final Optional<BigDecimal> amnt) {
-        return AmountEntity.of(amnt.orElse(BigDecimal.ZERO), JPY);
+        return AmountEntity.of(amnt.orElse(ZERO), JPY);
     }
 
     private static AmountEntity jpyAmountOfDifference(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
@@ -195,4 +202,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .build();
     }
 
+    private Pair<BigDecimal, BigDecimal> cashAndTotalContrubutions(final CollateralBalanceEntity balance) {
+        final BigDecimal evaluated = collateralCalculator.calculateEvaluatedAmount(balance);
+        return balance.getProduct().getType() == CASH  ? Pair.of(evaluated, evaluated) : Pair.of(evaluated, ZERO);
+    }
 }
