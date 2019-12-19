@@ -24,7 +24,6 @@
 
     <!--id="3"-->
     <eod_product_cash_settlement
-
             participant_id="101"
             currency_pair_id="13"
             amount="9500"
@@ -33,6 +32,7 @@
             date="2019-10-06"
             type="DAILY_MTM"
     />
+
     <!--id="4"-->
     <eod_product_cash_settlement
 
@@ -43,6 +43,29 @@
             settlement_date="2019-10-07"
             date="2019-10-06"
             type="DAILY_MTM"
+    />
+
+    <!--id="5"-->
+    <eod_product_cash_settlement
+            participant_id="101"
+            currency_pair_id="13"
+            amount="9500"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="TOTAL_VM"
+    />
+
+    <!--id="6"-->
+    <eod_product_cash_settlement
+
+            participant_id="102"
+            currency_pair_id="13"
+            amount="9700"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="TOTAL_VM"
     />
 
     <eod_product_cash_settlement
@@ -84,6 +107,28 @@
             date="2019-10-07"
             type="TOTAL_VM"
     />
+
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="9500"   date_type="DAY"       type="DAILY_MTM"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="5500"   date_type="FOLLOWING" type="DAILY_MTM"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="15000"  date_type="TOTAL"     type="DAILY_MTM"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="-28222" date_type="FOLLOWING" type="SWAP_PNL"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="-28222" date_type="TOTAL"     type="SWAP_PNL"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="9500"   date_type="DAY"       type="TOTAL_VM"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="-22722" date_type="FOLLOWING" type="TOTAL_VM"/>
+    <eod_cash_settlement participant_id="101" date="2019-10-07" amount="-13222" date_type="TOTAL"     type="TOTAL_VM"/>
+
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="7500"   date_type="FOLLOWING" type="INITIAL_MTM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="7500"   date_type="TOTAL"     type="INITIAL_MTM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="9700"   date_type="DAY"       type="DAILY_MTM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="9700"   date_type="TOTAL"     type="DAILY_MTM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-31043" date_type="FOLLOWING" type="SWAP_PNL"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-31043" date_type="TOTAL"     type="SWAP_PNL"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="9700"   date_type="DAY"       type="TOTAL_VM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-23543" date_type="FOLLOWING" type="TOTAL_VM"/>
+    <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-13843" date_type="TOTAL"     type="TOTAL_VM"/>
+
+    <eod_participant_margin  participant_id="101" date="2019-10-07" required_amount="78744100.00" initial_margin_amount="78753600.00" total_deficit_amount="43223.00" cash_deficit_amount="501.00"/>
+    <eod_participant_margin  participant_id="102" date="2019-10-07" required_amount="-9700.00" initial_margin_amount="0.00" total_deficit_amount="24843.00" cash_deficit_amount="1300.00"/>
 
     <eod_ledger_collateral_list
         business_date="2019-10-07"
