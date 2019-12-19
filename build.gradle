@@ -49,8 +49,6 @@ dependencies {
             [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'],
             [group: 'org.apache.activemq', name: 'activemq-client'],
-            [group: 'mysql', name: 'mysql-connector-java', version: mysqlVersion],
-            [group: 'com.zaxxer', name: 'HikariCP'],
             [group: 'com.google.guava', name: 'guava'],
             [group: 'org.projectlombok', name: 'lombok'],
             [group: 'org.mapstruct', name: 'mapstruct'],
@@ -63,6 +61,11 @@ dependencies {
             [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
             [group: 'org.springframework', name: 'spring-jms'],
             [group: 'org.yaml', name: 'snakeyaml']
+    )
+
+    runtimeOnly(
+        [group: 'com.zaxxer', name: 'HikariCP'],
+        [group: 'mysql', name: 'mysql-connector-java']
     )
 
     testImplementation(
