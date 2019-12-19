@@ -20,7 +20,7 @@
     <collateral_product id="1" enabled="true" deleted="false" type="1"/>
     <cash_collateral_product id="1" currency="JPY"/>
 
-    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10000" version="1"/>
+    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
     <collateral_balance id="2" purpose="1" participant_id="102" product_id="1" amount="11000" version="1"/>
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
@@ -252,8 +252,6 @@
             type="INITIAL_MTM"
     />
 
-    <collateral_product id="1" enabled="true" deleted="false" type="1"/>
-    <cash_collateral_product id="1" currency="JPY"/>
-    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
+
 
 </dataset>
