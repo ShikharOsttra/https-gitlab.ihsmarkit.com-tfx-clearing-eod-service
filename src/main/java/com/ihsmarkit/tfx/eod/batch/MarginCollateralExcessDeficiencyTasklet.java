@@ -65,7 +65,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     private final EodCashSettlementRepository eodCashSettlementRepository;
 
-    private EodParticipantMarginRepository eodParticipantMarginRepository;
+    private final EodParticipantMarginRepository eodParticipantMarginRepository;
 
     private final CollateralBalanceRepository collateralBalanceRepository;
 

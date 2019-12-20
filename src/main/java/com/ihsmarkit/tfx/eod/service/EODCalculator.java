@@ -197,7 +197,7 @@ public class EODCalculator {
     }
 
     private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following) {
-        return new EnumMap<EodCashSettlementDateType, BigDecimal>(
+        return new EnumMap<>(
             Stream.of(
                 safeSum(day, following).map(margin -> Pair.of(TOTAL, margin)),
                 day.map(margin -> Pair.of(DAY, margin)),
