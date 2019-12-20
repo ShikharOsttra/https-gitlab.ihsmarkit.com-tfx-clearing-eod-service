@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.config;
 
+import java.time.LocalDateTime;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -16,6 +18,7 @@ public class DateConfig {
             new DefaultFormattingConversionService(false);
 
         conversionService.addConverter(new BusinessDateConverter());
+        conversionService.addConverter(String.class, LocalDateTime.class, LocalDateTime::parse);
 
         return conversionService;
     }
