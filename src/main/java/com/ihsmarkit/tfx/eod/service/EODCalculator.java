@@ -185,7 +185,7 @@ public class EODCalculator {
                     EodProductCashSettlementEntity::getParticipant,
                     groupingBy(
                         EodProductCashSettlementEntity::getType,
-                        () -> new EnumMap<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>(EodProductCashSettlementType.class),
+                        () -> new EnumMap<>(EodProductCashSettlementType.class),
                         twoWayCollector(
                             margin -> businessDate.isEqual(margin.getSettlementDate()),
                             margin -> margin.getAmount().getValue(),
