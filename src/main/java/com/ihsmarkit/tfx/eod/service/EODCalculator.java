@@ -4,9 +4,11 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,10 +22,12 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
@@ -115,7 +119,7 @@ public class EODCalculator {
                     .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant()))
                     .setScale(0, RoundingMode.CEILING)
             )).collect(
-                Collectors.toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
+                toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
             );
     }
 
@@ -156,7 +160,7 @@ public class EODCalculator {
                     CcyParticipantAmount::getParticipant,
                     groupingBy(
                         CcyParticipantAmount::getCurrencyPair,
-                        reducing(BigDecimal.ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
+                        reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
                     )
                 )
             );
@@ -182,20 +186,24 @@ public class EODCalculator {
                     groupingBy(
                         EodProductCashSettlementEntity::getType,
                         () -> new EnumMap<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>(EodProductCashSettlementType.class),
-                        collectingAndThen(
-                            groupingBy(
-                                margin -> businessDate.isEqual(margin.getSettlementDate()) ? DAY : FOLLOWING,
-                                () -> new EnumMap<EodCashSettlementDateType, BigDecimal>(EodCashSettlementDateType.class),
-                                reducing(BigDecimal.ZERO, margin -> margin.getAmount().getValue(), BigDecimal::add)
-                            ),
-                            res -> {
-                                res.put(TOTAL, res.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add));
-                                return res;
-                            }
+                        twoWayCollector(
+                            margin -> businessDate.isEqual(margin.getSettlementDate()),
+                            margin -> margin.getAmount().getValue(),
+                            EODCalculator::marginMap
                         )
                     )
                 )
             );
+    }
+
+    private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following) {
+        return new EnumMap<EodCashSettlementDateType, BigDecimal>(
+            Stream.of(
+                safeSum(day, following).map(margin -> Pair.of(TOTAL, margin)),
+                day.map(margin -> Pair.of(DAY, margin)),
+                following.map(margin -> Pair.of(FOLLOWING, margin))
+            ).flatMap(Optional::stream).collect(toMap(Pair::getLeft, Pair::getRight))
+        );
     }
 
     public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
@@ -220,7 +228,7 @@ public class EODCalculator {
                 Collectors.toList()
             )).entrySet().stream()
                 .collect(
-                    Collectors.toMap(
+                    toMap(
                         Map.Entry::getKey,
                         entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
                     )
@@ -248,7 +256,32 @@ public class EODCalculator {
         }
 
         return trades;
+    }
 
+    public static <T, R> Collector<T, ?, R> twoWayCollector(
+        final Predicate<T> predicate,
+        final Function<T, BigDecimal> mapper,
+        final BiFunction<Optional<BigDecimal>, Optional<BigDecimal>, R> finisher) {
+
+        return collectingAndThen(
+            reducing(
+                ImmutablePair.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty()),
+                o -> predicate.test(o)
+                    ? ImmutablePair.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
+                    : ImmutablePair.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)
+                ),
+                (a, b) -> ImmutablePair.of(safeSum(a.getLeft(), b.getLeft()), safeSum(a.getRight(), b.getRight()))
+            ),
+            res -> finisher.apply(res.getLeft(), res.getRight())
+        );
+    }
+
+    public static Optional<BigDecimal> safeSum(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
+        return
+            left
+                .flatMap(l -> right.map(l::add))
+                .or(() -> left)
+                .or(() -> right);
     }
 
 }

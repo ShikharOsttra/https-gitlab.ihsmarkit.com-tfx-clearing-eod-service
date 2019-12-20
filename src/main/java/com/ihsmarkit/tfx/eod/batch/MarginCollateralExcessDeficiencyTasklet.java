@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
+import static com.ihsmarkit.tfx.eod.service.EODCalculator.safeSum;
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.toMap;
 
@@ -179,12 +180,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     }
 
     private static AmountEntity jpyAmountOfDifference(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
-        return jpyAmountOf(
-            left
-                .flatMap(l -> right.map(l::subtract))
-                .or(() -> left)
-                .or(() -> right.map(BigDecimal::negate))
-        );
+        return jpyAmountOf(safeSum(left, right.map(BigDecimal::negate)));
     }
 
     private EodCashSettlementEntity createCashSettlement(
