@@ -13,6 +13,10 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,6 +46,7 @@ import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
+import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.MarginRatioService;
@@ -126,10 +131,10 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 .collect(
                     Collectors.groupingBy(
                         CollateralBalanceEntity::getParticipant,
-                        Collectors.reducing(
-                            Pair.of(ZERO, ZERO),
-                            this::cashAndTotalContrubutions,
-                            MarginCollateralExcessDeficiencyTasklet::sumPairs
+                        twoWayCollector(
+                            balance -> balance.getProduct().getType() == CASH,
+                            collateralCalculator::calculateEvaluatedAmount,
+                            (cash, nonCash) -> new BalanceContribution(nonCash.add(cash), cash)
                         )
                     )
                 );
@@ -156,7 +161,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
         final Optional<Pair<Optional<BigDecimal>, BigDecimal>> dayCashSettlement,
-        final Optional<Pair<BigDecimal, BigDecimal>> balance) {
+        final Optional<BalanceContribution> balance) {
 
         return EodParticipantMarginEntity.builder()
             .date(businessDate)
@@ -164,13 +169,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .timestamp(clockService.getCurrentDateTimeUTC())
             .initialMargin(jpyAmountOf(requiredInitialMargin))
             .requiredAmount(jpyAmountOfDifference(requiredInitialMargin, dayCashSettlement.flatMap(Pair::getLeft)))
-            .totalDeficit(jpyAmountOfDifference(balance.map(Pair::getLeft), dayCashSettlement.map(Pair::getRight)))
-            .cashDeficit(jpyAmountOfDifference(balance.map(Pair::getRight), dayCashSettlement.flatMap(Pair::getLeft)))
+            .totalDeficit(jpyAmountOfDifference(balance.map(BalanceContribution::getTotalBalanceContribution), dayCashSettlement.map(Pair::getRight)))
+            .cashDeficit(jpyAmountOfDifference(balance.map(BalanceContribution::getCashBalanceCntribution), dayCashSettlement.flatMap(Pair::getLeft)))
             .build();
-    }
-
-    private static Pair<BigDecimal, BigDecimal> sumPairs(final Pair<BigDecimal, BigDecimal> a, final Pair<BigDecimal, BigDecimal> b) {
-        return Pair.of(a.getLeft().add(b.getLeft()), a.getRight().add(b.getRight()));
     }
 
     private static AmountEntity jpyAmountOf(final Optional<BigDecimal> amnt) {
@@ -202,8 +203,25 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .build();
     }
 
-    private Pair<BigDecimal, BigDecimal> cashAndTotalContrubutions(final CollateralBalanceEntity balance) {
-        final BigDecimal evaluated = collateralCalculator.calculateEvaluatedAmount(balance);
-        return balance.getProduct().getType() == CASH  ? Pair.of(evaluated, evaluated) : Pair.of(evaluated, ZERO);
+    private static <T, R> Collector<T, ?, R>  twoWayCollector(
+        final Predicate<T> predicate,
+        final Function<T, BigDecimal> mapper,
+        final BiFunction<BigDecimal, BigDecimal, R> finisher) {
+
+        return Collectors.collectingAndThen(
+            Collectors.reducing(
+                ImmutablePair.of(ZERO, ZERO),
+                o -> predicate.test(o)
+                    ? ImmutablePair.of(mapper.apply(o), ZERO)
+                    : ImmutablePair.of(ZERO, mapper.apply(o)
+                ),
+                (a, b) ->
+                    ImmutablePair.of(
+                        a.getLeft().add(b.getLeft()),
+                        a.getRight().add(b.getRight())
+                    )
+            ),
+            res -> finisher.apply(res.getLeft(), res.getRight())
+        );
     }
 }
