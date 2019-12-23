@@ -28,5 +28,6 @@ public final class EodJobConstants {
     public static final String SWAP_PNL_STEP_NAME = "swapPnL";
     public static final String TOTAL_VM_STEP_NAME = "totalVM";
     public static final String COLLATERAL_LIST_LEDGER_STEP_NAME = "collateralListLedger";
+    public static final String DAILY_MARKET_DATA_LEDGER_STEP_NAME = "dailyMarketDataLedger";
 
 }

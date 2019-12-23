@@ -43,4 +43,7 @@
     <BATCH_STEP_EXECUTION/>
     <BATCH_STEP_EXECUTION_CONTEXT/>
     <eod_ledger_collateral_list/>
+    <eod_ledger_market_data/>
+    <eod_daily_settlement_price/>
+    <eod_swap_point/>
 </dataset>

@@ -23,3 +23,28 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     interest_payment_day2   varchar(5)   not null,
     maturity_date           varchar(10)  not null
 );
+
+create table if not exists eod_ledger_market_data
+(
+    business_date          date        not null,
+    trade_date             varchar(10) not null,
+    record_date            varchar(19) not null,
+    currency_no            varchar(3)  not null,
+    currency_pair          varchar(7)  not null,
+    previous_day_dsp       varchar(16) not null,
+    open_price             varchar(15) not null,
+    open_price_time        varchar(8)  not null,
+    high_price             varchar(15) not null,
+    high_price_time        varchar(8)  not null,
+    low_price              varchar(15) not null,
+    low_price_time         varchar(8)  not null,
+    close_price            varchar(15) not null,
+    close_price_time       varchar(8)  not null,
+    dsp                    varchar(15) not null,
+    dsp_change             varchar(15) not null,
+    swap_point             varchar(15) not null,
+    trading_volume_in_unit varchar(15) not null,
+    trading_volume_amount  varchar(15) not null,
+    open_position_in_unit  varchar(15) not null,
+    open_position_amount   varchar(15) not null
+);
