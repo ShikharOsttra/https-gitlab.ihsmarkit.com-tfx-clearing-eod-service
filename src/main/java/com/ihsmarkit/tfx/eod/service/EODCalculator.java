@@ -1,8 +1,10 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
+import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -19,6 +21,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,14 +36,18 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
+import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
+import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
+import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
 import com.ihsmarkit.tfx.eod.model.PositionBalance;
 import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
@@ -233,7 +240,69 @@ public class EODCalculator {
                         entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
                     )
                 );
+    }
 
+    public Stream<ParticipantMargin> calculateParticipantMargin(final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
+                                                                final Map<ParticipantEntity, DayAndTotalCashSettlement> dayCashSettlement,
+                                                                final Map<ParticipantEntity, BalanceContribution> deposits) {
+        return Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
+            .map(Map::keySet)
+            .flatMap(Set::stream)
+            .distinct()
+            .map(
+                participant -> createEodParticipantMargin(
+                    participant,
+                    Optional.ofNullable(requiredInitialMargin.get(participant)),
+                    Optional.ofNullable(dayCashSettlement.get(participant)),
+                    Optional.ofNullable(deposits.get(participant))
+                )
+            );
+    }
+
+    public Map<ParticipantEntity, BalanceContribution> calculateDeposits(
+        final Stream<CollateralBalanceEntity> balances,
+        final Function<CollateralBalanceEntity, BigDecimal> evaluator
+    ) {
+        return balances.collect(
+            groupingBy(
+                CollateralBalanceEntity::getParticipant,
+                twoWayCollector(
+                    balance -> balance.getProduct().getType() == CASH,
+                    evaluator,
+                    (cash, nonCash) -> new BalanceContribution(safeSum(nonCash, cash).orElse(ZERO), cash.orElse(ZERO))
+                )
+            )
+        );
+
+    }
+
+    public Map<ParticipantEntity, DayAndTotalCashSettlement> aggregateDayAndTotalCashSettlement(
+        final Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>> aggregated
+    ) {
+        return aggregated.entrySet().stream()
+            .flatMap(
+                byParticipant -> Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
+                    .map(byType -> new DayAndTotalCashSettlement(Optional.ofNullable(byType.get(DAY)), byType.get(TOTAL)))
+                    .map(amount -> ImmutablePair.of(byParticipant.getKey(), amount))
+                    .stream()
+            ).collect(
+            toMap(Pair::getLeft, Pair::getRight)
+        );
+    }
+
+    private ParticipantMargin createEodParticipantMargin(
+        final ParticipantEntity participant,
+        final Optional<BigDecimal> requiredInitialMargin,
+        final Optional<DayAndTotalCashSettlement> dayCashSettlement,
+        final Optional<BalanceContribution> balance) {
+
+        return ParticipantMargin.builder()
+            .participant(participant)
+            .initialMargin(requiredInitialMargin)
+            .requiredAmount(safeDiff(requiredInitialMargin, dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
+            .totalDeficit(safeDiff(balance.map(BalanceContribution::getTotalBalanceContribution), dayCashSettlement.map(DayAndTotalCashSettlement::getTotal)))
+            .cashDeficit(safeDiff(balance.map(BalanceContribution::getCashBalanceCntribution), dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
+            .build();
     }
 
     private List<BalanceTrade> rebalanceSingleCurrency(final List<TradeOrPositionEssentials> list, final int rounding) {
@@ -284,4 +353,7 @@ public class EODCalculator {
                 .or(() -> right);
     }
 
+    private static Optional<BigDecimal> safeDiff(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
+        return safeSum(left, right.map(BigDecimal::negate));
+    }
 }
