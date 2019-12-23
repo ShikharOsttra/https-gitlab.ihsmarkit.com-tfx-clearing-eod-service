@@ -145,7 +145,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .flatMap(Set::stream)
             .distinct()
             .map(
-                participant -> creaetEodParticipantMargin(
+                participant -> createEodParticipantMargin(
                     participant,
                     Optional.ofNullable(requiredInitialMargin.get(participant)),
                     Optional.ofNullable(dayCashSettlement.get(participant)),
@@ -158,7 +158,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private EodParticipantMarginEntity creaetEodParticipantMargin(
+    private EodParticipantMarginEntity createEodParticipantMargin(
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
         final Optional<Pair<Optional<BigDecimal>, BigDecimal>> dayCashSettlement,
