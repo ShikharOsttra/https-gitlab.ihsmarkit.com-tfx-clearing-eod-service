@@ -1,0 +1,47 @@
+package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
+
+import java.time.LocalDate;
+
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.ihsmarkit.tfx.core.dl.entity.LegalEntity_;
+import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.entity.TradeEntity_;
+
+import lombok.AllArgsConstructor;
+
+@Service
+@AllArgsConstructor
+@JobScope
+public class TradeListQueryProvider extends AbstractJpaQueryProvider {
+
+    @Value("#{jobParameters['businessDate']}")
+    private final LocalDate businessDate;
+
+    @Override
+    public Query createQuery() {
+        final CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
+        final CriteriaQuery<TradeEntity> query = criteriaBuilder.createQuery(TradeEntity.class);
+
+        final Root<TradeEntity> root = query.from(TradeEntity.class);
+        root.fetch(TradeEntity_.originator);
+        root.fetch(TradeEntity_.currencyPair);
+        root.fetch(TradeEntity_.counterparty).fetch(LegalEntity_.participant);
+
+        return getEntityManager().createQuery(query.where(criteriaBuilder.equal(root.get(TradeEntity_.tradeDate), businessDate)));
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+    }
+
+}

@@ -77,6 +77,15 @@ public class EODCalculator {
         );
     }
 
+    public ParticipantCurrencyPairAmount calculateInitialMtmValue(
+        final TradeEntity trade, final Function<CurrencyPairEntity, BigDecimal> dsp, final Function<String, BigDecimal> jpyRates) {
+        return calculateMtmValue(tradeOrPositionMapper.convertTrade(trade), dsp, jpyRates);
+    }
+
+    public ParticipantCurrencyPairAmount calculateDailyMtmValue(
+        final ParticipantPositionEntity positionEntity, final Function<CurrencyPairEntity, BigDecimal> dsp, final Function<String, BigDecimal> jpyRates) {
+        return calculateMtmValue(tradeOrPositionMapper.convertPosition(positionEntity), dsp, jpyRates);
+    }
 
     private ParticipantCurrencyPairAmount calculateSwapPoint(
         final TradeOrPositionEssentials trade,
@@ -88,6 +97,14 @@ public class EODCalculator {
             jpyRates,
             SWAP_POINT_UNIT.multiply(swapPointResolver.apply(trade.getCurrencyPair()))
         );
+    }
+
+    public ParticipantCurrencyPairAmount calculateSwapPoint(
+        final TradeEntity trade,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return calculateSwapPoint(tradeOrPositionMapper.convertTrade(trade), swapPointResolver, jpyRates);
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateInitialMtm(
@@ -114,6 +131,7 @@ public class EODCalculator {
         return flatten(
             aggregate(
                 trades
+                    //TODO: use it
                     .map(tradeOrPositionMapper::convertTrade)
                     .map(essentials -> calculateSwapPoint(essentials, swapPointResolver, jpyRates))
             )
@@ -149,8 +167,8 @@ public class EODCalculator {
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
-                                                                               final Function<CurrencyPairEntity, BigDecimal> dsp,
-                                                                               final Function<String, BigDecimal> jpyRates) {
+        final Function<CurrencyPairEntity, BigDecimal> dsp,
+        final Function<String, BigDecimal> jpyRates) {
 
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
@@ -165,12 +183,12 @@ public class EODCalculator {
                 TradeOrPositionEssentials::getCurrencyPair,
                 Collectors.toList()
             )).entrySet().stream()
-                .collect(
-                    Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
-                    )
-                );
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
+                )
+            );
 
     }
 
