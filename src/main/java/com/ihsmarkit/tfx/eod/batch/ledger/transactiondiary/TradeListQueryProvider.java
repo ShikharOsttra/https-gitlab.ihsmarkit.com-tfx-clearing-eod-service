@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity_;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity_;
+import com.ihsmarkit.tfx.core.domain.type.ClearingStatus;
 
 import lombok.AllArgsConstructor;
 
@@ -32,11 +33,15 @@ public class TradeListQueryProvider extends AbstractJpaQueryProvider {
         final CriteriaQuery<TradeEntity> query = criteriaBuilder.createQuery(TradeEntity.class);
 
         final Root<TradeEntity> root = query.from(TradeEntity.class);
-        root.fetch(TradeEntity_.originator);
         root.fetch(TradeEntity_.currencyPair);
+        root.fetch(TradeEntity_.originator).fetch(LegalEntity_.participant);
         root.fetch(TradeEntity_.counterparty).fetch(LegalEntity_.participant);
 
-        return getEntityManager().createQuery(query.where(criteriaBuilder.equal(root.get(TradeEntity_.tradeDate), businessDate)));
+        return getEntityManager().createQuery(
+            query.where(
+                criteriaBuilder.and(
+                    criteriaBuilder.equal(root.get(TradeEntity_.tradeDate), businessDate),
+                    criteriaBuilder.equal(root.get(TradeEntity_.clearingStatus), ClearingStatus.NOVATED))));
     }
 
     @Override
