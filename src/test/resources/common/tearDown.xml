@@ -2,6 +2,8 @@
     <system_parameter/>
     <currency_pair/>
     <participant/>
+    <eod_cash_settlement/>
+    <eod_participant_margin/>
     <legal_entity/>
     <user/>
     <trade/>
