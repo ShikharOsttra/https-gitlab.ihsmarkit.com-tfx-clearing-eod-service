@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
+import static org.apache.logging.log4j.util.Strings.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         @Nullable
         final LocalDateTime clearingTsp = trade.getClearingTsp();
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
+        final String baseAmount = trade.getBaseAmount().getValue().toString();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -61,29 +64,36 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .participantCode(originatorParticipant.getCode())
             .participantName(originatorParticipant.getName())
             .participantType(formatEnum(originatorParticipant.getType()))
-            //todo ???
-            .currencyNo(trade.getCurrencyPair().getCode())
+            //todo currencyNo used for sorting
+            .currencyNo(trade.getCurrencyPair().getId().toString())
             .currencyPair(trade.getCurrencyPair().getCode())
-            .matchDate(matchingTsp == null ? null : formatDate(matchingTsp.toLocalDate()))
-            .matchTime(matchingTsp == null ? null : formatTime(matchingTsp))
-            .matchId(trade.getMatchingRef())
-            .clearDate(clearingTsp == null ? null : formatDate(clearingTsp.toLocalDate()))
-            .clearTime(clearingTsp == null ? null : formatTime(clearingTsp))
-            .clearingId(trade.getClearingRef())
+            .matchDate(matchingTsp == null ? EMPTY : formatDate(matchingTsp.toLocalDate()))
+            .matchTime(matchingTsp == null ? EMPTY : formatTime(matchingTsp))
+            .matchId(getSafeString(trade.getMatchingRef()))
+            .clearDate(clearingTsp == null ? EMPTY : formatDate(clearingTsp.toLocalDate()))
+            .clearTime(clearingTsp == null ? EMPTY : formatTime(clearingTsp))
+            .clearingId(getSafeString(trade.getClearingRef()))
             .tradePrice(trade.getSpotRate().toString())
-            .sellAmount(trade.getDirection() == Side.SELL ? trade.getBaseAmount().getValue().toString() : null)
-            .buyAmount(trade.getDirection() == Side.BUY ? trade.getBaseAmount().getValue().toString() : null)
+            .sellAmount(trade.getDirection() == Side.SELL ? baseAmount : EMPTY)
+            .buyAmount(trade.getDirection() == Side.BUY ? baseAmount : EMPTY)
             .counterpartyCode(counterpartyParticipant.getCode())
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
             .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, dspResolver, jpyRatesResolver).getAmount().toString())
+            .swapPoint(EMPTY)
+            .outstandingPositionAmount(EMPTY)
             .settlementDate(formatDate(trade.getValueDate()))
-            //todo?????
+            //todo Trade ID registered by the member. This is not system generated. Blank if not provided.
             .tradeId(trade.getTradeReference())
-            .tradeType(formatEnum(trade.getTransactionType()))
-            //todo????????
-            .reference(trade.getUtiTradeId())
-            .userReference(null)
+            //todo: enum name or index??? See DataTypes for types of transactions. For type 5 show opposing transaction ID in the reference field.
+            .tradeType(trade.getTransactionType().getValue().toString())
+            //todo When the Trade Type is 5 Cancellation, the Trade ID of the trade being cancelled is displayed.
+            .reference(getSafeString(trade.getUtiTradeId()))
+            .userReference(EMPTY)
             .build();
+    }
+
+    private String getSafeString(@Nullable final String record) {
+        return Strings.isNotBlank(record) ? record : EMPTY;
     }
 }

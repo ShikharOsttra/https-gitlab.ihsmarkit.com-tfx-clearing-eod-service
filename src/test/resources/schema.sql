@@ -23,3 +23,35 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     interest_payment_day2   varchar(5)   not null,
     maturity_date           varchar(10)  not null
 );
+
+CREATE TABLE IF NOT EXISTS eod_ledger_transaction_diary
+(
+    business_date                   date         not null,
+    trade_date                      varchar(10)  not null,
+    record_date                     varchar(19)  not null,
+    participant_code                varchar(31)  not null,
+    participant_name                varchar(255) not null,
+    participant_type                varchar(3)   not null,
+    currency_no                     varchar(3)   not null,
+    currency_pair                   varchar(7)   not null,
+    match_date                      varchar(10)  not null,
+    match_time                      varchar(8)   not null,
+    match_id                        varchar(24)  not null,
+    clear_date                      varchar(10)  not null,
+    clear_time                      varchar(8)   not null,
+    clearing_id                     varchar(8)   not null,
+    trade_price                     varchar(15)  not null,
+    sell_amount                     varchar(15)  not null,
+    buy_amount                      varchar(15)  not null,
+    counterparty_code               varchar(15)  not null,
+    counterparty_type               varchar(3)   not null,
+    dsp                             varchar(15)  not null,
+    daily_mtm_amount                varchar(15)  not null,
+    swap_point                      varchar(15)  not null,
+    outstanding_position_amount     varchar(15)  not null,
+    settlement_date                 varchar(10)  not null,
+    trade_id                        varchar(40)  not null,
+    trade_type                      varchar(2)   not null,
+    reference                       varchar(40)  not null,
+    user_reference                  varchar(255) not null
+);

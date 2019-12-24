@@ -45,4 +45,5 @@
     <BATCH_STEP_EXECUTION/>
     <BATCH_STEP_EXECUTION_CONTEXT/>
     <eod_ledger_collateral_list/>
+    <eod_ledger_transaction_diary/>
 </dataset>

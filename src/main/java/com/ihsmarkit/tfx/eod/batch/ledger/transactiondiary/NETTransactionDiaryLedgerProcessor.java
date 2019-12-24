@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static org.apache.logging.log4j.util.Strings.EMPTY;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,13 +46,29 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
             //todo ???
-            .currencyNo(participantPosition.getCurrencyPair().getCode())
+            .currencyNo(participantPosition.getCurrencyPair().getId().toString())
             .currencyPair(participantPosition.getCurrencyPair().getCode())
+            .matchDate(EMPTY)
+            .matchTime(EMPTY)
+            .matchId(EMPTY)
+            .clearDate(EMPTY)
+            .clearTime(EMPTY)
+            .clearingId(EMPTY)
             //todo is it correct??
             .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), participantPosition.getCurrencyPair()).toString())
+            .sellAmount(EMPTY)
+            .buyAmount(EMPTY)
+            .counterpartyCode(EMPTY)
+            .counterpartyType(EMPTY)
             .dsp(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString())
-            .outstandingPositionAmount(participantPosition.getAmount().toString())
-            .userReference(null)
+            .dailyMtMAmount(EMPTY)
+            .swapPoint(EMPTY)
+            .outstandingPositionAmount(participantPosition.getAmount().getValue().toString())
+            .settlementDate(EMPTY)
+            .tradeId(EMPTY)
+            .tradeType(EMPTY)
+            .reference(EMPTY)
+            .userReference(EMPTY)
             .build();
     }
 }

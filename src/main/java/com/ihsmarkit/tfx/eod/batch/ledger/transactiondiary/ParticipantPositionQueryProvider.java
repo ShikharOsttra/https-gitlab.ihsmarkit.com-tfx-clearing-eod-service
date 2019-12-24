@@ -8,18 +8,17 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
-import org.springframework.beans.factory.annotation.Value;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity_;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
-public class ParticipantPositionQueryProvider extends AbstractJpaQueryProvider {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+class ParticipantPositionQueryProvider extends AbstractJpaQueryProvider {
 
-    @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
     private final ParticipantPositionType type;
 

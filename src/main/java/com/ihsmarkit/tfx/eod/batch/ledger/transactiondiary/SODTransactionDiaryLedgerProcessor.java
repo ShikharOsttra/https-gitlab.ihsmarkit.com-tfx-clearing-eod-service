@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static org.apache.logging.log4j.util.Strings.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -61,15 +62,29 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
             //todo ???
-            .currencyNo(participantPosition.getCurrencyPair().getCode())
+            .currencyNo(participantPosition.getCurrencyPair().getId().toString())
             .currencyPair(participantPosition.getCurrencyPair().getCode())
+            .matchDate(EMPTY)
+            .matchTime(EMPTY)
+            .matchId(EMPTY)
+            .clearDate(EMPTY)
+            .clearTime(EMPTY)
+            .clearingId(EMPTY)
             //todo is it correct
             .tradePrice(dsp)
+            .sellAmount(EMPTY)
+            .buyAmount(EMPTY)
+            .counterpartyCode(EMPTY)
+            .counterpartyType(EMPTY)
             .dsp(dsp)
             .dailyMtMAmount(dailyMtMAmount)
             .swapPoint(swapPoint)
+            .outstandingPositionAmount(EMPTY)
             .settlementDate(settlementDate)
-            .userReference(null)
+            .tradeId(EMPTY)
+            .tradeType(EMPTY)
+            .reference(EMPTY)
+            .userReference(EMPTY)
             .build();
     }
 }
