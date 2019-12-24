@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
@@ -206,7 +207,7 @@ public class EODCalculator {
     private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following) {
         return new EnumMap<EodCashSettlementDateType, BigDecimal>(
             Stream.of(
-                safeSum(day, following).map(margin -> Pair.of(TOTAL, margin)),
+                sumAll(day, following).map(margin -> Pair.of(TOTAL, margin)),
                 day.map(margin -> Pair.of(DAY, margin)),
                 following.map(margin -> Pair.of(FOLLOWING, margin))
             ).flatMap(Optional::stream).collect(toMap(Pair::getLeft, Pair::getRight))
@@ -269,7 +270,7 @@ public class EODCalculator {
                 twoWayCollector(
                     balance -> balance.getProduct().getType() == CASH,
                     evaluator,
-                    (cash, nonCash) -> new BalanceContribution(safeSum(nonCash, cash).orElse(ZERO), cash.orElse(ZERO))
+                    (cash, nonCash) -> new BalanceContribution(sumAll(nonCash, cash).orElse(ZERO), cash.orElse(ZERO))
                 )
             )
         );
@@ -299,9 +300,19 @@ public class EODCalculator {
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
-            .requiredAmount(safeDiff(requiredInitialMargin, dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
-            .totalDeficit(safeDiff(balance.map(BalanceContribution::getTotalBalanceContribution), dayCashSettlement.map(DayAndTotalCashSettlement::getTotal)))
-            .cashDeficit(safeDiff(balance.map(BalanceContribution::getCashBalanceContribution), dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
+            .requiredAmount(sumAll(requiredInitialMargin, dayCashSettlement.map(DayAndTotalCashSettlement::getTotal).map(BigDecimal::negate)))
+            .totalDeficit(
+                sumAll(
+                    balance.map(BalanceContribution::getTotalBalanceContribution),
+                    dayCashSettlement.map(DayAndTotalCashSettlement::getTotal),
+                    requiredInitialMargin.map(BigDecimal::negate)
+                ))
+            .cashDeficit(
+                sumAll(
+                    balance.map(BalanceContribution::getCashBalanceContribution),
+                    dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay),
+                    requiredInitialMargin.map(BigDecimal::negate)
+                ))
             .build();
     }
 
@@ -339,21 +350,16 @@ public class EODCalculator {
                     ? ImmutablePair.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
                     : ImmutablePair.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)
                 ),
-                (a, b) -> ImmutablePair.of(safeSum(a.getLeft(), b.getLeft()), safeSum(a.getRight(), b.getRight()))
+                (a, b) -> ImmutablePair.of(sumAll(a.getLeft(), b.getLeft()), sumAll(a.getRight(), b.getRight()))
             ),
             res -> finisher.apply(res.getLeft(), res.getRight())
         );
     }
 
-    public static Optional<BigDecimal> safeSum(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
-        return
-            left
-                .flatMap(l -> right.map(l::add))
-                .or(() -> left)
-                .or(() -> right);
-    }
-
-    private static Optional<BigDecimal> safeDiff(final Optional<BigDecimal> left, final Optional<BigDecimal> right) {
-        return safeSum(left, right.map(BigDecimal::negate));
+    private static Optional<BigDecimal> sumAll(final Optional<BigDecimal>...values) {
+        return Arrays
+            .stream(values)
+            .flatMap(Optional::stream)
+            .reduce(BigDecimal::add);
     }
 }
