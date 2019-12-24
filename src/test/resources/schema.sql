@@ -23,3 +23,36 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     interest_payment_day2   varchar(5)   not null,
     maturity_date           varchar(10)  not null
 );
+
+CREATE TABLE IF NOT EXISTS eod_ledger_collateral_balance
+(
+    business_date                                 date         not null,
+    trade_date                                    varchar(10)  not null,
+    record_date                                   varchar(19)  not null,
+    participant_code                              varchar(15)  not null,
+    participant_name                              varchar(255) not null,
+    participant_type                              varchar(3)   not null,
+    collateral_purpose_type                       varchar(2)   not null,
+    collateral_purpose                            varchar(64)  not null,
+    total_deposit                                 varchar(15)  not null,
+    cash                                          varchar(15)  not null,
+    lg                                            varchar(15)  not null,
+    securities                                    varchar(15)  not null,
+    required_amount                               varchar(15)  not null,
+    total_initial_margin                          varchar(15)  not null,
+    total_variation_margin                        varchar(15)  not null,
+    total_excess_deficit                          varchar(15)  not null,
+    deficit_in_cash_settlement                    varchar(15)  not null,
+    cash_settlement                               varchar(15)  not null,
+    cash_settlement_following_day                 varchar(15)  not null,
+    initial_mtm_total                             varchar(15)  not null,
+    initial_mtm_day                               varchar(15)  not null,
+    initial_mtm_following_day                     varchar(15)  not null,
+    daily_mtm_total                               varchar(15)  not null,
+    daily_mtm_day                                 varchar(15)  not null,
+    daily_mtm_following_day                       varchar(15)  not null,
+    swap_point_total                              varchar(15)  not null,
+    swap_point_day                                varchar(15)  not null,
+    swap_point_following_day                      varchar(15)  not null,
+    following_applicable_day_for_clearing_deposit varchar(15)  not null
+);

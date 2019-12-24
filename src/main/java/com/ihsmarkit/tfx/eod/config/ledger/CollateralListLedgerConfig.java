@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
@@ -39,6 +41,9 @@ public class CollateralListLedgerConfig {
     @Value("${eod.ledger.collateral.list.chunk.size:1000}")
     private final int collateralListChunkSize;
 
+    @Value("${eod.ledger.collateral.list.concurrency.limit:1}")
+    private final int collateralListConcurrencyLimit;
+
     private final CollateralListLedgerProcessor collateralListProcessor;
 
     @Value("classpath:/ledger/sql/eod_ledger_collateral_list_insert.sql")
@@ -54,7 +59,15 @@ public class CollateralListLedgerConfig {
             .reader(collateralListReader())
             .processor(collateralListProcessor)
             .writer(collateralListWriter())
+            .taskExecutor(collateralListTaskExecutor())
             .build();
+    }
+
+    @Bean
+    protected TaskExecutor collateralListTaskExecutor() {
+        final SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
+        taskExecutor.setConcurrencyLimit(collateralListConcurrencyLimit);
+        return taskExecutor;
     }
 
     @Bean
@@ -69,7 +82,6 @@ public class CollateralListLedgerConfig {
             .build();
     }
 
-    @SuppressWarnings("unchecked")
     @Bean
     @SneakyThrows
     protected ItemWriter<CollateralListItem> collateralListWriter() {
