@@ -301,7 +301,7 @@ public class EODCalculator {
             .initialMargin(requiredInitialMargin)
             .requiredAmount(safeDiff(requiredInitialMargin, dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
             .totalDeficit(safeDiff(balance.map(BalanceContribution::getTotalBalanceContribution), dayCashSettlement.map(DayAndTotalCashSettlement::getTotal)))
-            .cashDeficit(safeDiff(balance.map(BalanceContribution::getCashBalanceCntribution), dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
+            .cashDeficit(safeDiff(balance.map(BalanceContribution::getCashBalanceContribution), dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay)))
             .build();
     }
 

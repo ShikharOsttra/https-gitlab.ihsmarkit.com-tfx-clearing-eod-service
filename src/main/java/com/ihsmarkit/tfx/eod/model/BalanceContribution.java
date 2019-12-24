@@ -10,6 +10,6 @@ import lombok.RequiredArgsConstructor;
 public class BalanceContribution {
 
     private final BigDecimal totalBalanceContribution;
-    private final BigDecimal cashBalanceCntribution;
+    private final BigDecimal cashBalanceContribution;
 
 }
