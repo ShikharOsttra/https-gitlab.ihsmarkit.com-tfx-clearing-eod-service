@@ -2,11 +2,9 @@ package com.ihsmarkit.tfx.eod.model.ledger;
 
 import java.time.LocalDate;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
-@AllArgsConstructor
 @Value
 @Builder
 @SuppressWarnings("PMD.TooManyFields")

@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
-import java.util.List;
-
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -23,11 +21,11 @@ public class CollateralListQueryProvider extends AbstractJpaQueryProvider {
         root.fetch(CollateralBalanceEntity_.product);
         root.fetch(CollateralBalanceEntity_.participant);
 
-        query.orderBy(List.of(
+        query.orderBy(
             cb.asc(root.get(CollateralBalanceEntity_.participant)),
             cb.asc(root.get(CollateralBalanceEntity_.purpose)),
             cb.asc(root.get(CollateralBalanceEntity_.id))
-        ));
+        );
 
         return getEntityManager().createQuery(query);
     }

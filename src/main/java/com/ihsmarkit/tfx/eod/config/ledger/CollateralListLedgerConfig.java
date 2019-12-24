@@ -52,7 +52,7 @@ public class CollateralListLedgerConfig {
     private final RecordDateSetter recordDateSetter;
 
     @Bean(COLLATERAL_LIST_LEDGER_STEP_NAME)
-    protected Step collateralListLedger() {
+    Step collateralListLedger() {
         return steps.get(COLLATERAL_LIST_LEDGER_STEP_NAME)
             .listener(recordDateSetter)
             .<CollateralBalanceEntity, CollateralListItem>chunk(collateralListChunkSize)
@@ -64,15 +64,14 @@ public class CollateralListLedgerConfig {
     }
 
     @Bean
-    protected TaskExecutor collateralListTaskExecutor() {
+    TaskExecutor collateralListTaskExecutor() {
         final SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
         taskExecutor.setConcurrencyLimit(collateralListConcurrencyLimit);
         return taskExecutor;
     }
 
     @Bean
-    protected ItemReader<CollateralBalanceEntity> collateralListReader() {
-        //todo: hibernate cursor ?
+    ItemReader<CollateralBalanceEntity> collateralListReader() {
         return new JpaPagingItemReaderBuilder<CollateralBalanceEntity>()
             .pageSize(collateralListChunkSize)
             .entityManagerFactory(entityManagerFactory)
@@ -84,7 +83,7 @@ public class CollateralListLedgerConfig {
 
     @Bean
     @SneakyThrows
-    protected ItemWriter<CollateralListItem> collateralListWriter() {
+    ItemWriter<CollateralListItem> collateralListWriter() {
         return new JdbcBatchItemWriterBuilder<CollateralListItem>()
             .beanMapped()
             .sql(IOUtils.toString(collateralListLedgerSql.getInputStream()))

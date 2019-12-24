@@ -3,11 +3,12 @@ package com.ihsmarkit.tfx.eod.support;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.validation.constraints.NotNull;
+
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 import lombok.AllArgsConstructor;
 
@@ -15,6 +16,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ListItemWriter<T> implements ItemWriter<List<T>>, ItemStream, InitializingBean {
 
+    @NotNull
     private final ItemWriter<T> delegate;
 
     @Override
@@ -28,7 +30,6 @@ public class ListItemWriter<T> implements ItemWriter<List<T>>, ItemStream, Initi
 
     @Override
     public void afterPropertiesSet() {
-        Assert.notNull(delegate, "You must set a delegate!");
     }
 
     @Override

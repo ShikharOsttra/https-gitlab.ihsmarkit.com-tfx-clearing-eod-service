@@ -24,7 +24,7 @@ class TotalBalance {
     private final BigDecimal lg;
     private final BigDecimal securities;
 
-    public static TotalBalance of(final CollateralProductType type, final BigDecimal amount) {
+    static TotalBalance of(final CollateralProductType type, final BigDecimal amount) {
         return TotalBalance.of(
             amount,
             matchTypeOrZero(amount, type, CASH),
@@ -33,7 +33,7 @@ class TotalBalance {
         );
     }
 
-    public TotalBalance add(final TotalBalance balance) {
+    TotalBalance add(final TotalBalance balance) {
         return TotalBalance.of(
             total.add(balance.getTotal()),
             cash.add(balance.getCash()),

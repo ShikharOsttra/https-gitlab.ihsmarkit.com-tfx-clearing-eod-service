@@ -1,7 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collateralbalance;
 
-import java.util.List;
-
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -24,9 +22,7 @@ public class ParticipantQueryProvider extends AbstractJpaQueryProvider {
 
         query.where(cb.notEqual(root.get(ParticipantEntity_.code), Participant.CLEARING_HOUSE_CODE));
 
-        query.orderBy(List.of(
-            cb.asc(root.get(ParticipantEntity_.id))
-        ));
+        query.orderBy(cb.asc(root.get(ParticipantEntity_.id)));
 
         return getEntityManager().createQuery(query);
     }

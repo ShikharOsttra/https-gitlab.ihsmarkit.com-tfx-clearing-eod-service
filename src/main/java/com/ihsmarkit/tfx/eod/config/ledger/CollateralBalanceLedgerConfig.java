@@ -55,7 +55,7 @@ public class CollateralBalanceLedgerConfig {
     private final RecordDateSetter recordDateSetter;
 
     @Bean(COLLATERAL_BALANCE_LEDGER_STEP_NAME)
-    protected Step collateralBalanceLedger() {
+    Step collateralBalanceLedger() {
         return steps.get(COLLATERAL_BALANCE_LEDGER_STEP_NAME)
             .listener(recordDateSetter)
             .<ParticipantEntity, List<CollateralBalanceItem>>chunk(collateralBalanceChunkSize)
@@ -67,14 +67,14 @@ public class CollateralBalanceLedgerConfig {
     }
 
     @Bean
-    protected TaskExecutor collateralBalanceTaskExecutor() {
+    TaskExecutor collateralBalanceTaskExecutor() {
         final SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
         taskExecutor.setConcurrencyLimit(collateralBalanceConcurrencyLimit);
         return taskExecutor;
     }
 
     @Bean
-    protected ItemReader<ParticipantEntity> collateralBalanceReader() {
+    ItemReader<ParticipantEntity> collateralBalanceReader() {
         return new JpaPagingItemReaderBuilder<ParticipantEntity>()
             .pageSize(collateralBalanceChunkSize)
             .entityManagerFactory(entityManagerFactory)
@@ -85,13 +85,13 @@ public class CollateralBalanceLedgerConfig {
     }
 
     @Bean
-    protected ItemWriter<List<CollateralBalanceItem>> collateralBalanceListWriter() {
+    ItemWriter<List<CollateralBalanceItem>> collateralBalanceListWriter() {
         return new ListItemWriter<>(collateralBalanceWriter());
     }
 
     @Bean
     @SneakyThrows
-    protected ItemWriter<CollateralBalanceItem> collateralBalanceWriter() {
+    ItemWriter<CollateralBalanceItem> collateralBalanceWriter() {
         return new JdbcBatchItemWriterBuilder<CollateralBalanceItem>()
             .beanMapped()
             .sql(IOUtils.toString(collateralBalanceLedgerSql.getInputStream()))

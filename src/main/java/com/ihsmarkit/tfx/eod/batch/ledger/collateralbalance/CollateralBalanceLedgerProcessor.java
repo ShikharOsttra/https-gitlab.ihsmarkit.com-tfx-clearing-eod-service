@@ -15,6 +15,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnu
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -87,7 +87,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         return Stream.of(values())
             .sorted(Comparator.comparing(CollateralPurpose::getValue))
             .map(purpose -> mapToCollateralBalance(purpose, participant, balances, margin, cashSettlement))
-            .collect(Collectors.toList());
+            .collect(toList());
     }
 
     private CollateralBalanceItem mapToCollateralBalance(
@@ -159,7 +159,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     }
 
     private Table<EodProductCashSettlementType, EodCashSettlementDateType, BigDecimal> getCashSettlement(final ParticipantEntity participant) {
-        return eodCashSettlementRepository.findByDateAndParticipant(businessDate, participant).stream()
+        return eodCashSettlementRepository.findAllByDateAndParticipant(businessDate, participant).stream()
             .collect(
                 Tables.toTable(
                     EodCashSettlementEntity::getType,
