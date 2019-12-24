@@ -3,9 +3,11 @@ package com.ihsmarkit.tfx.eod.config;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -41,9 +43,12 @@ public class EOD2JobConfig {
 
     @Qualifier(COLLATERAL_LIST_LEDGER_STEP_NAME)
     private Step collateralListLedger;
-
-    @Qualifier(TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    private Step transactionDiaryLedger;
+    @Qualifier(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private Step tradeTransactionDiaryLedger;
+    @Qualifier(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private Step sodTransactionDiaryLedger;
+    @Qualifier(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private Step netTransactionDiaryLedger;
 
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
@@ -52,7 +57,9 @@ public class EOD2JobConfig {
             .next(totalVM())
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
-            .next(transactionDiaryLedger)
+            .next(sodTransactionDiaryLedger)
+            .next(tradeTransactionDiaryLedger)
+            .next(netTransactionDiaryLedger)
             .next(collateralListLedger)
 
             .build();

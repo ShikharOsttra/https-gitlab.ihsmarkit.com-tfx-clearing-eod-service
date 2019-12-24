@@ -31,7 +31,7 @@ public class DspProvider {
             .collect(Collectors.toMap(dsp -> dsp.getCurrencyPair().getCode(), Function.identity())));
     }
 
-    Optional<DailySettlementPriceEntity> getDsp(final String currencyPairCode) {
+    Optional<DailySettlementPriceEntity> getDspByCurrencyCode(final String currencyPairCode) {
         return Optional.ofNullable(dsp.get().get(currencyPairCode));
     }
 }
