@@ -127,8 +127,8 @@
     <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-23543" date_type="FOLLOWING" type="TOTAL_VM"/>
     <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-13843" date_type="TOTAL"     type="TOTAL_VM"/>
 
-    <eod_participant_margin  participant_id="101" date="2019-10-07" required_amount="78744100.00" initial_margin_amount="78753600.00" total_deficit_amount="43023.00" cash_deficit_amount="501.00"/>
-    <eod_participant_margin  participant_id="102" date="2019-10-07" required_amount="-9700.00" initial_margin_amount="0.00" total_deficit_amount="24843.00" cash_deficit_amount="1300.00"/>
+    <eod_participant_margin  participant_id="101" date="2019-10-07" required_amount="78766822.00" initial_margin_amount="78753600.00" total_deficit_amount="-78737021.00" cash_deficit_amount="-78734099.00"/>
+    <eod_participant_margin  participant_id="102" date="2019-10-07" required_amount="13843.00" initial_margin_amount="0.00" total_deficit_amount="-2843.00" cash_deficit_amount="20700.00"/>
 
     <eod_ledger_collateral_list
         business_date="2019-10-07"
