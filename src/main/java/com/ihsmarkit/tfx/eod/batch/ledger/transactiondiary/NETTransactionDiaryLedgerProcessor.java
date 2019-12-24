@@ -6,7 +6,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnu
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +13,8 @@ import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,14 +29,12 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
 
-    private final DspProvider dspProvider;
+    private final DailySettlementPriceService dailySettlementPriceService;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
 
         final ParticipantEntity participant = participantPosition.getParticipant();
-        final Optional<DailySettlementPriceEntity> dailySettlementPriceEntity =
-            dspProvider.getDspByCurrencyCode(participantPosition.getCurrencyPair().getCode());
 
         //todo: are rest of the fields empty??
         return TransactionDiary.builder()
@@ -51,8 +48,8 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .currencyNo(participantPosition.getCurrencyPair().getCode())
             .currencyPair(participantPosition.getCurrencyPair().getCode())
             //todo is it correct??
-            .tradePrice(dailySettlementPriceEntity.map(dsp -> dsp.getPreviousDailySettlementPrice().toString()).orElse(null))
-            .dsp(dailySettlementPriceEntity.map(dsp -> dsp.getDailySettlementPrice().toString()).orElse(null))
+            .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), participantPosition.getCurrencyPair()).toString())
+            .dsp(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString())
             .outstandingPositionAmount(participantPosition.getAmount().toString())
             .userReference(null)
             .build();

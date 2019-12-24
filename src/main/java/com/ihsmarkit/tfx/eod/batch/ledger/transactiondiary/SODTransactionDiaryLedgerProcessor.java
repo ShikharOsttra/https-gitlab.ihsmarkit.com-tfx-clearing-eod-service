@@ -7,10 +7,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnu
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.function.Function;
-
-import javax.annotation.Nullable;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +16,6 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -43,7 +39,6 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
-    private final DspProvider dspProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -52,14 +47,10 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver = ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
 
         final ParticipantEntity participant = participantPosition.getParticipant();
-        final Optional<DailySettlementPriceEntity> dailySettlementPriceEntity =
-            dspProvider.getDspByCurrencyCode(participantPosition.getCurrencyPair().getCode());
         final String dailyMtMAmount = eodCalculator.calculateDailyMtmValue(participantPosition, dspResolver, jpyRatesResolver).getAmount().toString();
         final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, swapPointResolver, jpyRatesResolver).getAmount().toString();
         final String settlementDate = formatDate(participantPosition.getValueDate());
-
-        @Nullable
-        final String dsp = dailySettlementPriceEntity.map(dspEntity -> dspEntity.getDailySettlementPrice().toString()).orElse(null);
+        final String dsp = dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString();
 
         //todo: are rest of the fields empty??
         return TransactionDiary.builder()

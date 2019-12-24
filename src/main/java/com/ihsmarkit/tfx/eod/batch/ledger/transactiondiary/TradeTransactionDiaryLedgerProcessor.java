@@ -8,7 +8,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTim
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
-import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -43,7 +41,6 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final EODCalculator eodCalculator;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
-    private final DspProvider dspProvider;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
@@ -56,7 +53,6 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         @Nullable
         final LocalDateTime clearingTsp = trade.getClearingTsp();
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
-        final Optional<DailySettlementPriceEntity> dailySettlementPriceEntity = dspProvider.getDspByCurrencyCode(trade.getCurrencyPair().getCode());
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -79,7 +75,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .buyAmount(trade.getDirection() == Side.BUY ? trade.getBaseAmount().getValue().toString() : null)
             .counterpartyCode(counterpartyParticipant.getCode())
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
-            .dsp(dailySettlementPriceEntity.map(dsp -> dsp.getDailySettlementPrice().toString()).orElse(null))
+            .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
             .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, dspResolver, jpyRatesResolver).getAmount().toString())
             .settlementDate(formatDate(trade.getValueDate()))
             //todo?????
