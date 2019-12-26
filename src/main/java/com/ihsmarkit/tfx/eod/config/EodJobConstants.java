@@ -29,5 +29,6 @@ public final class EodJobConstants {
     public static final String TOTAL_VM_STEP_NAME = "totalVM";
     public static final String MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY = "marginCollateralExcessOrDeficiency";
     public static final String COLLATERAL_LIST_LEDGER_STEP_NAME = "collateralListLedger";
+    public static final String OPEN_POSITIONS_LEDGER_STEP_NAME = "openPositionsLedger";
 
 }

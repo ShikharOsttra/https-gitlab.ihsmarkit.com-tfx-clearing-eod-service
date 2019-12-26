@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.config;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 
@@ -19,12 +20,13 @@ import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
+import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Configuration
-@Import(CollateralListLedgerConfig.class)
+@Import({CollateralListLedgerConfig.class, OpenPositionsLedgerConfig.class})
 public class EOD2JobConfig {
 
     private final JobBuilderFactory jobs;
@@ -40,6 +42,9 @@ public class EOD2JobConfig {
     @Qualifier(COLLATERAL_LIST_LEDGER_STEP_NAME)
     private Step collateralListLedger;
 
+    @Qualifier(OPEN_POSITIONS_LEDGER_STEP_NAME)
+    private Step openPositionsLedger;
+
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
         return jobs.get(EOD2_BATCH_JOB_NAME)
@@ -48,7 +53,7 @@ public class EOD2JobConfig {
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
             .next(collateralListLedger)
-
+            .next(openPositionsLedger)
             .build();
     }
 

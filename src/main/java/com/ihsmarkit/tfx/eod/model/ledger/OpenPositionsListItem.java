@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -9,6 +11,7 @@ import lombok.Value;
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
 public class OpenPositionsListItem {
+    private final LocalDate businessDate;
     private final String tradeDate;
     private final String recordDate;
     private final String participantCode;

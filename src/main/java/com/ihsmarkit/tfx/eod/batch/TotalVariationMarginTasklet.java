@@ -43,7 +43,7 @@ public class TotalVariationMarginTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Stream<EodProductCashSettlementEntity> margin =
-            eodProductCashSettlementRepository.findByDateAndTypeIn(businessDate, DAILY_MTM, INITIAL_MTM, SWAP_PNL);
+            eodProductCashSettlementRepository.findAllByDateAndTypeIn(businessDate, DAILY_MTM, INITIAL_MTM, SWAP_PNL);
 
         final Stream<EodProductCashSettlementEntity> totalVM =
             eodCalculator.netAll(margin.map(mapper::toParticipantCurrencyPairAmount))

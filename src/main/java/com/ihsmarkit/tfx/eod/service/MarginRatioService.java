@@ -2,8 +2,8 @@ package com.ihsmarkit.tfx.eod.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.batch.core.configuration.annotation.JobScope;
@@ -38,7 +38,7 @@ public class MarginRatioService {
         () -> getMarginRatioRepository().findByBusinessDate(getBusinessDate()).stream()
             .collect(Collectors.toMap(MarginRatioEntity::getCurrencyPair, MarginRatioEntity::getValue))
     );
-    private final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> marginRatioMultiplier = new HashMap<>();
+    private final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> marginRatioMultiplier = new ConcurrentHashMap<>();
 
     public BigDecimal getRequiredMarginRatio(final CurrencyPairEntity currencyPair, final ParticipantEntity participant) {
 
