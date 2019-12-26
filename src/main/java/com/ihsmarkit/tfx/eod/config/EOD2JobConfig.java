@@ -4,8 +4,11 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_BALANCE_LE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -21,12 +24,13 @@ import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
+import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Configuration
-@Import({ CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class })
+@Import({ CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class, TransactionDiaryLedgerConfig.class })
 public class EOD2JobConfig {
 
     private final JobBuilderFactory jobs;
@@ -41,9 +45,14 @@ public class EOD2JobConfig {
 
     @Qualifier(COLLATERAL_LIST_LEDGER_STEP_NAME)
     private final Step collateralListLedger;
-
     @Qualifier(COLLATERAL_BALANCE_LEDGER_STEP_NAME)
     private final Step collateralBalanceLedger;
+    @Qualifier(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private final Step tradeTransactionDiaryLedger;
+    @Qualifier(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private final Step sodTransactionDiaryLedger;
+    @Qualifier(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME)
+    private final Step netTransactionDiaryLedger;
 
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
@@ -52,6 +61,9 @@ public class EOD2JobConfig {
             .next(totalVM())
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
+            .next(sodTransactionDiaryLedger)
+            .next(tradeTransactionDiaryLedger)
+            .next(netTransactionDiaryLedger)
             .next(collateralListLedger)
             .next(collateralBalanceLedger)
 
