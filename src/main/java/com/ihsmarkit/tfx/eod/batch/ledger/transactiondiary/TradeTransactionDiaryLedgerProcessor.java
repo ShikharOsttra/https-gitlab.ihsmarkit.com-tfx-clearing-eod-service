@@ -9,6 +9,7 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import javax.annotation.Nullable;
 
@@ -49,9 +50,9 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
 
         final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
         @Nullable
-        final LocalDateTime matchingTsp = trade.getMatchingTsp();
+        final LocalDateTime matchingTsp = getDateTimeInJSTTimeZone(trade.getMatchingTsp());
         @Nullable
-        final LocalDateTime clearingTsp = trade.getClearingTsp();
+        final LocalDateTime clearingTsp = getDateTimeInJSTTimeZone(trade.getClearingTsp());
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
         final String baseAmount = trade.getBaseAmount().getValue().toString();
 
@@ -99,5 +100,11 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
 
     private BigDecimal getJpyRate(final String ccy) {
         return jpyRateService.getJpyRate(businessDate, ccy);
+    }
+
+    //todo: move to clockService??
+    @Nullable
+    private static LocalDateTime getDateTimeInJSTTimeZone(@Nullable final LocalDateTime dateTime) {
+        return dateTime == null ? null : dateTime.atZone(ZoneId.of("+09:00")).toLocalDateTime();
     }
 }
