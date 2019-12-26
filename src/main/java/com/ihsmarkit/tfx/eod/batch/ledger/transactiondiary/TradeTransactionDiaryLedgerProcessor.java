@@ -9,7 +9,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +21,7 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -44,15 +44,16 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
     private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private final ClockService clockService;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
 
         final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
         @Nullable
-        final LocalDateTime matchingTsp = getDateTimeInJSTTimeZone(trade.getMatchingTsp());
+        final LocalDateTime matchingTsp = getDateTimeInSystemTimeZone(trade.getMatchingTsp());
         @Nullable
-        final LocalDateTime clearingTsp = getDateTimeInJSTTimeZone(trade.getClearingTsp());
+        final LocalDateTime clearingTsp = getDateTimeInSystemTimeZone(trade.getClearingTsp());
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
         final String baseAmount = trade.getBaseAmount().getValue().toString();
 
@@ -102,9 +103,8 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         return jpyRateService.getJpyRate(businessDate, ccy);
     }
 
-    //todo: move to clockService??
     @Nullable
-    private static LocalDateTime getDateTimeInJSTTimeZone(@Nullable final LocalDateTime dateTime) {
-        return dateTime == null ? null : dateTime.atZone(ZoneId.of("+09:00")).toLocalDateTime();
+    private LocalDateTime getDateTimeInSystemTimeZone(@Nullable final LocalDateTime dateTime) {
+        return dateTime == null ? null : dateTime.atOffset(clockService.getServerZoneOffset()).toLocalDateTime();
     }
 }

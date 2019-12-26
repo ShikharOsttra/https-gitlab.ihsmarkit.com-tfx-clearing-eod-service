@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -56,16 +58,19 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private LegalEntity originator;
     @Mock
     private LegalEntity counterparty;
+    @Mock
+    private ClockService clockService;
 
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
-            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductQueryProvider);
+            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductQueryProvider, clockService);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void processTradeEntity() {
+        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
         when(fxSpotProductQueryProvider.getCurrencyNo(CURRENCY)).thenReturn("101");
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
