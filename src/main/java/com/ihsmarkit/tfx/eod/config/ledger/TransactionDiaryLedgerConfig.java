@@ -14,7 +14,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
-import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
+import org.springframework.batch.item.database.orm.JpaQueryProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -95,7 +95,7 @@ public class TransactionDiaryLedgerConfig {
             .build();
     }
 
-    private <T> ItemReader<T> transactionDiaryReader(final AbstractJpaQueryProvider queryProvider) {
+    private <T> ItemReader<T> transactionDiaryReader(final JpaQueryProvider queryProvider) {
         //todo: hibernate cursor ?
         return new JpaPagingItemReaderBuilder<T>()
             .pageSize(transactionDiaryChunkSize)

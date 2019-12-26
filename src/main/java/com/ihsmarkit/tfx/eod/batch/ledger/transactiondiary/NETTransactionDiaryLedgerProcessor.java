@@ -12,6 +12,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
@@ -37,6 +38,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
 
         final ParticipantEntity participant = participantPosition.getParticipant();
+        final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -45,8 +47,8 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(participantPosition.getCurrencyPair()))
-            .currencyPair(participantPosition.getCurrencyPair().getCode())
+            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(currencyPair))
+            .currencyPair(currencyPair.getCode())
             .matchDate(EMPTY)
             .matchTime(EMPTY)
             .matchId(EMPTY)
@@ -54,12 +56,12 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearTime(EMPTY)
             .clearingId(EMPTY)
             //todo is it correct??
-            .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), participantPosition.getCurrencyPair()).toString())
+            .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), currencyPair).toString())
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
             .counterpartyCode(EMPTY)
             .counterpartyType(EMPTY)
-            .dsp(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString())
+            .dsp(dailySettlementPriceService.getPrice(businessDate, currencyPair).toString())
             .dailyMtMAmount(EMPTY)
             .swapPoint(EMPTY)
             .outstandingPositionAmount(participantPosition.getAmount().getValue().toString())

@@ -13,11 +13,10 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity_;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class ParticipantPositionQueryProvider extends AbstractJpaQueryProvider {
+@RequiredArgsConstructor
+public class ParticipantPositionQueryProvider extends AbstractJpaQueryProvider {
 
     private final LocalDate businessDate;
     private final ParticipantPositionType type;
