@@ -8,7 +8,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.function.Function;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,20 +39,17 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
+    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
-        final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
-        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
-        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver = ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
-
         final ParticipantEntity participant = participantPosition.getParticipant();
-        final String dailyMtMAmount = eodCalculator.calculateDailyMtmValue(participantPosition, dspResolver, jpyRatesResolver).getAmount().toString();
-        final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, swapPointResolver, jpyRatesResolver).getAmount().toString();
+        final String dailyMtMAmount =
+            eodCalculator.calculateDailyMtmValue(participantPosition, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString();
+        final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, this::getSwapPoint, this::getJpyRate).getAmount().toString();
         final String settlementDate = formatDate(participantPosition.getValueDate());
         final String dsp = dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString();
 
-        //todo: are rest of the fields empty??
         return TransactionDiary.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
@@ -61,8 +57,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            //todo ???
-            .currencyNo(participantPosition.getCurrencyPair().getId().toString())
+            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(participantPosition.getCurrencyPair()))
             .currencyPair(participantPosition.getCurrencyPair().getCode())
             .matchDate(EMPTY)
             .matchTime(EMPTY)
@@ -86,5 +81,18 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .reference(EMPTY)
             .userReference(EMPTY)
             .build();
+    }
+
+    //todo: refactor it - extract it and reuse
+    private BigDecimal getDailySettlementPrice(final CurrencyPairEntity ccy) {
+        return dailySettlementPriceService.getPrice(businessDate, ccy);
+    }
+
+    private BigDecimal getSwapPoint(final CurrencyPairEntity ccy) {
+        return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
+    }
+
+    private BigDecimal getJpyRate(final String ccy) {
+        return jpyRateService.getJpyRate(businessDate, ccy);
     }
 }

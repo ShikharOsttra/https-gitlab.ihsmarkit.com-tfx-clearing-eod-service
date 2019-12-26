@@ -42,5 +42,4 @@ class ParticipantPositionQueryProvider extends AbstractJpaQueryProvider {
     public void afterPropertiesSet() throws Exception {
 
     }
-
 }

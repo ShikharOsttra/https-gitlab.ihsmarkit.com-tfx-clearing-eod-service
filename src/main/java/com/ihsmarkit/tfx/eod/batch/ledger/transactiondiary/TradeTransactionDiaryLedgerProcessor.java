@@ -9,7 +9,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -43,11 +42,10 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final EODCalculator eodCalculator;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
+    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
-        final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
-        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
         final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
         @Nullable
@@ -64,8 +62,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .participantCode(originatorParticipant.getCode())
             .participantName(originatorParticipant.getName())
             .participantType(formatEnum(originatorParticipant.getType()))
-            //todo currencyNo used for sorting
-            .currencyNo(trade.getCurrencyPair().getId().toString())
+            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(trade.getCurrencyPair()))
             .currencyPair(trade.getCurrencyPair().getCode())
             .matchDate(matchingTsp == null ? EMPTY : formatDate(matchingTsp.toLocalDate()))
             .matchTime(matchingTsp == null ? EMPTY : formatTime(matchingTsp))
@@ -79,21 +76,28 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .counterpartyCode(counterpartyParticipant.getCode())
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
-            .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, dspResolver, jpyRatesResolver).getAmount().toString())
+            .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString())
             .swapPoint(EMPTY)
             .outstandingPositionAmount(EMPTY)
             .settlementDate(formatDate(trade.getValueDate()))
-            //todo Trade ID registered by the member. This is not system generated. Blank if not provided.
             .tradeId(trade.getTradeReference())
-            //todo: enum name or index??? See DataTypes for types of transactions. For type 5 show opposing transaction ID in the reference field.
             .tradeType(trade.getTransactionType().getValue().toString())
             //todo When the Trade Type is 5 Cancellation, the Trade ID of the trade being cancelled is displayed.
-            .reference(getSafeString(trade.getUtiTradeId()))
+            .reference(EMPTY)
             .userReference(EMPTY)
             .build();
     }
 
     private String getSafeString(@Nullable final String record) {
         return Strings.isNotBlank(record) ? record : EMPTY;
+    }
+
+    //todo: refactor it - extract it and reuse
+    private BigDecimal getDailySettlementPrice(final CurrencyPairEntity ccy) {
+        return dailySettlementPriceService.getPrice(businessDate, ccy);
+    }
+
+    private BigDecimal getJpyRate(final String ccy) {
+        return jpyRateService.getJpyRate(businessDate, ccy);
     }
 }

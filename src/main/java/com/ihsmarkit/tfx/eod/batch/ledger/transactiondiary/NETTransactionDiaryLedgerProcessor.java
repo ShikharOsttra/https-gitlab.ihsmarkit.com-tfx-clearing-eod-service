@@ -31,13 +31,13 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final LocalDateTime recordDate;
 
     private final DailySettlementPriceService dailySettlementPriceService;
+    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
 
         final ParticipantEntity participant = participantPosition.getParticipant();
 
-        //todo: are rest of the fields empty??
         return TransactionDiary.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
@@ -45,8 +45,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            //todo ???
-            .currencyNo(participantPosition.getCurrencyPair().getId().toString())
+            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(participantPosition.getCurrencyPair()))
             .currencyPair(participantPosition.getCurrencyPair().getCode())
             .matchDate(EMPTY)
             .matchTime(EMPTY)

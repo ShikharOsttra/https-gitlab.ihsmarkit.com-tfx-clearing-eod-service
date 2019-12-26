@@ -74,6 +74,16 @@ public class TransactionDiaryLedgerConfig {
         return getStep(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(netQueryProvider), netTransactionDiaryLedgerProcessor);
     }
 
+    @Bean
+    @SneakyThrows
+    protected ItemWriter<TransactionDiary> transactionDiaryWriter() {
+        return new JdbcBatchItemWriterBuilder<TransactionDiary>()
+            .beanMapped()
+            .sql(IOUtils.toString(transactionDiaryLedgerSql.getInputStream()))
+            .dataSource(dataSource)
+            .build();
+    }
+
     private <T> Step getStep(final String transactionDiaryLedgerStepName, final ItemReader<T> tradeEntityItemReader,
         final TransactionDiaryLedgerProcessor<T> transactionDiaryLedgerProcessor) {
         return steps.get(transactionDiaryLedgerStepName)
@@ -85,7 +95,7 @@ public class TransactionDiaryLedgerConfig {
             .build();
     }
 
-    protected <T> ItemReader<T> transactionDiaryReader(final AbstractJpaQueryProvider queryProvider) {
+    private <T> ItemReader<T> transactionDiaryReader(final AbstractJpaQueryProvider queryProvider) {
         //todo: hibernate cursor ?
         return new JpaPagingItemReaderBuilder<T>()
             .pageSize(transactionDiaryChunkSize)
@@ -93,17 +103,6 @@ public class TransactionDiaryLedgerConfig {
             .saveState(false)
             .transacted(false)
             .queryProvider(queryProvider)
-            .build();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Bean
-    @SneakyThrows
-    protected ItemWriter<TransactionDiary> transactionDiaryWriter() {
-        return new JdbcBatchItemWriterBuilder<TransactionDiary>()
-            .beanMapped()
-            .sql(IOUtils.toString(transactionDiaryLedgerSql.getInputStream()))
-            .dataSource(dataSource)
             .build();
     }
 }
