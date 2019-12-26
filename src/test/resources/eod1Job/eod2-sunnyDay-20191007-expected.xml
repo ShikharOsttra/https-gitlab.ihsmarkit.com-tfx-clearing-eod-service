@@ -127,100 +127,26 @@
     <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-23543" date_type="FOLLOWING" type="TOTAL_VM"/>
     <eod_cash_settlement participant_id="102" date="2019-10-07" amount="-13843" date_type="TOTAL"     type="TOTAL_VM"/>
 
-    <eod_participant_margin  participant_id="101" date="2019-10-07" required_amount="78744100.00" initial_margin_amount="78753600.00" total_deficit_amount="43023.00" cash_deficit_amount="501.00"/>
-    <eod_participant_margin  participant_id="102" date="2019-10-07" required_amount="-9700.00" initial_margin_amount="0.00" total_deficit_amount="24843.00" cash_deficit_amount="1300.00"/>
+    <eod_participant_margin  participant_id="101" date="2019-10-07" required_amount="78766822.00" initial_margin_amount="78753600.00" total_deficit_amount="-78737021.00" cash_deficit_amount="-78734099.00"/>
+    <eod_participant_margin  participant_id="102" date="2019-10-07" required_amount="13843.00" initial_margin_amount="0.00" total_deficit_amount="-2843.00" cash_deficit_amount="20700.00"/>
 
-    <eod_ledger_collateral_list
-        business_date="2019-10-07"
-        trade_date="2019/10/07"
-        evaluation_date="2019/10/07"
-        participant_code="P11"
-        participant_name="Party_123"
-        participant_type="LP"
-        collateral_purpose_type="1"
-        collateral_purpose="Margin"
-        collateral_name=""
-        collateral_type="Cash"
-        security_code=""
-        isin_code=""
-        amount="10001"
-        market_price=""
-        evaluated_price=""
-        evaluated_amount="10001"
-        boj_code=""
-        jasdec_code=""
-        interest_payment_day=""
-        interest_payment_day2=""
-        maturity_date=""/>
+    <eod_ledger_collateral_list business_date="2019-10-07" trade_date="2019/10/07" evaluation_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="1" collateral_purpose="Margin" collateral_name="" collateral_type="Cash" security_code="" isin_code="" amount="10001" market_price="" evaluated_price="" evaluated_amount="10001" boj_code="" jasdec_code="" interest_payment_day="" interest_payment_day2="" maturity_date=""/>
+    <eod_ledger_collateral_list business_date="2019-10-07" trade_date="2019/10/07" evaluation_date="2019/10/07" participant_code="P22" participant_name="Party_422" participant_type="LP" collateral_purpose_type="1" collateral_purpose="Margin" collateral_name="" collateral_type="Cash" security_code="" isin_code="" amount="11000" market_price="" evaluated_price="" evaluated_amount="11000" boj_code="" jasdec_code="" interest_payment_day="" interest_payment_day2="" maturity_date=""/>
+    <eod_ledger_collateral_list business_date="2019-10-07" trade_date="2019/10/07" evaluation_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="1" collateral_purpose="Margin" collateral_name="" collateral_type="Cash" security_code="" isin_code="" amount="12000" market_price="" evaluated_price="" evaluated_amount="12000" boj_code="" jasdec_code="" interest_payment_day="" interest_payment_day2="" maturity_date=""/>
+    <eod_ledger_collateral_list business_date="2019-10-07" trade_date="2019/10/07" evaluation_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="1" collateral_purpose="Margin" collateral_name="" collateral_type="LG" security_code="" isin_code="" amount="20000" market_price="" evaluated_price="" evaluated_amount="19800" boj_code="" jasdec_code="" interest_payment_day="" interest_payment_day2="" maturity_date="2020/02/02"/>
 
-    <eod_ledger_collateral_list
-            business_date="2019-10-07"
-            trade_date="2019/10/07"
-            evaluation_date="2019/10/07"
-            participant_code="P22"
-            participant_name="Party_422"
-            participant_type="LP"
-            collateral_purpose_type="1"
-            collateral_purpose="Margin"
-            collateral_name=""
-            collateral_type="Cash"
-            security_code=""
-            isin_code=""
-            amount="11000"
-            market_price=""
-            evaluated_price=""
-            evaluated_amount="11000"
-            boj_code=""
-            jasdec_code=""
-            interest_payment_day=""
-            interest_payment_day2=""
-            maturity_date=""/>
-
-    <eod_ledger_collateral_list
-            business_date="2019-10-07"
-            trade_date="2019/10/07"
-            evaluation_date="2019/10/07"
-            participant_code="P23"
-            participant_name="Party_423"
-            participant_type="FXB"
-            collateral_purpose_type="1"
-            collateral_purpose="Margin"
-            collateral_name=""
-            collateral_type="Cash"
-            security_code=""
-            isin_code=""
-            amount="12000"
-            market_price=""
-            evaluated_price=""
-            evaluated_amount="12000"
-            boj_code=""
-            jasdec_code=""
-            interest_payment_day=""
-            interest_payment_day2=""
-            maturity_date=""/>
-
-    <eod_ledger_collateral_list
-            business_date="2019-10-07"
-            trade_date="2019/10/07"
-            evaluation_date="2019/10/07"
-            participant_code="P11"
-            participant_name="Party_123"
-            participant_type="LP"
-            collateral_purpose_type="1"
-            collateral_purpose="Margin"
-            collateral_name=""
-            collateral_type="LG"
-            security_code=""
-            isin_code=""
-            amount="20000"
-            market_price=""
-            evaluated_price=""
-            evaluated_amount="19800"
-            boj_code=""
-            jasdec_code=""
-            interest_payment_day=""
-            interest_payment_day2=""
-            maturity_date="2020/02/02"/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="1" collateral_purpose="Margin" total_deposit="29801" cash="10001" lg="19800" securities="0" required_amount="78766822.00" total_initial_margin="78753600.00" total_variation_margin="-13222.00" total_excess_deficit="-78737021.00" deficit_in_cash_settlement="-78734099.00" cash_settlement="9500.00" cash_settlement_following_day="-22722.00" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="15000.00" daily_mtm_day="9500.00" daily_mtm_following_day="5500.00" swap_point_total="-28222.00" swap_point_day="" swap_point_following_day="-28222.00" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="2" collateral_purpose="Market entry deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="2000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-2000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="3" collateral_purpose="Clearing deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="3000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-3000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P11" participant_name="Party_123" participant_type="LP" collateral_purpose_type="4" collateral_purpose="Special purpose collateral" total_deposit="0" cash="0" lg="0" securities="0" required_amount="4000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-4000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P22" participant_name="Party_422" participant_type="LP" collateral_purpose_type="1" collateral_purpose="Margin" total_deposit="11000" cash="11000" lg="0" securities="0" required_amount="13843.00" total_initial_margin="0.00" total_variation_margin="-13843.00" total_excess_deficit="-2843.00" deficit_in_cash_settlement="20700.00" cash_settlement="9700.00" cash_settlement_following_day="-23543.00" initial_mtm_total="7500.00" initial_mtm_day="" initial_mtm_following_day="7500.00" daily_mtm_total="9700.00" daily_mtm_day="9700.00" daily_mtm_following_day="" swap_point_total="-31043.00" swap_point_day="" swap_point_following_day="-31043.00" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P22" participant_name="Party_422" participant_type="LP" collateral_purpose_type="2" collateral_purpose="Market entry deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="2000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-2000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P22" participant_name="Party_422" participant_type="LP" collateral_purpose_type="3" collateral_purpose="Clearing deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="3000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-3000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P22" participant_name="Party_422" participant_type="LP" collateral_purpose_type="4" collateral_purpose="Special purpose collateral" total_deposit="0" cash="0" lg="0" securities="0" required_amount="4000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-4000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="1" collateral_purpose="Margin" total_deposit="12000" cash="12000" lg="0" securities="0" required_amount="0" total_initial_margin="" total_variation_margin="" total_excess_deficit="12000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="2" collateral_purpose="Market entry deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="2000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-2000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="3" collateral_purpose="Clearing deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="3000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-3000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
+    <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="4" collateral_purpose="Special purpose collateral" total_deposit="0" cash="0" lg="0" securities="0" required_amount="4000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-4000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
 
     <eod_ledger_transaction_diary
         business_date="2019-10-07"

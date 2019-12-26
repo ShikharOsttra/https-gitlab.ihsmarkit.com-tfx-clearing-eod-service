@@ -37,6 +37,8 @@
     <equity_haircut_rate/>
     <participant_position/>
     <eod_product_cash_settlement/>
+    <eod_cash_settlement/>
+    <eod_participant_margin/>
     <calendar_trading_swap_point/>
     <BATCH_JOB_INSTANCE/>
     <BATCH_JOB_EXECUTION/>
@@ -45,5 +47,6 @@
     <BATCH_STEP_EXECUTION/>
     <BATCH_STEP_EXECUTION_CONTEXT/>
     <eod_ledger_collateral_list/>
+    <eod_ledger_collateral_balance/>
     <eod_ledger_transaction_diary/>
 </dataset>
