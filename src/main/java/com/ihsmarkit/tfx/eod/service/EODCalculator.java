@@ -102,6 +102,15 @@ public class EODCalculator {
         );
     }
 
+    public ParticipantCurrencyPairAmount calculateInitialMtmValue(
+        final TradeEntity trade, final Function<CurrencyPairEntity, BigDecimal> dsp, final Function<String, BigDecimal> jpyRates) {
+        return calculateMtmValue(tradeOrPositionMapper.convertTrade(trade), dsp, jpyRates);
+    }
+
+    public ParticipantCurrencyPairAmount calculateDailyMtmValue(
+        final ParticipantPositionEntity positionEntity, final Function<CurrencyPairEntity, BigDecimal> dsp, final Function<String, BigDecimal> jpyRates) {
+        return calculateMtmValue(tradeOrPositionMapper.convertPosition(positionEntity), dsp, jpyRates);
+    }
 
     private ParticipantCurrencyPairAmount calculateSwapPoint(
         final TradeOrPositionEssentials trade,
@@ -113,6 +122,14 @@ public class EODCalculator {
             jpyRates,
             SWAP_POINT_UNIT.multiply(swapPointResolver.apply(trade.getCurrencyPair()))
         );
+    }
+
+    public ParticipantCurrencyPairAmount calculateSwapPoint(
+        final ParticipantPositionEntity participantPosition,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return calculateSwapPoint(tradeOrPositionMapper.convertPosition(participantPosition), swapPointResolver, jpyRates);
     }
 
     public Map<ParticipantEntity, BigDecimal> calculateRequiredInitialMargin(
