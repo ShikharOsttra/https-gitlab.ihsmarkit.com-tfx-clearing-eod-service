@@ -50,7 +50,7 @@ public class CollateralListLedgerConfig extends AbstractLedgerConfig<CollateralB
         taskExecutor.setConcurrencyLimit(collateralListConcurrencyLimit);
         return taskExecutor;
     }
-    
+
     ItemReader<CollateralBalanceEntity> collateralListReader() {
         return listReader(new CollateralListQueryProvider())
             .pageSize(collateralListChunkSize)

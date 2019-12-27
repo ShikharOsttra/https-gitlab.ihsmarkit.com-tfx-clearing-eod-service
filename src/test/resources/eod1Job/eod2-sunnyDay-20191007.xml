@@ -8,7 +8,6 @@
     <legal_entity id="103" code="TFEP32" name="Legal_423" participant_id="103" status="ACTIVE" clearing_role="NON_MEMBER"/>
 
     <currency_pair id="13" base_ccy="EUR" value_ccy="USD"/>
-    <fx_spot_product id="13" product_number="102" product_code="EUR/USD" trading_unit="0" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
 
     <margin_ratio id="1" currency_pair_id="13" value="0.80" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="1" participant_id="101" currency_pair_id="13" value="0.90" applicable_date="2019-10-07" business_date="2019-10-07"/>
