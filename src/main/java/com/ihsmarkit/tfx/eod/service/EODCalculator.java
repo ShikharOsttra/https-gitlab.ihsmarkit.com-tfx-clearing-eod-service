@@ -191,7 +191,7 @@ public class EODCalculator {
 
     private <R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
         final Stream<? extends CcyParticipantAmount> input,
-        Collector<CcyParticipantAmount, ?, R> collector
+        final Collector<CcyParticipantAmount, ?, R> collector
     ) {
         return input
             .collect(
@@ -396,7 +396,7 @@ public class EODCalculator {
         return trades;
     }
 
-    public static <K, T, L, R> Stream<T> mergeAndFlatten(Map<K, L> left, Map<K, R> right, Merger<K, T, L, R> merger) {
+    public static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
         return Streams.concat(left.keySet().stream(), right.keySet().stream())
             .distinct()
             .map(
