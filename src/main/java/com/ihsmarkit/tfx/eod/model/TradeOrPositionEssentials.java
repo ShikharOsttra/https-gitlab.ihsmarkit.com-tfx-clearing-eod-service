@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(staticName = "of")
 @Getter
 @Builder
-public class TradeOrPositionEssentials implements CcyParticipantAmount<BigDecimal> {
+public class TradeOrPositionEssentials implements CcyParticipantAmount {
 
     @NonNull
     private final CurrencyPairEntity currencyPair;

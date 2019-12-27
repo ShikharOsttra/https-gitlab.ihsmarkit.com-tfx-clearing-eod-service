@@ -185,13 +185,13 @@ public class EODCalculator {
         );
     }
 
-    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount<BigDecimal>> input) {
-        return aggregate(input, reducing(ZERO, CcyParticipantAmount<BigDecimal>::getAmount, BigDecimal::add));
+    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
+        return aggregate(input, reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add));
     }
 
-    private <T, R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
-        final Stream<? extends CcyParticipantAmount<T>> input,
-        Collector<CcyParticipantAmount<T>, ?, R> collector
+    private <R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
+        final Stream<? extends CcyParticipantAmount> input,
+        Collector<CcyParticipantAmount, ?, R> collector
     ) {
         return input
             .collect(
@@ -242,13 +242,13 @@ public class EODCalculator {
         );
     }
 
-    public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount<BigDecimal>> trades) {
+    public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
         return flatten(aggregate(trades));
     }
 
     public Stream<ParticipantPosition> netAllByBuySell(
         final Stream<TradeOrPositionEssentials> tradesToNet,
-        final Stream<? extends CcyParticipantAmount<BigDecimal>> positions
+        final Stream<? extends CcyParticipantAmount> positions
     ) {
 
          return mergeAndFlatten(
