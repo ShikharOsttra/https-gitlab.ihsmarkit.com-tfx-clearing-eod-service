@@ -19,7 +19,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.SneakyThrows;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
-class AbstractLedgerConfig<I, O> {
+class BaseLedgerConfig<I, O> {
 
     @Autowired
     private DataSource dataSource;

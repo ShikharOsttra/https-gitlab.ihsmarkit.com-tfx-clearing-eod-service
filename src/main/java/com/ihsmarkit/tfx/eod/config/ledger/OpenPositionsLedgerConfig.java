@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 
 @Configuration
 @AllArgsConstructor
-public class OpenPositionsLedgerConfig extends AbstractLedgerConfig<ParticipantAndCurrencyPair, OpenPositionsListItem> {
+public class OpenPositionsLedgerConfig extends BaseLedgerConfig<ParticipantAndCurrencyPair, OpenPositionsListItem> {
 
     private final OpenPositionsLedgerProcessor openPositionsLedgerProcessor;
 

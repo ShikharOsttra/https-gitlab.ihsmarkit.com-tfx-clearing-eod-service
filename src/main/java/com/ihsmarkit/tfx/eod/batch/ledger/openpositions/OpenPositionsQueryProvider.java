@@ -32,7 +32,6 @@ public class OpenPositionsQueryProvider extends AbstractJpaQueryProvider {
         final CriteriaQuery<ParticipantAndCurrencyPair> query = criteriaBuilder.createQuery(ParticipantAndCurrencyPair.class);
 
         final Root<ParticipantPositionEntity> root = query.from(ParticipantPositionEntity.class);
-//        root.fetch(ParticipantPositionEntity_.participant);
 
         query.select(criteriaBuilder.construct(
             ParticipantAndCurrencyPair.class,
@@ -46,6 +45,5 @@ public class OpenPositionsQueryProvider extends AbstractJpaQueryProvider {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
     }
 }

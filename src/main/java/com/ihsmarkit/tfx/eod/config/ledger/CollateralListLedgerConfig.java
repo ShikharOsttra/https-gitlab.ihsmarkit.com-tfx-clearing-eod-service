@@ -21,7 +21,7 @@ import lombok.AllArgsConstructor;
 
 @Configuration
 @AllArgsConstructor
-public class CollateralListLedgerConfig extends AbstractLedgerConfig<CollateralBalanceEntity, CollateralListItem> {
+public class CollateralListLedgerConfig extends BaseLedgerConfig<CollateralBalanceEntity, CollateralListItem> {
 
     @Value("${eod.ledger.collateral.list.chunk.size:1000}")
     private final int collateralListChunkSize;
