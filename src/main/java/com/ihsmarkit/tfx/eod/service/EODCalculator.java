@@ -37,6 +37,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -51,6 +52,7 @@ import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
@@ -249,31 +251,28 @@ public class EODCalculator {
         final Stream<? extends CcyParticipantAmount<BigDecimal>> positions
     ) {
 
-        final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> sodIndex = positions.collect(
-            groupingBy(CcyParticipantAmount::getParticipant, toMap(CcyParticipantAmount::getCurrencyPair, CcyParticipantAmount::getAmount))
-        );
-
-        return aggregate(
-            tradesToNet,
-            twoWayCollector(
-                ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
-                CcyParticipantAmount::getAmount,
-                BuySellAmounts::new
-            )
-        ).entrySet().stream()
-            .flatMap(byParticipant -> byParticipant.getValue().entrySet().stream()
-                .flatMap(byCcy ->
-                    Stream.of(
-                        byCcy.getValue().getBuy().map(buy -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), buy, BUY)),
-                        byCcy.getValue().getSell().map(sell -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), sell, SELL)),
-                        sumAll(
-                            byCcy.getValue().getBuy(),
-                            byCcy.getValue().getSell(),
-                            Optional.ofNullable(sodIndex.get(byParticipant)).flatMap(sodByCcy -> Optional.ofNullable(sodByCcy.get(byCcy)))
-                        ).map(net -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), net, NET))
-                    ).flatMap(Optional::stream)
+         return mergeAndFlatten(
+            positions.collect(
+                toMap(pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()), CcyParticipantAmount::getAmount)
+            ),
+            tradesToNet.collect(
+                groupingBy(
+                    pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()),
+                    twoWayCollector(
+                        ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
+                        CcyParticipantAmount::getAmount,
+                        BuySellAmounts::new
+                    )
                 )
-            );
+            ),
+            (key, sod, buySell) ->
+                Stream.of(
+                    buySell.flatMap(BuySellAmounts::getBuy).map(buy -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), buy, BUY)),
+                    buySell.flatMap(BuySellAmounts::getSell).map(sell -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), sell, SELL)),
+                    sumAll(buySell.flatMap(BuySellAmounts::getBuy), buySell.flatMap(BuySellAmounts::getSell), sod)
+                        .map(net -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), net, NET))
+                ).flatMap(Optional::stream)
+        ).flatMap(x -> x);
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
@@ -395,6 +394,23 @@ public class EODCalculator {
         }
 
         return trades;
+    }
+
+    public static <K, T, L, R> Stream<T> mergeAndFlatten(Map<K, L> left, Map<K, R> right, Merger<K, T, L, R> merger) {
+        return Streams.concat(left.keySet().stream(), right.keySet().stream())
+            .distinct()
+            .map(
+                key -> merger.merge(
+                    key,
+                    Optional.ofNullable(left.get(key)),
+                    Optional.ofNullable(right.get(key))
+                )
+            );
+    }
+
+    @FunctionalInterface
+    interface Merger<K, T, L, R> {
+        T merge(K key, Optional<L> left, Optional<R> right);
     }
 
     public static <T, R> Collector<T, ?, R> twoWayCollector(

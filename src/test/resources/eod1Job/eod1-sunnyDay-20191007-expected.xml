@@ -100,17 +100,6 @@
 
     <participant_position
             currency_pair_id="13"
-            participant_type="FX_BROKER"
-            participant_id="103"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="1.1"
-            amount="-1000000.00"
-            currency="EUR"
-            type="SELL"
-    />
-    <participant_position
-            currency_pair_id="13"
             type="NET"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="102"
@@ -177,7 +166,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.1"
-            amount="-1000001.11"
+            amount="-1.11"
             currency="EUR"
     />
 
