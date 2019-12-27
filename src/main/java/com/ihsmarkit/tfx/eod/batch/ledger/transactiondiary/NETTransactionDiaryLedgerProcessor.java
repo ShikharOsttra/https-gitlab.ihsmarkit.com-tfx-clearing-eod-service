@@ -17,6 +17,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +33,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final LocalDateTime recordDate;
 
     private final DailySettlementPriceService dailySettlementPriceService;
-    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private final FXSpotProductService fxSpotProductService;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -47,7 +48,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(currencyPair))
+            .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
             .currencyPair(currencyPair.getCode())
             .matchDate(EMPTY)
             .matchTime(EMPTY)

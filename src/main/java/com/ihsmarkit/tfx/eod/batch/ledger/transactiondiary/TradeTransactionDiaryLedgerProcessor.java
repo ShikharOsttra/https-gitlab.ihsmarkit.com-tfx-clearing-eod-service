@@ -25,6 +25,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final EODCalculator eodCalculator;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
-    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private final FXSpotProductService fxSpotProductService;
     private final ClockService clockService;
 
     @Override
@@ -64,7 +65,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .participantCode(originatorParticipant.getCode())
             .participantName(originatorParticipant.getName())
             .participantType(formatEnum(originatorParticipant.getType()))
-            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(trade.getCurrencyPair()))
+            .currencyNo(fxSpotProductService.getFxSpotProduct(trade.getCurrencyPair()).getProductNumber())
             .currencyPair(trade.getCurrencyPair().getCode())
             .matchDate(matchingTsp == null ? EMPTY : formatDate(matchingTsp.toLocalDate()))
             .matchTime(matchingTsp == null ? EMPTY : formatTime(matchingTsp))
