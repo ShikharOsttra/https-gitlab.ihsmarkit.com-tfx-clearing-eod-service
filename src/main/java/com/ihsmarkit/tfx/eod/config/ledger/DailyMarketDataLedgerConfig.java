@@ -18,7 +18,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class DailyMarketDataLedgerConfig {
 
-
     private final StepBuilderFactory steps;
     private final RecordDateSetter recordDateSetter;
     private final DailyMarketDataReader dailyMarketDataReader;
@@ -34,5 +33,4 @@ public class DailyMarketDataLedgerConfig {
             .writer(dailyMarketDataWriter)
             .build();
     }
-
 }

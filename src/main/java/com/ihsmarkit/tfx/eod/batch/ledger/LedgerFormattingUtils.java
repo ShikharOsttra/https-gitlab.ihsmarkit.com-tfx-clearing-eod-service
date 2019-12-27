@@ -3,7 +3,6 @@ package com.ihsmarkit.tfx.eod.batch.ledger;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -36,10 +35,6 @@ public class LedgerFormattingUtils {
 
     public static String formatMonthDay(final MonthDay monthDay) {
         return MONTH_DAY_FORMATTER.format(monthDay);
-    }
-
-    public static String formatTime(final LocalTime time) {
-        return TIME_FORMATTER.format(time);
     }
 
     public static String formatEnum(final Enum value) {

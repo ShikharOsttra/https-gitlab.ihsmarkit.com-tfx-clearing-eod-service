@@ -96,13 +96,13 @@ public class DailyMarketDataAggregator {
             .currencyNumber(open.getProductNumber())
             .currencyPairCode(open.getCurrencyPairCode())
             .openPrice(formatBigDecimal(open.getValueAmount()))
-            .openPriceTime(formatTime(open.getVersionTsp().toLocalTime()))
+            .openPriceTime(formatTime(open.getVersionTsp()))
             .highPrice(formatBigDecimal(high.getValueAmount()))
-            .highPriceTime(formatTime(high.getVersionTsp().toLocalTime()))
+            .highPriceTime(formatTime(high.getVersionTsp()))
             .lowPrice(formatBigDecimal(low.getValueAmount()))
-            .lowPriceTime(formatTime(low.getVersionTsp().toLocalTime()))
+            .lowPriceTime(formatTime(low.getVersionTsp()))
             .closePrice(formatBigDecimal(close.getValueAmount()))
-            .closePriceTime(formatTime(close.getVersionTsp().toLocalTime()))
+            .closePriceTime(formatTime(close.getVersionTsp()))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
             .previousDsp(formatBigDecimal(previousDsp))
             .currentDsp(formatBigDecimal(currentDsp))
@@ -157,5 +157,4 @@ public class DailyMarketDataAggregator {
             .min(comparator)
             .orElseThrow(() -> new IllegalStateException("Can't find min item by comparator"));
     }
-
 }
