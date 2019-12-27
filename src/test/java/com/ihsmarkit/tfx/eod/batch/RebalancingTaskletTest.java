@@ -86,7 +86,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
     private ArgumentCaptor<Iterable<TradeEntity>> tradeCaptor;
 
     @Captor
-    private ArgumentCaptor<Stream<CcyParticipantAmount>> netCaptor;
+    private ArgumentCaptor<Stream<CcyParticipantAmount<BigDecimal>>> netCaptor;
 
     @Test
     void shouldRebalanceTrades() {

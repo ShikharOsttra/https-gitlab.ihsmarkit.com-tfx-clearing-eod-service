@@ -5,6 +5,9 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -45,10 +48,12 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
+import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
+import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.PositionBalance;
 import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
@@ -178,20 +183,24 @@ public class EODCalculator {
         );
     }
 
-    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
+    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount<BigDecimal>> input) {
+        return aggregate(input, reducing(ZERO, CcyParticipantAmount<BigDecimal>::getAmount, BigDecimal::add));
+    }
+
+    private <T, R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
+        final Stream<? extends CcyParticipantAmount<T>> input,
+        Collector<CcyParticipantAmount<T>, ?, R> collector
+    ) {
         return input
             .collect(
                 groupingBy(
                     CcyParticipantAmount::getParticipant,
-                    groupingBy(
-                        CcyParticipantAmount::getCurrencyPair,
-                        reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
-                    )
+                    groupingBy(CcyParticipantAmount::getCurrencyPair, collector)
                 )
             );
     }
 
-    private Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
+    private <T> Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
         return input.entrySet().stream()
             .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
                 .map(ccyPairBalances -> ParticipantCurrencyPairAmount.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
@@ -231,8 +240,30 @@ public class EODCalculator {
         );
     }
 
-    public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
+    public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount<BigDecimal>> trades) {
         return flatten(aggregate(trades));
+    }
+
+    public Stream<ParticipantPosition> netAllByBuySell(final Stream<? extends CcyParticipantAmount<BigDecimal>> trades) {
+
+        return aggregate(
+            trades,
+            twoWayCollector(
+                ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
+                CcyParticipantAmount::getAmount,
+                BuySellAmounts::new
+            )
+        ).entrySet().stream()
+            .flatMap(byParticipant -> byParticipant.getValue().entrySet().stream()
+                .flatMap(byCcy ->
+                    Stream.of(
+                        byCcy.getValue().getBuy().map(buy -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), buy, BUY)),
+                        byCcy.getValue().getSell().map(sell -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), sell, SELL)),
+                        sumAll(byCcy.getValue().getBuy(), byCcy.getValue().getSell())
+                            .map(net -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), net, NET))
+                    ).flatMap(Optional::stream)
+                )
+            );
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,

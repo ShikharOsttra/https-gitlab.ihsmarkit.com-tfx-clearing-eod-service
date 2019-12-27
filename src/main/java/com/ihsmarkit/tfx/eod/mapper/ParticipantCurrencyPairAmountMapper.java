@@ -14,7 +14,9 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
+import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
+import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 @Mapper(config = DefaultMapperConfig.class)
@@ -61,8 +63,25 @@ public interface ParticipantCurrencyPairAmountMapper {
         BigDecimal price
     );
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "timestamp", ignore = true)
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "participant", source = "position.participant")
+    @Mapping(target = "participantType", source = "position.participant.type")
+    @Mapping(target = "currencyPair", source = "position.currencyPair")
+    @Mapping(target = "amount", source = "position", qualifiedByName = PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
+    @Mapping(target = "type", source = "position.type")
+    @Mapping(target = "tradeDate", source = "businessDate")
+    @Mapping(target = "valueDate", source = "settlementDate")
+    ParticipantPositionEntity toParticipantPosition(
+        ParticipantPosition position,
+        LocalDate businessDate,
+        LocalDate settlementDate,
+        BigDecimal price
+    );
+
     @Named(PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
-    default AmountEntity mapAmount(ParticipantCurrencyPairAmount trade) {
-        return AmountEntity.of(trade.getAmount(), trade.getCurrencyPair().getBaseCurrency());
+    default AmountEntity mapAmount(CcyParticipantAmount<BigDecimal> position) {
+        return AmountEntity.of(position.getAmount(), position.getCurrencyPair().getBaseCurrency());
     }
 }
