@@ -244,10 +244,17 @@ public class EODCalculator {
         return flatten(aggregate(trades));
     }
 
-    public Stream<ParticipantPosition> netAllByBuySell(final Stream<? extends CcyParticipantAmount<BigDecimal>> trades) {
+    public Stream<ParticipantPosition> netAllByBuySell(
+        final Stream<TradeOrPositionEssentials> tradesToNet,
+        final Stream<? extends CcyParticipantAmount<BigDecimal>> positions
+    ) {
+
+        final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> sodIndex = positions.collect(
+            groupingBy(CcyParticipantAmount::getParticipant, toMap(CcyParticipantAmount::getCurrencyPair, CcyParticipantAmount::getAmount))
+        );
 
         return aggregate(
-            trades,
+            tradesToNet,
             twoWayCollector(
                 ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
                 CcyParticipantAmount::getAmount,
@@ -259,8 +266,11 @@ public class EODCalculator {
                     Stream.of(
                         byCcy.getValue().getBuy().map(buy -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), buy, BUY)),
                         byCcy.getValue().getSell().map(sell -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), sell, SELL)),
-                        sumAll(byCcy.getValue().getBuy(), byCcy.getValue().getSell())
-                            .map(net -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), net, NET))
+                        sumAll(
+                            byCcy.getValue().getBuy(),
+                            byCcy.getValue().getSell(),
+                            Optional.ofNullable(sodIndex.get(byParticipant)).flatMap(sodByCcy -> Optional.ofNullable(sodByCcy.get(byCcy)))
+                        ).map(net -> ParticipantPosition.of(byParticipant.getKey(), byCcy.getKey(), net, NET))
                     ).flatMap(Optional::stream)
                 )
             );
