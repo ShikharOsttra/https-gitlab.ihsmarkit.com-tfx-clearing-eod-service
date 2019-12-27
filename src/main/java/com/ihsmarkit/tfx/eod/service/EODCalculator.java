@@ -251,7 +251,7 @@ public class EODCalculator {
         final Stream<? extends CcyParticipantAmount> positions
     ) {
 
-         return mergeAndFlatten(
+        return mergeAndFlatten(
             positions.collect(
                 toMap(pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()), CcyParticipantAmount::getAmount)
             ),
@@ -408,11 +408,6 @@ public class EODCalculator {
             );
     }
 
-    @FunctionalInterface
-    interface Merger<K, T, L, R> {
-        T merge(K key, Optional<L> left, Optional<R> right);
-    }
-
     public static <T, R> Collector<T, ?, R> twoWayCollector(
         final Predicate<T> predicate,
         final Function<T, BigDecimal> mapper,
@@ -436,5 +431,10 @@ public class EODCalculator {
             .stream(values)
             .flatMap(Optional::stream)
             .reduce(BigDecimal::add);
+    }
+
+    @FunctionalInterface
+    interface Merger<K, T, L, R> {
+        T merge(K key, Optional<L> left, Optional<R> right);
     }
 }
