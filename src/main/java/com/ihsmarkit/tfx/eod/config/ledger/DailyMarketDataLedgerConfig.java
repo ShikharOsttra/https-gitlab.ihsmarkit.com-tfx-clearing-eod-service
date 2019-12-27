@@ -8,9 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
-import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.DailyMarketDataReader;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.DailyMarketDataWriter;
+import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
 
 import lombok.AllArgsConstructor;
 

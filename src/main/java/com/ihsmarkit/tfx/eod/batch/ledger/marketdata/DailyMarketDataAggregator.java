@@ -20,14 +20,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodSwapPointEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
+import com.ihsmarkit.tfx.core.dl.entity.marketdata.EodSwapPointEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository.TradeTotalAmountCurrencyPair;
-import com.ihsmarkit.tfx.core.dl.repository.eod.EodSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarketDataAggregate;
@@ -108,10 +108,10 @@ public class DailyMarketDataAggregator {
             .currentDsp(formatBigDecimal(currentDsp))
             .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp)))
             .tradingVolumeAmount(formatBigDecimal(tradingVolumeAmount))
-            // todo: rounding?
+            // todo: rounding? add check for 0
             .tradingVolumeAmountInUnit(formatBigDecimal(tradingVolumeAmount.divide(BigDecimal.valueOf(productCodeTradingUnit))))
             .openPositionAmount(formatBigDecimal(openPositionAmount))
-            // todo: rounding?
+            // todo: rounding? add check for 0
             .openPositionAmountInUit(formatBigDecimal(openPositionAmount.divide(BigDecimal.valueOf(productCodeTradingUnit))))
             .build();
     }

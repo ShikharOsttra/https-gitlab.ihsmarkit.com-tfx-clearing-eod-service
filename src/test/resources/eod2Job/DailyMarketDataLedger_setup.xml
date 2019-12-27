@@ -13,9 +13,9 @@
     <fx_spot_product id="82" product_number="102" product_code="EUR/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
     <fx_spot_product id="83" product_number="103" product_code="GBP/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
 
-    <eod_swap_point id="1" currency_pair_id="81" bid="4.23" offer="5.23" swap_point="4.23" position_type="BID" date="2019-02-02" swap_point_days="1" />
-    <eod_swap_point id="2" currency_pair_id="82" bid="1.34" offer="5.24" swap_point="1.34" position_type="BID" date="2019-02-02" swap_point_days="1" />
-    <eod_swap_point id="3" currency_pair_id="83" bid="2.32" offer="2.23" swap_point="2.23" position_type="OFFER" date="2019-02-02" swap_point_days="1" />
+    <eod_swap_point id="1" currency_pair_id="81" bid="4.23" offer="5.23" swap_point="4.23" position_type="SHORT" date="2019-02-02" swap_point_days="1" remarks="[]" />
+    <eod_swap_point id="2" currency_pair_id="82" bid="1.34" offer="5.24" swap_point="1.34" position_type="SHORT" date="2019-02-02" swap_point_days="1" remarks="[]" />
+    <eod_swap_point id="3" currency_pair_id="83" bid="2.32" offer="2.23" swap_point="2.23" position_type="LONG" date="2019-02-02" swap_point_days="1"  remarks="[]"/>
 
     <eod_daily_settlement_price currency_pair_id="81" dsp="1.12" business_date="2019-02-02" remarks="[]"/>
     <eod_daily_settlement_price currency_pair_id="82" dsp="1.17" business_date="2019-02-02" remarks="[]"/>

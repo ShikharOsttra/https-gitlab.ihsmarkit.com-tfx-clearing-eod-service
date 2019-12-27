@@ -27,9 +27,9 @@ import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository.TradeTotalAmountCurrencyPair;
-import com.ihsmarkit.tfx.core.dl.repository.eod.EodSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarketDataAggregate;
 
