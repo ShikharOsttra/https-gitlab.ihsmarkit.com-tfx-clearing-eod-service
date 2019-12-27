@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantType.FX_BROKER;
 import static com.ihsmarkit.tfx.core.domain.type.TransactionType.BALANCE;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -31,6 +33,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,12 +45,13 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
+    private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
 
     private TradeTransactionDiaryLedgerProcessor processor;
     @Mock
     private DailySettlementPriceService dailySettlementPriceService;
     @Mock
-    private FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private FXSpotProductService fxSpotProductService;
     @Mock
     private EODCalculator eodCalculator;
     @Mock
@@ -64,14 +68,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
-            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductQueryProvider, clockService);
+            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void processTradeEntity() {
         when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
-        when(fxSpotProductQueryProvider.getCurrencyNo(CURRENCY)).thenReturn("101");
+        when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(participantCurrencyPairAmount);

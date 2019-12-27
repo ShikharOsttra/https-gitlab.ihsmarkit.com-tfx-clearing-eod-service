@@ -20,6 +20,7 @@ import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
-    private final FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private final FXSpotProductService fxSpotProductService;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -57,7 +58,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .currencyNo(fxSpotProductQueryProvider.getCurrencyNo(participantPosition.getCurrencyPair()))
+            .currencyNo(fxSpotProductService.getFxSpotProduct(participantPosition.getCurrencyPair()).getProductNumber())
             .currencyPair(participantPosition.getCurrencyPair().getCode())
             .matchDate(EMPTY)
             .matchTime(EMPTY)
