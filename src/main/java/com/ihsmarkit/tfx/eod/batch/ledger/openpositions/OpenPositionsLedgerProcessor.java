@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -83,44 +84,44 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .currencyCode(currencyPair.getCode())
             .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
             .tradeDate(formatDate(businessDate))
-            .shortPositionPreviousDay(format(shortPosition(getPosition(positions, SOD))))
-            .longPositionPreviousDay(format(longPosition(getPosition(positions, SOD))))
-            .shortPosition(format(shortPosition(getPositionsSummed(positions, NET, REBALANCING))))
-            .longPosition(format(longPosition(getPositionsSummed(positions, NET, REBALANCING))))
-            .initialMtmAmount(format(getMargin(margins, INITIAL_MTM)))
-            .dailyMtmAmount(format(getMargin(margins, DAILY_MTM)))
-            .swapPoint(format(getMargin(margins, SWAP_PNL)))
-            .totalVariationMargin(format(getMargin(margins, TOTAL_VM)))
+            .shortPositionPreviousDay(formatAmount(shortPosition(getPosition(positions, SOD))))
+            .longPositionPreviousDay(formatAmount(longPosition(getPosition(positions, SOD))))
+            .shortPosition(formatAmount(shortPosition(getPositionsSummed(positions, NET, REBALANCING))))
+            .longPosition(formatAmount(longPosition(getPositionsSummed(positions, NET, REBALANCING))))
+            .initialMtmAmount(formatAmount(getMargin(margins, INITIAL_MTM)))
+            .dailyMtmAmount(formatAmount(getMargin(margins, DAILY_MTM)))
+            .swapPoint(formatAmount(getMargin(margins, SWAP_PNL)))
+            .totalVariationMargin(formatAmount(getMargin(margins, TOTAL_VM)))
             .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
 
-            .buyTradingAmount(format(shortPosition(getPosition(positions, SOD))))
-            .sellTradingAmount(format(shortPosition(getPosition(positions, SOD))))
+            .buyTradingAmount(formatAmount(shortPosition(getPosition(positions, SOD))))
+            .sellTradingAmount(formatAmount(shortPosition(getPosition(positions, SOD))))
 
             .build();
     }
 
 
-    private String format(final Optional<BigDecimal> value) {
+    private static String formatAmount(final Optional<BigDecimal> value) {
         return value.orElse(ZERO).toString();
     }
 
-    private Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
+    private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
         return amount.map(ZERO::max);
     }
 
-    private Optional<BigDecimal> shortPosition(final Optional<BigDecimal> amount) {
+    private static Optional<BigDecimal> shortPosition(final Optional<BigDecimal> amount) {
         return amount.map(ZERO::min).map(BigDecimal::negate);
     }
 
-    private Optional<BigDecimal> getMargin(
+    private static Optional<BigDecimal> getMargin(
         final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins,
         final EodProductCashSettlementType initialMtm
     ) {
         return Optional.ofNullable(margins.get(initialMtm)).map(EodProductCashSettlementEntity::getAmount).map(AmountEntity::getValue);
     }
 
-    private Optional<BigDecimal> getPosition(
+    private static Optional<BigDecimal> getPosition(
         final Map<ParticipantPositionType, ParticipantPositionEntity> positions,
         final ParticipantPositionType type
     ) {
@@ -129,14 +130,13 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .map(AmountEntity::getValue);
     }
 
-    private Optional<BigDecimal> getPositionsSummed(
+    private static Optional<BigDecimal> getPositionsSummed(
         final Map<ParticipantPositionType, ParticipantPositionEntity> positions,
         final ParticipantPositionType...type
     ) {
         return Arrays.stream(type)
             .map(positions::get)
-            .map(Optional::ofNullable)
-            .flatMap(Optional::stream)
+            .filter(Objects::nonNull)
             .map(ParticipantPositionEntity::getAmount)
             .map(AmountEntity::getValue)
             .reduce(BigDecimal::add);
