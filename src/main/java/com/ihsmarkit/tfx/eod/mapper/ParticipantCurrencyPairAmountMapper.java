@@ -81,7 +81,7 @@ public interface ParticipantCurrencyPairAmountMapper {
     );
 
     @Named(PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
-    default AmountEntity mapAmount(CcyParticipantAmount<BigDecimal> position) {
+    default AmountEntity mapAmount(CcyParticipantAmount position) {
         return AmountEntity.of(position.getAmount(), position.getCurrencyPair().getBaseCurrency());
     }
 }
