@@ -349,6 +349,7 @@ public class EODCalculator {
         );
     }
 
+    @SuppressWarnings("unchecked")
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
