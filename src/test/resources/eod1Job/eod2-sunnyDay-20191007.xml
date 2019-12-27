@@ -9,6 +9,32 @@
 
     <currency_pair id="13" base_ccy="EUR" value_ccy="USD"/>
 
+    <margin_ratio id="1" currency_pair_id="13" value="0.80" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <margin_ratio_multiplier id="1" participant_id="101" currency_pair_id="13" value="0.90" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <margin_ratio_multiplier id="2" participant_id="102" currency_pair_id="13" value="0.91" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <margin_ratio_multiplier id="3" participant_id="103" currency_pair_id="13" value="0.92" applicable_date="2019-10-07" business_date="2019-10-07"/>
+
+    <collateral_product id="4" enabled="true" deleted="false" type="2"/>
+    <log_collateral_product id="4" issuer_bank_id="1" deposit_date="2020-2-2" maturity_date="2020-2-2"/>
+
+    <collateral_product id="1" enabled="true" deleted="false" type="1"/>
+    <cash_collateral_product id="1" currency="JPY"/>
+
+    <participant_collateral_requirement id="1" participant_id="101" purpose="MARKET_ENTRY_DEPOSIT" value="2000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="2" participant_id="101" purpose="CLEARING_DEPOSIT" value="3000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="3" participant_id="101" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="4" participant_id="102" purpose="MARKET_ENTRY_DEPOSIT" value="2000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="5" participant_id="102" purpose="CLEARING_DEPOSIT" value="3000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="6" participant_id="102" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="7" participant_id="103" purpose="MARKET_ENTRY_DEPOSIT" value="2000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="8" participant_id="103" purpose="CLEARING_DEPOSIT" value="3000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <participant_collateral_requirement id="9" participant_id="103" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+
+    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
+    <collateral_balance id="2" purpose="1" participant_id="102" product_id="1" amount="11000" version="1"/>
+    <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
+    <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
+
     <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" />
     <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" value_date="2019-10-11" />
 
@@ -201,6 +227,19 @@
             type="SOD"
     />
 
+    <participant_position
+            id="5"
+            currency_pair_id="13"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="3.12"
+            amount="-1000000"
+            currency="JPY"
+            type="NET"
+    />
+
     <eod_product_cash_settlement
             id="1"
             participant_id="101"
@@ -223,8 +262,47 @@
             type="INITIAL_MTM"
     />
 
-    <collateral_product id="1" enabled="true" deleted="false" type="1"/>
-    <cash_collateral_product id="1" currency="JPY"/>
-    <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
+    <eod_product_cash_settlement
+            id="3"
+            participant_id="101"
+            currency_pair_id="13"
+            amount="9500"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
 
+    <eod_product_cash_settlement
+            id="4"
+            participant_id="102"
+            currency_pair_id="13"
+            amount="9700"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="DAILY_MTM"
+    />
+
+    <eod_product_cash_settlement
+            id="5"
+            participant_id="101"
+            currency_pair_id="13"
+            amount="9500"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="TOTAL_VM"
+    />
+
+    <eod_product_cash_settlement
+            id="6"
+            participant_id="102"
+            currency_pair_id="13"
+            amount="9700"
+            currency="JPY"
+            settlement_date="2019-10-07"
+            date="2019-10-06"
+            type="TOTAL_VM"
+    />
 </dataset>

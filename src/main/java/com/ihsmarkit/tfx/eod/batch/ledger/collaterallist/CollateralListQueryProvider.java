@@ -14,12 +14,18 @@ public class CollateralListQueryProvider extends AbstractJpaQueryProvider {
 
     @Override
     public Query createQuery() {
-        final CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
-        final CriteriaQuery<CollateralBalanceEntity> query = criteriaBuilder.createQuery(CollateralBalanceEntity.class);
+        final CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        final CriteriaQuery<CollateralBalanceEntity> query = cb.createQuery(CollateralBalanceEntity.class);
 
         final Root<CollateralBalanceEntity> root = query.from(CollateralBalanceEntity.class);
         root.fetch(CollateralBalanceEntity_.product);
         root.fetch(CollateralBalanceEntity_.participant);
+
+        query.orderBy(
+            cb.asc(root.get(CollateralBalanceEntity_.participant)),
+            cb.asc(root.get(CollateralBalanceEntity_.purpose)),
+            cb.asc(root.get(CollateralBalanceEntity_.id))
+        );
 
         return getEntityManager().createQuery(query);
     }

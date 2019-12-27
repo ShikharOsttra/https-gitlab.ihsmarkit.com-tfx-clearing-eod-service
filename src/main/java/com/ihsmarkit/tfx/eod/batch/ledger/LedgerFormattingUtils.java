@@ -30,6 +30,10 @@ public class LedgerFormattingUtils {
         return DATE_TIME_FORMATTER.format(dateTime);
     }
 
+    public static String formatTime(final LocalDateTime dateTime) {
+        return TIME_FORMATTER.format(dateTime);
+    }
+
     public static String formatMonthDay(final MonthDay monthDay) {
         return MONTH_DAY_FORMATTER.format(monthDay);
     }

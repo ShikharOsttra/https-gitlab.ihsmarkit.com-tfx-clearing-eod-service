@@ -82,7 +82,7 @@ class TotalVariationMarginTaskletTest extends AbstractSpringBatchTest {
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
-        when(eodProductCashSettlementRepository.findByDateAndTypeIn(any(), any())).thenReturn(
+        when(eodProductCashSettlementRepository.findAllByDateAndTypeIn(any(), any())).thenReturn(
             Stream.of(MARGIN_1, MARGIN_2, MARGIN_3, MARGIN_4)
         );
         when(eodCalculator.netAll(any())).thenReturn(
@@ -96,7 +96,7 @@ class TotalVariationMarginTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        verify(eodProductCashSettlementRepository).findByDateAndTypeIn(BUSINESS_DATE, DAILY_MTM, INITIAL_MTM, SWAP_PNL);
+        verify(eodProductCashSettlementRepository).findAllByDateAndTypeIn(BUSINESS_DATE, DAILY_MTM, INITIAL_MTM, SWAP_PNL);
 
         verify(eodCalculator).netAll(netCaptor.capture());
         assertThat(netCaptor.getValue())

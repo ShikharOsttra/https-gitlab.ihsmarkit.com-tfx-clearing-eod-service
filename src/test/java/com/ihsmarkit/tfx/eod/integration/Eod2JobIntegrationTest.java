@@ -19,8 +19,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
+import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.github.springtestdbunit.dataset.ReplacementDataSetLoader;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -32,6 +34,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
     @ContextConfiguration(classes = EOD2JobConfig.class) }
 )
 @TestPropertySource("classpath:/application.properties")
+@DbUnitConfiguration(dataSetLoader = ReplacementDataSetLoader.class)
 class Eod2JobIntegrationTest {
 
     @Autowired
@@ -46,6 +49,7 @@ class Eod2JobIntegrationTest {
         "/common/business_date_2019_1_1.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
+        "/common/fx_spot_product.xml",
         "/eod1Job/eod2-sunnyDay-20191007.xml"
     })
     @ExpectedDatabase(value = "/eod1Job/eod2-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)

@@ -24,7 +24,72 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     maturity_date           varchar(10)  not null
 );
 
-create table if not exists eod_ledger_market_data
+CREATE TABLE IF NOT EXISTS eod_ledger_collateral_balance
+(
+    business_date                                 date         not null,
+    trade_date                                    varchar(10)  not null,
+    record_date                                   varchar(19)  not null,
+    participant_code                              varchar(15)  not null,
+    participant_name                              varchar(255) not null,
+    participant_type                              varchar(3)   not null,
+    collateral_purpose_type                       varchar(2)   not null,
+    collateral_purpose                            varchar(64)  not null,
+    total_deposit                                 varchar(15)  not null,
+    cash                                          varchar(15)  not null,
+    lg                                            varchar(15)  not null,
+    securities                                    varchar(15)  not null,
+    required_amount                               varchar(15)  not null,
+    total_initial_margin                          varchar(15)  not null,
+    total_variation_margin                        varchar(15)  not null,
+    total_excess_deficit                          varchar(15)  not null,
+    deficit_in_cash_settlement                    varchar(15)  not null,
+    cash_settlement                               varchar(15)  not null,
+    cash_settlement_following_day                 varchar(15)  not null,
+    initial_mtm_total                             varchar(15)  not null,
+    initial_mtm_day                               varchar(15)  not null,
+    initial_mtm_following_day                     varchar(15)  not null,
+    daily_mtm_total                               varchar(15)  not null,
+    daily_mtm_day                                 varchar(15)  not null,
+    daily_mtm_following_day                       varchar(15)  not null,
+    swap_point_total                              varchar(15)  not null,
+    swap_point_day                                varchar(15)  not null,
+    swap_point_following_day                      varchar(15)  not null,
+    following_applicable_day_for_clearing_deposit varchar(15)  not null
+);
+
+CREATE TABLE IF NOT EXISTS eod_ledger_transaction_diary
+(
+    business_date                   date         not null,
+    trade_date                      varchar(10)  not null,
+    record_date                     varchar(19)  not null,
+    participant_code                varchar(31)  not null,
+    participant_name                varchar(255) not null,
+    participant_type                varchar(3)   not null,
+    currency_no                     varchar(3)   not null,
+    currency_pair                   varchar(7)   not null,
+    match_date                      varchar(10)  not null,
+    match_time                      varchar(8)   not null,
+    match_id                        varchar(24)  not null,
+    clear_date                      varchar(10)  not null,
+    clear_time                      varchar(8)   not null,
+    clearing_id                     varchar(8)   not null,
+    trade_price                     varchar(15)  not null,
+    sell_amount                     varchar(15)  not null,
+    buy_amount                      varchar(15)  not null,
+    counterparty_code               varchar(15)  not null,
+    counterparty_type               varchar(3)   not null,
+    dsp                             varchar(15)  not null,
+    daily_mtm_amount                varchar(15)  not null,
+    swap_point                      varchar(15)  not null,
+    outstanding_position_amount     varchar(15)  not null,
+    settlement_date                 varchar(10)  not null,
+    trade_id                        varchar(40)  not null,
+    trade_type                      varchar(2)   not null,
+    reference                       varchar(40)  not null,
+    user_reference                  varchar(255) not null
+);
+
+CREATE TABLE IF NOT EXISTS eod_ledger_market_data
 (
     business_date          date        not null,
     trade_date             varchar(10) not null,
