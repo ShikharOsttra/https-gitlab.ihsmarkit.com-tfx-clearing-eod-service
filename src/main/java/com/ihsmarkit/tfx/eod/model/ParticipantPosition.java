@@ -4,27 +4,24 @@ import java.math.BigDecimal;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 @RequiredArgsConstructor(staticName = "of")
-@Getter
 @Builder
-public class TradeOrPositionEssentials implements CcyParticipantAmount<BigDecimal> {
+@Getter
+@ToString
+public class ParticipantPosition implements CcyParticipantAmount<BigDecimal> {
 
-    @NonNull
-    private final CurrencyPairEntity currencyPair;
-
-    @NonNull
     private final ParticipantEntity participant;
 
-    @NonNull
+    private final CurrencyPairEntity currencyPair;
+
     private final BigDecimal amount;
 
-    @NonNull
-    private final BigDecimal spotRate;
-
+    private final ParticipantPositionType type;
 }

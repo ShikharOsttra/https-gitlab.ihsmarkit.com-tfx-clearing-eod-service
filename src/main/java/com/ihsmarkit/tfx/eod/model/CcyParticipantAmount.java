@@ -1,15 +1,13 @@
 package com.ihsmarkit.tfx.eod.model;
 
-import java.math.BigDecimal;
-
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 
-public interface CcyParticipantAmount {
+public interface CcyParticipantAmount<T> {
 
     CurrencyPairEntity getCurrencyPair();
 
     ParticipantEntity getParticipant();
 
-    BigDecimal getAmount();
+    T getAmount();
 }

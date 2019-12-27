@@ -72,7 +72,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Stream<EodProductCashSettlementEntity> margin =
-            eodProductCashSettlementRepository.findBySettlementDateIsGreaterThanEqual(businessDate);
+            eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThanEqual(businessDate);
 
         final var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
 

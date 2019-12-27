@@ -15,7 +15,7 @@ import lombok.ToString;
 @Builder
 @Getter
 @ToString
-public class ParticipantCurrencyPairAmount implements CcyParticipantAmount {
+public class ParticipantCurrencyPairAmount implements CcyParticipantAmount<BigDecimal> {
 
     @NonNull
     private final ParticipantEntity participant;
