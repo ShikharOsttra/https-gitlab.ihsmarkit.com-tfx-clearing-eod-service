@@ -4,8 +4,10 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DA
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.REBALANCING;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -86,6 +88,8 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .tradeDate(formatDate(businessDate))
             .shortPositionPreviousDay(formatAmount(shortPosition(getPosition(positions, SOD))))
             .longPositionPreviousDay(formatAmount(longPosition(getPosition(positions, SOD))))
+            .buyTradingAmount(formatAmount(shortPosition(getPosition(positions, BUY))))
+            .sellTradingAmount(formatAmount(shortPosition(getPosition(positions, SELL))))
             .shortPosition(formatAmount(shortPosition(getPositionsSummed(positions, NET, REBALANCING))))
             .longPosition(formatAmount(longPosition(getPositionsSummed(positions, NET, REBALANCING))))
             .initialMtmAmount(formatAmount(getMargin(margins, INITIAL_MTM)))
@@ -94,10 +98,6 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .totalVariationMargin(formatAmount(getMargin(margins, TOTAL_VM)))
             .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
-
-            .buyTradingAmount(formatAmount(shortPosition(getPosition(positions, SOD))))
-            .sellTradingAmount(formatAmount(shortPosition(getPosition(positions, SOD))))
-
             .build();
     }
 
