@@ -24,9 +24,9 @@ import org.springframework.context.annotation.Import;
 import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
-import com.ihsmarkit.tfx.eod.config.ledger.BaseLedgerConfigFactory;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
+import com.ihsmarkit.tfx.eod.config.ledger.LedgerStepFactory;
 import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
 
@@ -35,7 +35,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Configuration
 @Import({ CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class, TransactionDiaryLedgerConfig.class, OpenPositionsLedgerConfig.class })
-@ComponentScan(basePackageClasses = BaseLedgerConfigFactory.class)
+@ComponentScan(basePackageClasses = LedgerStepFactory.class)
 public class EOD2JobConfig {
 
     private final JobBuilderFactory jobs;

@@ -25,7 +25,7 @@ import lombok.SneakyThrows;
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @Component
 @RequiredArgsConstructor
-public class BaseLedgerConfigFactory {
+public class LedgerStepFactory {
 
     private final DataSource dataSource;
     private final EntityManagerFactory entityManagerFactory;

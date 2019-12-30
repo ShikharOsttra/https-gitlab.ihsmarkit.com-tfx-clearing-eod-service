@@ -28,7 +28,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class TransactionDiaryLedgerConfig {
 
-    private final BaseLedgerConfigFactory baseLedgerConfigFactory;
+    private final LedgerStepFactory ledgerStepFactory;
 
     @Value("${eod.ledger.transaction.diary.chunk.size:1000}")
     private final int transactionDiaryChunkSize;
@@ -60,12 +60,12 @@ public class TransactionDiaryLedgerConfig {
 
     @Bean
     protected ItemWriter<TransactionDiary> transactionDiaryWriter() {
-        return baseLedgerConfigFactory.listWriter(transactionDiaryLedgerSql);
+        return ledgerStepFactory.listWriter(transactionDiaryLedgerSql);
     }
 
     private <T> Step getStep(final String transactionDiaryLedgerStepName, final ItemReader<T> tradeEntityItemReader,
         final TransactionDiaryLedgerProcessor<T> transactionDiaryLedgerProcessor) {
-        return baseLedgerConfigFactory.<T, TransactionDiary>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
+        return ledgerStepFactory.<T, TransactionDiary>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
             .reader(tradeEntityItemReader)
             .processor(transactionDiaryLedgerProcessor)
             .writer(transactionDiaryWriter())
@@ -73,6 +73,6 @@ public class TransactionDiaryLedgerConfig {
     }
 
     private <T> ItemReader<T> transactionDiaryReader(final JpaQueryProvider queryProvider) {
-        return baseLedgerConfigFactory.listReader(queryProvider, transactionDiaryChunkSize);
+        return ledgerStepFactory.listReader(queryProvider, transactionDiaryChunkSize);
     }
 }

@@ -30,11 +30,11 @@ public class CollateralListLedgerConfig {
     private final Resource collateralListLedgerSql;
 
     private final CollateralListLedgerProcessor collateralListProcessor;
-    private final BaseLedgerConfigFactory baseLedgerConfigFactory;
+    private final LedgerStepFactory ledgerStepFactory;
 
     @Bean(COLLATERAL_LIST_LEDGER_STEP_NAME)
     Step collateralListLedger() {
-        return baseLedgerConfigFactory.<CollateralBalanceEntity, CollateralListItem>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize)
+        return ledgerStepFactory.<CollateralBalanceEntity, CollateralListItem>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize)
             .reader(collateralListReader())
             .processor(collateralListProcessor)
             .writer(collateralListWriter())
@@ -44,16 +44,16 @@ public class CollateralListLedgerConfig {
 
     @Bean
     TaskExecutor collateralListTaskExecutor() {
-        return baseLedgerConfigFactory.taskExecutor(collateralListConcurrencyLimit);
+        return ledgerStepFactory.taskExecutor(collateralListConcurrencyLimit);
     }
 
     @Bean
     ItemReader<CollateralBalanceEntity> collateralListReader() {
-        return baseLedgerConfigFactory.listReader(new CollateralListQueryProvider(), collateralListChunkSize);
+        return ledgerStepFactory.listReader(new CollateralListQueryProvider(), collateralListChunkSize);
     }
 
     @Bean
     ItemWriter<CollateralListItem> collateralListWriter() {
-        return baseLedgerConfigFactory.listWriter(collateralListLedgerSql);
+        return ledgerStepFactory.listWriter(collateralListLedgerSql);
     }
 }

@@ -23,7 +23,7 @@ public class OpenPositionsLedgerConfig {
 
     private final OpenPositionsLedgerProcessor openPositionsLedgerProcessor;
     private final OpenPositionsQueryProvider openPositionsQueryProvider;
-    private final BaseLedgerConfigFactory baseLedgerConfigFactory;
+    private final LedgerStepFactory ledgerStepFactory;
 
     @Value("${eod.ledger.open.positions.chunk.size:1000}")
     private final int openPositionsChunkSize;
@@ -32,7 +32,7 @@ public class OpenPositionsLedgerConfig {
 
     @Bean(OPEN_POSITIONS_LEDGER_STEP_NAME)
     protected Step openPositionsLedger() {
-        return baseLedgerConfigFactory.<ParticipantAndCurrencyPair, OpenPositionsListItem>stepBuilder(OPEN_POSITIONS_LEDGER_STEP_NAME, openPositionsChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair, OpenPositionsListItem>stepBuilder(OPEN_POSITIONS_LEDGER_STEP_NAME, openPositionsChunkSize)
             .reader(openPositionsLedgerReader())
             .processor(openPositionsLedgerProcessor)
             .writer(openPositionsLedgerWriter())
@@ -41,13 +41,13 @@ public class OpenPositionsLedgerConfig {
 
     @Bean
     protected JpaPagingItemReader<ParticipantAndCurrencyPair> openPositionsLedgerReader() {
-        return baseLedgerConfigFactory.<ParticipantAndCurrencyPair>listReaderBuilder(openPositionsQueryProvider, openPositionsChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(openPositionsQueryProvider, openPositionsChunkSize)
             .transacted(true)
             .build();
     }
 
     @Bean
     protected ItemWriter<OpenPositionsListItem> openPositionsLedgerWriter() {
-        return baseLedgerConfigFactory.listWriter(openPositionsLedgerSql);
+        return ledgerStepFactory.listWriter(openPositionsLedgerSql);
     }
 }
