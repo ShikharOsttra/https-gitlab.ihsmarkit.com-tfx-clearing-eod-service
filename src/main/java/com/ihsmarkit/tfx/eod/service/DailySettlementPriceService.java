@@ -1,15 +1,17 @@
 package com.ihsmarkit.tfx.eod.service;
 
-import static com.ihsmarkit.tfx.eod.config.CacheConfig.DSP_CACHE;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,18 +20,24 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DailySettlementPriceService {
 
-    private final DailySettlementPriceProvider dailySettlementPriceProvider;
+    private final DailySettlementPriceRepository dailySettlementPriceRepository;
 
-    @Cacheable(value = DSP_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair, #date)")
+    private final Map<LocalDate, Map<String, BigDecimal>> marginRatioMultiplier = new ConcurrentHashMap<>();
+
     public BigDecimal getPrice(final LocalDate date, final CurrencyPairEntity currencyPair) {
-        return dailySettlementPriceProvider.getDailySettlementPrices(date)
-            .get(currencyPair.getBaseCurrency() + currencyPair.getValueCurrency());
+        return getPrice(date, currencyPair.getBaseCurrency(), currencyPair.getValueCurrency());
     }
 
-    @Cacheable(value = DSP_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#baseCurrency, #valueCurrency, #date)")
     public BigDecimal getPrice(final LocalDate date, final String baseCurrency, final String valueCurrency) {
-        return dailySettlementPriceProvider.getDailySettlementPrices(date).get(baseCurrency + valueCurrency);
+        return marginRatioMultiplier.computeIfAbsent(
+            date,
+            p -> dailySettlementPriceRepository.findAllByBusinessDate(date).stream()
+                .collect(
+                    Collectors.toMap(
+                        dsp -> dsp.getCurrencyPair().getBaseCurrency() + dsp.getCurrencyPair().getValueCurrency(),
+                        DailySettlementPriceEntity::getDailySettlementPrice
+                    )
+                )
+        ).get(baseCurrency + valueCurrency);
     }
-
-
 }

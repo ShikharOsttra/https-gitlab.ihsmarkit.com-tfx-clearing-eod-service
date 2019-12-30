@@ -1,0 +1,15 @@
+<dataset>
+    <currency_pair id="13" base_ccy="EUR" value_ccy="USD"/>
+    <currency_pair id="14" base_ccy="USD" value_ccy="JPY"/>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" />
+    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" value_date="2019-10-11" />
+<!-- TODO:  REMOVE-->
+    <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-06" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-06" remarks="[]"/>
+<!-- TODO:  END OF REMOVE-->
+
+    <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-07" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-07" remarks="[]"/>
+
+</dataset>
