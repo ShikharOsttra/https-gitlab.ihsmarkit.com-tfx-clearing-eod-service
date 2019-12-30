@@ -112,6 +112,18 @@
 
     <participant_position
             currency_pair_id="13"
+            type="BUY"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="102"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
+            amount="330000"
+            currency="EUR"
+    />
+
+    <participant_position
+            currency_pair_id="13"
             type="REBALANCING"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
@@ -143,6 +155,30 @@
             value_date="2019-10-10"
             price="1.1"
             amount="-999999.94"
+            currency="EUR"
+    />
+
+    <participant_position
+            currency_pair_id="13"
+            type="SELL"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
+            amount="-1.11"
+            currency="EUR"
+    />
+
+    <participant_position
+            currency_pair_id="13"
+            type="BUY"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.1"
+            amount="1.17"
             currency="EUR"
     />
 

@@ -55,18 +55,15 @@ public class NettingTasklet implements Tasklet {
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
             .stream();
 
-        final Stream<TradeOrPositionEssentials> tradesToNet = Stream.concat(
-            novatedTrades.map(tradeOrPositionMapper::convertTrade),
-            positions.map(tradeOrPositionMapper::convertPosition)
-        );
+        final Stream<TradeOrPositionEssentials> tradesToNet = novatedTrades.map(tradeOrPositionMapper::convertTrade);
+        final Stream<TradeOrPositionEssentials> sodPositions = positions.map(tradeOrPositionMapper::convertPosition);
 
-        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAll(tradesToNet)
-            .map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
-                trade,
-                ParticipantPositionType.NET,
+        final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllByBuySell(tradesToNet, sodPositions)
+            .map(position -> participantCurrencyPairAmountMapper.toParticipantPosition(
+                position,
                 businessDate,
-                tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
-                dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
+                tradeAndSettlementDateService.getValueDate(businessDate, position.getCurrencyPair()),
+                dailySettlementPriceService.getPrice(businessDate, position.getCurrencyPair())
             ));
 
         participantPositionRepository.saveAll(netted::iterator);
