@@ -34,7 +34,7 @@ import lombok.SneakyThrows;
 @Configuration
 @AllArgsConstructor
 public class CollateralBalanceLedgerConfig {
-
+    //todo use BaseLedgerConfig
     private final StepBuilderFactory steps;
 
     private final EntityManagerFactory entityManagerFactory;

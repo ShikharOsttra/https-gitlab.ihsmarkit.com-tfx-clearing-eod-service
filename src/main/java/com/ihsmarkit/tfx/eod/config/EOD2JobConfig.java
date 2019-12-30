@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
@@ -26,14 +27,17 @@ import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
+import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Configuration
-@Import({ CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class, TransactionDiaryLedgerConfig.class,
-    DailyMarketDataLedgerConfig.class })
+@Import({
+    CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class, TransactionDiaryLedgerConfig.class,
+    OpenPositionsLedgerConfig.class, DailyMarketDataLedgerConfig.class
+})
 public class EOD2JobConfig {
 
     private final JobBuilderFactory jobs;
@@ -59,6 +63,9 @@ public class EOD2JobConfig {
     @Qualifier(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
     private Step dailyMarkedDataLedger;
 
+    @Qualifier(OPEN_POSITIONS_LEDGER_STEP_NAME)
+    private Step openPositionsLedger;
+
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
         return jobs.get(EOD2_BATCH_JOB_NAME)
@@ -71,6 +78,7 @@ public class EOD2JobConfig {
             .next(netTransactionDiaryLedger)
             .next(collateralListLedger)
             .next(collateralBalanceLedger)
+            .next(openPositionsLedger)
             .next(dailyMarkedDataLedger)
 
             .build();

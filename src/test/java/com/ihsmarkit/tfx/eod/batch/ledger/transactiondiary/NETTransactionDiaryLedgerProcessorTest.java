@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,10 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 
 @ExtendWith(MockitoExtension.class)
 class NETTransactionDiaryLedgerProcessorTest {
@@ -31,21 +34,23 @@ class NETTransactionDiaryLedgerProcessorTest {
     private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
+    private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
+
 
     private NETTransactionDiaryLedgerProcessor processor;
     @Mock
     private DailySettlementPriceService dailySettlementPriceService;
     @Mock
-    private FxSpotProductQueryProvider fxSpotProductQueryProvider;
+    private FXSpotProductService fxSpotProductService;
 
     @BeforeEach
     void init() {
-        this.processor = new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductQueryProvider);
+        this.processor = new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService);
     }
 
     @Test
     void processParticipantPositionEntity() {
-        when(fxSpotProductQueryProvider.getCurrencyNo(any(CurrencyPairEntity.class))).thenReturn("101");
+        when(fxSpotProductService.getFxSpotProduct(any(CurrencyPairEntity.class))).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(BigDecimal.TEN);
 
         assertThat(processor.process(aParticipantPosition()))

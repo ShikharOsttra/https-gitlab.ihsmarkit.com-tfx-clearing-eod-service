@@ -36,6 +36,7 @@ import lombok.SneakyThrows;
 @Configuration
 @AllArgsConstructor
 public class TransactionDiaryLedgerConfig {
+    //todo use BaseLedgerConfig
 
     private final StepBuilderFactory steps;
 
