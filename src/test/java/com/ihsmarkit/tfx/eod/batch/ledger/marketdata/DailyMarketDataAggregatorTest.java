@@ -30,8 +30,8 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository.TradeTotalAmountCurr
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
-import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
-import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarketDataAggregate;
+import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataProjection;
+import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataAggregate;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 

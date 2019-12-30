@@ -1,4 +1,4 @@
-package com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model;
+package com.ihsmarkit.tfx.eod.model.ledger;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

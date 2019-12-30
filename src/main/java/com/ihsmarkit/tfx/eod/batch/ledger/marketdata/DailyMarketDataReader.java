@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.domain.type.ClearingStatus;
-import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.model.DailyMarkedDataProjection;
+import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataProjection;
 
 @Component
 @StepScope
