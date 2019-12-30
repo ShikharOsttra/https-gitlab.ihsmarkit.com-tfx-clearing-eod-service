@@ -202,7 +202,7 @@ public class EODCalculator {
             );
     }
 
-    private <T> Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
+    private Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
         return input.entrySet().stream()
             .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
                 .map(ccyPairBalances -> ParticipantCurrencyPairAmount.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
