@@ -56,8 +56,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearDate(EMPTY)
             .clearTime(EMPTY)
             .clearingId(EMPTY)
-            //todo is it correct??
-            .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), currencyPair).toString())
+            .tradePrice(dailySettlementPriceService.getPrice(businessDate, currencyPair).toString())
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
             .counterpartyCode(EMPTY)

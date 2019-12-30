@@ -4,23 +4,15 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 
-import javax.persistence.EntityManagerFactory;
-import javax.sql.DataSource;
-
-import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.batch.item.database.orm.JpaQueryProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETTransactionDiaryLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODQueryProvider;
@@ -31,30 +23,21 @@ import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TransactionDiaryLedge
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 
 @Configuration
 @AllArgsConstructor
 public class TransactionDiaryLedgerConfig {
-    //todo use BaseLedgerConfig
 
-    private final StepBuilderFactory steps;
-
-    private final EntityManagerFactory entityManagerFactory;
-
-    private final DataSource dataSource;
+    private final BaseLedgerConfigFactory baseLedgerConfigFactory;
 
     @Value("${eod.ledger.transaction.diary.chunk.size:1000}")
     private final int transactionDiaryChunkSize;
+    @Value("classpath:/ledger/sql/eod_ledger_transaction_diary_insert.sql")
+    private final Resource transactionDiaryLedgerSql;
 
     private final TradeTransactionDiaryLedgerProcessor tradeTransactionDiaryLedgerProcessor;
     private final SODTransactionDiaryLedgerProcessor sodTransactionDiaryLedgerProcessor;
     private final NETTransactionDiaryLedgerProcessor netTransactionDiaryLedgerProcessor;
-
-    @Value("classpath:/ledger/sql/eod_ledger_transaction_diary_insert.sql")
-    private final Resource transactionDiaryLedgerSql;
-
-    private final RecordDateSetter recordDateSetter;
 
     private final TradeListQueryProvider tradeListQueryProvider;
     private final SODQueryProvider sodQueryProvider;
@@ -76,20 +59,13 @@ public class TransactionDiaryLedgerConfig {
     }
 
     @Bean
-    @SneakyThrows
     protected ItemWriter<TransactionDiary> transactionDiaryWriter() {
-        return new JdbcBatchItemWriterBuilder<TransactionDiary>()
-            .beanMapped()
-            .sql(IOUtils.toString(transactionDiaryLedgerSql.getInputStream()))
-            .dataSource(dataSource)
-            .build();
+        return baseLedgerConfigFactory.listWriter(transactionDiaryLedgerSql);
     }
 
     private <T> Step getStep(final String transactionDiaryLedgerStepName, final ItemReader<T> tradeEntityItemReader,
         final TransactionDiaryLedgerProcessor<T> transactionDiaryLedgerProcessor) {
-        return steps.get(transactionDiaryLedgerStepName)
-            .listener(recordDateSetter)
-            .<T, TransactionDiary>chunk(transactionDiaryChunkSize)
+        return baseLedgerConfigFactory.<T, TransactionDiary>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
             .reader(tradeEntityItemReader)
             .processor(transactionDiaryLedgerProcessor)
             .writer(transactionDiaryWriter())
@@ -97,13 +73,6 @@ public class TransactionDiaryLedgerConfig {
     }
 
     private <T> ItemReader<T> transactionDiaryReader(final JpaQueryProvider queryProvider) {
-        //todo: hibernate cursor ?
-        return new JpaPagingItemReaderBuilder<T>()
-            .pageSize(transactionDiaryChunkSize)
-            .entityManagerFactory(entityManagerFactory)
-            .saveState(false)
-            .transacted(false)
-            .queryProvider(queryProvider)
-            .build();
+        return baseLedgerConfigFactory.listReader(queryProvider, transactionDiaryChunkSize);
     }
 }

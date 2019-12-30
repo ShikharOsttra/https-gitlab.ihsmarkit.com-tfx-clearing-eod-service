@@ -330,7 +330,7 @@
         clear_date=""
         clear_time=""
         clearing_id=""
-        trade_price="1.10"
+        trade_price="-0.86"
         sell_amount=""
         buy_amount=""
         counterparty_code=""
