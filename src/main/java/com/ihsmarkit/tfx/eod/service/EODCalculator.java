@@ -10,6 +10,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
@@ -272,7 +273,7 @@ public class EODCalculator {
                     sumAll(buySell.flatMap(BuySellAmounts::getBuy), buySell.flatMap(BuySellAmounts::getSell), sod)
                         .map(net -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), net, NET))
                 ).flatMap(Optional::stream)
-        ).flatMap(x -> x);
+        ).flatMap(identity());
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
