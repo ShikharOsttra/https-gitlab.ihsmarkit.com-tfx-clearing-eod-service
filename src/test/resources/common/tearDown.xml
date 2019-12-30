@@ -5,6 +5,7 @@
     <eod_cash_settlement/>
     <eod_participant_margin/>
     <eod_daily_settlement_price/>
+    <eod_swap_point/>
     <legal_entity/>
     <user/>
     <trade/>

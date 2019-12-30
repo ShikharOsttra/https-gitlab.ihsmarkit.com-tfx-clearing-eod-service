@@ -12,4 +12,6 @@
     <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-07" remarks="[]"/>
     <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-07" remarks="[]"/>
 
+    <eod_swap_point id="4" currency_pair_id="13" bid="4.23" offer="5.234" swap_point="-0.86" position_type="LONG" date="2019-10-07" swap_point_days="1" remarks="Edited"/>
+
 </dataset>

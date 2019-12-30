@@ -22,16 +22,16 @@ public class DailySettlementPriceService {
 
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
 
-    private final Map<LocalDate, Map<String, BigDecimal>> marginRatioMultiplier = new ConcurrentHashMap<>();
+    private final Map<LocalDate, Map<String, BigDecimal>> dailySettlementPrices = new ConcurrentHashMap<>();
 
     public BigDecimal getPrice(final LocalDate date, final CurrencyPairEntity currencyPair) {
         return getPrice(date, currencyPair.getBaseCurrency(), currencyPair.getValueCurrency());
     }
 
     public BigDecimal getPrice(final LocalDate date, final String baseCurrency, final String valueCurrency) {
-        return marginRatioMultiplier.computeIfAbsent(
+        return dailySettlementPrices.computeIfAbsent(
             date,
-            p -> dailySettlementPriceRepository.findAllByBusinessDate(date).stream()
+            businessDate -> dailySettlementPriceRepository.findAllByBusinessDate(date).stream()
                 .collect(
                     Collectors.toMap(
                         dsp -> dsp.getCurrencyPair().getBaseCurrency() + dsp.getCurrencyPair().getValueCurrency(),
