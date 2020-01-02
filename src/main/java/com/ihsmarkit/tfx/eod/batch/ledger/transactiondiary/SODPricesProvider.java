@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
-import com.ihsmarkit.tfx.core.dl.entity.custodianaccount.CustodianAccountEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 
@@ -21,7 +20,7 @@ public class SODPricesProvider {
 
     private final Lazy<Table<String, String, String>> prices;
 
-    public <T extends CustodianAccountEntity> SODPricesProvider(@Value("#{jobParameters['businessDate']}") final LocalDate businessDate,
+    public SODPricesProvider(@Value("#{jobParameters['businessDate']}") final LocalDate businessDate,
         final ParticipantPositionRepository participantPositionRepository) {
         prices = Lazy.of(() -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
             .stream()

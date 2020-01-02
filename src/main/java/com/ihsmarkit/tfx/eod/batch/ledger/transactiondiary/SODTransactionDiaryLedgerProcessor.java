@@ -66,7 +66,6 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearDate(EMPTY)
             .clearTime(EMPTY)
             .clearingId(EMPTY)
-            //todo is it correct
             .tradePrice(dsp)
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
