@@ -1,0 +1,48 @@
+<dataset>
+
+    <haircut_rate id="1" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <log_haircut_rate id="1" issuer_bank_id="1"/>
+    <haircut_rate id="1000" value="99.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <log_haircut_rate id="1000" issuer_bank_id="1"/>
+
+    <haircut_rate id="2" value="98.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="2" bond_type="JGB" remaining_duration="ONE"/>
+    <haircut_rate id="1001" value="98.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <bond_haircut_rate id="1001" bond_type="JGB" remaining_duration="ONE"/>
+
+    <haircut_rate id="6" value="79.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <equity_haircut_rate id="6"/>
+    <haircut_rate id="1002" value="79.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <equity_haircut_rate id="1002"/>
+
+    <margin_ratio currency_pair_id="1" value="7.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio currency_pair_id="1" value="7.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <margin_ratio currency_pair_id="2" value="8.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio currency_pair_id="2" value="11.00" applicable_date="2019-01-02" business_date="2019-01-02"/>
+
+    <margin_ratio_multiplier participant_id="1" currency_pair_id="1" value="1.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier participant_id="1" currency_pair_id="1" value="1.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <margin_ratio_multiplier participant_id="1" currency_pair_id="2" value="2.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier participant_id="1" currency_pair_id="2" value="2.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <margin_ratio_multiplier participant_id="2" currency_pair_id="1" value="3.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier participant_id="2" currency_pair_id="1" value="3.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
+    <margin_ratio_multiplier participant_id="2" currency_pair_id="2" value="4.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier participant_id="2" currency_pair_id="2" value="5.00" applicable_date="2019-01-02" business_date="2019-01-02"/>
+
+    <participant_collateral_requirement participant_id="1" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-01" value="1"/>
+    <participant_collateral_requirement participant_id="1" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-02" value="1"/>
+    <participant_collateral_requirement participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-01" business_date="2019-01-01" value="2"/>
+    <participant_collateral_requirement participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-01" business_date="2019-01-02" value="2"/>
+    <participant_collateral_requirement participant_id="2" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-01" value="3"/>
+    <participant_collateral_requirement participant_id="2" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-02" value="3"/>
+    <participant_collateral_requirement participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-01" business_date="2019-01-01" value="4"/>
+    <participant_collateral_requirement participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-02" business_date="2019-01-02" value="5"/>
+
+    <fx_spot_tick_size product_id="1" value="0.0001" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <fx_spot_tick_size product_id="1" value="0.0002" applicable_date="2019-01-02" business_date="2019-01-02"/>
+    <fx_spot_tick_size product_id="2" value="0.0003" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <fx_spot_tick_size product_id="2" value="0.0003" applicable_date="2019-01-01" business_date="2019-01-02"/>
+
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-02"/>
+
+</dataset>

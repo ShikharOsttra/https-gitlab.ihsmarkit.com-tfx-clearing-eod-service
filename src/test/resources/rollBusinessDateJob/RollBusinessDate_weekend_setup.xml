@@ -1,0 +1,22 @@
+<dataset>
+
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-04"/>
+
+    <currency_pair id="1" base_ccy="USD" value_ccy="JPY"/>
+    <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
+    <currency_pair id="3" base_ccy="CAD" value_ccy="JPY"/>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="1" trade_date="2019-01-04" is_relevant_currency_trade="true" value_date="2019-01-07" is_exchange_business_date="true"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="1" trade_date="2019-01-05" is_relevant_currency_trade="false" value_date="2019-01-07" is_exchange_business_date="false" />
+    <calendar_trading_swap_point id="3" currency_pair_id="1" trade_date="2019-01-06" is_relevant_currency_trade="false" value_date="2019-01-07" is_exchange_business_date="false" />
+    <calendar_trading_swap_point id="4" currency_pair_id="1" trade_date="2019-01-07" is_relevant_currency_trade="true" value_date="2019-01-09" is_exchange_business_date="true" />
+
+    <margin_ratio id="1" currency_pair_id="1" value="1.00" applicable_date="2019-01-04" business_date="2019-01-04"/>
+    <margin_ratio id="2" currency_pair_id="2" value="2.00" applicable_date="2019-01-04" business_date="2019-01-04"/>
+    <margin_ratio id="3" currency_pair_id="3" value="3.00" applicable_date="2019-01-04" business_date="2019-01-04"/>
+
+    <margin_ratio id="4" currency_pair_id="2" value="4.00" applicable_date="2019-01-06" business_date="2019-01-06"/>
+
+    <margin_ratio id="5" currency_pair_id="3" value="5.00" applicable_date="2019-01-07" business_date="2019-01-07"/>
+
+</dataset>
