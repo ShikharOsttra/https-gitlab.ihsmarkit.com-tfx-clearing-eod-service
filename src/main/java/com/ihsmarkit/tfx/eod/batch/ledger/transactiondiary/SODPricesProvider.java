@@ -22,7 +22,7 @@ public class SODPricesProvider {
 
     public SODPricesProvider(@Value("#{jobParameters['businessDate']}") final LocalDate businessDate,
         final ParticipantPositionRepository participantPositionRepository) {
-        prices = Lazy.of(() -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
+        this.prices = Lazy.of(() -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
             .stream()
             .collect(Tables.toTable(
                 participantPosition -> participantPosition.getParticipant().getCode(),
