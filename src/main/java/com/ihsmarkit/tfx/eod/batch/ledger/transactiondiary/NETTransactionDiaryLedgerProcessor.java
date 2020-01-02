@@ -34,6 +34,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
 
     private final DailySettlementPriceService dailySettlementPriceService;
     private final FXSpotProductService fxSpotProductService;
+    private final SODPricesProvider sodPricesProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -56,8 +57,9 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearDate(EMPTY)
             .clearTime(EMPTY)
             .clearingId(EMPTY)
-            //todo fix it
-            .tradePrice(dailySettlementPriceService.getPrice(businessDate.minusDays(1), currencyPair).toString())
+            // we can use sod price for current business date cause it's the same as net price of previous business date
+            .tradePrice(sodPricesProvider.getPrice(participantPosition.getParticipant().getCode(), participantPosition.getCurrencyPair().getCode())
+                .orElse(EMPTY))
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
             .counterpartyCode(EMPTY)
