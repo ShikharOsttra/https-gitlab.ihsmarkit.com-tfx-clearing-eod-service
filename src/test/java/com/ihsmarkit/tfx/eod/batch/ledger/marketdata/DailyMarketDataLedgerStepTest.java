@@ -33,7 +33,7 @@ public class DailyMarketDataLedgerStepTest extends AbstractSpringBatchTest {
 
     @Test
     @DatabaseSetup("/eod2Job/DailyMarketDataLedger_setup.xml")
-    @ExpectedDatabase(value = "/eod2Job/DailyMarketDataLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
+    @ExpectedDatabase(value = "/eod2Job/DailyMarketDataLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunDailyMarketDataStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 2, 11, 30, 0));
 

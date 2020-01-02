@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,18 +26,16 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
-import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
-import com.ihsmarkit.tfx.core.dl.repository.TradeRepository.TradeTotalAmountCurrencyPair;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
-import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataProjection;
-import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataAggregate;
+import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
+import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.SneakyThrows;
 
 @ExtendWith(MockitoExtension.class)
-class DailyMarketDataAggregatorTest {
+class DailyMarketDataProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1));
@@ -46,35 +45,33 @@ class DailyMarketDataAggregatorTest {
     @Mock
     private DailySettlementPriceRepository dailySettlementPriceRepository;
     @Mock
-    private TradeRepository tradeRepository;
-    @Mock
     private FxSpotProductRepository fxSpotProductRepository;
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
 
-    private DailyMarketDataAggregator aggregator;
+    private DailyMarketDataProcessor aggregator;
 
     @BeforeEach
     void beforeEach() {
-        aggregator = new DailyMarketDataAggregator(
-            eodSwapPointRepository, dailySettlementPriceRepository, tradeRepository, fxSpotProductRepository,
+        aggregator = new DailyMarketDataProcessor(
+            eodSwapPointRepository, dailySettlementPriceRepository, fxSpotProductRepository,
             participantPositionRepository, BUSINESS_DATE, RECORD_DATE
         );
     }
 
     @Test
+    @SneakyThrows
     void shouldAggregateAllRecords() {
         mockSwapPoints();
         mockDsp();
-        mockTradeTotal();
         mockOpenPositionAmount();
         mockTradingUnit();
 
-        assertThat(aggregator.aggregate(getInputData()))
+        assertThat(aggregator.process(getInputData()))
             .isNotEmpty()
             .extracting(
-                DailyMarketDataAggregate::getCurrencyPairCode,
-                DailyMarketDataAggregate::getBusinessDate
+                DailyMarketDataEnriched::getCurrencyPairCode,
+                DailyMarketDataEnriched::getBusinessDate
             )
             .containsExactlyInAnyOrder(
                 tuple("USD/JPY", Date.valueOf(BUSINESS_DATE)),
@@ -102,50 +99,15 @@ class DailyMarketDataAggregatorTest {
                 DailySettlementPriceEntity.builder()
                     .currencyPair(currencyPair("USD", "JPY"))
                     .dailySettlementPrice(new BigDecimal("1.51"))
+                    .previousDailySettlementPrice(new BigDecimal("1.45"))
                     .build(),
                 DailySettlementPriceEntity.builder()
                     .currencyPair(currencyPair("EUR", "JPY"))
                     .dailySettlementPrice(new BigDecimal("2.32"))
-                    .build()
-            ));
-
-        when(dailySettlementPriceRepository.findPreviousDailySettlementPrice(any()))
-            .thenReturn(List.of(
-                DailySettlementPriceEntity.builder()
-                    .currencyPair(currencyPair("USD", "JPY"))
-                    .dailySettlementPrice(new BigDecimal("1.45"))
-                    .build(),
-                DailySettlementPriceEntity.builder()
-                    .currencyPair(currencyPair("EUR", "JPY"))
-                    .dailySettlementPrice(new BigDecimal("2.30"))
+                    .previousDailySettlementPrice(new BigDecimal("2.30"))
                     .build()
             ));
     }
-
-    private void mockTradeTotal() {
-        when(tradeRepository.findTotalBaseAmountPerCurrencyPairForBusinessDate(any()))
-            .thenReturn(List.of(
-                getTradeTotal("USD/JPY", new BigDecimal("1011.3")),
-                getTradeTotal("EUR/JPY", new BigDecimal("117.2"))
-            ));
-    }
-
-    @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
-    private TradeTotalAmountCurrencyPair getTradeTotal(final String currencyPair, final BigDecimal total) {
-        // can'y mock this interface :(
-        return new TradeTotalAmountCurrencyPair() {
-            @Override
-            public BigDecimal getTotal() {
-                return total;
-            }
-
-            @Override
-            public String getProductCode() {
-                return currencyPair;
-            }
-        };
-    }
-
 
     private void mockOpenPositionAmount() {
         when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
@@ -175,29 +137,21 @@ class DailyMarketDataAggregatorTest {
             ));
     }
 
-    private static List<DailyMarkedDataProjection> getInputData() {
-        return List.of(
-            DailyMarkedDataProjection.of(
-                1L, 1L, "USD/JPY", "101", new BigDecimal("1.1"),
-                LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1))
+    private static Map<String, DailyMarkedDataAggregated> getInputData() {
+        return Map.of(
+            "USD/JPY", DailyMarkedDataAggregated.of(
+                "USD/JPY", new BigDecimal("1011.3"),
+                new BigDecimal("1.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1)),
+                new BigDecimal("1000.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 2)),
+                new BigDecimal("1.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1)),
+                new BigDecimal("10.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
             ),
-            DailyMarkedDataProjection.of(
-                2L, 1L, "USD/JPY", "101", new BigDecimal("1000.1"),
-                LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 2))
-            ),
-            DailyMarkedDataProjection.of(
-                3L, 1L, "USD/JPY", "101", new BigDecimal("10.1"),
-                LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
-            ),
-
-
-            DailyMarkedDataProjection.of(
-                4L, 2L, "EUR/JPY", "102", new BigDecimal("17.1"),
-                LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
-            ),
-            DailyMarkedDataProjection.of(
-                5L, 2L, "EUR/JPY", "102", new BigDecimal("100.1"),
-                LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
+            "EUR/JPY", DailyMarkedDataAggregated.of(
+                "EUR/JPY", new BigDecimal("117.2"),
+                new BigDecimal("17.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
+                new BigDecimal("100.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
+                new BigDecimal("17.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
+                new BigDecimal("100.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
             )
         );
     }

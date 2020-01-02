@@ -17,13 +17,9 @@
     <eod_swap_point id="2" currency_pair_id="82" bid="1.34" offer="5.24" swap_point="1.34" position_type="SHORT" date="2019-02-02" swap_point_days="1" remarks="[]" />
     <eod_swap_point id="3" currency_pair_id="83" bid="2.32" offer="2.23" swap_point="2.23" position_type="LONG" date="2019-02-02" swap_point_days="1"  remarks="[]"/>
 
-    <eod_daily_settlement_price currency_pair_id="81" dsp="1.12" business_date="2019-02-02" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="82" dsp="1.17" business_date="2019-02-02" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="83" dsp="1.11" business_date="2019-02-02" remarks="[]"/>
-
-    <eod_daily_settlement_price currency_pair_id="81" dsp="1.15" business_date="2019-02-01" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="82" dsp="1.10" business_date="2019-02-01" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="83" dsp="1.12" business_date="2019-02-01" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="81" dsp="1.12" previous_dsp="1.15" business_date="2019-02-02" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="82" dsp="1.17" previous_dsp="1.10" business_date="2019-02-02" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="83" dsp="1.11" previous_dsp="1.12" business_date="2019-02-02" remarks="[]"/>
 
     <participant_position id="1" currency_pair_id="81" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
         trade_date="2019-02-02" value_date="2019-11-01" amount="1011" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="NET"/>

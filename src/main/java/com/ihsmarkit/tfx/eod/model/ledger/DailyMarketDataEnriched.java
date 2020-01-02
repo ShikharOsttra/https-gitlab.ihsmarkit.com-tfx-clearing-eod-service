@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
+@Builder(builderClassName = "Builder")
 @SuppressWarnings("PMD.TooManyFields")
-public class DailyMarketDataAggregate {
+public class DailyMarketDataEnriched {
     private final Date businessDate;
     private final String tradeDate;
     private final String recordDate;
@@ -29,5 +29,5 @@ public class DailyMarketDataAggregate {
     private final String tradingVolumeAmount;
     private final String tradingVolumeAmountInUnit;
     private final String openPositionAmount;
-    private final String openPositionAmountInUit;
+    private final String openPositionAmountInUnit;
 }
