@@ -9,11 +9,10 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.StepContribution;
@@ -32,8 +31,9 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceProvider;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
@@ -51,10 +51,11 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     private static final BigDecimal EUR_RATE = BigDecimal.valueOf(104.98);
     private static final CurrencyPairEntity USDJPY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final CurrencyPairEntity EURJPY = CurrencyPairEntity.of(2L, "EUR", "JPY");
-    private static final String EURJPY_CODE = "EURJPY";
-    private static final String USDJPY_CODE = "USDJPY";
     private static final LocalDate OCT_10 = LocalDate.of(2019, 10, 10);
     private static final LocalDate OCT_11 = OCT_10.plusDays(1);
+
+    private static final DailySettlementPriceEntity USD_DSP = DailySettlementPriceEntity.builder().currencyPair(USDJPY).dailySettlementPrice(USD_RATE).build();
+    private static final DailySettlementPriceEntity EUR_DSP = DailySettlementPriceEntity.builder().currencyPair(EURJPY).dailySettlementPrice(EUR_RATE).build();
 
     @Autowired
     private Job job;
@@ -63,10 +64,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
     private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     @MockBean
-    private DailySettlementPriceProvider dailySettlementPriceProvider;
-
-    @Mock
-    private Map<String, BigDecimal> ratesMap;
+    private DailySettlementPriceRepository dailySettlementPriceRepository;
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -77,10 +75,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
         when(calendarTradingSwapPointRepository.findNextTradingDateFailFast(any(), any())).thenReturn(OCT_11);
 
-        when(dailySettlementPriceProvider.getDailySettlementPrices(OCT_10)).thenReturn(ratesMap);
-
-        when(ratesMap.get(EURJPY_CODE)).thenReturn(EUR_RATE);
-        when(ratesMap.get(USDJPY_CODE)).thenReturn(USD_RATE);
+        when(dailySettlementPriceRepository.findAllByBusinessDate(OCT_10)).thenReturn(List.of(USD_DSP, EUR_DSP));
 
         assertThat(
             Stream.generate(this::launchJobAndGetStatus).limit(2)
@@ -89,9 +84,9 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         );
 
         verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDateFailFast(OCT_10, USDJPY);
-        verify(ratesMap, times(2)).get(EURJPY_CODE);
-        verify(ratesMap, times(2)).get(USDJPY_CODE);
-        verifyNoMoreInteractions(calendarTradingSwapPointRepository, ratesMap);
+        verify(dailySettlementPriceRepository, times(2)).findAllByBusinessDate(OCT_10);
+
+        verifyNoMoreInteractions(calendarTradingSwapPointRepository);
     };
 
     @SneakyThrows(Exception.class)
