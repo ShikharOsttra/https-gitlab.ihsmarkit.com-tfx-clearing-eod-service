@@ -5,8 +5,12 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
@@ -34,6 +38,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -45,10 +50,13 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
+import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
+import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.PositionBalance;
 import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
@@ -179,14 +187,18 @@ public class EODCalculator {
     }
 
     private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
+        return aggregate(input, reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add));
+    }
+
+    private <R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
+        final Stream<? extends CcyParticipantAmount> input,
+        final Collector<CcyParticipantAmount, ?, R> collector
+    ) {
         return input
             .collect(
                 groupingBy(
                     CcyParticipantAmount::getParticipant,
-                    groupingBy(
-                        CcyParticipantAmount::getCurrencyPair,
-                        reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add)
-                    )
+                    groupingBy(CcyParticipantAmount::getCurrencyPair, collector)
                 )
             );
     }
@@ -233,6 +245,35 @@ public class EODCalculator {
 
     public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
         return flatten(aggregate(trades));
+    }
+
+    public Stream<ParticipantPosition> netAllByBuySell(
+        final Stream<TradeOrPositionEssentials> tradesToNet,
+        final Stream<? extends CcyParticipantAmount> positions
+    ) {
+
+        return mergeAndFlatten(
+            positions.collect(
+                toMap(pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()), CcyParticipantAmount::getAmount)
+            ),
+            tradesToNet.collect(
+                groupingBy(
+                    pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()),
+                    twoWayCollector(
+                        ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
+                        CcyParticipantAmount::getAmount,
+                        BuySellAmounts::new
+                    )
+                )
+            ),
+            (key, sod, buySell) ->
+                Stream.of(
+                    buySell.flatMap(BuySellAmounts::getBuy).map(buy -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), buy, BUY)),
+                    buySell.flatMap(BuySellAmounts::getSell).map(sell -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), sell, SELL)),
+                    sumAll(buySell.flatMap(BuySellAmounts::getBuy), buySell.flatMap(BuySellAmounts::getSell), sod)
+                        .map(net -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), net, NET))
+                ).flatMap(Optional::stream)
+        ).flatMap(identity());
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
@@ -308,6 +349,7 @@ public class EODCalculator {
         );
     }
 
+    @SuppressWarnings("unchecked")
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
@@ -355,6 +397,18 @@ public class EODCalculator {
         return trades;
     }
 
+    public static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
+        return Streams.concat(left.keySet().stream(), right.keySet().stream())
+            .distinct()
+            .map(
+                key -> merger.merge(
+                    key,
+                    Optional.ofNullable(left.get(key)),
+                    Optional.ofNullable(right.get(key))
+                )
+            );
+    }
+
     public static <T, R> Collector<T, ?, R> twoWayCollector(
         final Predicate<T> predicate,
         final Function<T, BigDecimal> mapper,
@@ -378,5 +432,10 @@ public class EODCalculator {
             .stream(values)
             .flatMap(Optional::stream)
             .reduce(BigDecimal::add);
+    }
+
+    @FunctionalInterface
+    interface Merger<K, T, L, R> {
+        T merge(K key, Optional<L> left, Optional<R> right);
     }
 }

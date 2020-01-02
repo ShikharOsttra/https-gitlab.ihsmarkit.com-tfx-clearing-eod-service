@@ -2,6 +2,8 @@ package com.ihsmarkit.tfx.eod.batch;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
@@ -38,12 +40,11 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
-import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
+import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -109,6 +110,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     @Captor
     private ArgumentCaptor<Stream<TradeOrPositionEssentials>> tradeCaptor;
 
+    @Captor
+    private ArgumentCaptor<Stream<TradeOrPositionEssentials>> sodPositionCaptor;
+
     @Test
     void shouldCalculateAndStoreNetPosition() {
 
@@ -128,11 +132,11 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_JPY))
             .thenReturn(BigDecimal.valueOf(3));
 
-        when(eodCalculator.netAll(any()))
+        when(eodCalculator.netAllByBuySell(any(), any()))
             .thenReturn(
                 Stream.of(
-                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE),
-                    ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2))
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, NET),
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), NET)
                 )
             );
 
@@ -144,9 +148,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         verify(participantPositionRepository)
-            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, BUSINESS_DATE);
+            .findAllByPositionTypeAndTradeDateFetchCurrencyPair(SOD, BUSINESS_DATE);
 
-        verify(eodCalculator).netAll(tradeCaptor.capture());
+        verify(eodCalculator).netAllByBuySell(tradeCaptor.capture(), sodPositionCaptor.capture());
         assertThat(tradeCaptor.getValue())
             .extracting(
                 TradeOrPositionEssentials::getParticipant,
@@ -155,9 +159,19 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 TradeOrPositionEssentials::getAmount
             ).containsExactlyInAnyOrder(
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0)),
-                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0)),
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.5), BigDecimal.valueOf(-10.0))
             );
+
+        assertThat(sodPositionCaptor.getValue())
+            .extracting(
+                TradeOrPositionEssentials::getParticipant,
+                TradeOrPositionEssentials::getCurrencyPair,
+                TradeOrPositionEssentials::getSpotRate,
+                TradeOrPositionEssentials::getAmount
+            ).containsExactlyInAnyOrder(
+            tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0))
+
+        );
 
         verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
 
@@ -178,7 +192,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     PARTICIPANT,
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_USD,
-                    ParticipantPositionType.NET,
+                    NET,
                     AmountEntity.of(BigDecimal.ONE, USD),
                     BigDecimal.valueOf(2),
                     BUSINESS_DATE,
@@ -188,7 +202,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     PARTICIPANT,
                     ParticipantType.LIQUIDITY_PROVIDER,
                     CURRENCY_PAIR_JPY,
-                    ParticipantPositionType.NET,
+                    NET,
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
                     BigDecimal.valueOf(3),
                     BUSINESS_DATE,
