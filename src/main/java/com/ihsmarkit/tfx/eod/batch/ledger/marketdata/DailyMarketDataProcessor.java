@@ -22,6 +22,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.EodSwapPointEntity;
@@ -131,7 +132,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         return participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.NET, businessDate).stream()
             .collect(Collectors.groupingBy(
                 item -> item.getCurrencyPair().getCode(),
-                Collectors.reducing(BigDecimal.ZERO, item -> item.getAmount().getValue(), BigDecimal::add)
+                Streams.summingBigDecimal(item -> item.getAmount().getValue())
             ));
     }
 

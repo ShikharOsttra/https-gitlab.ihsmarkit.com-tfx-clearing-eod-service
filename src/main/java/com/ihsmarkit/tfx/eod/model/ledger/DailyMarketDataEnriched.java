@@ -3,9 +3,9 @@ package com.ihsmarkit.tfx.eod.model.ledger;
 import java.util.Date;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @Builder(builderClassName = "Builder")
 @SuppressWarnings("PMD.TooManyFields")
 public class DailyMarketDataEnriched {
