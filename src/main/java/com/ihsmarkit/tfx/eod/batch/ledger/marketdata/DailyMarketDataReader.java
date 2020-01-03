@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
+import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -54,7 +55,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
 
         log.debug("Read trades for Daily Market Data Ledger");
 
-        return tradeRepository.findAllNovatedForTradeDate(businessDate)
+        return tradeRepository.findAllNovatedForTradeDateAndDirection(businessDate, Side.SELL)
             .collect(
                 Collectors.groupingBy(
                     trade -> trade.getCurrencyPair().getCode(),
