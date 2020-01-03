@@ -53,4 +53,7 @@
     <eod_ledger_open_position/>
     <eod_ledger_collateral_balance/>
     <eod_ledger_transaction_diary/>
+    <eod_ledger_market_data/>
+    <eod_daily_settlement_price/>
+    <eod_swap_point/>
 </dataset>

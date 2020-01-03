@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.MonthDay;
@@ -40,4 +41,8 @@ public class LedgerFormattingUtils {
         return RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name());
     }
 
+    public static String formatBigDecimal(final BigDecimal bigDecimal) {
+        // todo: formatting, rounding?
+        return bigDecimal.toString();
+    }
 }

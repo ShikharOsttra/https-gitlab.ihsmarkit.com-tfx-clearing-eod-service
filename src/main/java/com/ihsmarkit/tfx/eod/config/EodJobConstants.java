@@ -36,6 +36,7 @@ public final class EodJobConstants {
     public static final String TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME = "tradeTransactionDiaryLedger";
     public static final String SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME = "sodTransactionDiaryLedger";
     public static final String NET_TRANSACTION_DIARY_LEDGER_STEP_NAME = "netTransactionDiaryLedger";
+    public static final String DAILY_MARKET_DATA_LEDGER_STEP_NAME = "dailyMarketDataLedger";
 
     public static final String ROLL_BUSINESS_DATE_STEP_NAME = "rollBusinessDate";
 }

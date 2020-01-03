@@ -104,4 +104,9 @@ compileJava {
     options.compilerArgs << '-parameters' //<< "-Xlint:unchecked" << "-Xlint:deprecation" << "-Werror" << "-Xmaxerrs" << "1000"
 }
 
+ext.additionalJacocoExclusions = [
+        // quite hard to verify invocation of TradeHolder.merge
+        '**/eod/batch/ledger/marketdata/DailyMarketDataReader$TradeHolder*'
+]
+
 jarPublishing()
