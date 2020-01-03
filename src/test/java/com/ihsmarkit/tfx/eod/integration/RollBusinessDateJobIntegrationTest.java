@@ -49,7 +49,7 @@ class RollBusinessDateJobIntegrationTest {
     @Test
     @DatabaseSetup("/rollBusinessDateJob/RollBusinessDate_setup.xml")
     @ExpectedDatabase(value = "/rollBusinessDateJob/RollBusinessDate_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void testRollBusinessDate() throws Exception {
+    void shouldRollBusinessDate() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20190101").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(rollBusinessDateJob, jobParams);
 
@@ -59,7 +59,7 @@ class RollBusinessDateJobIntegrationTest {
     @Test
     @DatabaseSetup("/rollBusinessDateJob/RollBusinessDate_weekend_setup.xml")
     @ExpectedDatabase(value = "/rollBusinessDateJob/RollBusinessDate_weekend_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void testRollBusinessDateWeekend() throws Exception {
+    void shouldRollBusinessDateWeekend() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20190104").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(rollBusinessDateJob, jobParams);
 

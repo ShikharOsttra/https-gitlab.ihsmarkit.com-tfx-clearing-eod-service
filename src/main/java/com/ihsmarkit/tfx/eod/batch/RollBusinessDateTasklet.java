@@ -18,7 +18,6 @@ import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -49,14 +48,11 @@ public class RollBusinessDateTasklet implements Tasklet {
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
-    @Autowired
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
-    @Autowired
-    private SystemParameterRepository systemParameterRepository;
+    private final SystemParameterRepository systemParameterRepository;
 
-    @Autowired
-    private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
+    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
@@ -79,9 +75,10 @@ public class RollBusinessDateTasklet implements Tasklet {
         rollFutureValue(nextBusinessDate, FxSpotTickSizeEntity.class, entity -> entity.getFxSpotProduct().getId());
         rollFutureValue(nextBusinessDate, LogHaircutRateEntity.class, entity -> entity.getIssuer().getId());
         rollFutureValue(nextBusinessDate, BondHaircutRateEntity.class, BondHaircutRateEntity::getBondSubType, BondHaircutRateEntity::getRemainingDuration);
-        rollFutureValue(nextBusinessDate, EquityHaircutRateEntity.class, new Function[] {});
+        rollFutureValue(nextBusinessDate, EquityHaircutRateEntity.class, EquityHaircutRateEntity::getType);
     }
 
+    @SafeVarargs
     private <T extends FutureValueEntity> void rollFutureValue(
         final LocalDate nextBusinessDate,
         final Class<T> clazz,
@@ -109,6 +106,7 @@ public class RollBusinessDateTasklet implements Tasklet {
             .forEach(entityManager::persist);
     }
 
+    @SafeVarargs
     private <T extends FutureValueEntity> List<?> toFutureValueKey(final T entity, final Function<T, ?>... keyExtractors) {
         return Stream.of(keyExtractors)
             .map(keyExtractor -> keyExtractor.apply(entity))
