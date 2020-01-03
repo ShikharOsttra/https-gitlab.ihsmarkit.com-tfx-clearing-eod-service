@@ -1,0 +1,46 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-01"/>
+
+    <participant id="1" code="P11" name="TEST_PARTY11" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="2" code="P12" name="TEST_PARTY12" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+
+    <currency_pair id="1" base_ccy="USD" value_ccy="JPY"/>
+    <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="1" trade_date="2019-01-01" is_relevant_currency_trade="true" value_date="2019-01-03" is_exchange_business_date="true"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="1" trade_date="2019-01-02" is_relevant_currency_trade="true" value_date="2019-01-04" is_exchange_business_date="true" />
+
+    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
+    <haircut_rate id="1" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <log_haircut_rate id="1" issuer_bank_id="1"/>
+
+    <haircut_rate id="2" value="98.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <bond_haircut_rate id="2" bond_type="JGB" remaining_duration="ONE"/>
+
+    <haircut_rate id="6" value="79.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <equity_haircut_rate id="6"/>
+
+    <margin_ratio id="1" currency_pair_id="1" value="7.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio id="2" currency_pair_id="2" value="8.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio id="3" currency_pair_id="2" value="11.00" applicable_date="2019-01-02" business_date="2019-01-02"/>
+
+    <margin_ratio_multiplier id="1" participant_id="1" currency_pair_id="1" value="1.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier id="2" participant_id="1" currency_pair_id="2" value="2.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier id="3" participant_id="2" currency_pair_id="1" value="3.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier id="4" participant_id="2" currency_pair_id="2" value="4.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <margin_ratio_multiplier id="5" participant_id="2" currency_pair_id="2" value="5.00" applicable_date="2019-01-02" business_date="2019-01-02"/>
+
+    <participant_collateral_requirement id="1" participant_id="1" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-01" value="1"/>
+    <participant_collateral_requirement id="2" participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-01" business_date="2019-01-01" value="2"/>
+    <participant_collateral_requirement id="3" participant_id="2" purpose="MARKET_ENTRY_DEPOSIT" applicable_date="2019-01-01" business_date="2019-01-01" value="3"/>
+    <participant_collateral_requirement id="4" participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-01" business_date="2019-01-01" value="4"/>
+    <participant_collateral_requirement id="5" participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" applicable_date="2019-01-02" business_date="2019-01-02" value="5"/>
+
+    <fx_spot_product id="1" product_number="101" product_code="USD/JPY" trading_unit="0" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
+    <fx_spot_product id="2" product_number="102" product_code="EUR/JPY" trading_unit="0" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
+
+    <fx_spot_tick_size id="1" product_id="1" value="0.0001" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <fx_spot_tick_size id="2" product_id="1" value="0.0002" applicable_date="2019-01-02" business_date="2019-01-02"/>
+    <fx_spot_tick_size id="3" product_id="2" value="0.0003" applicable_date="2019-01-01" business_date="2019-01-01"/>
+
+</dataset>

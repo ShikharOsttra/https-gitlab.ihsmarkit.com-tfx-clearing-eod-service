@@ -26,6 +26,7 @@
     <fx_spot_product/>
     <fx_spot_eod_position_setting/>
     <fx_spot_single_ticket_limit/>
+    <fx_spot_tick_size/>
     <margin_alert_configuration/>
     <margin_ratio/>
     <margin_ratio_multiplier/>
