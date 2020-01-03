@@ -1,0 +1,91 @@
+<dataset>
+    <participant id="101" code="P11" name="Party_123" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="102" code="P22" name="Party_422" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+
+    <currency_pair id="1" base_ccy="USD" value_ccy="JPY"/>
+    <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
+
+    <fx_spot_product id="1" product_number="101" product_code="USD/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
+    <fx_spot_product id="2" product_number="102" product_code="EUR/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
+
+    <participant_position
+        id="1"
+        currency_pair_id="1"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="-1000000"
+        currency="JPY"
+        type="SELL"
+    />
+
+    <participant_position
+        id="2"
+        currency_pair_id="1"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="1254153"
+        currency="JPY"
+        type="BUY"
+    />
+
+    <participant_position
+        id="3"
+        currency_pair_id="2"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="263643.31"
+        currency="JPY"
+        type="BUY"
+    />
+
+    <participant_position
+        id="4"
+        currency_pair_id="1"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="102"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="542323.32"
+        currency="JPY"
+        type="SELL"
+    />
+
+    <participant_position
+        id="5"
+        currency_pair_id="1"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="102"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="-542343.54"
+        currency="JPY"
+        type="BUY"
+    />
+
+    <participant_position
+        id="6"
+        currency_pair_id="2"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="102"
+        trade_date="2222-02-02"
+        value_date="2222-02-03"
+        price="3.12"
+        amount="2353454"
+        currency="JPY"
+        type="SELL"
+    />
+
+
+
+</dataset>

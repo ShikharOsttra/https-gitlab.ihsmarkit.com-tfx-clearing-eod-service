@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
@@ -65,6 +66,8 @@ public class EOD2JobConfig {
     private final Step netTransactionDiaryLedger;
     @Qualifier(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
     private Step dailyMarkedDataLedger;
+    @Qualifier(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME)
+    private Step monthlyTradingVolumeLedger;
 
     @Qualifier(OPEN_POSITIONS_LEDGER_STEP_NAME)
     private Step openPositionsLedger;
@@ -83,6 +86,7 @@ public class EOD2JobConfig {
             .next(collateralBalanceLedger)
             .next(openPositionsLedger)
             .next(dailyMarkedDataLedger)
+            .next(monthlyTradingVolumeLedger)
 
             .build();
     }

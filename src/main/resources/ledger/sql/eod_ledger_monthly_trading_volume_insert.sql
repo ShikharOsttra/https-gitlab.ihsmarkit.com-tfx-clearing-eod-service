@@ -1,0 +1,21 @@
+INSERT INTO eod_ledger_monthly_trading_volume(business_date,
+                                              trade_date,
+                                              record_date,
+                                              participant_code,
+                                              participant_name,
+                                              participant_type,
+                                              currency_no,
+                                              currency_pair,
+                                              sell_trading_volume_in_unit,
+                                              buy_trading_volume_in_unit)
+
+VALUES (:businessDate,
+        :tradeDate,
+        :recordDate,
+        :participantCode,
+        :participantName,
+        :participantType,
+        :currencyPairNumber,
+        :currencyPairCode,
+        :sellTradingVolumeInUnit,
+        :buyTradingVolumeInUnit);
