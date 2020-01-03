@@ -1,15 +1,17 @@
 package com.ihsmarkit.tfx.eod.service;
 
-import static com.ihsmarkit.tfx.eod.config.CacheConfig.SWAP_POINT_CACHE;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.marketdata.EodSwapPointEntity;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,10 +20,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CurrencyPairSwapPointService {
 
-    private final CurrencyPairSwapPointMockProvider currencyPairSwapPointMockProvider;
+    private final Map<LocalDate, Map<CurrencyPairEntity, BigDecimal>> swapPoints = new ConcurrentHashMap<>();
 
-    @Cacheable(value = SWAP_POINT_CACHE, key = "T(com.ihsmarkit.tfx.eod.model.CurrencyPairKeyAndDate).of(#currencyPair, #date)")
+    private final EodSwapPointRepository eodSwapPointRepository;
+
     public BigDecimal getSwapPoint(final LocalDate date, final CurrencyPairEntity currencyPair) {
-        return currencyPairSwapPointMockProvider.getCurrencySwapPoint(date, currencyPair);
+        return swapPoints.computeIfAbsent(
+            date,
+            businessDate -> eodSwapPointRepository.findAllByDateOrderedByProductNumber(date).stream()
+                .collect(Collectors.toMap(EodSwapPointEntity::getCurrencyPair, EodSwapPointEntity::getSwapPoint)
+                )
+        ).get(currencyPair);
     }
 }

@@ -5,11 +5,13 @@ import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntity
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,16 +44,20 @@ class NETTransactionDiaryLedgerProcessorTest {
     private DailySettlementPriceService dailySettlementPriceService;
     @Mock
     private FXSpotProductService fxSpotProductService;
+    @Mock
+    private SODPricesProvider sodPricesProvider;
 
     @BeforeEach
     void init() {
-        this.processor = new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService);
+        this.processor =
+            new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService, sodPricesProvider);
     }
 
     @Test
     void processParticipantPositionEntity() {
         when(fxSpotProductService.getFxSpotProduct(any(CurrencyPairEntity.class))).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(BigDecimal.TEN);
+        when(sodPricesProvider.getPrice(anyString(), anyString())).thenReturn(Optional.of(BigDecimal.ONE.toString()));
 
         assertThat(processor.process(aParticipantPosition()))
             .isEqualTo(TransactionDiary.builder()
@@ -69,7 +75,7 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .clearDate(EMPTY)
                 .clearTime(EMPTY)
                 .clearingId(EMPTY)
-                .tradePrice("10")
+                .tradePrice("1")
                 .sellAmount(EMPTY)
                 .buyAmount(EMPTY)
                 .counterpartyCode(EMPTY)
