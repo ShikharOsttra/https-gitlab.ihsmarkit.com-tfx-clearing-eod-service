@@ -12,6 +12,7 @@ import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD2;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD2_COMPLETE;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD2_RUN;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.IDLE;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.INIT;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.LEDGER_COMPLETE;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.LEDGER_RUN;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_NO_TRADES;
@@ -38,11 +39,11 @@ import org.springframework.statemachine.guard.Guard;
 
 @EnableStateMachine
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
-    public enum States {IDLE, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
+    public enum States {IDLE, INIT, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
         NO_DSP_TRADES_DELAY, EOD1_READY, EOD1_RUN, EOD1_COMPLETE, EOD2, SWP_PNT_CHECK, SWP_PNT_NOTAPPROVED, SWP_PNT_APPROVED,
         SWP_PNT_DELAY, EOD2_RUN, EOD2_COMPLETE, LEDGER_RUN, LEDGER_COMPLETE, DATE_ROLL_RUN
     }
-    public enum Events {EOD}
+    public enum Events {EOD, STOP}
 
     private static final int WAIT_TIME = 1000;
 
@@ -57,6 +58,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     @Autowired
     @Qualifier("swpPointApprovedGuard")
     private Guard<States, Events> swpPointApprovedGuard;
+
+    @Autowired
+    @Qualifier("initAction")
+    private Action<States, Events> initAction;
 
     @Autowired
     @Qualifier("eod1runAction")
@@ -78,6 +83,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     @Qualifier("dateRollRunAction")
     private Action<States, Events> dateRollRunAction;
 
+
     @Override
     public void configure(StateMachineStateConfigurer<States, Events> states) throws Exception {
         states.
@@ -86,23 +92,21 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
             .choice(EOD1_RUN)
             .choice(EOD2_RUN)
             .choice(LEDGER_RUN)
-            .states(Set.of(EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, LEDGER_COMPLETE, DATE_ROLL_RUN))
+            .states(Set.of(INIT, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, LEDGER_COMPLETE, DATE_ROLL_RUN))
             .and()
                 .withStates()
                 .parent(EOD1)
                 .initial(DSP_CHECK)
-                .end(EOD1_READY)
                 .choice(NO_DSP_NO_TRADES)
                 .choice(DSP_NO_TRADES)
                 .choice(NO_DSP_TRADES)
-                .states(Set.of(NO_DSP_TRADES_DELAY, DSP_NO_TRADES_DELAY, NO_DSP_NO_TRADES_DELAY))
+                .states(Set.of(EOD1_READY, NO_DSP_TRADES_DELAY, DSP_NO_TRADES_DELAY, NO_DSP_NO_TRADES_DELAY))
             .and()
                 .withStates()
                 .parent(EOD2)
                 .initial(SWP_PNT_CHECK)
                 .choice(SWP_PNT_NOTAPPROVED)
-                .state(SWP_PNT_DELAY)
-                .end(SWP_PNT_APPROVED)
+                .states(Set.of(SWP_PNT_APPROVED, SWP_PNT_DELAY))
             ;
     }
 
@@ -110,9 +114,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     public void configure(StateMachineTransitionConfigurer<States, Events> transitions) throws Exception {
         transitions
             .withExternal()
-                .source(DSP_CHECK).target(NO_DSP_NO_TRADES)
+                .source(EOD1).target(IDLE).event(Events.STOP)
             .and().withExternal()
-                .source(IDLE).target(EOD1).event(Events.EOD)
+                .source(EOD2).target(IDLE).event(Events.STOP)
+            .and().withExternal()
+                .source(IDLE).target(INIT).event(Events.EOD)
+            .and().withExternal()
+                .source(INIT).target(EOD1).action(initAction)
+            .and().withExternal()
+                .source(DSP_CHECK).target(NO_DSP_NO_TRADES)
             .and().withChoice()
                 .source(NO_DSP_NO_TRADES)
                 .first(DSP_NO_TRADES, dspApprovedGuard)
@@ -165,88 +175,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
             .and().withExternal()
                 .source(DATE_ROLL_RUN).target(IDLE)
         ;
-    }
-
-    @Bean
-    public Action<States, Events> eod1runAction() {
-        return new Action<>() {
-            @Override
-            public void execute(StateContext<States, Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
-    public Action<States, Events> eod1CompleteAction() {
-        return new Action<>() {
-            @Override
-            public void execute(StateContext<States, Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
-    public Action<States, Events> eod2runAction() {
-        return new Action<>() {
-            @Override
-            public void execute(StateContext<States, Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
-    public Action<States, Events> ledgerRunAction() {
-        return new Action<>() {
-            @Override
-            public void execute(StateContext<States, Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
-    public Action<States, Events> dateRollRunAction() {
-        return new Action<>() {
-            @Override
-            public void execute(StateContext<States, Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
-    public Guard<States, Events> swpPointApprovedGuard() {
-        return new Guard<States, Events>() {
-
-            @Override
-            public boolean evaluate(StateContext<States, Events> context) {
-                return true;
-            }
-        };
-    }
-
-    @Bean
-    public Guard<States, Events> dspApprovedGuard() {
-        return new Guard<States, Events>() {
-
-            @Override
-            public boolean evaluate(StateContext<States, Events> context) {
-                return true;
-            }
-        };
-    }
-
-    @Bean
-    public Guard<States, Events> tradesInFlightGuard() {
-        return new Guard<States, Events>() {
-            @Override
-            public boolean evaluate(StateContext<States, Events> context) {
-                return false;
-            }
-        };
     }
 
     @Bean

@@ -1,0 +1,4 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-04"/>
+    <eod_status stage="DSP_APPROVED" business_date="2019-01-04" timestamp="2019-01-04 22:00:00" />
+</dataset>
