@@ -2,107 +2,92 @@ package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.service.EODCalculator.twoWayCollector;
+import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
-import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
-import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 @StepScope
 @RequiredArgsConstructor
-public class MonthlyTradingVolumeProcessor implements ItemProcessor<List<ParticipantPositionEntity>, List<MonthlyTradingVolumeItem>> {
+public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem> {
 
-    private final FxSpotProductDataProvider fxSpotProductDataProvider;
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
+
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
 
+    private final FXSpotProductService fxSpotProductService;
+
+    private final ParticipantPositionRepository participantPositionRepository;
+
     @Override
-    public List<MonthlyTradingVolumeItem> process(final List<ParticipantPositionEntity> item) {
-        return item.stream()
-            .collect(Collectors.groupingBy(ParticipantPositionKey::new))
-            .entrySet().stream()
-            .map(this::mapToTradingVolumeModel)
-            .collect(Collectors.toUnmodifiableList());
+    public MonthlyTradingVolumeItem process(final ParticipantAndCurrencyPair item) {
+
+        return participantPositionRepository.findAllByParticipantAndCurrencyPairAndTypeInAndTradeDateBetween(
+            item.getParticipant(),
+            item.getCurrencyPair(),
+            Set.of(BUY, SELL),
+            businessDate.with(firstDayOfMonth()),
+            businessDate.with(lastDayOfMonth())
+        ).collect(
+            twoWayCollector(
+                position -> position.getType() == BUY,
+                position -> position.getAmount().getValue(),
+                (buyAmount, sellAmount) -> mapToTradingVolumeModel(item, buyAmount, sellAmount)
+            )
+        );
     }
 
-    private MonthlyTradingVolumeItem mapToTradingVolumeModel(final Map.Entry<ParticipantPositionKey, List<ParticipantPositionEntity>> positionEntry) {
-        log.info("Building monthly trading volume for participant & currency pair: {}", positionEntry.getKey());
-
-        final List<ParticipantPositionEntity> positions = positionEntry.getValue();
-        final ParticipantEntity participant = positions.get(0).getParticipant();
-        final String currencyPairCode = positionEntry.getKey().getCurrencyPairCode();
-        final BigDecimal tradingUnit = fxSpotProductDataProvider.getTradingUnit(currencyPairCode);
-
-        // todo: math context?
-        final BigDecimal sellTradingPositionInUnit = getParticipantPositionVolumeBySide(positions, SELL)
-            .abs()
-            .divide(tradingUnit);
-        final BigDecimal buyTradingPositionInUnit = getParticipantPositionVolumeBySide(positions, BUY)
-            .abs()
-            .divide(tradingUnit);
+    private MonthlyTradingVolumeItem mapToTradingVolumeModel(
+        final ParticipantAndCurrencyPair item,
+        final Optional<BigDecimal> buyAmount,
+        final Optional<BigDecimal> sellAmount
+    ) {
+        final Long tradingUnit = fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getTradingUnit();
 
         return MonthlyTradingVolumeItem.builder()
-            .businessDate(Date.valueOf(businessDate))
+            .businessDate(businessDate.with(firstDayOfMonth()))
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
-            .participantCode(participant.getCode())
-            .participantName(participant.getName())
-            .participantType(formatEnum(participant.getType()))
-            .currencyPairCode(currencyPairCode)
-            .currencyPairNumber(fxSpotProductDataProvider.getProductNumber(currencyPairCode))
-            .sellTradingVolumeInUnit(formatBigDecimal(sellTradingPositionInUnit))
-            .buyTradingVolumeInUnit(formatBigDecimal(buyTradingPositionInUnit))
+            .participantCode(item.getParticipant().getCode())
+            .participantName(item.getParticipant().getName())
+            .participantType(formatEnum(item.getParticipant().getType()))
+            .currencyPairCode(item.getCurrencyPair().getCode())
+            .currencyPairNumber(fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getProductNumber())
+            .sellTradingVolumeInUnit(amountInUnit(sellAmount, tradingUnit))
+            .buyTradingVolumeInUnit(amountInUnit(buyAmount, tradingUnit))
             .build();
     }
 
-    private static BigDecimal getParticipantPositionVolumeBySide(final List<ParticipantPositionEntity> positions, final ParticipantPositionType positionType) {
-        return positions.stream()
-            .filter(item -> item.getType() == positionType)
-            .findFirst()
-            .map(ParticipantPositionEntity::getAmount)
-            .map(AmountEntity::getValue)
-            // todo: what is a default value if no position?
-            .orElse(BigDecimal.ZERO);
-    }
-
-    @ToString
-    @Getter
-    @EqualsAndHashCode
-    private static final class ParticipantPositionKey {
-        private final String currencyPairCode;
-        private final String participantCode;
-
-        ParticipantPositionKey(final ParticipantPositionEntity position) {
-            this.currencyPairCode = position.getCurrencyPair().getCode();
-            this.participantCode = position.getParticipant().getCode();
-        }
+    private String amountInUnit(final Optional<BigDecimal> amount, final Long tradingUnit) {
+        return amount.map(
+            value -> value.divide(BigDecimal.valueOf(tradingUnit), 0, RoundingMode.DOWN)
+        ).orElse(BigDecimal.ZERO)
+            .toString();
     }
 }

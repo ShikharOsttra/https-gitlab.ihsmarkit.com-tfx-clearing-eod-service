@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import lombok.Builder;
 import lombok.Value;
@@ -9,7 +9,7 @@ import lombok.Value;
 @Builder
 public class MonthlyTradingVolumeItem {
 
-    private final Date businessDate;
+    private final LocalDate businessDate;
     private final String tradeDate;
     private final String recordDate;
     private final String participantCode;

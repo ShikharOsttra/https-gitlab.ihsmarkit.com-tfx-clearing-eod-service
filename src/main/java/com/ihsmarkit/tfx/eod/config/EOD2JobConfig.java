@@ -5,18 +5,17 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_FLOW_NAME;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -28,8 +27,9 @@ import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
-import com.ihsmarkit.tfx.eod.config.ledger.LedgerStepFactory;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
+import com.ihsmarkit.tfx.eod.config.ledger.LedgerStepFactory;
+import com.ihsmarkit.tfx.eod.config.ledger.MonthlyTradingVolumeLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
 
@@ -38,8 +38,12 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Configuration
 @Import({
-    CollateralListLedgerConfig.class, CollateralBalanceLedgerConfig.class, TransactionDiaryLedgerConfig.class,
-    OpenPositionsLedgerConfig.class, DailyMarketDataLedgerConfig.class
+    CollateralListLedgerConfig.class,
+    CollateralBalanceLedgerConfig.class,
+    TransactionDiaryLedgerConfig.class,
+    OpenPositionsLedgerConfig.class,
+    DailyMarketDataLedgerConfig.class,
+    MonthlyTradingVolumeLedgerConfig.class
 })
 @ComponentScan(basePackageClasses = LedgerStepFactory.class)
 public class EOD2JobConfig {
@@ -54,40 +58,34 @@ public class EOD2JobConfig {
 
     private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
 
+    @Qualifier(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
+    private Step dailyMarkedDataLedger;
+    @Qualifier(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
+    private final Flow transactionDiaryLedger;
+    @Qualifier(OPEN_POSITIONS_LEDGER_STEP_NAME)
+    private Step openPositionsLedger;
     @Qualifier(COLLATERAL_LIST_LEDGER_STEP_NAME)
     private final Step collateralListLedger;
     @Qualifier(COLLATERAL_BALANCE_LEDGER_STEP_NAME)
     private final Step collateralBalanceLedger;
-    @Qualifier(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    private final Step tradeTransactionDiaryLedger;
-    @Qualifier(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    private final Step sodTransactionDiaryLedger;
-    @Qualifier(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    private final Step netTransactionDiaryLedger;
-    @Qualifier(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
-    private Step dailyMarkedDataLedger;
-    @Qualifier(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME)
-    private Step monthlyTradingVolumeLedger;
+    @Qualifier(MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME)
+    private Flow monthlyTradingVolumeLedger;
 
-    @Qualifier(OPEN_POSITIONS_LEDGER_STEP_NAME)
-    private Step openPositionsLedger;
 
     @Bean(name = EOD2_BATCH_JOB_NAME)
     public Job eod2Job() {
         return jobs.get(EOD2_BATCH_JOB_NAME)
-            .start(swapPnL())
+            .flow(swapPnL())
             .next(totalVM())
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
-            .next(sodTransactionDiaryLedger)
-            .next(tradeTransactionDiaryLedger)
-            .next(netTransactionDiaryLedger)
+            .next(dailyMarkedDataLedger)
+            .next(transactionDiaryLedger)
+            .next(openPositionsLedger)
             .next(collateralListLedger)
             .next(collateralBalanceLedger)
-            .next(openPositionsLedger)
-            .next(dailyMarkedDataLedger)
             .next(monthlyTradingVolumeLedger)
-
+            .end()
             .build();
     }
 

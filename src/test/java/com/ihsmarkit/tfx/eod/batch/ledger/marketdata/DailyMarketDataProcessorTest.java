@@ -74,8 +74,8 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getBusinessDate
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", Date.valueOf(BUSINESS_DATE)),
-                tuple("EUR/JPY", Date.valueOf(BUSINESS_DATE))
+                tuple("USD/JPY", BUSINESS_DATE),
+                tuple("EUR/JPY", BUSINESS_DATE)
             );
     }
 

@@ -3,8 +3,12 @@ package com.ihsmarkit.tfx.eod.config.ledger;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_FLOW_NAME;
 
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.support.SimpleFlow;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.orm.JpaQueryProvider;
@@ -43,23 +47,32 @@ public class TransactionDiaryLedgerConfig {
     private final SODQueryProvider sodQueryProvider;
     private final NETQueryProvider netQueryProvider;
 
+    @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
+    Flow transactionDiaryLedger() {
+        return new FlowBuilder<SimpleFlow>(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
+            .start(tradeTransactionDiaryLedger())
+            .next(sodTransactionDiaryLedger())
+            .next(netTransactionDiaryLedger())
+            .build();
+    }
+
     @Bean(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    protected Step tradeTransactionDiaryLedger() {
+    Step tradeTransactionDiaryLedger() {
         return getStep(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(tradeListQueryProvider), tradeTransactionDiaryLedgerProcessor);
     }
 
     @Bean(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    protected Step sodTransactionDiaryLedger() {
+    Step sodTransactionDiaryLedger() {
         return getStep(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(sodQueryProvider), sodTransactionDiaryLedgerProcessor);
     }
 
     @Bean(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    protected Step netTransactionDiaryLedger() {
+    Step netTransactionDiaryLedger() {
         return getStep(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(netQueryProvider), netTransactionDiaryLedgerProcessor);
     }
 
     @Bean
-    protected ItemWriter<TransactionDiary> transactionDiaryWriter() {
+    ItemWriter<TransactionDiary> transactionDiaryWriter() {
         return ledgerStepFactory.listWriter(transactionDiaryLedgerSql);
     }
 

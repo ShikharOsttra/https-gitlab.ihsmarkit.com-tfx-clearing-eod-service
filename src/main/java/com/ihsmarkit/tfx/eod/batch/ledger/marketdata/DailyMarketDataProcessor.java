@@ -6,7 +6,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,7 +83,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final BigDecimal previousDsp = getDspValue(dsp, DailySettlementPriceEntity::getPreviousDailySettlementPrice);
 
         return DailyMarketDataEnriched.builder()
-            .businessDate(Date.valueOf(businessDate))
+            .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
             .currencyNumber(fxSpotProduct.getProductNumber())

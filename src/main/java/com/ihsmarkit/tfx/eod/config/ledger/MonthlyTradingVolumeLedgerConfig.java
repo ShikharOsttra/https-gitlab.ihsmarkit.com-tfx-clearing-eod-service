@@ -1,21 +1,26 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME;
-
-import java.util.List;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.support.SimpleFlow;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeReader;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeQueryProvider;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
-import com.ihsmarkit.tfx.eod.support.ListItemWriter;
 
 import lombok.AllArgsConstructor;
 
@@ -26,21 +31,39 @@ public class MonthlyTradingVolumeLedgerConfig {
     private final LedgerStepFactory ledgerStepFactory;
     @Value("classpath:/ledger/sql/eod_ledger_monthly_trading_volume_insert.sql")
     private final Resource monthlyTradingVolumeLedgerSql;
-    private final MonthlyTradingVolumeReader monthlyTradingVolumeReader;
+    @Value("${eod.ledger.monthly.trading.volume.chunk.size:1000}")
+    private final int monthlyTradingVolumeChunkSize;
+    private final MonthlyTradingVolumeQueryProvider monthlyTradingVolumeQueryProvider;
     private final MonthlyTradingVolumeProcessor monthlyTradingVolumeProcessor;
+    private final LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
+
+    @Bean(MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME)
+    Flow monthlyTradingVolumeLedgerFlow() {
+        return new FlowBuilder<SimpleFlow>(MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME)
+            .start(lastTradingDateInMonthDecider).on(TRUE.toString()).to(monthlyTradingVolumeLedger())
+            .from(lastTradingDateInMonthDecider).on(FALSE.toString()).end()
+            .build();
+    }
 
     @Bean(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME)
-    protected Step monthlyTradingVolumeLedger() {
+    Step monthlyTradingVolumeLedger() {
         return ledgerStepFactory
-            .<List<ParticipantPositionEntity>, List<MonthlyTradingVolumeItem>>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME, 1)
-            .reader(monthlyTradingVolumeReader)
+            .<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME, monthlyTradingVolumeChunkSize)
+            .reader(monthlyTradingVolumeReader())
             .processor(monthlyTradingVolumeProcessor)
-            .writer(new ListItemWriter<>(monthlyTradingVolumeWriter()))
+            .writer(monthlyTradingVolumeWriter())
             .build();
     }
 
     @Bean
-    protected ItemWriter<MonthlyTradingVolumeItem> monthlyTradingVolumeWriter() {
+    JpaPagingItemReader<ParticipantAndCurrencyPair> monthlyTradingVolumeReader() {
+        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(monthlyTradingVolumeQueryProvider, monthlyTradingVolumeChunkSize)
+            .transacted(true)
+            .build();
+    }
+
+    @Bean
+    ItemWriter<MonthlyTradingVolumeItem> monthlyTradingVolumeWriter() {
         return ledgerStepFactory.listWriter(monthlyTradingVolumeLedgerSql);
     }
 

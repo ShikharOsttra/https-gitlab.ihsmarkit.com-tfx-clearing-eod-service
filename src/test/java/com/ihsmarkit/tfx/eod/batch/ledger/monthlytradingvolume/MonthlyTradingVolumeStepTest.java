@@ -11,6 +11,7 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
@@ -34,14 +35,46 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     @Test
     @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_setup.xml")
     @ExpectedDatabase(value = "/eod2Job/MonthlyTradingVolumeStepTest_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void shouldRunMonthlyTradingVolumeStep() {
-        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2222, 2, 2, 11, 30, 0));
+    void shouldRunMonthlyTradingVolumeStep() throws Exception {
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
         final JobParameters jobParams = new JobParametersBuilder()
-            .addString("businessDate", "22220202")
+            .addString("businessDate", "20190131")
             .toJobParameters();
         final JobExecution jobExecution = jobLauncherTestUtils.launchStep(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME, jobParams);
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+    }
+
+    @Test
+    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    void shouldRunMonthlyTradingVolumeStepOnLastTradingDayInMonth() throws Exception {
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
+
+        final JobParameters jobParams = new JobParametersBuilder()
+            .addString("businessDate", "20190130")
+            .toJobParameters();
+        final JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParams);
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        assertThat(jobExecution.getStepExecutions())
+            .extracting(StepExecution::getStepName)
+            .contains(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME);
+    }
+
+    @Test
+    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    void shouldNotRunMonthlyTradingVolumeStepOnNotLastTradingDayInMonth() throws Exception {
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
+
+        final JobParameters jobParams = new JobParametersBuilder()
+            .addString("businessDate", "20190129")
+            .toJobParameters();
+        final JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParams);
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        assertThat(jobExecution.getStepExecutions())
+            .extracting(StepExecution::getStepName)
+            .doesNotContain(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME);
     }
 
 }

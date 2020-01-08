@@ -344,4 +344,26 @@
         trade_type=""
         reference=""
         user_reference=""/>
+
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-10-01"
+        trade_date="2019/10/07"
+        participant_code="P11"
+        participant_name="Party_123"
+        participant_type="LP"
+        currency_no="102"
+        currency_pair="EUR/USD"
+        sell_trading_volume_in_unit="0"
+        buy_trading_volume_in_unit="10000"/>
+
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-10-01"
+        trade_date="2019/10/07"
+        participant_code="P23"
+        participant_name="Party_423"
+        participant_type="FXB"
+        currency_no="102"
+        currency_pair="EUR/USD"
+        sell_trading_volume_in_unit="4000000"
+        buy_trading_volume_in_unit="0"/>
 </dataset>
