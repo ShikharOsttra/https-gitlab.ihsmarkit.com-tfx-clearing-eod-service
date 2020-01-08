@@ -34,9 +34,11 @@ class StateMachineConfigTest {
     @MockBean(name = "swpPointApprovedGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> swpPointApprovedGuard;
 
-
     @MockBean(name = "eod1runAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> eod1runAction;
+
+    @MockBean(name = "initAction")
+    private Action<StateMachineConfig.States, StateMachineConfig.Events> initAction;
 
     @MockBean(name = "eod1CompleteAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> eod1CompleteAction;
