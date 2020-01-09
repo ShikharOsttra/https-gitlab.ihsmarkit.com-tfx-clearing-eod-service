@@ -259,7 +259,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="4000000"
+        amount="-4000000"
         currency="JPY"
         type="SELL"
     />

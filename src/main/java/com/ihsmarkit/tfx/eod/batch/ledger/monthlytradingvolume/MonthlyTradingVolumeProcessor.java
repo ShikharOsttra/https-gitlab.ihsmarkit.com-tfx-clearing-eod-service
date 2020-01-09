@@ -57,7 +57,7 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
         ).collect(
             twoWayCollector(
                 position -> position.getType() == BUY,
-                position -> position.getAmount().getValue(),
+                position -> position.getAmount().getValue().abs(),
                 (buyAmount, sellAmount) -> mapToTradingVolumeModel(item, buyAmount, sellAmount)
             )
         );
