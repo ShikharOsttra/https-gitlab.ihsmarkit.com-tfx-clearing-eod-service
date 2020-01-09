@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
 import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.EOD1_COMPLETE;
+import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.EOD2_COMPLETE;
 import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
@@ -102,6 +103,23 @@ public class StateMachineActionsConfig {
                 eodStatusRepository.save(
                     EodStatusEntity.builder()
                         .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
+                        .timestamp(LocalDateTime.now())
+                        .build()
+                );
+            }
+        };
+    }
+
+    @Bean
+    public Action<StateMachineConfig.States, StateMachineConfig.Events> eod2CompleteAction() {
+        return new Action<>() {
+            @Override
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
+
+                eodStatusRepository.save(
+                    EodStatusEntity.builder()
+                        .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
                         .timestamp(LocalDateTime.now())
                         .build()
                 );

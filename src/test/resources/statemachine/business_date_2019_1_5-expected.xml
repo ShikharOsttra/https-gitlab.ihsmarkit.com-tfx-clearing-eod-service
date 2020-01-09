@@ -3,4 +3,5 @@
     <eod_status stage="DSP_APPROVED" business_date="2019-01-05"/>
     <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-05"/>
     <eod_status stage="EOD1_COMPLETE" business_date="2019-01-05"/>
+    <eod_status stage="EOD2_COMPLETE" business_date="2019-01-05"/>
 </dataset>

@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DATE_ROLL;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DATE_ROLL_RUN;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DSP_CHECK;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DSP_NO_TRADES;
@@ -47,7 +48,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
     public enum States { IDLE, READY, INIT, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
         NO_DSP_TRADES_DELAY, EOD1_READY, EOD1_RUN, EOD1_COMPLETE, EOD2, SWP_PNT_CHECK, SWP_PNT_NOTAPPROVED, SWP_PNT_APPROVED,
-        SWP_PNT_DELAY, EOD2_RUN, EOD2_COMPLETE, DATE_ROLL_RUN
+        SWP_PNT_DELAY, EOD2_RUN, EOD2_COMPLETE, DATE_ROLL, DATE_ROLL_RUN
     }
     public enum Events { EOD, STOP }
 
@@ -82,6 +83,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     private Action<States, Events> eod1CompleteAction;
 
     @Autowired
+    @Qualifier("eod2CompleteAction")
+    private Action<States, Events> eod2CompleteAction;
+
+    @Autowired
     @Qualifier("eod2runAction")
     private Action<States, Events> eod2runAction;
 
@@ -97,7 +102,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
             .initial(IDLE)
             .choice(EOD1_RUN)
             .choice(EOD2_RUN)
-            .states(Set.of(INIT, READY, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, DATE_ROLL_RUN))
+            .states(Set.of(INIT, READY, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, DATE_ROLL, DATE_ROLL_RUN))
             .and().withStates()
                 .parent(EOD1)
                 .initial(DSP_CHECK)
@@ -169,7 +174,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
                 .first(EOD2_COMPLETE, noErrorGuard())
                 .last(IDLE)
             .and().withExternal()
-                .source(EOD2_COMPLETE).target(DATE_ROLL_RUN).action(dateRollRunAction)
+                .source(EOD2_COMPLETE).target(DATE_ROLL).action(eod2CompleteAction)
+            .and().withExternal()
+                .source(DATE_ROLL).target(DATE_ROLL_RUN).action(dateRollRunAction)
             .and().withExternal()
                 .source(DATE_ROLL_RUN).target(IDLE);
     }
