@@ -3,7 +3,9 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collateralbalance;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +24,7 @@ import lombok.AllArgsConstructor;
 @StepScope
 @Component
 @AllArgsConstructor
-public class RequiredAmountProvider {
+public class CollateralRequirementProvider {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -30,6 +32,8 @@ public class RequiredAmountProvider {
     private final ParticipantCollateralRequirementRepository requirementRepository;
 
     private final Lazy<Table<Long, CollateralPurpose, BigDecimal>> requiredAmounts = Lazy.of(this::loadRequiredAmount);
+
+    private final Lazy<Map<Long, LocalDate>> nextApplicableDateForClearingDeposit = Lazy.of(this::loadNextApplicableDateForClearingDeposit);
 
     private Table<Long, CollateralPurpose, BigDecimal> loadRequiredAmount() {
 
@@ -41,8 +45,18 @@ public class RequiredAmountProvider {
                 HashBasedTable::create));
     }
 
+    private Map<Long, LocalDate> loadNextApplicableDateForClearingDeposit() {
+        return requirementRepository.findFutureOnlyByBusinessDate(businessDate).stream()
+            .filter(requirement -> requirement.getPurpose() == CollateralPurpose.CLEARING_DEPOSIT)
+            .collect(Collectors.toMap(requirement -> requirement.getParticipant().getId(), ParticipantCollateralRequirementEntity::getApplicableDate));
+    }
+
     public Optional<BigDecimal> getRequiredAmount(final Long participantId, final CollateralPurpose purpose) {
         return Optional.ofNullable(requiredAmounts.get().get(participantId, purpose));
+    }
+
+    public Optional<LocalDate> getNextApplicableDateForClearingDeposit(final Long participantId) {
+        return Optional.ofNullable(nextApplicableDateForClearingDeposit.get().get(participantId));
     }
 
 }
