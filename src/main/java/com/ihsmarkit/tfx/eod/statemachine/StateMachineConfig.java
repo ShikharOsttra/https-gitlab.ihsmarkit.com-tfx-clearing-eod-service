@@ -19,6 +19,7 @@ import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DS
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_NO_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_TRADES;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_TRADES_DELAY;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.READY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_APPROVED;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_CHECK;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_DELAY;
@@ -37,13 +38,20 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings({
+    "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
+    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
+    "SIC_INNER_SHOULD_BE_STATIC_ANON"
+})
 @EnableStateMachine
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
-    public enum States {IDLE, INIT, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
+    public enum States { IDLE, READY, INIT, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
         NO_DSP_TRADES_DELAY, EOD1_READY, EOD1_RUN, EOD1_COMPLETE, EOD2, SWP_PNT_CHECK, SWP_PNT_NOTAPPROVED, SWP_PNT_APPROVED,
         SWP_PNT_DELAY, EOD2_RUN, EOD2_COMPLETE, LEDGER_RUN, LEDGER_COMPLETE, DATE_ROLL_RUN
     }
-    public enum Events {EOD, STOP}
+    public enum Events { EOD, STOP }
 
     private static final int WAIT_TIME = 1000;
 
@@ -62,6 +70,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     @Autowired
     @Qualifier("initAction")
     private Action<States, Events> initAction;
+
+    @Autowired
+    @Qualifier("resetErrorAction")
+    private Action<States, Events> resetErrorActionBean;
 
     @Autowired
     @Qualifier("eod1runAction")
@@ -85,40 +97,39 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
 
 
     @Override
-    public void configure(StateMachineStateConfigurer<States, Events> states) throws Exception {
+    public void configure(final StateMachineStateConfigurer<States, Events> states) throws Exception {
         states.
             withStates()
             .initial(IDLE)
             .choice(EOD1_RUN)
             .choice(EOD2_RUN)
             .choice(LEDGER_RUN)
-            .states(Set.of(INIT, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, LEDGER_COMPLETE, DATE_ROLL_RUN))
-            .and()
-                .withStates()
+            .states(Set.of(INIT, READY, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, LEDGER_COMPLETE, DATE_ROLL_RUN))
+            .and().withStates()
                 .parent(EOD1)
                 .initial(DSP_CHECK)
                 .choice(NO_DSP_NO_TRADES)
                 .choice(DSP_NO_TRADES)
                 .choice(NO_DSP_TRADES)
                 .states(Set.of(EOD1_READY, NO_DSP_TRADES_DELAY, DSP_NO_TRADES_DELAY, NO_DSP_NO_TRADES_DELAY))
-            .and()
-                .withStates()
+            .and().withStates()
                 .parent(EOD2)
                 .initial(SWP_PNT_CHECK)
                 .choice(SWP_PNT_NOTAPPROVED)
-                .states(Set.of(SWP_PNT_APPROVED, SWP_PNT_DELAY))
-            ;
+                .states(Set.of(SWP_PNT_APPROVED, SWP_PNT_DELAY));
     }
 
     @Override
-    public void configure(StateMachineTransitionConfigurer<States, Events> transitions) throws Exception {
+    public void configure(final StateMachineTransitionConfigurer<States, Events> transitions) throws Exception {
         transitions
             .withExternal()
                 .source(EOD1).target(IDLE).event(Events.STOP)
             .and().withExternal()
                 .source(EOD2).target(IDLE).event(Events.STOP)
             .and().withExternal()
-                .source(IDLE).target(INIT).event(Events.EOD)
+                .source(IDLE).target(READY).action(resetErrorActionBean)
+            .and().withExternal()
+                .source(READY).target(INIT).event(Events.EOD)
             .and().withExternal()
                 .source(INIT).target(EOD1).action(initAction)
             .and().withExternal()
@@ -173,16 +184,25 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
             .and().withExternal()
                 .source(LEDGER_COMPLETE).target(DATE_ROLL_RUN).action(dateRollRunAction)
             .and().withExternal()
-                .source(DATE_ROLL_RUN).target(IDLE)
-        ;
+                .source(DATE_ROLL_RUN).target(IDLE);
     }
 
     @Bean
     public Guard<States, Events> noErrorGuard() {
         return new Guard<States, Events>() {
             @Override
-            public boolean evaluate(StateContext<States, Events> context) {
+            public boolean evaluate(final StateContext<States, Events> context) {
                 return !context.getStateMachine().hasStateMachineError();
+            }
+        };
+    }
+
+    @Bean
+    public Action<StateMachineConfig.States, StateMachineConfig.Events> resetErrorAction() {
+        return new Action<>() {
+            @Override
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+                context.getStateMachine().setStateMachineError(null);
             }
         };
     }

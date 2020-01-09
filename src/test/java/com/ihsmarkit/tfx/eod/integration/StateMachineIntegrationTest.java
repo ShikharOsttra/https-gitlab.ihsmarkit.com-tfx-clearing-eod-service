@@ -5,9 +5,9 @@ import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DSP_NO_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD1;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD2;
-import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.IDLE;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_NO_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_TRADES_DELAY;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.READY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_DELAY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,6 +37,8 @@ import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
@@ -46,6 +48,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 )
 @TestPropertySource("classpath:/application.properties")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressFBWarnings("MDM_THREAD_YIELD")
 public class StateMachineIntegrationTest {
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
@@ -60,7 +63,7 @@ public class StateMachineIntegrationTest {
         stateMachine.sendEvent(StateMachineConfig.Events.EOD);
         Thread.sleep(1000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,1));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 1));
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, NO_DSP_TRADES_DELAY);
 
     }
@@ -72,10 +75,15 @@ public class StateMachineIntegrationTest {
         stateMachine.sendEvent(StateMachineConfig.Events.EOD);
         Thread.sleep(1000);
 
-        eodStatusRepository.save(EodStatusEntity.builder().id(new EodStatusCompositeId(DSP_APPROVED, LocalDate.of(2019,1,1))).timestamp(LocalDateTime.now()).build());
+        eodStatusRepository.save(
+            EodStatusEntity.builder()
+                .id(new EodStatusCompositeId(DSP_APPROVED, LocalDate.of(2019, 1, 1)))
+                .timestamp(LocalDateTime.now())
+                .build()
+        );
         Thread.sleep(1000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,1));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 1));
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
     }
 
@@ -87,7 +95,7 @@ public class StateMachineIntegrationTest {
 
         Thread.sleep(5000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,2));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 2));
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, NO_DSP_NO_TRADES_DELAY);
 
     }
@@ -99,7 +107,7 @@ public class StateMachineIntegrationTest {
         stateMachine.sendEvent(StateMachineConfig.Events.EOD);
         Thread.sleep(1000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,3));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 3));
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, DSP_NO_TRADES_DELAY);
 
     }
@@ -112,7 +120,7 @@ public class StateMachineIntegrationTest {
 
         Thread.sleep(1000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,4));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 4));
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
 
     }
@@ -125,8 +133,8 @@ public class StateMachineIntegrationTest {
 
         Thread.sleep(2000);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019,1,5));
-        assertThat(stateMachine.getState().getIds()).containsOnly(IDLE);
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 5));
+        assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
     }
 

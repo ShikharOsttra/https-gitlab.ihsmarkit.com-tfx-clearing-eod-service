@@ -16,6 +16,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.guard.Guard;
@@ -27,8 +28,16 @@ import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.SneakyThrows;
 
+@Configuration
+@SuppressFBWarnings({
+    "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
+    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
+    "SIC_INNER_SHOULD_BE_STATIC_ANON",
+    "UPM_UNCALLED_PRIVATE_METHOD"
+})
 public class StateMachineActionsConfig {
 
 
@@ -42,12 +51,12 @@ public class StateMachineActionsConfig {
     private JobLauncher jobLauncher;
 
     @Autowired
-    @Qualifier(value = "eod1Job")
+    @Qualifier("eod1Job")
     private Job eod1Job;
 
 
     @Autowired
-    @Qualifier(value = "eod2Job")
+    @Qualifier("eod2Job")
     private Job eod2Job;
 
     @Autowired
@@ -70,7 +79,7 @@ public class StateMachineActionsConfig {
         return new Action<>() {
             @Override
             @SneakyThrows
-            public void execute(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
                 final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
                 jobLauncher.run(eod1Job, getJobParameters(businessDate));
             }
@@ -81,7 +90,7 @@ public class StateMachineActionsConfig {
     public Action<StateMachineConfig.States, StateMachineConfig.Events> eod1CompleteAction() {
         return new Action<>() {
             @Override
-            public void execute(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
                 final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
 
                 eodStatusRepository.save(
@@ -99,7 +108,7 @@ public class StateMachineActionsConfig {
         return new Action<>() {
             @Override
             @SneakyThrows
-            public void execute(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
                 final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
                 jobLauncher.run(eod2Job, getJobParameters(businessDate));
             }
@@ -110,7 +119,7 @@ public class StateMachineActionsConfig {
     public Action<StateMachineConfig.States, StateMachineConfig.Events> ledgerRunAction() {
         return new Action<>() {
             @Override
-            public void execute(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
                 //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
             }
         };
@@ -120,7 +129,7 @@ public class StateMachineActionsConfig {
     public Action<StateMachineConfig.States, StateMachineConfig.Events> dateRollRunAction() {
         return new Action<>() {
             @Override
-            public void execute(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
                 //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
             }
         };
@@ -131,8 +140,8 @@ public class StateMachineActionsConfig {
         return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
 
             @Override
-            public boolean evaluate(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
+            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
                 return eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, date));
             }
         };
@@ -143,8 +152,8 @@ public class StateMachineActionsConfig {
         return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
 
             @Override
-            public boolean evaluate(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
+            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
                 return eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.DSP_APPROVED, date));
             }
         };
@@ -154,8 +163,8 @@ public class StateMachineActionsConfig {
     public Guard<StateMachineConfig.States, StateMachineConfig.Events> tradesInFlightGuard() {
         return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
             @Override
-            public boolean evaluate(StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
+            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
+                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
                 final boolean tradesInFlight = tradeRepository.existsTradeInFlightForDate(date);
                 return !tradesInFlight;
             }
