@@ -1,8 +1,23 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.configuration.JobLocator;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.NoSuchJobException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +32,11 @@ import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class EODControlService {
 
     private final SystemParameterRepository systemParameterRepository;
@@ -29,37 +46,72 @@ public class EODControlService {
 
     private final List<EodDataRepository> eodDataRepositories;
 
-    @Transactional
-    public LocalDate undoLatestEODResults() {
+    private final JobLauncher jobLauncher;
+    private final JobLocator jobLocator;
 
-        final LocalDate currentBusinessDate = getCurrentBusinessDate();
-        final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
-
-        tradeRepository.deleteAllByTransactionTypeAndTradeDate(TransactionType.BALANCE, currentBusinessDate);
-        eodDataRepositories.forEach(repository -> repository.deleteAllByDate(currentBusinessDate));
-        removeEODStageRecordsForDate(currentBusinessDate);
-
-        setCurrentBusinessDate(previousBusinessDate);
-
+    public LocalDate getCurrentBusinessDay() {
         return getCurrentBusinessDate();
     }
 
-    private void removeEODStageRecordsForDate(LocalDate businessDate) {
-        final EodStatusCompositeId eod1CompleteStatus = new EodStatusCompositeId(EodStage.EOD1_COMPLETE, businessDate);
-        final EodStatusCompositeId eod2CompleteStatus = new EodStatusCompositeId(EodStage.EOD2_COMPLETE, businessDate);
-        final EodStatusCompositeId dspApprovedStatus = new EodStatusCompositeId(EodStage.DSP_APPROVED, businessDate);
-        final EodStatusCompositeId swapPointsApprovedStatus = new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, businessDate);
-        if (eodStatusRepository.existsById(eod1CompleteStatus)) {
-            eodStatusRepository.deleteById(eod1CompleteStatus);
+    @Transactional
+    public LocalDate undoPreviousDayEOD() {
+        final LocalDate currentBusinessDate = getCurrentBusinessDate();
+        undoEODByDate(currentBusinessDate);
+
+        final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
+
+        if (previousBusinessDate.isEqual(currentBusinessDate)) {
+            return previousBusinessDate;
+        } else {
+            undoEODByDate(previousBusinessDate);
+            setCurrentBusinessDate(previousBusinessDate);
         }
+        return currentBusinessDate;
+    }
+
+    @Transactional
+    public LocalDate undoCurrentDayEOD() {
+        final LocalDate currentBusinessDate = getCurrentBusinessDate();
+        undoEODByDate(currentBusinessDate);
+        return currentBusinessDate;
+    }
+
+    public LocalDate runEOD(final String jobName) {
+        final LocalDate currentBusinessDay = getCurrentBusinessDay();
+        triggerEOD(jobName, currentBusinessDay);
+        return currentBusinessDay;
+    }
+
+    private void triggerEOD(final String jobName, final LocalDate businessDate) {
+        try {
+            final Job job = jobLocator.getJob(jobName);
+            final JobParameters params = new JobParametersBuilder()
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
+                .addString(CURRENT_TSP_JOB_PARAM_NAME, LocalDateTime.now().toString())
+                .toJobParameters();
+            jobLauncher.run(job, params);
+        } catch (final NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException
+            | JobInstanceAlreadyCompleteException | JobParametersInvalidException ex) {
+            log.error("exception while triggering jobName: {} on businessDate: {} with message: {}", jobName, businessDate, ex.getMessage(), ex);
+        }
+    }
+
+    private void undoEODByDate(final LocalDate currentBusinessDate) {
+        tradeRepository.deleteAllByTransactionTypeAndTradeDate(TransactionType.BALANCE, currentBusinessDate);
+        eodDataRepositories.forEach(repository -> repository.deleteAllByDate(currentBusinessDate));
+        removeEODStageRecordsForDate(currentBusinessDate);
+    }
+
+    private void removeEODStageRecordsForDate(final LocalDate businessDate) {
+        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.EOD1_COMPLETE, businessDate));
+        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.EOD2_COMPLETE, businessDate));
+        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.DSP_APPROVED, businessDate));
+        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, businessDate));
+    }
+
+    private void deleteEodStatusIfExist(final EodStatusCompositeId eod2CompleteStatus) {
         if (eodStatusRepository.existsById(eod2CompleteStatus)) {
             eodStatusRepository.deleteById(eod2CompleteStatus);
-        }
-        if (eodStatusRepository.existsById(dspApprovedStatus)) {
-            eodStatusRepository.deleteById(dspApprovedStatus);
-        }
-        if (eodStatusRepository.existsById(swapPointsApprovedStatus)) {
-            eodStatusRepository.deleteById(swapPointsApprovedStatus);
         }
     }
 
@@ -67,11 +119,11 @@ public class EODControlService {
         return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
     }
 
-    private void setCurrentBusinessDate(LocalDate businessDate) {
+    private void setCurrentBusinessDate(final LocalDate businessDate) {
         systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, businessDate);
     }
 
-    private LocalDate getPreviousBusinessDate(LocalDate currentBusinessDate) {
+    private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
         return calendarRepository.findPrevBankBusinessDate(currentBusinessDate).orElse(currentBusinessDate);
     }
 }

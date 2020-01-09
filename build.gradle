@@ -166,12 +166,33 @@ test {
 
 compileJava {
     options.encoding = 'UTF-8'
-    options.compilerArgs << '-parameters' //<< "-Xlint:unchecked" << "-Xlint:deprecation" << "-Werror" << "-Xmaxerrs" << "1000"
+    options.compilerArgs << '-parameters' << '-ApojoMetamodelGeneratorPackagesToScan=com.ihsmarkit.tfx.eod.model.dto'
 }
 
 ext.additionalJacocoExclusions = [
         // quite hard to verify invocation of TradeHolder.merge
-        '**/eod/batch/ledger/marketdata/DailyMarketDataReader$TradeHolder*'
+        '**/eod/batch/ledger/marketdata/DailyMarketDataReader$TradeHolder*',
+        '**/eod/model/dto/*',
+        '**/eod/api/*',
+        '**/eod/service/EODControlService*', //non-production code
+        '**/eod/controller/EODServiceController*', //non-production code
 ]
 
-jarPublishing()
+task contractsJar(type: Jar) {
+    archiveClassifier.set('contracts')
+    from ('src/main/resources/contract') {
+        include '*.yaml'
+    }
+}
+
+artifacts {
+    archives contractsJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact contractsJar
+        }
+    }
+}

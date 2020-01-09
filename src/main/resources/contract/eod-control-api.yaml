@@ -11,12 +11,88 @@ servers:
   - url: http://ihsmarkit.com
 
 paths:
-  /undoLatestEOD:
+  /undoCurrentBusinessDay:
     post:
       tags:
         - eod-service-controller
-      summary: remove results of the latest EOD and move business day backwards if needed
-      operationId: undoLatestEOD
+      summary: remove results of the current business day EOD
+      operationId: undoCurrentEOD
+      responses:
+        200:
+          description: current business date
+          content:
+            application/json:
+              schema:
+                $ref: 'common-types.yaml#/components/schemas/Date'
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
+  /undoPreviousBusinessDay:
+    post:
+      tags:
+        - eod-service-controller
+      summary: remove results of the current and previous business days EOD and unroll business day
+      operationId: undoPreviousEOD
+      responses:
+        200:
+          description: current business date
+          content:
+            application/json:
+              schema:
+                $ref: 'common-types.yaml#/components/schemas/Date'
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
+  /runEOD1:
+    post:
+      tags:
+        - eod-service-controller
+      summary: run EOD1 for the current business day
+      operationId: runEOD1
+      responses:
+        200:
+          description: current business date
+          content:
+            application/json:
+              schema:
+                $ref: 'common-types.yaml#/components/schemas/Date'
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
+  /runEOD2:
+    post:
+      tags:
+        - eod-service-controller
+      summary: run EOD2 for the current business day
+      operationId: runEOD2
+      responses:
+        200:
+          description: current business date
+          content:
+            application/json:
+              schema:
+                $ref: 'common-types.yaml#/components/schemas/Date'
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
+  /businessDay:
+    get:
+      tags:
+        - eod-service-controller
+      summary: get current business day
+      operationId: getCurrentBusinessDay
       responses:
         200:
           description: current business date
