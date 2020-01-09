@@ -90,7 +90,7 @@
         swap_point_total=""
         swap_point_day=""
         swap_point_following_day=""
-        following_applicable_day_for_clearing_deposit=""/>
+        following_applicable_day_for_clearing_deposit="2019/01/05"/>
 
     <eod_ledger_collateral_balance
         business_date="2019-01-01"

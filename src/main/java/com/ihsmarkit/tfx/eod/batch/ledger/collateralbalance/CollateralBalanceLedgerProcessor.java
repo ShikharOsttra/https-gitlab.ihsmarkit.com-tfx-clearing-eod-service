@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collateralbalance;
 
+import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.CLEARING_DEPOSIT;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARGIN;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.values;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
@@ -49,6 +50,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralBalanceItem;
 
@@ -69,7 +71,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
 
     private final CollateralBalanceRepository collateralBalanceRepository;
 
-    private final RequiredAmountProvider requiredAmountProvider;
+    private final CollateralRequirementProvider collateralRequirementProvider;
 
     private final EodCashSettlementRepository eodCashSettlementRepository;
 
@@ -99,6 +101,11 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     ) {
         final BigDecimal requiredAmount = getRequiredAmount(purpose, margin, participant).orElse(ZERO);
         final BigDecimal totalExcessDeficit = balances.getOrDefault(purpose, ZERO_BALANCE).getTotal().subtract(requiredAmount);
+        final String applicableDayForClearingDeposit = purpose == CLEARING_DEPOSIT
+                                                       ? collateralRequirementProvider.getNextApplicableDateForClearingDeposit(participant.getId())
+                                                           .map(LedgerFormattingUtils::formatDate)
+                                                           .orElse(EMPTY)
+                                                       : EMPTY;
 
         return CollateralBalanceItem.builder()
             .businessDate(businessDate)
@@ -129,8 +136,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .swapPointTotal(getForMargin(purpose, cashSettlement.get(SWAP_PNL, TOTAL)))
             .swapPointDay(getForMargin(purpose, cashSettlement.get(SWAP_PNL, DAY)))
             .swapPointFollowingDay(getForMargin(purpose, cashSettlement.get(SWAP_PNL, FOLLOWING)))
-            //todo: ???
-            .followingApplicableDayForClearingDeposit(EMPTY)
+            .followingApplicableDayForClearingDeposit(applicableDayForClearingDeposit)
             .build();
     }
 
@@ -141,7 +147,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     ) {
         return purpose == MARGIN
                ? margin.map(marginVal -> marginVal.getRequiredAmount().getValue())
-               : requiredAmountProvider.getRequiredAmount(participant.getId(), purpose);
+               : collateralRequirementProvider.getRequiredAmount(participant.getId(), purpose);
     }
 
     private Map<CollateralPurpose, TotalBalance> calculateTotalBalances(final ParticipantEntity participant) {
