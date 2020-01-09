@@ -1,0 +1,32 @@
+openapi: '3.0.0'
+info:
+  description: EOD Control
+  version: '1.0'
+  title:  EOD Control Service
+
+tags:
+  - name: eod-service-controller
+    description: EOD Controller
+servers:
+  - url: http://ihsmarkit.com
+
+paths:
+  /undoLatestEOD:
+    post:
+      tags:
+        - eod-service-controller
+      summary: remove results of the latest EOD and move business day backwards if needed
+      operationId: undoLatestEOD
+      responses:
+        200:
+          description: current business date
+          content:
+            application/json:
+              schema:
+                $ref: 'common-types.yaml#/components/schemas/Date'
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'

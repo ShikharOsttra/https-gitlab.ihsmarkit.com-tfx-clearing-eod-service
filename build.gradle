@@ -14,6 +14,9 @@ buildscript {
 plugins {
     id 'org.springframework.boot' version '2.1.3.RELEASE'
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'org.hidetake.swagger.generator' version '2.18.1'
+    id 'idea'
+
 }
 
 project.sourceCompatibility = javaVersion
@@ -60,7 +63,10 @@ dependencies {
             [group: 'org.springframework.boot', name: 'spring-boot-starter-quartz'],
             [group: 'org.springframework.cloud', name: 'spring-cloud-starter-sleuth'],
             [group: 'org.springframework', name: 'spring-jms'],
-            [group: 'org.yaml', name: 'snakeyaml']
+            [group: 'org.yaml', name: 'snakeyaml'],
+            [group: 'io.swagger', name: 'swagger-annotations'],
+            [group: 'io.springfox', name: 'springfox-swagger2'],
+            [group: 'io.springfox', name: 'springfox-swagger-ui']
     )
 
     runtimeOnly(
@@ -87,6 +93,65 @@ dependencies {
             [group: 'org.mockito', name: 'mockito-junit-jupiter'],
             [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
+
+    swaggerCodegen (
+            [group: 'org.openapitools', name: 'openapi-generator-cli']
+    )
+}
+
+class BatchGenerateOpenApiContractsTask extends org.hidetake.gradle.swagger.generator.GenerateSwaggerCode {
+
+    @InputFiles
+    Collection<File> contracts
+
+    @Override
+    void exec() {
+        contracts.each {
+            inputFile = it
+            super.exec();
+        }
+    }
+}
+
+task generateOpenApiContracts(type: BatchGenerateOpenApiContractsTask) {
+    contracts = [
+            'eod-control-api'
+    ]
+            .collect { file("$projectDir/src/main/resources/contract/${it}.yaml") }
+
+    inputFile = file("$projectDir/src/main/resources/contract/") // ignored
+    wipeOutputDir = false
+    rawOptions = [
+            '--api-package', 'com.ihsmarkit.tfx.eod.api',
+            '--model-package', 'com.ihsmarkit.tfx.eod.model.dto',
+            '--model-name-suffix', 'Dto'
+    ]
+    language = 'spring'
+    outputDir = file("$buildDir/generated")
+    additionalProperties = [
+            library           : 'spring-mvc',
+            interfaceOnly     : 'true',
+            dateLibrary       : 'java8',
+            java8             : 'true',
+            useTags           : 'true',
+            bigDecimalAsString: 'true'
+    ]
+}
+
+compileJava.dependsOn(generateOpenApiContracts)
+
+sourceSets {
+    main {
+        java {
+            srcDirs += "$buildDir/generated/src/main/java"
+        }
+    }
+}
+
+idea {
+    module {
+        generatedSourceDirs += file("$buildDir/generated/src/main/java")
+    }
 }
 
 configurations.compile.exclude(group: 'com.zaxxer', module: 'HikariCP-java7')
