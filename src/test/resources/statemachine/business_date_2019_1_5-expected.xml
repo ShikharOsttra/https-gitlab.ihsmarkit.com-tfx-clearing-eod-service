@@ -1,0 +1,6 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-06"/>
+    <eod_status stage="DSP_APPROVED" business_date="2019-01-05"/>
+    <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-05"/>
+    <eod_status stage="EOD1_COMPLETE" business_date="2019-01-05"/>
+</dataset>

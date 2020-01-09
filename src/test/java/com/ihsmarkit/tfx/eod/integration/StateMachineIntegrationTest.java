@@ -28,11 +28,14 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
+import com.github.springtestdbunit.annotation.ExpectedDatabase;
+import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
+import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
@@ -44,7 +47,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @DatabaseTearDown("/common/tearDown.xml")
 @ContextHierarchy({
     @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = {EOD1JobConfig.class, EOD2JobConfig.class, StateMachineConfig.class, StateMachineActionsConfig.class})}
+    @ContextConfiguration(classes = {
+        EOD1JobConfig.class,
+        EOD2JobConfig.class,
+        RollBusinessDateJobConfig.class,
+        StateMachineConfig.class,
+        StateMachineActionsConfig.class
+    })}
 )
 @TestPropertySource("classpath:/application.properties")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -127,6 +136,7 @@ public class StateMachineIntegrationTest {
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_5.xml"})
+    @ExpectedDatabase(value = "/statemachine/business_date_2019_1_5-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunFullCycle() throws InterruptedException {
 
         stateMachine.sendEvent(StateMachineConfig.Events.EOD);

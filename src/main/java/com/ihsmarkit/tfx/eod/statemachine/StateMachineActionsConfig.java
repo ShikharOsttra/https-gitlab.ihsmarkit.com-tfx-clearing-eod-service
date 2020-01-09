@@ -5,6 +5,9 @@ import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,13 +54,16 @@ public class StateMachineActionsConfig {
     private JobLauncher jobLauncher;
 
     @Autowired
-    @Qualifier("eod1Job")
+    @Qualifier(EOD1_BATCH_JOB_NAME)
     private Job eod1Job;
 
+    @Autowired
+    @Qualifier(EOD2_BATCH_JOB_NAME)
+    private Job eod2Job;
 
     @Autowired
-    @Qualifier("eod2Job")
-    private Job eod2Job;
+    @Qualifier(ROLL_BUSINESS_DATE_JOB_NAME)
+    private Job rollBusinessDateJob;
 
     @Autowired
     private SystemParameterRepository systemParameterRepository;
@@ -129,9 +135,10 @@ public class StateMachineActionsConfig {
     public Action<StateMachineConfig.States, StateMachineConfig.Events> dateRollRunAction() {
         return new Action<>() {
             @Override
+            @SneakyThrows
             public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
+                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
+                jobLauncher.run(rollBusinessDateJob, getJobParameters(businessDate));            }
         };
     }
 
