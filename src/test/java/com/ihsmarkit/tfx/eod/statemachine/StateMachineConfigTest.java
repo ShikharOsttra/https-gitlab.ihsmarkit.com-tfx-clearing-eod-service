@@ -53,9 +53,6 @@ class StateMachineConfigTest {
     @MockBean(name = "eod2runAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> eod2runAction;
 
-    @MockBean(name = "ledgerRunAction")
-    private Action<StateMachineConfig.States, StateMachineConfig.Events> ledgerRunAction;
-
     @MockBean(name = "dateRollRunAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> dateRollRunAction;
 
@@ -87,7 +84,6 @@ class StateMachineConfigTest {
         verify(eod1runAction).execute(any());
         verify(eod1CompleteAction).execute(any());
         verify(eod2runAction).execute(any());
-        verify(ledgerRunAction).execute(any());
         verify(dateRollRunAction).execute(any());
     }
 
@@ -107,7 +103,7 @@ class StateMachineConfigTest {
         Thread.sleep(500);
 
         verify(eod1runAction).execute(any());
-        verifyNoMoreInteractions(eod1CompleteAction, eod2runAction, ledgerRunAction, dateRollRunAction);
+        verifyNoMoreInteractions(eod1CompleteAction, eod2runAction, dateRollRunAction);
         assertThat(stateMachine.getState().getId()).isEqualTo(READY);
 
     }
@@ -130,7 +126,6 @@ class StateMachineConfigTest {
         verify(eod1runAction).execute(any());
         verify(eod1CompleteAction).execute(any());
         verify(eod2runAction).execute(any());
-        verify(ledgerRunAction).execute(any());
         verify(dateRollRunAction).execute(any());
     }
 

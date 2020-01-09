@@ -122,16 +122,6 @@ public class StateMachineActionsConfig {
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> ledgerRunAction() {
-        return new Action<>() {
-            @Override
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                //context.getStateMachine().setStateMachineError(new RuntimeException("dddddddddddd"));
-            }
-        };
-    }
-
-    @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> dateRollRunAction() {
         return new Action<>() {
             @Override
