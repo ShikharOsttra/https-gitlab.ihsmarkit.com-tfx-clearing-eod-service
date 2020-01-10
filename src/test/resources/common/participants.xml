@@ -1,0 +1,9 @@
+<dataset>
+    <participant id="101" code="P11" name="Party_123" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="102" code="P22" name="Party_422" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="103" code="P23" name="Party_423" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+
+    <legal_entity id="101" code="TFEP11" name="Legal_123" participant_id="101" status="ACTIVE" clearing_role="CLEARING_MEMBER"/>
+    <legal_entity id="102" code="TFEP12" name="Legal_422" participant_id="102" status="ACTIVE" clearing_role="NON_MEMBER"/>
+    <legal_entity id="103" code="TFEP32" name="Legal_423" participant_id="103" status="ACTIVE" clearing_role="NON_MEMBER"/>
+</dataset>
