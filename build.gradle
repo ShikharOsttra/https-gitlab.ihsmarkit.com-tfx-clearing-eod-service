@@ -178,3 +178,22 @@ compileJava {
 }
 
 jarPublishing()
+
+task contractsJar(type: Jar) {
+    archiveClassifier.set('contracts')
+    from ('src/main/resources/contract') {
+        include '*.yaml'
+    }
+}
+
+artifacts {
+    archives contractsJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact contractsJar
+        }
+    }
+}
