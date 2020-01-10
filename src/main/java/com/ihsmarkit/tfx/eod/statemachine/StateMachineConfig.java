@@ -39,6 +39,7 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 import org.springframework.statemachine.guard.Guard;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.RequiredArgsConstructor;
 
 @SuppressFBWarnings({
     "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
@@ -46,6 +47,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     "SIC_INNER_SHOULD_BE_STATIC_ANON"
 })
 @EnableStateMachine
+@RequiredArgsConstructor
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
     public enum States { IDLE, READY, INIT, EOD1, NO_DSP_NO_TRADES, NO_DSP_NO_TRADES_DELAY, DSP_CHECK, DSP_NO_TRADES, DSP_NO_TRADES_DELAY, NO_DSP_TRADES,
         NO_DSP_TRADES_DELAY, EOD1_READY, EOD1_RUN, EOD1_COMPLETE, EOD2, SWP_PNT_CHECK, SWP_PNT_NOTAPPROVED, SWP_PNT_APPROVED,
@@ -55,45 +57,36 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
 
     private static final int WAIT_TIME = 1000;
 
-    @Autowired
     @Qualifier("dspApprovedGuard")
-    private Guard<States, Events> dspApprovedGuard;
+    private final Guard<States, Events> dspApprovedGuard;
 
-    @Autowired
     @Qualifier("tradesInFlightGuard")
-    private Guard<States, Events> tradesInFlightGuard;
+    private final Guard<States, Events> tradesInFlightGuard;
 
-    @Autowired
     @Qualifier("swpPointApprovedGuard")
-    private Guard<States, Events> swpPointApprovedGuard;
+    private final Guard<States, Events> swpPointApprovedGuard;
 
-    @Autowired
     @Qualifier("initAction")
-    private Action<States, Events> initAction;
+    private final Action<States, Events> initAction;
 
-    @Autowired
     @Qualifier("resetErrorAction")
-    private Action<States, Events> resetErrorActionBean;
+    private final Action<States, Events> resetErrorActionBean;
 
     @Autowired
     @Qualifier("eod1runAction")
-    private Action<States, Events> eod1runAction;
+    private final Action<States, Events> eod1runAction;
 
-    @Autowired
     @Qualifier("eod1CompleteAction")
-    private Action<States, Events> eod1CompleteAction;
+    private final Action<States, Events> eod1CompleteAction;
 
-    @Autowired
     @Qualifier("eod2CompleteAction")
-    private Action<States, Events> eod2CompleteAction;
+    private final Action<States, Events> eod2CompleteAction;
 
-    @Autowired
     @Qualifier("eod2runAction")
-    private Action<States, Events> eod2runAction;
+    private final Action<States, Events> eod2runAction;
 
-    @Autowired
     @Qualifier("dateRollRunAction")
-    private Action<States, Events> dateRollRunAction;
+    private final Action<States, Events> dateRollRunAction;
 
     @Override
     public void configure(final StateMachineConfigurationConfigurer<States, Events> config) throws Exception {
@@ -187,7 +180,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     }
 
     @Bean
-    public Guard<States, Events> noErrorGuard() {
+    public static Guard<States, Events> noErrorGuard() {
         return new Guard<States, Events>() {
             @Override
             public boolean evaluate(final StateContext<States, Events> context) {
@@ -197,7 +190,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> resetErrorAction() {
+    public static Action<StateMachineConfig.States, StateMachineConfig.Events> resetErrorAction() {
         return new Action<>() {
             @Override
             public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {

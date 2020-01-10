@@ -11,13 +11,11 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,43 +29,39 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
+import com.ihsmarkit.tfx.core.time.ClockService;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 @Configuration
+@RequiredArgsConstructor
 @SuppressFBWarnings({
-    "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
     "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
     "SIC_INNER_SHOULD_BE_STATIC_ANON",
     "UPM_UNCALLED_PRIVATE_METHOD"
 })
 public class StateMachineActionsConfig {
 
+    private final EodStatusRepository eodStatusRepository;
 
-    @Autowired
-    private EodStatusRepository eodStatusRepository;
+    private final TradeRepository tradeRepository;
 
-    @Autowired
-    private TradeRepository tradeRepository;
+    private final JobLauncher jobLauncher;
 
-    @Autowired
-    private JobLauncher jobLauncher;
-
-    @Autowired
     @Qualifier(EOD1_BATCH_JOB_NAME)
-    private Job eod1Job;
+    private final Job eod1Job;
 
-    @Autowired
     @Qualifier(EOD2_BATCH_JOB_NAME)
-    private Job eod2Job;
+    private final Job eod2Job;
 
-    @Autowired
     @Qualifier(ROLL_BUSINESS_DATE_JOB_NAME)
-    private Job rollBusinessDateJob;
+    private final Job rollBusinessDateJob;
 
-    @Autowired
-    private SystemParameterRepository systemParameterRepository;
+    private final SystemParameterRepository systemParameterRepository;
+
+    private final ClockService clockService;
 
     @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> initAction() {
@@ -103,7 +97,7 @@ public class StateMachineActionsConfig {
                 eodStatusRepository.save(
                     EodStatusEntity.builder()
                         .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(clockService.getCurrentDateTimeUTC())
                         .build()
                 );
             }
@@ -120,7 +114,7 @@ public class StateMachineActionsConfig {
                 eodStatusRepository.save(
                     EodStatusEntity.builder()
                         .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(clockService.getCurrentDateTimeUTC())
                         .build()
                 );
             }
@@ -190,7 +184,7 @@ public class StateMachineActionsConfig {
     private JobParameters getJobParameters(final LocalDate businessDate) {
         return new JobParametersBuilder()
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
-            .addString(CURRENT_TSP_JOB_PARAM_NAME, LocalDateTime.now().toString())
+            .addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
             .toJobParameters();
     }
 }
