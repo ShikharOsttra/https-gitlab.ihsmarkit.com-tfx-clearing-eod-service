@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.EOD;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.READY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,13 +21,11 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.guard.Guard;
+import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @ExtendWith(SpringExtension.class)
 @Import(StateMachineConfig.class)
-@SuppressFBWarnings("MDM_THREAD_YIELD")
 class StateMachineConfigTest {
 
     @Autowired
@@ -69,17 +68,25 @@ class StateMachineConfigTest {
         stateMachine.stop();
     }
 
+    private StateMachineTestPlanBuilder<StateMachineConfig.States, StateMachineConfig.Events> testPlanBuilder() {
+        return StateMachineTestPlanBuilder.<StateMachineConfig.States, StateMachineConfig.Events>builder();
+    }
+
     @Test
     void shouldRunWhenDspApprovedFirst() throws Exception {
 
         when(dspApprovedGuard.evaluate(any())).thenReturn(false, false, true);
         when(tradesInFlightGuard.evaluate(any())).thenReturn(false, false, false, true);
         when(swpPointApprovedGuard.evaluate(any())).thenReturn(false, true);
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
 
-        Thread.sleep(8000);
+        testPlanBuilder()
+            .stateMachine(stateMachine)
+            .step()
+                .sendEvent(EOD)
+                .expectStateChanged(17)
+                .expectState(READY)
+            .and().build().test();
 
-        assertThat(stateMachine.getState().getId()).isEqualTo(READY);
         verify(dspApprovedGuard, times(3)).evaluate(any());
         verify(tradesInFlightGuard, times(4)).evaluate(any());
         verify(swpPointApprovedGuard, times(2)).evaluate(any());
@@ -103,8 +110,13 @@ class StateMachineConfigTest {
             return null;
         }).when(eod1runAction).execute(any());
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
-        Thread.sleep(500);
+        testPlanBuilder()
+            .stateMachine(stateMachine)
+            .step()
+                .sendEvent(EOD)
+                .expectStateChanged(6)
+                .expectState(READY)
+            .and().build().test();
 
         verify(eod1runAction).execute(any());
         verifyNoMoreInteractions(eod1CompleteAction, eod2CompleteAction, eod2runAction, dateRollRunAction);
@@ -118,9 +130,14 @@ class StateMachineConfigTest {
         when(dspApprovedGuard.evaluate(any())).thenReturn(false, false, true);
         when(tradesInFlightGuard.evaluate(any())).thenReturn(false, true);
         when(swpPointApprovedGuard.evaluate(any())).thenReturn(true);
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
 
-        Thread.sleep(8000);
+        testPlanBuilder()
+            .stateMachine(stateMachine)
+            .step()
+                .sendEvent(EOD)
+                .expectStateChanged(14)
+                .expectState(READY)
+            .and().build().test();
 
         assertThat(stateMachine.getState().getId()).isEqualTo(READY);
         verify(dspApprovedGuard, times(3)).evaluate(any());
