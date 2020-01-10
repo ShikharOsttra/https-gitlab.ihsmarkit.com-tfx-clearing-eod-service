@@ -66,7 +66,9 @@ dependencies {
             [group: 'org.yaml', name: 'snakeyaml'],
             [group: 'io.swagger', name: 'swagger-annotations'],
             [group: 'io.springfox', name: 'springfox-swagger2'],
-            [group: 'io.springfox', name: 'springfox-swagger-ui']
+            [group: 'io.springfox', name: 'springfox-swagger-ui'],
+            [group: 'org.springframework.statemachine', name: 'spring-statemachine-core'],
+            [group: 'org.yaml', name: 'snakeyaml']
     )
 
     runtimeOnly(
@@ -91,6 +93,7 @@ dependencies {
             [group: 'org.junit.jupiter', name: 'junit-jupiter-params'],
             [group: 'org.assertj', name: 'assertj-core'],
             [group: 'org.mockito', name: 'mockito-junit-jupiter'],
+            [group: 'org.springframework.statemachine', name: 'spring-statemachine-test'],
             [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
 

@@ -46,11 +46,12 @@ class Eod2JobIntegrationTest {
 
     @Test
     @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
         "/common/business_date_2019_1_1.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/fx_spot_product.xml",
-        "/common/currency.xml",
         "/eod1Job/eod2-sunnyDay-20191007.xml"
     })
     @ExpectedDatabase(value = "/eod1Job/eod2-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
