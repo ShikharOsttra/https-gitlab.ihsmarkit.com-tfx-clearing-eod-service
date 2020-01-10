@@ -13,11 +13,10 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-//@SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 @RequiredArgsConstructor
 public class EodQuartzJob extends QuartzJobBean {
 
-    private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
+    private final StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
 
     @Override
     @SneakyThrows

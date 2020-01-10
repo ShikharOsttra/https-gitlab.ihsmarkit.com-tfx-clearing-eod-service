@@ -33,6 +33,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
+import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
@@ -94,6 +95,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     @Qualifier("dateRollRunAction")
     private Action<States, Events> dateRollRunAction;
 
+    @Override
+    public void configure(final StateMachineConfigurationConfigurer<States, Events> config) throws Exception {
+        config.withConfiguration().autoStartup(true);
+    }
 
     @Override
     public void configure(final StateMachineStateConfigurer<States, Events> states) throws Exception {

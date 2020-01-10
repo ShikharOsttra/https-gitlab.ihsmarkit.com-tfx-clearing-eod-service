@@ -15,9 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
@@ -56,7 +54,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     })}
 )
 @TestPropertySource("classpath:/application.properties")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressFBWarnings("MDM_THREAD_YIELD")
 public class StateMachineIntegrationTest {
     @Autowired
@@ -146,11 +143,6 @@ public class StateMachineIntegrationTest {
         assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE)).isEqualTo(LocalDate.of(2019, 1, 5));
         assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
-    }
-
-    @BeforeAll
-    void startMachine() {
-        stateMachine.start();
     }
 
     @AfterEach
