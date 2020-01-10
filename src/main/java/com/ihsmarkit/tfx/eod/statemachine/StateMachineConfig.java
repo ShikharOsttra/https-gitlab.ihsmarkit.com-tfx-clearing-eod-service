@@ -37,14 +37,8 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 
-@SuppressFBWarnings({
-    "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
-    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
-    "SIC_INNER_SHOULD_BE_STATIC_ANON"
-})
 @EnableStateMachine
 @RequiredArgsConstructor
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
