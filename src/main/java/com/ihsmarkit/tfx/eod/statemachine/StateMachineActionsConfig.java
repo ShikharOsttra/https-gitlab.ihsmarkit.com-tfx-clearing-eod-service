@@ -29,16 +29,11 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.time.ClockService;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 @Configuration
 @RequiredArgsConstructor
-@SuppressFBWarnings({
-    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
-    "UPM_UNCALLED_PRIVATE_METHOD"
-})
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
@@ -109,7 +104,7 @@ public class StateMachineActionsConfig {
         return date -> !tradeRepository.existsTradeInFlightForDate(date);
     }
 
-    private void saveEodStatus(EodStage stage, LocalDate businessDate) {
+    private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {
         eodStatusRepository.save(
             EodStatusEntity.builder()
                 .id(new EodStatusCompositeId(stage, businessDate))
