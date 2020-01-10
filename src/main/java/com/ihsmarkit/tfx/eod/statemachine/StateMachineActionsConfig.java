@@ -73,24 +73,13 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodAction eod1CompleteAction() {
-        return businessDate ->
-            eodStatusRepository.save(
-                EodStatusEntity.builder()
-                    .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
-                    .timestamp(clockService.getCurrentDateTimeUTC())
-                    .build()
-            );
+        return businessDate -> saveEodStatus(EOD1_COMPLETE, businessDate);
+
     }
 
     @Bean
     public EodAction eod2CompleteAction() {
-        return businessDate ->
-            eodStatusRepository.save(
-                EodStatusEntity.builder()
-                    .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
-                    .timestamp(clockService.getCurrentDateTimeUTC())
-                    .build()
-            );
+        return businessDate -> saveEodStatus(EOD2_COMPLETE, businessDate);
     }
 
     @Bean
@@ -116,6 +105,15 @@ public class StateMachineActionsConfig {
     @Bean
     public EodGuard tradesInFlightGuard() {
         return date -> !tradeRepository.existsTradeInFlightForDate(date);
+    }
+
+    private void saveEodStatus(EodStage stage, LocalDate businessDate) {
+        eodStatusRepository.save(
+            EodStatusEntity.builder()
+                .id(new EodStatusCompositeId(stage, businessDate))
+                .timestamp(clockService.getCurrentDateTimeUTC())
+                .build()
+        );
     }
 
     @SneakyThrows
