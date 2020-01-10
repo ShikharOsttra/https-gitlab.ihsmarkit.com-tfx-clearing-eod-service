@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
@@ -28,6 +30,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantMarginMapper;
+import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.CashSettlement;
 import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -35,10 +38,12 @@ import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.MarginRatioService;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
 @JobScope
+@Slf4j
 public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
@@ -102,12 +107,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 ccy -> jpyRateService.getJpyRate(businessDate, ccy)
             );
 
-        final Set<Long> participants = uniqueParticipantIds(requiredInitialMargin, dayCashSettlement);
-
-        final var deposits = eodCalculator.calculateDeposits(
-            collateralBalanceRepository.findByParticipantIdAndPurpose(participants, Set.of(CollateralPurpose.MARGIN)).stream(),
-            collateralCalculator::calculateEvaluatedAmount
-        );
+        final var deposits = calculateDeposits(dayCashSettlement, requiredInitialMargin);
 
         final var participantMargin =
             eodCalculator
@@ -117,6 +117,20 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         eodParticipantMarginRepository.saveAll(participantMargin::iterator);
 
         return RepeatStatus.FINISHED;
+    }
+
+    private Map<ParticipantEntity, BalanceContribution> calculateDeposits(final Map<ParticipantEntity, DayAndTotalCashSettlement> dayCashSettlement,
+                                                                          final Map<ParticipantEntity, BigDecimal> requiredInitialMargin) {
+        final Set<Long> participants = uniqueParticipantIds(requiredInitialMargin, dayCashSettlement);
+        if (participants.isEmpty()) {
+            log.warn("[{}] no participants with collateral requirements found", MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY);
+            return Map.of();
+        } else {
+            return eodCalculator.calculateDeposits(
+                collateralBalanceRepository.findByParticipantIdAndPurpose(participants, Set.of(CollateralPurpose.MARGIN)).stream(),
+                collateralCalculator::calculateEvaluatedAmount
+            );
+        }
     }
 
     private Set<Long> uniqueParticipantIds(

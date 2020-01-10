@@ -54,4 +54,4 @@ VALUES (:businessDate,
 		:tradeId,
 		:tradeType,
 		:reference,
-		:userReference);
+		:userReference)
