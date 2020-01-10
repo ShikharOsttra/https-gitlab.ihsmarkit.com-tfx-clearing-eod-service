@@ -33,7 +33,7 @@ public class EODServiceController implements EodServiceControllerApi {
 
     @Override
     public ResponseEntity<LocalDate> getCurrentBusinessDay() {
-        return ResponseEntity.ok(eodControlService.getCurrentBusinessDay());
+        return ResponseEntity.ok(eodControlService.getCurrentBusinessDate());
     }
 
     @Override

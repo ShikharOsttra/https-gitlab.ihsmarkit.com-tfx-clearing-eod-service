@@ -7,6 +7,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -49,8 +50,12 @@ public class EODControlService {
     private final JobLauncher jobLauncher;
     private final JobLocator jobLocator;
 
-    public LocalDate getCurrentBusinessDay() {
-        return getCurrentBusinessDate();
+    public LocalDate getCurrentBusinessDate() {
+        return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
+    }
+
+    private void setCurrentBusinessDate(final LocalDate businessDate) {
+        systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, businessDate);
     }
 
     @Transactional
@@ -60,9 +65,7 @@ public class EODControlService {
 
         final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
 
-        if (previousBusinessDate.isEqual(currentBusinessDate)) {
-            return previousBusinessDate;
-        } else {
+        if (!previousBusinessDate.isEqual(currentBusinessDate)) {
             undoEODByDate(previousBusinessDate);
             setCurrentBusinessDate(previousBusinessDate);
         }
@@ -77,7 +80,7 @@ public class EODControlService {
     }
 
     public LocalDate runEOD(final String jobName) {
-        final LocalDate currentBusinessDay = getCurrentBusinessDay();
+        final LocalDate currentBusinessDay = getCurrentBusinessDate();
         triggerEOD(jobName, currentBusinessDay);
         return currentBusinessDay;
     }
@@ -103,24 +106,20 @@ public class EODControlService {
     }
 
     private void removeEODStageRecordsForDate(final LocalDate businessDate) {
-        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.EOD1_COMPLETE, businessDate));
-        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.EOD2_COMPLETE, businessDate));
-        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.DSP_APPROVED, businessDate));
-        deleteEodStatusIfExist(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, businessDate));
+        Stream.of(
+            EodStage.EOD1_COMPLETE,
+            EodStage.EOD2_COMPLETE,
+            EodStage.DSP_APPROVED,
+            EodStage.SWAP_POINTS_APPROVED
+        )
+            .map(eodStage -> new EodStatusCompositeId(eodStage, businessDate))
+            .forEach(this::deleteEodStatusIfExist);
     }
 
     private void deleteEodStatusIfExist(final EodStatusCompositeId eod2CompleteStatus) {
         if (eodStatusRepository.existsById(eod2CompleteStatus)) {
             eodStatusRepository.deleteById(eod2CompleteStatus);
         }
-    }
-
-    private LocalDate getCurrentBusinessDate() {
-        return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
-    }
-
-    private void setCurrentBusinessDate(final LocalDate businessDate) {
-        systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, businessDate);
     }
 
     private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
