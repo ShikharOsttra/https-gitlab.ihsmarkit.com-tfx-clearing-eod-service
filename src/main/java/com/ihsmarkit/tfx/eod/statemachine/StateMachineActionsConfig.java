@@ -19,9 +19,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
-import org.springframework.statemachine.guard.Guard;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStage;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
@@ -39,7 +37,6 @@ import lombok.SneakyThrows;
 @RequiredArgsConstructor
 @SuppressFBWarnings({
     "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
-    "SIC_INNER_SHOULD_BE_STATIC_ANON",
     "UPM_UNCALLED_PRIVATE_METHOD"
 })
 public class StateMachineActionsConfig {
@@ -65,119 +62,60 @@ public class StateMachineActionsConfig {
 
     @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> initAction() {
-        return new Action<>() {
-
-            @Override
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-                context.getExtendedState().getVariables().put(BUSINESS_DATE, businessDate);
-            }
-        };
+        return context -> context.getExtendedState().getVariables()
+                    .put(BUSINESS_DATE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> eod1runAction() {
-        return new Action<>() {
-            @Override
-            @SneakyThrows
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-                jobLauncher.run(eod1Job, getJobParameters(businessDate));
-            }
-        };
+    public EodAction eod1runAction() {
+        return businessDate -> jobLauncher.run(eod1Job, getJobParameters(businessDate));
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> eod1CompleteAction() {
-        return new Action<>() {
-            @Override
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-
-                eodStatusRepository.save(
-                    EodStatusEntity.builder()
-                        .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
-                        .timestamp(clockService.getCurrentDateTimeUTC())
-                        .build()
-                );
-            }
-        };
+    public EodAction eod1CompleteAction() {
+        return businessDate ->
+            eodStatusRepository.save(
+                EodStatusEntity.builder()
+                    .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
+                    .timestamp(clockService.getCurrentDateTimeUTC())
+                    .build()
+            );
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> eod2CompleteAction() {
-        return new Action<>() {
-            @Override
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-
-                eodStatusRepository.save(
-                    EodStatusEntity.builder()
-                        .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
-                        .timestamp(clockService.getCurrentDateTimeUTC())
-                        .build()
-                );
-            }
-        };
+    public EodAction eod2CompleteAction() {
+        return businessDate ->
+            eodStatusRepository.save(
+                EodStatusEntity.builder()
+                    .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
+                    .timestamp(clockService.getCurrentDateTimeUTC())
+                    .build()
+            );
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> eod2runAction() {
-        return new Action<>() {
-            @Override
-            @SneakyThrows
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-                jobLauncher.run(eod2Job, getJobParameters(businessDate));
-            }
-        };
+    public EodAction eod2runAction() {
+        return businessDate -> jobLauncher.run(eod2Job, getJobParameters(businessDate));
     }
 
     @Bean
-    public Action<StateMachineConfig.States, StateMachineConfig.Events> dateRollRunAction() {
-        return new Action<>() {
-            @Override
-            @SneakyThrows
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate businessDate = systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
-                jobLauncher.run(rollBusinessDateJob, getJobParameters(businessDate));            }
-        };
+    public EodAction dateRollRunAction() {
+        return businessDate -> jobLauncher.run(rollBusinessDateJob, getJobParameters(businessDate));
     }
 
     @Bean
-    public Guard<StateMachineConfig.States, StateMachineConfig.Events> swpPointApprovedGuard() {
-        return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
-
-            @Override
-            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
-                return eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, date));
-            }
-        };
+    public EodGuard swpPointApprovedGuard() {
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, date));
     }
 
     @Bean
-    public Guard<StateMachineConfig.States, StateMachineConfig.Events> dspApprovedGuard() {
-        return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
-
-            @Override
-            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
-                return eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.DSP_APPROVED, date));
-            }
-        };
+    public EodGuard dspApprovedGuard() {
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.DSP_APPROVED, date));
     }
 
     @Bean
-    public Guard<StateMachineConfig.States, StateMachineConfig.Events> tradesInFlightGuard() {
-        return new Guard<StateMachineConfig.States, StateMachineConfig.Events>() {
-            @Override
-            public boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
-                final boolean tradesInFlight = tradeRepository.existsTradeInFlightForDate(date);
-                return !tradesInFlight;
-            }
-        };
+    public EodGuard tradesInFlightGuard() {
+        return date -> !tradeRepository.existsTradeInFlightForDate(date);
     }
 
     @SneakyThrows

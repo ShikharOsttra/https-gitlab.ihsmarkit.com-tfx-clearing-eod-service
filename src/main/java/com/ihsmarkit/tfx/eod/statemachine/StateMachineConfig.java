@@ -29,7 +29,6 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
@@ -181,22 +180,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
 
     @Bean
     public static Guard<States, Events> noErrorGuard() {
-        return new Guard<States, Events>() {
-            @Override
-            public boolean evaluate(final StateContext<States, Events> context) {
-                return !context.getStateMachine().hasStateMachineError();
-            }
-        };
+        return context -> !context.getStateMachine().hasStateMachineError();
     }
 
     @Bean
     public static Action<StateMachineConfig.States, StateMachineConfig.Events> resetErrorAction() {
-        return new Action<>() {
-            @Override
-            public void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-                context.getStateMachine().setStateMachineError(null);
-            }
-        };
+        return context -> context.getStateMachine().setStateMachineError(null);
     }
 
 }
