@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.controller;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
 
@@ -37,12 +38,26 @@ public class EODServiceController implements EodServiceControllerApi {
     }
 
     @Override
-    public ResponseEntity<LocalDate> runEOD1() {
-        return ResponseEntity.ok(eodControlService.runEOD(EOD1_BATCH_JOB_NAME));
+    public ResponseEntity<String> runEOD1() {
+        return ResponseEntity.ok(eodControlService.runEODJob(EOD1_BATCH_JOB_NAME));
     }
 
     @Override
-    public ResponseEntity<LocalDate> runEOD2() {
-        return ResponseEntity.ok(eodControlService.runEOD(EOD2_BATCH_JOB_NAME));
+    public ResponseEntity<String> runEOD2() {
+        return ResponseEntity.ok(eodControlService.runEODJob(EOD2_BATCH_JOB_NAME));
+    }
+
+    @Override
+    public ResponseEntity<LocalDate> rollBusinessDate() {
+        eodControlService.runEODJob(ROLL_BUSINESS_DATE_JOB_NAME);
+        return getCurrentBusinessDay();
+    }
+
+    @Override
+    public ResponseEntity<LocalDate> runAll() {
+        eodControlService.runEODJob(EOD1_BATCH_JOB_NAME);
+        eodControlService.runEODJob(EOD2_BATCH_JOB_NAME);
+        eodControlService.runEODJob(ROLL_BUSINESS_DATE_JOB_NAME);
+        return getCurrentBusinessDay();
     }
 }

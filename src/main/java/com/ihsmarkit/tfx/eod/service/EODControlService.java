@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -79,23 +80,23 @@ public class EODControlService {
         return currentBusinessDate;
     }
 
-    public LocalDate runEOD(final String jobName) {
+    public String runEODJob(final String jobName) {
         final LocalDate currentBusinessDay = getCurrentBusinessDate();
-        triggerEOD(jobName, currentBusinessDay);
-        return currentBusinessDay;
+        return triggerEOD(jobName, currentBusinessDay).name();
     }
 
-    private void triggerEOD(final String jobName, final LocalDate businessDate) {
+    private BatchStatus triggerEOD(final String jobName, final LocalDate businessDate) {
         try {
             final Job job = jobLocator.getJob(jobName);
             final JobParameters params = new JobParametersBuilder()
                 .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
                 .addString(CURRENT_TSP_JOB_PARAM_NAME, LocalDateTime.now().toString())
                 .toJobParameters();
-            jobLauncher.run(job, params);
+            return jobLauncher.run(job, params).getStatus();
         } catch (final NoSuchJobException | JobExecutionAlreadyRunningException | JobRestartException
             | JobInstanceAlreadyCompleteException | JobParametersInvalidException ex) {
             log.error("exception while triggering jobName: {} on businessDate: {} with message: {}", jobName, businessDate, ex.getMessage(), ex);
+            return BatchStatus.FAILED;
         }
     }
 
