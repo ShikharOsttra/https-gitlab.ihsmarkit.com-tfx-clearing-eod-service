@@ -16,7 +16,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
     id 'org.hidetake.swagger.generator' version '2.18.1'
     id 'idea'
-
 }
 
 project.sourceCompatibility = javaVersion
@@ -159,19 +158,6 @@ idea {
 
 configurations.compile.exclude(group: 'com.zaxxer', module: 'HikariCP-java7')
 
-test {
-    useJUnitPlatform()
-}
-
-test {
-    testLogging.showStandardStreams = true
-}
-
-compileJava {
-    options.encoding = 'UTF-8'
-    options.compilerArgs << '-parameters' << '-ApojoMetamodelGeneratorPackagesToScan=com.ihsmarkit.tfx.eod.model.dto'
-}
-
 ext.additionalJacocoExclusions = [
         // quite hard to verify invocation of TradeHolder.merge
         '**/eod/batch/ledger/marketdata/DailyMarketDataReader$TradeHolder*',
@@ -180,6 +166,18 @@ ext.additionalJacocoExclusions = [
         '**/eod/service/EODControlService*', //non-production code
         '**/eod/controller/EODServiceController*' //non-production code
 ]
+
+test {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters' << '-ApojoMetamodelGeneratorPackagesToScan=com.ihsmarkit.tfx.eod.model.dto'
+}
+
+jarPublishing()
 
 task contractsJar(type: Jar) {
     archiveClassifier.set('contracts')
