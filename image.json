@@ -23,10 +23,6 @@
       "loadBalanced": true,
       "replicas": 1,
       "routes": [
-        {
-          "host": "eod.${KUBERNETES_NAMESPACE}.${CLUSTER}",
-          "portNumber": 8443
-        }
       ]
     },
     "spec": {
