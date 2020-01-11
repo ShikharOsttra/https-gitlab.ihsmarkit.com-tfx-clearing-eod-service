@@ -1,0 +1,1 @@
+DELETE FROM eod_ledger_monthly_trading_volume WHERE business_date = ?
