@@ -48,6 +48,7 @@ dependencies {
             [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreConfigVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreDlVersion],
             [group: 'com.ihsmarkit.tfx', name: 'collateral-calculator', version: collateralCalculatorVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'mailing-client', version: mailingClientVersion],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'],
             [group: 'org.apache.activemq', name: 'activemq-client'],
@@ -67,7 +68,8 @@ dependencies {
             [group: 'io.springfox', name: 'springfox-swagger2'],
             [group: 'io.springfox', name: 'springfox-swagger-ui'],
             [group: 'org.springframework.statemachine', name: 'spring-statemachine-core'],
-            [group: 'org.yaml', name: 'snakeyaml']
+            [group: 'org.yaml', name: 'snakeyaml'],
+            [group: 'org.apache.commons', name: 'commons-csv']
     )
 
     runtimeOnly(
