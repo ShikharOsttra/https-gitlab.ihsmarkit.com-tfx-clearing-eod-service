@@ -12,16 +12,16 @@ import org.junit.jupiter.api.Test;
 
 class PositionRebalanceCSVWriterTest {
 
-    private static String HEADER_ONLY = "Trade Date,Trade Type,Participant Code Source,Participant Code Target,Currency Pair,Side,Trade Price,Base Currency Amount,Value Currency Amount,Value Date,Trade ID,Timestamp\r\n";
+    private final static String HEADER_ONLY = "Trade Date,Trade Type,Participant Code Source,Participant Code Target,Currency Pair,Side,Trade Price,"
+        + "Base Currency Amount,Value Currency Amount,Value Date,Trade ID,Timestamp\r\n";
 
-    private static String ONE_ROW = HEADER_ONLY +
+    private final static String ONE_ROW = HEADER_ONLY +
         "20190101,2,ORIGINATOR_01,CPARTY_01,USD/CHF,SELL,1.10123,10000000,12312323,20190102,tradeId_01,20190101 12:13:14\r\n";
 
     private final PositionRebalanceCSVWriter csvWriter = new PositionRebalanceCSVWriter();
 
     @Test
     void shouldReturnHeaderOnlyOnNoRecords() {
-
         final String recordsAsCsv = csvWriter.getRecordsAsCsv(List.of());
         assertThat(recordsAsCsv).isEqualTo(HEADER_ONLY);
     }
@@ -31,6 +31,7 @@ class PositionRebalanceCSVWriterTest {
         final LocalDate tradeDate = LocalDate.of(2019, 1, 1);
         final String recordsAsCsv = csvWriter.getRecordsAsCsv(List.of(PositionRebalanceRecord.builder()
             .tradeDate(tradeDate)
+            .tradeType(2)
             .participantCodeSource("ORIGINATOR_01")
             .participantCodeTarget("CPARTY_01")
             .currencyPair("USD/CHF")

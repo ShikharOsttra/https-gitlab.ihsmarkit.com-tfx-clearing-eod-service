@@ -12,7 +12,7 @@ import lombok.Data;
 public class PositionRebalanceRecord {
 
     private final LocalDate tradeDate;
-    private final int tradeType = 2;
+    private final int tradeType;
     private final String participantCodeSource;
     private final String participantCodeTarget;
     private final String currencyPair;

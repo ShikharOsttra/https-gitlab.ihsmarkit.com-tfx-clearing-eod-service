@@ -41,8 +41,8 @@ class PositionRebalancePublishingServiceTest {
         verify(mailClient).sendEmailWithAttachments(
             anyString(),
             eq(StringUtils.EMPTY),
-            (List)argThat(IsCollectionWithSize.hasSize(1)),
-            (List)argThat(IsCollectionWithSize.hasSize(1))
+            (List) argThat(IsCollectionWithSize.hasSize(1)),
+            (List) argThat(IsCollectionWithSize.hasSize(1))
         );
     }
 
