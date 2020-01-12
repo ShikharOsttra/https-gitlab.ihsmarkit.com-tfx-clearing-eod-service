@@ -42,12 +42,10 @@ public class EODControlService {
 
     private final EODCleanupService cleanupService;
 
+    private final FutureValueService futureValueService;
+
     public LocalDate getCurrentBusinessDate() {
         return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
-    }
-
-    private void setCurrentBusinessDate(final LocalDate businessDate) {
-        systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, businessDate);
     }
 
     @Transactional
@@ -59,7 +57,9 @@ public class EODControlService {
 
         if (!previousBusinessDate.isEqual(currentBusinessDate)) {
             cleanupService.undoEODByDate(previousBusinessDate);
-            setCurrentBusinessDate(previousBusinessDate);
+            futureValueService.unrollFutureValues(currentBusinessDate);
+            systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, previousBusinessDate);
+            return previousBusinessDate;
         }
         return currentBusinessDate;
     }
@@ -92,6 +92,6 @@ public class EODControlService {
     }
 
     private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
-        return calendarRepository.findPrevBankBusinessDate(currentBusinessDate).orElse(currentBusinessDate);
+        return calendarRepository.findPreviousTradingDate(currentBusinessDate.minusDays(1)).orElse(currentBusinessDate);
     }
 }
