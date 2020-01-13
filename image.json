@@ -9,7 +9,7 @@
     "credentials.tpl": "/opt/app/"
   },
   "run": [
-    "for i in $(ls /opt/app | egrep '.*-(tests|sources|javadoc).jar$'); do rm -f /opt/app/$i; done",
+    "for i in $(ls /opt/app | egrep '.*-(tests|sources|javadoc|contracts).jar$'); do rm -f /opt/app/$i; done",
     "mv `ls /opt/app/*.jar` $(echo `ls /opt/app/*.jar` | sed -En s/-[0-9]+\\.[0-9]+\\.[0-9]+\\(-SNAPSHOT\\)?.jar//p).jar",
     "mkdir /etc/.creds"
   ],
@@ -23,6 +23,10 @@
       "loadBalanced": true,
       "replicas": 1,
       "routes": [
+        {
+          "host": "eod.${TFX_DOMAIN}",
+          "portNumber": 8443
+        }
       ]
     },
     "spec": {

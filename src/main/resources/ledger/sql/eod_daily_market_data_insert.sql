@@ -39,4 +39,4 @@ INSERT INTO eod_ledger_market_data(business_date,
            :tradingVolumeAmount,
            :tradingVolumeAmountInUnit,
            :openPositionAmount,
-           :openPositionAmountInUnit);
+           :openPositionAmountInUnit)

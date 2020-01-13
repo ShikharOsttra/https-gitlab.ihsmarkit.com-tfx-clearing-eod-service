@@ -1,0 +1,1 @@
+DELETE FROM eod_ledger_transaction_diary WHERE business_date = ?

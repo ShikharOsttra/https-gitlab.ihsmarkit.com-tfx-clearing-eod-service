@@ -2,14 +2,12 @@ package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.core.time.ClockService.JST;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JOB_NAME_PARAM_NAME;
 
 import java.util.TimeZone;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Trigger;
@@ -40,12 +38,9 @@ public class QuartzConfig {
     @Bean(EOD1_JOB_DETAIL_NAME)
     @ConditionalOnProperty(EOD1_JOB_IS_ENABLED_PROPERTY)
     public JobDetail eod1JobDetail() {
-        final JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(JOB_NAME_PARAM_NAME, EOD1_BATCH_JOB_NAME);
 
         return JobBuilder.newJob(EodQuartzJob.class)
             .withIdentity(EOD1_BATCH_JOB_NAME)
-            .setJobData(jobDataMap)
             .storeDurably()
             .build();
     }

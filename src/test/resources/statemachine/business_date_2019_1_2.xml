@@ -1,0 +1,32 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-02"/>
+
+    <trade
+            id="110"
+            transaction_type="1"
+            currency_pair_id="13"
+            product_code="EUR/USD"
+            trade_ref="some_ref"
+            activity="NEW"
+            originator_id="101"
+            counterparty_id="102"
+            direction="BUY"
+            base_ccy="EUR"
+            base_ccy_amt="1.11"
+            value_ccy="USD"
+            value_ccy_amt="2.11"
+            spot_rate="3.11"
+            matching_status="CONFIRMED"
+            clearing_status="READY_FOR_CLEARING"
+            trade_date="2019-01-02"
+            value_date="2019-01-03"
+            execution_time="2019-01-02 22:00:00"
+            source_system="GUI"
+            submission_tsp="2019-01-02 16:00:00"
+            user_name="john.doe"
+            matching_ref="[null]"
+            version_tsp="2019-01-02 16:00:00"
+            message_id="WEB0000000011"
+    />
+
+</dataset>

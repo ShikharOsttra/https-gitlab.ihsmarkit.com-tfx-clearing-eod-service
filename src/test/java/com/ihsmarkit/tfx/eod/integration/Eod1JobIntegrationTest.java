@@ -42,7 +42,7 @@ class Eod1JobIntegrationTest {
     private JobLauncher jobLauncher;
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/eod1Job/eod1-sunnyDay-20191007.xml"})
+    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml"})
     @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testEodJob() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();

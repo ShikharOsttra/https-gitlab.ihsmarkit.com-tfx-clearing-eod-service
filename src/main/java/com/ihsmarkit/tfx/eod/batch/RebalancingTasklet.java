@@ -27,6 +27,7 @@ import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
+import com.ihsmarkit.tfx.eod.service.PositionRebalancePublishingService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,8 @@ public class RebalancingTasklet implements Tasklet {
 
     private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
 
+    private final PositionRebalancePublishingService publishingService;
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -61,7 +64,7 @@ public class RebalancingTasklet implements Tasklet {
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions);
 
-        final Stream<TradeEntity> trades = balanceTrades.entrySet().stream()
+        final List<TradeEntity> trades = balanceTrades.entrySet().stream()
             .flatMap(
                 tradesByCcy -> tradesByCcy.getValue().stream()
                     .collect(
@@ -85,9 +88,10 @@ public class RebalancingTasklet implements Tasklet {
                             dailySettlementPriceService.getPrice(businessDate, tradesByCcy.getKey())
                         )
                     )
-                );
+                )
+            .collect(Collectors.toList());
 
-        tradeRepositiory.saveAll(trades::iterator);
+        tradeRepositiory.saveAll(trades);
 
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             balanceTrades.entrySet().stream()
@@ -110,6 +114,7 @@ public class RebalancingTasklet implements Tasklet {
         ));
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
+        publishingService.publishTrades(businessDate, trades);
 
         return RepeatStatus.FINISHED;
     }

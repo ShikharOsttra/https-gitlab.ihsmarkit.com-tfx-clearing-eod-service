@@ -1,0 +1,1 @@
+DELETE FROM eod_ledger_collateral_balance WHERE business_date = ?

@@ -41,4 +41,4 @@ VALUES (:businessDate,
         :jasdecCode,
         :interestPaymentDay,
         :interestPaymentDay2,
-        :maturityDate);
+        :maturityDate)
