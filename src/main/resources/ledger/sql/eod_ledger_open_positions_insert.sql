@@ -35,4 +35,4 @@ VALUES (:businessDate,
         :dailyMtmAmount,
         :swapPoint,
         :totalVariationMargin,
-        :settlementDate);
+        :settlementDate)

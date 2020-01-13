@@ -18,4 +18,4 @@ VALUES (:businessDate,
         :currencyPairNumber,
         :currencyPairCode,
         :sellTradingVolumeInUnit,
-        :buyTradingVolumeInUnit);
+        :buyTradingVolumeInUnit)

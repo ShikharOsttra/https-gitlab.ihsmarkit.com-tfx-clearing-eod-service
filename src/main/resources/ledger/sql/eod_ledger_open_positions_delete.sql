@@ -1,0 +1,1 @@
+DELETE FROM eod_ledger_open_position WHERE business_date = ?

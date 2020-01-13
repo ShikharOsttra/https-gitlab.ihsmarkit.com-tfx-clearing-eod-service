@@ -55,4 +55,4 @@ VALUES (:businessDate,
         :swapPointTotal,
         :swapPointDay,
         :swapPointFollowingDay,
-        :followingApplicableDayForClearingDeposit);
+        :followingApplicableDayForClearingDeposit)

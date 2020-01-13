@@ -6,8 +6,6 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Stream;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
@@ -23,15 +21,9 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodStage;
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
-import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
-import com.ihsmarkit.tfx.core.dl.repository.eod.EodDataRepository;
-import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
-import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,46 +34,52 @@ import lombok.extern.slf4j.Slf4j;
 public class EODControlService {
 
     private final SystemParameterRepository systemParameterRepository;
-    private final EodStatusRepository eodStatusRepository;
-    private final TradeRepository tradeRepository;
-    private final CalendarTradingSwapPointRepository calendarRepository;
 
-    private final List<EodDataRepository> eodDataRepositories;
+    private final CalendarTradingSwapPointRepository calendarRepository;
 
     private final JobLauncher jobLauncher;
     private final JobLocator jobLocator;
+
+    private final EODCleanupService cleanupService;
+
+    private final FutureValueService futureValueService;
 
     public LocalDate getCurrentBusinessDate() {
         return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
     }
 
-    private void setCurrentBusinessDate(final LocalDate businessDate) {
-        systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, businessDate);
-    }
-
     @Transactional
     public LocalDate undoPreviousDayEOD() {
-        final LocalDate currentBusinessDate = getCurrentBusinessDate();
-        undoEODByDate(currentBusinessDate);
+        LocalDate currentBusinessDate = getCurrentBusinessDate();
+        log.info("[control-service] undo previous day EOD called for business date: {}", currentBusinessDate);
+        cleanupService.undoEODByDate(currentBusinessDate);
 
         final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
 
         if (!previousBusinessDate.isEqual(currentBusinessDate)) {
-            undoEODByDate(previousBusinessDate);
-            setCurrentBusinessDate(previousBusinessDate);
+            cleanupService.undoEODByDate(previousBusinessDate);
+            log.info("[cleanup] unrolling futures values for business date: {}", currentBusinessDate);
+            futureValueService.unrollFutureValues(currentBusinessDate);
+            log.info("[cleanup] setting current business date to : {}", previousBusinessDate);
+            systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, previousBusinessDate);
+            currentBusinessDate = previousBusinessDate;
         }
+        log.info("[control-service] undo previous day EOD completed for business date: {}", currentBusinessDate);
         return currentBusinessDate;
     }
 
     @Transactional
     public LocalDate undoCurrentDayEOD() {
         final LocalDate currentBusinessDate = getCurrentBusinessDate();
-        undoEODByDate(currentBusinessDate);
+        log.info("[control-service] undo current day EOD called for business date: {}", currentBusinessDate);
+        cleanupService.undoEODByDate(currentBusinessDate);
+        log.info("[control-service] undo current day EOD completed for business date: {}", currentBusinessDate);
         return currentBusinessDate;
     }
 
     public String runEODJob(final String jobName) {
         final LocalDate currentBusinessDay = getCurrentBusinessDate();
+        log.info("[control-service] triggering eod job: {} for business date: {}", jobName, currentBusinessDay);
         return triggerEOD(jobName, currentBusinessDay).name();
     }
 
@@ -100,30 +98,7 @@ public class EODControlService {
         }
     }
 
-    private void undoEODByDate(final LocalDate currentBusinessDate) {
-        tradeRepository.deleteAllByTransactionTypeAndTradeDate(TransactionType.BALANCE, currentBusinessDate);
-        eodDataRepositories.forEach(repository -> repository.deleteAllByDate(currentBusinessDate));
-        removeEODStageRecordsForDate(currentBusinessDate);
-    }
-
-    private void removeEODStageRecordsForDate(final LocalDate businessDate) {
-        Stream.of(
-            EodStage.EOD1_COMPLETE,
-            EodStage.EOD2_COMPLETE,
-            EodStage.DSP_APPROVED,
-            EodStage.SWAP_POINTS_APPROVED
-        )
-            .map(eodStage -> new EodStatusCompositeId(eodStage, businessDate))
-            .forEach(this::deleteEodStatusIfExist);
-    }
-
-    private void deleteEodStatusIfExist(final EodStatusCompositeId eod2CompleteStatus) {
-        if (eodStatusRepository.existsById(eod2CompleteStatus)) {
-            eodStatusRepository.deleteById(eod2CompleteStatus);
-        }
-    }
-
     private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
-        return calendarRepository.findPrevBankBusinessDate(currentBusinessDate).orElse(currentBusinessDate);
+        return calendarRepository.findPreviousTradingDate(currentBusinessDate.minusDays(1)).orElse(currentBusinessDate);
     }
 }
