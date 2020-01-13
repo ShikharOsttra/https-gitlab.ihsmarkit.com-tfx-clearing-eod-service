@@ -168,7 +168,8 @@ ext.additionalJacocoExclusions = [
         '**/eod/service/EODControlService*', //non-production code
         '**/eod/service/EODCleanupService*', //non-production code
         '**/eod/service/FutureValueService*', //non-production code
-        '**/eod/controller/EODServiceController*' //non-production code
+        '**/eod/controller/EODServiceController*', //non-production code
+        '**/eod/service/DailySettlementPriceService*' //TODO fix post release
 ]
 
 test {
