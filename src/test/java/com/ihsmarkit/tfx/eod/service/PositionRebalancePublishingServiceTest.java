@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.service;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
@@ -33,12 +34,12 @@ class PositionRebalancePublishingServiceTest {
     private AwsSesMailClient mailClient;
 
     @Test
-    void shouldEmailEmptyCsv() {
+    void onMailServiceCallOnEmptyTrades() {
         List<TradeEntity> tradeEntities = List.of();
         final LocalDate businessDate = LocalDate.of(2019, 1, 1);
         publishingService.publishTrades(businessDate, tradeEntities);
 
-        verify(mailClient).sendEmailWithAttachments(
+        verify(mailClient, times(0)).sendEmailWithAttachments(
             anyString(),
             eq(StringUtils.EMPTY),
             (List) argThat(IsCollectionWithSize.hasSize(1)),
