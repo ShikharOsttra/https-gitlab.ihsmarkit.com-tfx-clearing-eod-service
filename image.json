@@ -24,7 +24,7 @@
       "replicas": 1,
       "routes": [
         {
-          "host": "eod.${KUBERNETES_NAMESPACE}.${CLUSTER}",
+          "host": "eod.${TFX_DOMAIN}",
           "portNumber": 8443
         }
       ]
