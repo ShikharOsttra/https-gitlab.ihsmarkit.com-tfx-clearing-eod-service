@@ -32,6 +32,7 @@ public class DailySettlementPriceService {
         return dailySettlementPrices.computeIfAbsent(
             date,
             businessDate -> dailySettlementPriceRepository.findAllByBusinessDate(date).stream()
+                .filter(entity -> entity.getDailySettlementPrice() != null)
                 .collect(
                     Collectors.toMap(
                         dsp -> dsp.getCurrencyPair().getBaseCurrency() + dsp.getCurrencyPair().getValueCurrency(),
