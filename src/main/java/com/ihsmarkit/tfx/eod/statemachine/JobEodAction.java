@@ -19,7 +19,7 @@ public interface JobEodAction extends EodAction {
     default void execute(LocalDate date) {
         final JobExecution execution = executeJob(date);
         if (execution.getStatus() != BatchStatus.COMPLETED) {
-            throw new RuntimeException(String.format("Job %s failed", execution.getJobInstance().getJobName()));
+            throw new JobFailedException(String.format("Job %s failed", execution.getJobInstance().getJobName()));
         }
     }
 
