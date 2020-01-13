@@ -41,6 +41,8 @@ import lombok.SneakyThrows;
 })
 public class StateMachineActionsConfig {
 
+    public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
+
     private final EodStatusRepository eodStatusRepository;
 
     private final TradeRepository tradeRepository;
@@ -63,7 +65,7 @@ public class StateMachineActionsConfig {
     @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> initAction() {
         return context -> context.getExtendedState().getVariables()
-                    .put(BUSINESS_DATE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
+                    .put(BUSINESS_DATE_ATTRIBUTE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
     }
 
     @Bean

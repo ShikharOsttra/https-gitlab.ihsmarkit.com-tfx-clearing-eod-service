@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
-import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig.BUSINESS_DATE_ATTRIBUTE;
 
 import java.time.LocalDate;
 
@@ -12,7 +12,7 @@ public interface EodAction extends Action<StateMachineConfig.States, StateMachin
 
     @Override
     default void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-        final LocalDate businessDate = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE);
+        final LocalDate businessDate = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE);
         execute(businessDate);
     }
 
