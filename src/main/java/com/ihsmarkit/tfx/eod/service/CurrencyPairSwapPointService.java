@@ -28,8 +28,8 @@ public class CurrencyPairSwapPointService {
         return swapPoints.computeIfAbsent(
             date,
             businessDate -> eodSwapPointRepository.findAllByDateOrderedByProductNumber(date).stream()
-                .collect(Collectors.toMap(EodSwapPointEntity::getCurrencyPair, EodSwapPointEntity::getSwapPoint)
-                )
+                .filter(swapPoint -> swapPoint.getSwapPointDays() != 0)
+                .collect(Collectors.toMap(EodSwapPointEntity::getCurrencyPair, EodSwapPointEntity::getSwapPoint))
         ).get(currencyPair);
     }
 }
