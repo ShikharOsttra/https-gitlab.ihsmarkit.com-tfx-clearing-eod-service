@@ -35,7 +35,7 @@ public class PositionRebalancePublishingService {
                 List.of("SpecialIDL-CLHCoreTeam@epam.com"),
                 List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv", getPositionRebalanceCsv(trades))));
         } catch (final Exception ex) {
-            log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage(), ex);
+            log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
     }
 

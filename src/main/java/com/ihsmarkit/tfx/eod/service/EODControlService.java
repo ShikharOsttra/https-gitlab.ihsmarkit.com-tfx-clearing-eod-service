@@ -50,29 +50,36 @@ public class EODControlService {
 
     @Transactional
     public LocalDate undoPreviousDayEOD() {
-        final LocalDate currentBusinessDate = getCurrentBusinessDate();
+        LocalDate currentBusinessDate = getCurrentBusinessDate();
+        log.info("[control-service] undo previous day EOD called for business date: {}", currentBusinessDate);
         cleanupService.undoEODByDate(currentBusinessDate);
 
         final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
 
         if (!previousBusinessDate.isEqual(currentBusinessDate)) {
             cleanupService.undoEODByDate(previousBusinessDate);
+            log.info("[cleanup] unrolling futures values for business date: {}", currentBusinessDate);
             futureValueService.unrollFutureValues(currentBusinessDate);
+            log.info("[cleanup] setting current business date to : {}", previousBusinessDate);
             systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, previousBusinessDate);
-            return previousBusinessDate;
+            currentBusinessDate = previousBusinessDate;
         }
+        log.info("[control-service] undo previous day EOD completed for business date: {}", currentBusinessDate);
         return currentBusinessDate;
     }
 
     @Transactional
     public LocalDate undoCurrentDayEOD() {
         final LocalDate currentBusinessDate = getCurrentBusinessDate();
+        log.info("[control-service] undo current day EOD called for business date: {}", currentBusinessDate);
         cleanupService.undoEODByDate(currentBusinessDate);
+        log.info("[control-service] undo current day EOD completed for business date: {}", currentBusinessDate);
         return currentBusinessDate;
     }
 
     public String runEODJob(final String jobName) {
         final LocalDate currentBusinessDay = getCurrentBusinessDate();
+        log.info("[control-service] triggering eod job: {} for business date: {}", jobName, currentBusinessDay);
         return triggerEOD(jobName, currentBusinessDay).name();
     }
 
