@@ -57,4 +57,5 @@
     <eod_ledger_monthly_trading_volume/>
     <eod_daily_settlement_price/>
     <eod_swap_point/>
+    <alert />
 </dataset>
