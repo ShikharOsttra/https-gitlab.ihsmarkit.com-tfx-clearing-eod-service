@@ -2,8 +2,10 @@ package com.ihsmarkit.tfx.eod.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -29,14 +31,23 @@ public class PositionRebalancePublishingService {
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final String subject = String.format("%s rebalance results", businessDate.toString());
         try {
-            mailClient.sendEmailWithAttachments(
-                subject,
-                StringUtils.EMPTY,
-                List.of("SpecialIDL-CLHCoreTeam@epam.com"),
-                List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv", getPositionRebalanceCsv(trades))));
+            getAllParticipantEmails(trades).forEach(email -> {
+                mailClient.sendEmailWithAttachments(
+                    subject,
+                    StringUtils.EMPTY,
+                    Arrays.asList(email.split(",")),
+                    List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv", getPositionRebalanceCsv(trades))));
+            });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
+    }
+
+    private List<String> getAllParticipantEmails(final List<TradeEntity> trades) {
+        return trades.stream()
+            .flatMap(trade -> Stream.of(trade.getCounterparty().getParticipant().getNotificationEmail(),
+                trade.getOriginator().getParticipant().getNotificationEmail()))
+            .collect(Collectors.toList());
     }
 
     private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
