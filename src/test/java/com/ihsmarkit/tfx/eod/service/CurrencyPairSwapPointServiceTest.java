@@ -64,10 +64,9 @@ class CurrencyPairSwapPointServiceTest {
 
     @TestConfiguration
     @Import(SpringBatchConfig.class)
-    @ComponentScan(basePackageClasses = { CurrencyPairSwapPointService.class },
+    @ComponentScan(basePackageClasses = CurrencyPairSwapPointService.class,
         useDefaultFilters = false,
-        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = { CurrencyPairSwapPointService.class })
+        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = CurrencyPairSwapPointService.class)
     )
     static class TestConfig {
 

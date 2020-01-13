@@ -67,7 +67,7 @@ public class StateMachineActionsConfig {
     }
 
     @Bean
-    public EodAction eod1runAction() {
+    public JobEodAction eod1runAction() {
         return businessDate -> jobLauncher.run(eod1Job, getJobParameters(businessDate));
     }
 
@@ -94,12 +94,12 @@ public class StateMachineActionsConfig {
     }
 
     @Bean
-    public EodAction eod2runAction() {
+    public JobEodAction eod2runAction() {
         return businessDate -> jobLauncher.run(eod2Job, getJobParameters(businessDate));
     }
 
     @Bean
-    public EodAction dateRollRunAction() {
+    public JobEodAction dateRollRunAction() {
         return businessDate -> jobLauncher.run(rollBusinessDateJob, getJobParameters(businessDate));
     }
 
