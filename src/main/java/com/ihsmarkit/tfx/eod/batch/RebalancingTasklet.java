@@ -64,7 +64,7 @@ public class RebalancingTasklet implements Tasklet {
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions);
 
-        final Stream<TradeEntity> trades = balanceTrades.entrySet().stream()
+        final List<TradeEntity> trades = balanceTrades.entrySet().stream()
             .flatMap(
                 tradesByCcy -> tradesByCcy.getValue().stream()
                     .collect(
@@ -88,9 +88,10 @@ public class RebalancingTasklet implements Tasklet {
                             dailySettlementPriceService.getPrice(businessDate, tradesByCcy.getKey())
                         )
                     )
-                );
+                )
+            .collect(Collectors.toList());
 
-        tradeRepositiory.saveAll(trades::iterator);
+        tradeRepositiory.saveAll(trades);
 
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             balanceTrades.entrySet().stream()

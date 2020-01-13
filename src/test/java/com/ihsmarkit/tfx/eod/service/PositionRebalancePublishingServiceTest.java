@@ -36,7 +36,7 @@ class PositionRebalancePublishingServiceTest {
     void shouldEmailEmptyCsv() {
         List<TradeEntity> tradeEntities = List.of();
         final LocalDate businessDate = LocalDate.of(2019, 1, 1);
-        publishingService.publishTrades(businessDate, tradeEntities.stream());
+        publishingService.publishTrades(businessDate, tradeEntities);
 
         verify(mailClient).sendEmailWithAttachments(
             anyString(),

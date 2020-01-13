@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ public class PositionRebalancePublishingService {
 
     private final PositionRebalanceCSVWriter csvWriter;
 
-    public void publishTrades(final LocalDate businessDate, final Stream<TradeEntity> trades) {
+    public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final String subject = String.format("%s rebalance results", businessDate.toString());
         try {
             mailClient.sendEmailWithAttachments(
@@ -40,8 +39,8 @@ public class PositionRebalancePublishingService {
         }
     }
 
-    private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final Stream<TradeEntity> trades) {
-        return trades.map(tradeEntity -> PositionRebalanceRecord.builder()
+    private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
+        return trades.stream().map(tradeEntity -> PositionRebalanceRecord.builder()
             .tradeDate(tradeEntity.getTradeDate())
             .tradeType(2)
             .participantCodeSource(tradeEntity.getOriginator().getCode())
@@ -58,7 +57,7 @@ public class PositionRebalancePublishingService {
             .collect(Collectors.toList());
     }
 
-    private byte[] getPositionRebalanceCsv(final Stream<TradeEntity> trades) {
+    private byte[] getPositionRebalanceCsv(final List<TradeEntity> trades) {
         return csvWriter.getRecordsAsCsv(getPositionRebalanceTradesAsRecords(trades)).getBytes(StandardCharsets.UTF_8);
     }
 }
