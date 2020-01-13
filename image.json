@@ -120,6 +120,15 @@
                 "key": "eod1.job.enabled"
               }
             }
+          },
+          {
+            "name": "AWS_SES_REGION",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "environment-config",
+                "key": "aws.ses.region"
+              }
+            }
           }
         ],
         "readinessProbe": {

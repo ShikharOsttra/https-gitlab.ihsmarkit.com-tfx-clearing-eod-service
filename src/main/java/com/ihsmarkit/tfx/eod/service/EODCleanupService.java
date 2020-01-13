@@ -42,7 +42,7 @@ public class EODCleanupService {
         log.info("[cleanup] removing all trades of type 2 for business date: {}", currentBusinessDate);
         tradeRepository.deleteAllByTransactionTypeAndTradeDate(TransactionType.BALANCE, currentBusinessDate);
         log.info("[cleanup] removing all data from EOD tables for business date: {}", currentBusinessDate);
-        eodDataRepositories.forEach(repository -> repository.deleteAllByDate(currentBusinessDate));
+        eodDataRepositories.forEach(repository -> repository.deleteAllByDateGreaterThanEqual(currentBusinessDate));
         log.info("[cleanup] removing all data from ledgers tables for business date: {}", currentBusinessDate);
         deleteAllLedgersByBusinessDate(currentBusinessDate);
         removeEODStageRecordsForDate(currentBusinessDate);
