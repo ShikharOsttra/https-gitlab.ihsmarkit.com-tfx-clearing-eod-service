@@ -15,15 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.listener.StateMachineListenerAdapter;
-import org.springframework.statemachine.state.State;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -42,9 +38,8 @@ import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
+import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
@@ -166,7 +161,7 @@ class StateMachineIntegrationTest {
     }
 
     void waitFor(final StateMachineConfig.States state, final int seconds, final Runnable toRun) throws InterruptedException {
-        final ReadyWaitingListener listener = new ReadyWaitingListener(state);
+        final StateWaitingListener listener = new StateWaitingListener(state);
         stateMachine.addStateListener(listener);
         if (toRun != null) {
             toRun.run();
@@ -180,34 +175,4 @@ class StateMachineIntegrationTest {
         }
     }
 
-    private static class ReadyWaitingListener extends StateMachineListenerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
-        private final CountDownLatch latch = new CountDownLatch(1);
-        private final StateMachineConfig.States state;
-
-        ReadyWaitingListener(final StateMachineConfig.States state) {
-            this.state = state;
-        }
-
-        @Override
-        public void stateChanged(
-            final State<StateMachineConfig.States, StateMachineConfig.Events> from,
-            final State<StateMachineConfig.States, StateMachineConfig.Events> to
-        ) {
-            if (latch.getCount() == 1L && to.getId() == state) {
-                latch.countDown();
-            }
-        }
-        @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
-        void await(
-            final StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine,
-            final long seconds
-        ) throws InterruptedException {
-
-            if (stateMachine.getState().getId() == state) {
-                latch.countDown();
-            } else {
-                latch.await(seconds, TimeUnit.SECONDS);
-            }
-        }
-    }
 }
