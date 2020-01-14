@@ -24,8 +24,6 @@ import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_P
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_PNT_NOTAPPROVED;
 
-import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -37,14 +35,8 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 
-@SuppressFBWarnings({
-    "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
-    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
-    "SIC_INNER_SHOULD_BE_STATIC_ANON"
-})
 @EnableStateMachine
 @RequiredArgsConstructor
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateMachineConfig.States, StateMachineConfig.Events> {
@@ -99,28 +91,43 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
             .initial(IDLE)
             .choice(EOD1_RUN)
             .choice(EOD2_RUN)
-            .states(Set.of(INIT, READY, EOD1, EOD1_COMPLETE, EOD2, EOD2_COMPLETE, DATE_ROLL, DATE_ROLL_RUN))
+            .state(INIT)
+            .state(READY)
+            .state(EOD1)
+            .state(EOD1_COMPLETE, Events.STOP)
+            .state(EOD2)
+            .state(EOD2_COMPLETE, Events.STOP)
+            .state(DATE_ROLL, Events.STOP)
+            .state(DATE_ROLL_RUN, Events.STOP)
             .and().withStates()
                 .parent(EOD1)
                 .initial(DSP_CHECK)
+                .state(NO_DSP_TRADES_DELAY)
+                .state(DSP_NO_TRADES_DELAY)
+                .state(NO_DSP_NO_TRADES_DELAY)
+                .state(EOD1_READY, Events.STOP)
                 .choice(NO_DSP_NO_TRADES)
                 .choice(DSP_NO_TRADES)
                 .choice(NO_DSP_TRADES)
-                .states(Set.of(EOD1_READY, NO_DSP_TRADES_DELAY, DSP_NO_TRADES_DELAY, NO_DSP_NO_TRADES_DELAY))
             .and().withStates()
                 .parent(EOD2)
                 .initial(SWP_PNT_CHECK)
                 .choice(SWP_PNT_NOTAPPROVED)
-                .states(Set.of(SWP_PNT_APPROVED, SWP_PNT_DELAY));
+                .state(SWP_PNT_APPROVED, Events.STOP)
+                .state(SWP_PNT_DELAY);
     }
 
     @Override
     public void configure(final StateMachineTransitionConfigurer<States, Events> transitions) throws Exception {
         transitions
             .withExternal()
-                .source(EOD1).target(IDLE).event(Events.STOP)
+                .source(SWP_PNT_DELAY).target(IDLE).event(Events.STOP)
             .and().withExternal()
-                .source(EOD2).target(IDLE).event(Events.STOP)
+                .source(DSP_NO_TRADES_DELAY).target(IDLE).event(Events.STOP)
+            .and().withExternal()
+                .source(NO_DSP_NO_TRADES_DELAY).target(IDLE).event(Events.STOP)
+            .and().withExternal()
+                .source(NO_DSP_TRADES_DELAY).target(IDLE).event(Events.STOP)
             .and().withExternal()
                 .source(IDLE).target(READY).action(resetErrorActionBean)
             .and().withExternal()

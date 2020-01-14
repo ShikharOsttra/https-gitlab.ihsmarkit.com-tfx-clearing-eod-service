@@ -2,9 +2,11 @@ package com.ihsmarkit.tfx.eod.integration;
 
 import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.DSP_APPROVED;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig.BUSINESS_DATE_ATTRIBUTE;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.STOP;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DSP_NO_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD1;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD2;
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.INIT;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_NO_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.NO_DSP_TRADES_DELAY;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.READY;
@@ -14,11 +16,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -36,9 +38,8 @@ import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
+import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
@@ -54,8 +55,16 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     })}
 )
 @TestPropertySource("classpath:/application.properties")
-@SuppressFBWarnings("MDM_THREAD_YIELD")
-public class StateMachineIntegrationTest {
+class StateMachineIntegrationTest {
+
+    private static final int WAITING_TIME = 30;
+
+    private static final LocalDate JAN_1 = LocalDate.of(2019, 1, 1);
+    private static final LocalDate JAN_2 = JAN_1.plusDays(1);
+    private static final LocalDate JAN_3 = JAN_1.plusDays(2);
+    private static final LocalDate JAN_4 = JAN_1.plusDays(3);
+    private static final LocalDate JAN_5 = JAN_1.plusDays(4);
+
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
 
@@ -64,12 +73,12 @@ public class StateMachineIntegrationTest {
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
-    void shouldWaitDSP() throws InterruptedException {
+    void shouldWaitDSP() throws Exception {
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
-        Thread.sleep(2000);
+        resetToReady();
+        waitFor(NO_DSP_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 1));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_1);
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, NO_DSP_TRADES_DELAY);
 
     }
@@ -78,55 +87,54 @@ public class StateMachineIntegrationTest {
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
     void shouldWaitDSPAndProceedToSwpPnt() throws InterruptedException {
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
-        Thread.sleep(2000);
+        resetToReady();
+        waitFor(DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
 
-        eodStatusRepository.save(
+
+        waitFor(SWP_PNT_DELAY, WAITING_TIME, () -> eodStatusRepository.save(
             EodStatusEntity.builder()
-                .id(new EodStatusCompositeId(DSP_APPROVED, LocalDate.of(2019, 1, 1)))
+                .id(new EodStatusCompositeId(DSP_APPROVED, JAN_1))
                 .timestamp(LocalDateTime.now())
                 .build()
-        );
-        Thread.sleep(2000);
+        ));
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 1));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_1);
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
+
     }
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_2.xml"})
-    void shouldWaitTradesAndDSP() throws InterruptedException {
+    void shouldWaitTradesAndDSP() throws Exception {
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
+        resetToReady();
+        waitFor(NO_DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
 
-        Thread.sleep(5000);
-
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 2));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_2);
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, NO_DSP_NO_TRADES_DELAY);
 
     }
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_3.xml"})
-    void shouldWaitTrades() throws InterruptedException {
+    void shouldWaitTrades() throws Exception {
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
-        Thread.sleep(2000);
+        resetToReady();
+        waitFor(DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 3));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_3);
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD1, DSP_NO_TRADES_DELAY);
 
     }
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_4.xml"})
-    void shouldWaitSwapPoints() throws InterruptedException {
+    void shouldWaitSwapPoints() throws Exception {
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
+        resetToReady();
+        waitFor(SWP_PNT_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
 
-        Thread.sleep(2000);
-
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 4));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_4);
         assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
 
     }
@@ -134,22 +142,37 @@ public class StateMachineIntegrationTest {
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_5.xml"})
     @ExpectedDatabase(value = "/statemachine/business_date_2019_1_5-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void shouldRunFullCycle() throws InterruptedException {
+    void shouldRunFullCycle() throws Exception {
+        resetToReady();
+        waitFor(INIT, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
+        waitFor(READY, WAITING_TIME);
 
-        stateMachine.sendEvent(StateMachineConfig.Events.EOD);
-
-        Thread.sleep(3000);
-
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(LocalDate.of(2019, 1, 5));
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_5);
         assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
     }
 
-    @AfterEach
-    void stopMachine() throws InterruptedException {
-
-        stateMachine.sendEvent(StateMachineConfig.Events.STOP);
-        Thread.sleep(1000);
-
+    private StateMachineTestPlanBuilder<StateMachineConfig.States, StateMachineConfig.Events> testPlanBuilder() {
+        return StateMachineTestPlanBuilder.<StateMachineConfig.States, StateMachineConfig.Events>builder();
     }
+
+    void waitFor(final StateMachineConfig.States state, final int seconds) throws InterruptedException {
+        waitFor(state, seconds, null);
+    }
+
+    void waitFor(final StateMachineConfig.States state, final int seconds, final Runnable toRun) throws InterruptedException {
+        final StateWaitingListener listener = new StateWaitingListener(state);
+        stateMachine.addStateListener(listener);
+        if (toRun != null) {
+            toRun.run();
+        }
+        listener.await(stateMachine, seconds);
+    }
+
+    void resetToReady() throws InterruptedException {
+        if (stateMachine.getState().getId() != READY) {
+            waitFor(READY, WAITING_TIME, () -> stateMachine.sendEvent(STOP));
+        }
+    }
+
 }

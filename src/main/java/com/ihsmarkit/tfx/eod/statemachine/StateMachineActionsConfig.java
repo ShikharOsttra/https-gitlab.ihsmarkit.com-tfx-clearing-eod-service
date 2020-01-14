@@ -29,16 +29,11 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.time.ClockService;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 @Configuration
 @RequiredArgsConstructor
-@SuppressFBWarnings({
-    "PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS",
-    "UPM_UNCALLED_PRIVATE_METHOD"
-})
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
@@ -75,24 +70,13 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodAction eod1CompleteAction() {
-        return businessDate ->
-            eodStatusRepository.save(
-                EodStatusEntity.builder()
-                    .id(new EodStatusCompositeId(EOD1_COMPLETE, businessDate))
-                    .timestamp(clockService.getCurrentDateTimeUTC())
-                    .build()
-            );
+        return businessDate -> saveEodStatus(EOD1_COMPLETE, businessDate);
+
     }
 
     @Bean
     public EodAction eod2CompleteAction() {
-        return businessDate ->
-            eodStatusRepository.save(
-                EodStatusEntity.builder()
-                    .id(new EodStatusCompositeId(EOD2_COMPLETE, businessDate))
-                    .timestamp(clockService.getCurrentDateTimeUTC())
-                    .build()
-            );
+        return businessDate -> saveEodStatus(EOD2_COMPLETE, businessDate);
     }
 
     @Bean
@@ -118,6 +102,15 @@ public class StateMachineActionsConfig {
     @Bean
     public EodGuard tradesInFlightGuard() {
         return date -> !tradeRepository.existsTradeInFlightForDate(date);
+    }
+
+    private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {
+        eodStatusRepository.save(
+            EodStatusEntity.builder()
+                .id(new EodStatusCompositeId(stage, businessDate))
+                .timestamp(clockService.getCurrentDateTimeUTC())
+                .build()
+        );
     }
 
     @SneakyThrows

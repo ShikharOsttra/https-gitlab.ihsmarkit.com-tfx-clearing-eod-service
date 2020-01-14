@@ -20,13 +20,14 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.eod.config.QuartzConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 
 @ExtendWith(SpringExtension.class)
 @Import({IntegrationTestConfig.class, QuartzConfig.class, StateMachineConfig.class})
-@TestPropertySource("classpath:/application.properties")
-@SuppressFBWarnings("MDM_THREAD_YIELD")
+@TestPropertySource(
+    locations = "classpath:/application.properties",
+    properties = "eod1.job.enabled=true"
+)
 public class QuartzIntegrationTest {
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
@@ -63,8 +64,10 @@ public class QuartzIntegrationTest {
 
     @Test
     void shouldTriggerExection() throws SchedulerException, InterruptedException {
+        final StateWaitingListener listener = new StateWaitingListener(EOD1);
+        stateMachine.addStateListener(listener);
         scheduler.triggerJob(new JobKey(EOD1_BATCH_JOB_NAME, null));
-        Thread.sleep(1000);
+        listener.await(stateMachine, 5);
         assertThat(stateMachine.getState().getId()).isEqualTo(EOD1);
     }
 
