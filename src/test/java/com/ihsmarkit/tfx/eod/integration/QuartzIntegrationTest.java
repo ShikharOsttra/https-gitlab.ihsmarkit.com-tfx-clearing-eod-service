@@ -25,7 +25,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @ExtendWith(SpringExtension.class)
 @Import({IntegrationTestConfig.class, QuartzConfig.class, StateMachineConfig.class})
-@TestPropertySource("classpath:/application.properties")
+@TestPropertySource(
+    locations = "classpath:/application.properties",
+    properties = "eod1.job.enabled=true"
+)
 @SuppressFBWarnings("MDM_THREAD_YIELD")
 public class QuartzIntegrationTest {
     @Autowired
