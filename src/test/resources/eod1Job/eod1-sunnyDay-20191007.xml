@@ -2,6 +2,9 @@
     <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10"/>
     <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" value_date="2019-10-11"/>
 
+    <legal_entity id="104" code="TFEP44" name="Legal_444" participant_id="104" status="ACTIVE" clearing_role="NON_MEMBER"/>
+    <participant id="104" code="P24" name="Party_444" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+
     <trade
             id="110"
             transaction_type="1"
@@ -162,6 +165,19 @@
             price="3.12"
             amount="-1000000"
             currency="JPY"
+            type="SOD"
+    />
+
+    <participant_position
+            id="5"
+            currency_pair_id="13"
+            participant_type="FX_BROKER"
+            participant_id="104"
+            trade_date="2019-10-07"
+            value_date="2019-10-10"
+            price="1.09"
+            amount="777"
+            currency="EUR"
             type="SOD"
     />
 
