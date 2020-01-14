@@ -50,8 +50,8 @@ public class TransactionDiaryLedgerConfig {
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
     Flow transactionDiaryLedger() {
         return new FlowBuilder<SimpleFlow>(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
-            .start(tradeTransactionDiaryLedger())
-            .next(sodTransactionDiaryLedger())
+            .start(sodTransactionDiaryLedger())
+            .next(tradeTransactionDiaryLedger())
             .next(netTransactionDiaryLedger())
             .build();
     }
