@@ -1,0 +1,43 @@
+<dataset>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-01-31" is_relevant_currency_trade="true" value_date="2019-02-02"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="14" trade_date="2019-01-31" is_relevant_currency_trade="true" value_date="2019-02-02"/>
+
+    <participant_position id="11" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="50000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER"  value_date="2019-02-02"/>
+    <participant_position id="12" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="10000" currency="USD" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="13" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="20000" currency="USD" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="14" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="60000" currency="USD" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+
+    <participant_position id="24" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="590000" currency="JPY" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="25" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="600000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="26" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="-10000" currency="JPY" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+
+    <participant_position id="36" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="-70000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="37" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="200000" currency="USD" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02" />
+    <participant_position id="38" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="130000" currency="USD" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+
+    <participant_position id="46" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="700000" currency="JPY" type="SOD" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="47" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="200000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02" />
+    <participant_position id="48" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="500000" currency="JPY" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="13" amount="-10" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="INITIAL_MTM"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="13" amount="-14" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="DAILY_MTM"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="13" amount="188" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="SWAP_PNL"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="13" amount="164" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="TOTAL_VM"/>
+
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="14" amount="120" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="INITIAL_MTM"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="14" amount="674" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="DAILY_MTM"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="14" amount="-88" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="SWAP_PNL"/>
+    <eod_product_cash_settlement participant_id="101" currency_pair_id="14" amount="706" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="TOTAL_VM"/>
+
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="13" amount="330" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="INITIAL_MTM"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="13" amount="-11" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="DAILY_MTM"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="13" amount="-99" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="SWAP_PNL"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="13" amount="220" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="TOTAL_VM"/>
+
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="14" amount="900" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="INITIAL_MTM"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="14" amount="-77" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="DAILY_MTM"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="14" amount="-23" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="SWAP_PNL"/>
+    <eod_product_cash_settlement participant_id="102" currency_pair_id="14" amount="800" currency="JPY" date="2019-01-31" settlement_date="2019-02-02" type="TOTAL_VM"/>
+
+</dataset>
