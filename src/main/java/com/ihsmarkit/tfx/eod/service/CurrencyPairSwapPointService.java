@@ -20,16 +20,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CurrencyPairSwapPointService {
 
-    private final Map<LocalDate, Map<CurrencyPairEntity, BigDecimal>> swapPoints = new ConcurrentHashMap<>();
+    private final Map<LocalDate, Map<String, BigDecimal>> swapPoints = new ConcurrentHashMap<>();
 
     private final EodSwapPointRepository eodSwapPointRepository;
 
-    public BigDecimal getSwapPoint(final LocalDate date, final CurrencyPairEntity currencyPair) {
+    public BigDecimal getSwapPoint(final LocalDate date, final String currencyPair) {
         return swapPoints.computeIfAbsent(
             date,
             businessDate -> eodSwapPointRepository.findAllByDateOrderedByProductNumber(date).stream()
                 .filter(swapPoint -> swapPoint.getSwapPointDays() != 0)
-                .collect(Collectors.toMap(EodSwapPointEntity::getCurrencyPair, EodSwapPointEntity::getSwapPoint))
+                .collect(Collectors.toMap(item -> item.getCurrencyPair().getCode(), EodSwapPointEntity::getSwapPoint))
         ).get(currencyPair);
+    }
+
+    public BigDecimal getSwapPoint(final LocalDate date, final CurrencyPairEntity currencyPair) {
+        return getSwapPoint(date, currencyPair.getCode());
     }
 }

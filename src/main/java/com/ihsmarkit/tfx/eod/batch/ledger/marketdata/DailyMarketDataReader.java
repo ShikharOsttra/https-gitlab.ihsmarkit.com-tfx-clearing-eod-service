@@ -5,12 +5,9 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemReader;
@@ -49,7 +46,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
         }
         isFinished = true;
 
-        log.debug("Read trades for Daily Market Data Ledger");
+        log.info("Read trades for Daily Market Data Ledger for trade date: {}", businessDate);
 
         return tradeRepository.findAllNovatedForTradeDateAndDirection(businessDate, Side.SELL)
             .collect(
@@ -63,16 +60,16 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
     private static DailyMarkedDataAggregated finisher(final TradeHolder tradeHolder) {
         return DailyMarkedDataAggregated.builder()
             .openPriceTime(tradeHolder.getOpenTrade().getVersionTsp())
-            .openPrice(tradeHolder.getOpenTrade().getValueAmount().getValue())
+            .openPrice(tradeHolder.getOpenTrade().getSpotRate())
 
             .closePriceTime(tradeHolder.getCloseTrade().getVersionTsp())
-            .closePrice(tradeHolder.getCloseTrade().getValueAmount().getValue())
+            .closePrice(tradeHolder.getCloseTrade().getSpotRate())
 
             .lowPriceTime(tradeHolder.getLowTrade().getVersionTsp())
-            .lowPrice(tradeHolder.getLowTrade().getValueAmount().getValue())
+            .lowPrice(tradeHolder.getLowTrade().getSpotRate())
 
             .highPriceTime(tradeHolder.getHighTrade().getVersionTsp())
-            .highPrice(tradeHolder.getHighTrade().getValueAmount().getValue())
+            .highPrice(tradeHolder.getHighTrade().getSpotRate())
 
             .tradingVolumeAmount(tradeHolder.getTotalBaseAmountSum())
             .currencyPairCode(tradeHolder.getCurrencyPairCode())
@@ -87,15 +84,14 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
 
         private static final Comparator<TradeEntity> OPEN_TRADE_COMPARATOR = Comparator.comparing(TradeEntity::getVersionTsp);
         private static final Comparator<TradeEntity> CLOSE_TRADE_COMPARATOR = OPEN_TRADE_COMPARATOR.reversed();
-        private static final Comparator<TradeEntity> LOW_TRADE_COMPARATOR = Comparator.comparing(TradeHolder::valueAmountMapper);
+        private static final Comparator<TradeEntity> LOW_TRADE_COMPARATOR = Comparator.comparing(TradeEntity::getSpotRate);
         private static final Comparator<TradeEntity> HIGH_TRADE_COMPARATOR = LOW_TRADE_COMPARATOR.reversed();
 
         private TradeEntity openTrade;
         private TradeEntity closeTrade;
         private TradeEntity highTrade;
         private TradeEntity lowTrade;
-        @Nullable
-        private BigDecimal totalBaseAmountSum;
+        private BigDecimal totalBaseAmountSum = BigDecimal.ZERO;
         private String currencyPairCode;
 
         void acceptTrade(final TradeEntity candidate) {
@@ -104,9 +100,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             lowTrade = findMinBy(Stream.of(lowTrade, candidate), LOW_TRADE_COMPARATOR);
             highTrade = findMinBy(Stream.of(highTrade, candidate), HIGH_TRADE_COMPARATOR);
             currencyPairCode = candidate.getCurrencyPair().getCode();
-            totalBaseAmountSum = Optional.ofNullable(totalBaseAmountSum)
-                .orElse(BigDecimal.ZERO)
-                .add(candidate.getBaseAmount().getValue());
+            totalBaseAmountSum = totalBaseAmountSum.add(candidate.getBaseAmount().getValue());
         }
 
         static TradeHolder merge(final TradeHolder a, final TradeHolder b) {
@@ -134,10 +128,6 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
                 a.openTrade, a.closeTrade, a.highTrade, a.lowTrade,
                 b.openTrade, b.closeTrade, b.highTrade, b.lowTrade
             );
-        }
-
-        private static BigDecimal valueAmountMapper(final TradeEntity trade) {
-            return trade.getValueAmount().getValue();
         }
     }
 
