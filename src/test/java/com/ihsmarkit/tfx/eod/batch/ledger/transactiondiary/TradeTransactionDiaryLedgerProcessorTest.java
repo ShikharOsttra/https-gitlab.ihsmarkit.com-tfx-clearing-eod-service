@@ -31,6 +31,7 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -64,11 +65,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private LegalEntity counterparty;
     @Mock
     private ClockService clockService;
+    @Mock
+    private CurrencyPairSwapPointService currencyPairSwapPointService;
 
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
-            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService);
+            BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService,
+            currencyPairSwapPointService);
     }
 
     @Test
@@ -78,6 +82,8 @@ class TradeTransactionDiaryLedgerProcessorTest {
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
+            .thenReturn(participantCurrencyPairAmount);
+        when(eodCalculator.calculateSwapPoint(any(TradeEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(participantCurrencyPairAmount);
         when(participantCurrencyPairAmount.getAmount()).thenReturn(BigDecimal.ZERO);
         when(originator.getParticipant()).thenReturn(PARTICIPANT);
@@ -109,7 +115,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .counterpartyType("FXB")
                 .dsp("10")
                 .dailyMtMAmount("0")
-                .swapPoint(EMPTY)
+                .swapPoint("0")
                 .outstandingPositionAmount(EMPTY)
                 .settlementDate("2019/01/02")
                 .tradeId("tradeRef")
