@@ -8,6 +8,8 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTim
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +26,14 @@ import org.springframework.stereotype.Component;
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
-import com.ihsmarkit.tfx.core.dl.entity.marketdata.EodSwapPointEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
-import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +46,11 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
 
     private static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
 
-    private final EodSwapPointRepository eodSwapPointRepository;
+    private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
     private final FxSpotProductRepository fxSpotProductRepository;
     private final ParticipantPositionRepository participantPositionRepository;
+    private final ClockService clockService;
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
     @Value("#{stepExecutionContext['recordDate']}")
@@ -89,13 +92,13 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .currencyNumber(fxSpotProduct.getProductNumber())
             .currencyPairCode(currencyPairCode)
             .openPrice(formatBigDecimal(aggregated.getOpenPrice()))
-            .openPriceTime(formatTime(aggregated.getOpenPriceTime()))
+            .openPriceTime(formatTime(utcTimeToServerTime(aggregated.getOpenPriceTime())))
             .highPrice(formatBigDecimal(aggregated.getHighPrice()))
-            .highPriceTime(formatTime(aggregated.getHighPriceTime()))
+            .highPriceTime(formatTime(utcTimeToServerTime(aggregated.getHighPriceTime())))
             .lowPrice(formatBigDecimal(aggregated.getLowPrice()))
-            .lowPriceTime(formatTime(aggregated.getLowPriceTime()))
+            .lowPriceTime(formatTime(utcTimeToServerTime(aggregated.getLowPriceTime())))
             .closePrice(formatBigDecimal(aggregated.getClosePrice()))
-            .closePriceTime(formatTime(aggregated.getClosePriceTime()))
+            .closePriceTime(formatTime(utcTimeToServerTime(aggregated.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
             .previousDsp(formatBigDecimal(previousDsp))
             .currentDsp(formatBigDecimal(currentDsp))
@@ -110,11 +113,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
     }
 
     private Function<String, BigDecimal> getSwapPointsMapper() {
-        final Map<String, BigDecimal> swapPointPerCurrencyPair = eodSwapPointRepository.findAllByDateOrderedByProductNumber(businessDate).stream()
-            .collect(Collectors.toUnmodifiableMap(item -> item.getCurrencyPair().getCode(), EodSwapPointEntity::getSwapPoint));
-
-        // todo: remove default ZERO once swap points will be setuped for each EOD
-        return currencyPairCode -> swapPointPerCurrencyPair.getOrDefault(currencyPairCode, BigDecimal.ZERO).multiply(THOUSAND);
+        return currencyPairCode -> currencyPairSwapPointService.getSwapPoint(businessDate, currencyPairCode).multiply(THOUSAND);
     }
 
     private Map<String, DailySettlementPriceEntity> getDspMap() {
@@ -131,8 +130,14 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         return participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.NET, businessDate).stream()
             .collect(Collectors.groupingBy(
                 item -> item.getCurrencyPair().getCode(),
-                Streams.summingBigDecimal(item -> item.getAmount().getValue())
+                Streams.summingBigDecimal(item -> item.getAmount().getValue().abs())
             ));
+    }
+
+    private LocalDateTime utcTimeToServerTime(final LocalDateTime utcTime) {
+        return OffsetDateTime.of(utcTime, ZoneOffset.UTC)
+            .withOffsetSameInstant(clockService.getServerZoneOffset())
+            .toLocalDateTime();
     }
 
     private static BigDecimal getDspValue(@Nullable final DailySettlementPriceEntity dsp, final Function<DailySettlementPriceEntity, BigDecimal> extractor) {

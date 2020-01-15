@@ -1,17 +1,17 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
-import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.anEodSwapPointEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +28,10 @@ import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
-import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 
 import lombok.SneakyThrows;
 
@@ -41,21 +42,25 @@ class DailyMarketDataProcessorTest {
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1));
 
     @Mock
-    private EodSwapPointRepository eodSwapPointRepository;
+    private CurrencyPairSwapPointService currencyPairSwapPointService;
     @Mock
     private DailySettlementPriceRepository dailySettlementPriceRepository;
     @Mock
     private FxSpotProductRepository fxSpotProductRepository;
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
+    @Mock
+    private ClockService clockService;
 
     private DailyMarketDataProcessor aggregator;
 
     @BeforeEach
     void beforeEach() {
+        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
+
         aggregator = new DailyMarketDataProcessor(
-            eodSwapPointRepository, dailySettlementPriceRepository, fxSpotProductRepository,
-            participantPositionRepository, BUSINESS_DATE, RECORD_DATE
+            currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductRepository,
+            participantPositionRepository, clockService, BUSINESS_DATE, RECORD_DATE
         );
     }
 
@@ -80,17 +85,8 @@ class DailyMarketDataProcessorTest {
     }
 
     private void mockSwapPoints() {
-        when(eodSwapPointRepository.findAllByDateOrderedByProductNumber(any()))
-            .thenReturn(List.of(
-                anEodSwapPointEntityBuilder()
-                    .currencyPair(currencyPair("USD", "JPY"))
-                    .swapPoint(BigDecimal.ONE)
-                    .build(),
-                anEodSwapPointEntityBuilder()
-                    .currencyPair(currencyPair("EUR", "JPY"))
-                    .swapPoint(BigDecimal.TEN)
-                    .build()
-            ));
+        when(currencyPairSwapPointService.getSwapPoint(any(), anyString()))
+            .thenReturn(BigDecimal.ONE);
     }
 
     private void mockDsp() {

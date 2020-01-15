@@ -5,13 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
@@ -28,7 +29,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @DatabaseTearDown("/common/tearDown.xml")
 public class DailyMarketDataLedgerStepTest extends AbstractSpringBatchTest {
 
-    @MockBean
+    @SpyBean
     private ClockService clockService;
 
     @Test
@@ -36,6 +37,7 @@ public class DailyMarketDataLedgerStepTest extends AbstractSpringBatchTest {
     @ExpectedDatabase(value = "/eod2Job/DailyMarketDataLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunDailyMarketDataStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 2, 11, 30, 0));
+        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.of("+05:00"));
 
         final JobParameters jobParams = new JobParametersBuilder()
             .addString("businessDate", "20190202")
