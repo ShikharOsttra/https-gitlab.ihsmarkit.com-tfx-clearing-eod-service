@@ -23,6 +23,7 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -46,6 +47,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final DailySettlementPriceService dailySettlementPriceService;
     private final FXSpotProductService fxSpotProductService;
     private final ClockService clockService;
+    private final CurrencyPairSwapPointService currencyPairSwapPointService;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
@@ -57,6 +59,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         final LocalDateTime clearingTsp = getDateTimeInSystemTimeZone(trade.getClearingTsp());
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
         final String baseAmount = trade.getBaseAmount().getValue().toString();
+        final String swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount().toString();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -80,7 +83,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
             .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString())
-            .swapPoint(EMPTY)
+            .swapPoint(swapPoint)
             .outstandingPositionAmount(EMPTY)
             .settlementDate(formatDate(trade.getValueDate()))
             .tradeId(trade.getTradeReference())
@@ -102,6 +105,10 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
 
     private BigDecimal getJpyRate(final String ccy) {
         return jpyRateService.getJpyRate(businessDate, ccy);
+    }
+
+    private BigDecimal getSwapPoint(final CurrencyPairEntity ccy) {
+        return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
     @Nullable

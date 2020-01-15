@@ -83,11 +83,11 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .participantType("LP")
                 .currencyNo("101")
                 .currencyPair("USD/JPY")
-                .matchDate(EMPTY)
-                .matchTime(EMPTY)
+                .matchDate("2019/01/01")
+                .matchTime("07:00:00")
                 .matchId(EMPTY)
-                .clearDate(EMPTY)
-                .clearTime(EMPTY)
+                .clearDate("2019/01/01")
+                .clearTime("07:00:00")
                 .clearingId(EMPTY)
                 .tradePrice("10")
                 .sellAmount(EMPTY)
@@ -112,6 +112,7 @@ class SODTransactionDiaryLedgerProcessorTest {
             .currencyPair(CURRENCY)
             .amount(AMOUNT)
             .valueDate(BUSINESS_DATE.plusDays(1))
+            .tradeDate(BUSINESS_DATE)
             .build();
     }
 }

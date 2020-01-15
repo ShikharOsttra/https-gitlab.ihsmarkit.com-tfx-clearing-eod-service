@@ -140,6 +140,14 @@ public class EODCalculator {
         return calculateSwapPoint(tradeOrPositionMapper.convertPosition(participantPosition), swapPointResolver, jpyRates);
     }
 
+    public ParticipantCurrencyPairAmount calculateSwapPoint(
+        final TradeEntity participantPosition,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return calculateSwapPoint(tradeOrPositionMapper.convertTrade(participantPosition), swapPointResolver, jpyRates);
+    }
+
     public Map<ParticipantEntity, BigDecimal> calculateRequiredInitialMargin(
         final Stream<ParticipantPositionEntity> positions,
         final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver,

@@ -30,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @StepScope
 public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
 
+    private static final String DEFAULT_TIME = "07:00:00";
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -50,6 +52,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, this::getSwapPoint, this::getJpyRate).getAmount().toString();
         final String settlementDate = formatDate(participantPosition.getValueDate());
         final String dsp = dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString();
+        final String tradeDate = formatDate(participantPosition.getTradeDate());
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -60,11 +63,11 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantType(formatEnum(participant.getType()))
             .currencyNo(fxSpotProductService.getFxSpotProduct(participantPosition.getCurrencyPair()).getProductNumber())
             .currencyPair(participantPosition.getCurrencyPair().getCode())
-            .matchDate(EMPTY)
-            .matchTime(EMPTY)
+            .matchDate(tradeDate)
+            .matchTime(DEFAULT_TIME)
             .matchId(EMPTY)
-            .clearDate(EMPTY)
-            .clearTime(EMPTY)
+            .clearDate(tradeDate)
+            .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
             .tradePrice(dsp)
             .sellAmount(EMPTY)
