@@ -9,6 +9,8 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import javax.annotation.Nullable;
 
@@ -54,9 +56,9 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
 
         final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
         @Nullable
-        final LocalDateTime matchingTsp = getDateTimeInSystemTimeZone(trade.getMatchingTsp());
+        final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
         @Nullable
-        final LocalDateTime clearingTsp = getDateTimeInSystemTimeZone(trade.getClearingTsp());
+        final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
         final String baseAmount = trade.getBaseAmount().getValue().toString();
         final String swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount().toString();
@@ -111,8 +113,11 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
+    //todo: refactor it - extract it and reuse
     @Nullable
-    private LocalDateTime getDateTimeInSystemTimeZone(@Nullable final LocalDateTime dateTime) {
-        return dateTime == null ? null : dateTime.atOffset(clockService.getServerZoneOffset()).toLocalDateTime();
+    private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
+        return utcTime == null ? null : OffsetDateTime.of(utcTime, ZoneOffset.UTC)
+            .withOffsetSameInstant(clockService.getServerZoneOffset())
+            .toLocalDateTime();
     }
 }
