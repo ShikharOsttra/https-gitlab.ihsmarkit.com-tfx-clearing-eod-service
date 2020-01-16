@@ -43,10 +43,7 @@ class EODCalculatorTest {
         EURUSD, BigDecimal.valueOf(1.1)
     );
 
-    private static final Map<CurrencyPairEntity, BigDecimal> SWP_PNT_MAP = Map.of(
-        USDJPY, BigDecimal.valueOf(4.1),
-        EURUSD, BigDecimal.valueOf(-0.31)
-    );
+    private static final Map<CurrencyPairEntity, BigDecimal> SWP_PNT_MAP = Map.of(EURUSD, BigDecimal.valueOf(-0.31));
 
     private static final Map<String, BigDecimal> JPY_PRICE_MAP = Map.of(
         EodJobConstants.USD, BigDecimal.valueOf(99.0)
@@ -218,7 +215,7 @@ class EODCalculatorTest {
             ParticipantCurrencyPairAmount::getAmount
         ).containsExactlyInAnyOrder(
             tuple(PARTICIPANT_A, EURUSD, BigDecimal.valueOf(920)),
-            tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(41)),
+            tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO),
             tuple(PARTICIPANT_B, EURUSD, BigDecimal.valueOf(613))
         );
     }
