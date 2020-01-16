@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 
 class PositionRebalanceCSVWriterTest {
 
-    private final static String HEADER_ONLY = "Trade Date,Trade Type,Participant Code Source,Participant Code Target,Currency Pair,Side,Trade Price,"
+    private static final String HEADER_ONLY = "Trade Date,Trade Type,Participant Code Source,Participant Code Target,Currency Pair,Side,Trade Price,"
         + "Base Currency Amount,Value Currency Amount,Value Date,Trade ID,Timestamp\r\n";
 
-    private final static String ONE_ROW = HEADER_ONLY +
+    private static final String ONE_ROW = HEADER_ONLY +
         "20190101,2,ORIGINATOR_01,CPARTY_01,USD/CHF,SELL,1.10123,10000000,12312323,20190102,tradeId_01,20190101 12:13:14\r\n";
 
     private final PositionRebalanceCSVWriter csvWriter = new PositionRebalanceCSVWriter();

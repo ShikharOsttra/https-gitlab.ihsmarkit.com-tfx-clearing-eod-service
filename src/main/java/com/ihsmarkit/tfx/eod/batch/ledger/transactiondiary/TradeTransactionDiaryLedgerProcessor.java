@@ -9,8 +9,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import javax.annotation.Nullable;
 
@@ -113,11 +111,8 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
-    //todo: refactor it - extract it and reuse
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
-        return utcTime == null ? null : OffsetDateTime.of(utcTime, ZoneOffset.UTC)
-            .withOffsetSameInstant(clockService.getServerZoneOffset())
-            .toLocalDateTime();
+        return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
     }
 }
