@@ -125,11 +125,10 @@ public class EODCalculator {
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
         final Function<String, BigDecimal> jpyRates) {
 
-        return calc(
-            trade,
-            jpyRates,
-            SWAP_POINT_UNIT.multiply(swapPointResolver.apply(trade.getCurrencyPair()))
-        );
+        return Optional
+            .ofNullable(swapPointResolver.apply(trade.getCurrencyPair()))
+            .map(swapPoint -> calc(trade, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
+            .orElseGet(() -> ParticipantCurrencyPairAmount.of(trade.getParticipant(), trade.getCurrencyPair(), ZERO));
     }
 
     public ParticipantCurrencyPairAmount calculateSwapPoint(
