@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +77,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
     @Test
     @SuppressWarnings("unchecked")
     void processTradeEntity() {
-        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
+        when(clockService.utcTimeToServerTime(any())).thenReturn(LocalDateTime.of(2019, 1, 1, 1, 30));
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
@@ -106,7 +105,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .matchTime("01:30:00")
                 .matchId("matchingRef")
                 .clearDate("2019/01/01")
-                .clearTime("03:30:00")
+                .clearTime("01:30:00")
                 .clearingId("clearingRef")
                 .tradePrice("10")
                 .sellAmount("10")
@@ -132,7 +131,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .currencyPair(CURRENCY)
             .matchingTsp(MATCHING_DATE)
             .matchingRef("matchingRef")
-            .clearingTsp(MATCHING_DATE.plusHours(2))
+            .clearingTsp(MATCHING_DATE)
             .clearingRef("clearingRef")
             .spotRate(BigDecimal.TEN)
             .baseAmount(AMOUNT)

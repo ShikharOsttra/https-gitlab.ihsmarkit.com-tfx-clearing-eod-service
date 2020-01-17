@@ -56,7 +56,7 @@ class DailyMarketDataProcessorTest {
 
     @BeforeEach
     void beforeEach() {
-        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
+        when(clockService.utcTimeToServerTime(any())).thenReturn(LocalDateTime.of(2019, 1, 1, 1, 1));
 
         aggregator = new DailyMarketDataProcessor(
             currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductRepository,

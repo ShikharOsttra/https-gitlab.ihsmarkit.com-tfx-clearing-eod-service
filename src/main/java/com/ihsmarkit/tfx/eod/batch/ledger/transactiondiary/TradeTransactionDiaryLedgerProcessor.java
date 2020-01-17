@@ -54,9 +54,9 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
 
         final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
         @Nullable
-        final LocalDateTime matchingTsp = getDateTimeInSystemTimeZone(trade.getMatchingTsp());
+        final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
         @Nullable
-        final LocalDateTime clearingTsp = getDateTimeInSystemTimeZone(trade.getClearingTsp());
+        final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
         final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
         final String baseAmount = trade.getBaseAmount().getValue().toString();
         final String swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount().toString();
@@ -112,7 +112,7 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     }
 
     @Nullable
-    private LocalDateTime getDateTimeInSystemTimeZone(@Nullable final LocalDateTime dateTime) {
-        return dateTime == null ? null : dateTime.atOffset(clockService.getServerZoneOffset()).toLocalDateTime();
+    private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
+        return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
     }
 }
