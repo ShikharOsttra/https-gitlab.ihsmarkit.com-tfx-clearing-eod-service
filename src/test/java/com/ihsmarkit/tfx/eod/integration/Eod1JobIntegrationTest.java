@@ -12,6 +12,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
@@ -21,7 +22,9 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -40,6 +43,12 @@ class Eod1JobIntegrationTest {
 
     @Autowired
     private JobLauncher jobLauncher;
+
+    @MockBean
+    private AlertSender alertSender;
+
+    @MockBean
+    private AwsSesMailClient mailClient;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml"})

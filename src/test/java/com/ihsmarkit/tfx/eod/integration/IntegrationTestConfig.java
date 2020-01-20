@@ -11,10 +11,12 @@ import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
+import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 
 @Configuration
 @ImportAutoConfiguration(classes = CoreDlAutoConfiguration.class)
-@Import({DateConfig.class, CacheConfig.class, SpringBatchConfig.class})
+@Import({DateConfig.class, CacheConfig.class, SpringBatchConfig.class, EodJobListenerFactory.class, EodAlertStepListener.class})
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper"})
 class IntegrationTestConfig {

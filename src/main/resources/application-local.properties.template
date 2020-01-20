@@ -6,4 +6,5 @@ spring.datasource.hikari.catalog=devXX
 spring.jpa.properties.hibernate.default_catalog=devXX
 spring.liquibase.default-schema=devXX
 
-
+# Output queues
+jms.any.alert-service.queue=ANY.ALERTSRV.NEW.ALERT.DEV_<USERNAME>

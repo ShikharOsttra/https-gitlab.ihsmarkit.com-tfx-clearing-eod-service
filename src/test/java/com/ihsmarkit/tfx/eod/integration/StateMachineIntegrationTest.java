@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
@@ -30,6 +31,7 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
@@ -70,6 +72,9 @@ class StateMachineIntegrationTest {
 
     @Autowired
     private EodStatusRepository eodStatusRepository;
+
+    @MockBean
+    private AlertSender alertSender;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
