@@ -44,6 +44,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
+import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
 @Import(EOD1JobConfig.class)
 class RebalancingTaskletTest extends AbstractSpringBatchTest {
@@ -78,6 +79,9 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private TradeAndSettlementDateService tradeAndSettlementDateService;
+
+    @MockBean
+    private AwsSesMailClient mailClient;
 
     @Captor
     private ArgumentCaptor<Iterable<ParticipantPositionEntity>> positionCaptor;

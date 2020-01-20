@@ -20,6 +20,7 @@ import org.springframework.core.io.Resource;
 import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.DailyMarketDataProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.DailyMarketDataReader;
+import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
 import com.ihsmarkit.tfx.eod.support.ListItemWriter;
@@ -38,11 +39,13 @@ public class DailyMarketDataLedgerConfig {
     private final DataSource dataSource;
     @Value("classpath:/ledger/sql/eod_daily_market_data_insert.sql")
     private final Resource dailyMarketDataSqlInsert;
+    private final EodAlertStepListener eodAlertStepListener;
 
     @Bean(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
     protected Step dailyMarketDataLedgerStep() {
         return steps.get(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
             .listener(recordDateSetter)
+            .listener(eodAlertStepListener)
             .<Map<String, DailyMarkedDataAggregated>, List<DailyMarketDataEnriched>>chunk(1)
             .reader(dailyMarketDataReader)
             .processor(dailyMarketDataProcessor)
