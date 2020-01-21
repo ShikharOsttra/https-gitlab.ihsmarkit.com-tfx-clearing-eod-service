@@ -40,7 +40,7 @@ class SODTransactionDiaryLedgerProcessorTest {
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
-
+    private static final BigDecimal PRICE = BigDecimal.valueOf(123.445);
 
     private SODTransactionDiaryLedgerProcessor processor;
     @Mock
@@ -89,7 +89,7 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .clearDate("2019/01/01")
                 .clearTime("07:00:00")
                 .clearingId(EMPTY)
-                .tradePrice("10")
+                .tradePrice(PRICE.toPlainString())
                 .sellAmount(EMPTY)
                 .buyAmount(EMPTY)
                 .counterpartyCode(EMPTY)
@@ -113,6 +113,7 @@ class SODTransactionDiaryLedgerProcessorTest {
             .amount(AMOUNT)
             .valueDate(BUSINESS_DATE.plusDays(1))
             .tradeDate(BUSINESS_DATE)
+            .price(PRICE)
             .build();
     }
 }

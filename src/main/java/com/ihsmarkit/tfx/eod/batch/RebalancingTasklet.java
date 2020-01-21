@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.dl.repository.FxSpotEodPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -53,16 +54,21 @@ public class RebalancingTasklet implements Tasklet {
 
     private final PositionRebalancePublishingService publishingService;
 
+    private final FxSpotEodPositionRepository fxSpotEodPositionRepository;
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
     @Override
-    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
-        final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions);
+        final Map<CurrencyPairEntity, BigDecimal> thresholds = fxSpotEodPositionRepository.findAllOrderByProductNumberAsc().stream()
+            .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), setting -> setting.getEodThresholdAmount().getValue()));
+
+        final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
 
         final List<TradeEntity> trades = balanceTrades.entrySet().stream()
             .flatMap(

@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
@@ -40,6 +42,7 @@ class DailyMarketDataProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1));
+    private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
 
     @Mock
     private CurrencyPairSwapPointService currencyPairSwapPointService;
@@ -56,8 +59,7 @@ class DailyMarketDataProcessorTest {
 
     @BeforeEach
     void beforeEach() {
-        when(clockService.utcTimeToServerTime(any())).thenReturn(LocalDateTime.of(2019, 1, 1, 1, 1));
-
+        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
         aggregator = new DailyMarketDataProcessor(
             currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductRepository,
             participantPositionRepository, clockService, BUSINESS_DATE, RECORD_DATE
@@ -76,11 +78,14 @@ class DailyMarketDataProcessorTest {
             .isNotEmpty()
             .extracting(
                 DailyMarketDataEnriched::getCurrencyPairCode,
-                DailyMarketDataEnriched::getBusinessDate
+                DailyMarketDataEnriched::getBusinessDate,
+                DailyMarketDataEnriched::getDspChange,
+                DailyMarketDataEnriched::getSwapPoint,
+                DailyMarketDataEnriched::getOpenPositionAmount
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", BUSINESS_DATE),
-                tuple("EUR/JPY", BUSINESS_DATE)
+                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0"),
+                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444")
             );
     }
 
@@ -94,13 +99,13 @@ class DailyMarketDataProcessorTest {
             .thenReturn(List.of(
                 DailySettlementPriceEntity.builder()
                     .currencyPair(currencyPair("USD", "JPY"))
-                    .dailySettlementPrice(new BigDecimal("1.51"))
-                    .previousDailySettlementPrice(new BigDecimal("1.45"))
+                    .dailySettlementPrice(new BigDecimal("1.5100000"))
+                    .previousDailySettlementPrice(new BigDecimal("1.4500000"))
                     .build(),
                 DailySettlementPriceEntity.builder()
                     .currencyPair(currencyPair("EUR", "JPY"))
-                    .dailySettlementPrice(new BigDecimal("2.32"))
-                    .previousDailySettlementPrice(new BigDecimal("2.30"))
+                    .dailySettlementPrice(new BigDecimal("2.3000000"))
+                    .previousDailySettlementPrice(new BigDecimal("2.3000000"))
                     .build()
             ));
     }
@@ -111,10 +116,12 @@ class DailyMarketDataProcessorTest {
                 ParticipantPositionEntity.builder()
                     .currencyPair(currencyPair("USD", "JPY"))
                     .amount(AmountEntity.of(new BigDecimal("1111"), "JPY"))
+                    .participant(PARTICIPANT)
                     .build(),
                 ParticipantPositionEntity.builder()
                     .currencyPair(currencyPair("EUR", "JPY"))
-                    .amount(AmountEntity.of(new BigDecimal("2222"), "JPY"))
+                    .amount(AmountEntity.of(new BigDecimal("-2222"), "JPY"))
+                    .participant(PARTICIPANT)
                     .build()
             ));
     }

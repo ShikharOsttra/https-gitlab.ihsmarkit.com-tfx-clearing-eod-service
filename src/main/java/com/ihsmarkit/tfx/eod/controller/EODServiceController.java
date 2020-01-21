@@ -7,6 +7,9 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JO
 import java.time.LocalDate;
 import java.util.stream.Stream;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -25,13 +28,13 @@ public class EODServiceController implements EodServiceControllerApi {
     private final EODControlService eodControlService;
 
     @Override
-    public ResponseEntity<LocalDate> undoCurrentEOD() {
-        return ResponseEntity.ok(eodControlService.undoCurrentDayEOD());
+    public ResponseEntity<LocalDate> undoCurrentEOD(@NotNull @Valid final Boolean keepMarketData) {
+        return ResponseEntity.ok(eodControlService.undoCurrentDayEOD(keepMarketData));
     }
 
     @Override
-    public ResponseEntity<LocalDate> undoPreviousEOD() {
-        return ResponseEntity.ok(eodControlService.undoPreviousDayEOD());
+    public ResponseEntity<LocalDate> undoPreviousEOD(@NotNull @Valid final Boolean keepMarketData) {
+        return ResponseEntity.ok(eodControlService.undoPreviousDayEOD(keepMarketData));
     }
 
     @Override

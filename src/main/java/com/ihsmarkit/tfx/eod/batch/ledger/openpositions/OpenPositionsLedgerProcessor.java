@@ -9,6 +9,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.REBALANCING;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -65,7 +66,7 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @Override
-    public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) throws Exception {
+    public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) {
 
         final ParticipantEntity participant = item.getParticipant();
         final CurrencyPairEntity currencyPair = item.getCurrencyPair();
@@ -88,8 +89,8 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .tradeDate(formatDate(businessDate))
             .shortPositionPreviousDay(formatAmount(shortPosition(getPosition(positions, SOD))))
             .longPositionPreviousDay(formatAmount(longPosition(getPosition(positions, SOD))))
-            .buyTradingAmount(formatAmount(getPosition(positions, BUY)))
-            .sellTradingAmount(formatAmount(getPosition(positions, SELL)))
+            .buyTradingAmount(formatBigDecimal(getPosition(positions, BUY).orElse(ZERO).abs()))
+            .sellTradingAmount(formatBigDecimal(getPosition(positions, SELL).orElse(ZERO).abs()))
             .shortPosition(formatAmount(shortPosition(getPositionsSummed(positions, NET, REBALANCING))))
             .longPosition(formatAmount(longPosition(getPositionsSummed(positions, NET, REBALANCING))))
             .initialMtmAmount(formatAmount(getMargin(margins, INITIAL_MTM)))

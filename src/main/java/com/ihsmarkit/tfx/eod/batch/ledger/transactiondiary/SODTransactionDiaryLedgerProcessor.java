@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -51,7 +52,8 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             eodCalculator.calculateDailyMtmValue(participantPosition, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString();
         final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, this::getSwapPoint, this::getJpyRate).getAmount().toString();
         final String settlementDate = formatDate(participantPosition.getValueDate());
-        final String dsp = dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()).toString();
+        final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()));
+        final String tradePrice = formatBigDecimal(participantPosition.getPrice());
         final String tradeDate = formatDate(participantPosition.getTradeDate());
 
         return TransactionDiary.builder()
@@ -69,7 +71,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearDate(tradeDate)
             .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
-            .tradePrice(dsp)
+            .tradePrice(tradePrice)
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
             .counterpartyCode(EMPTY)

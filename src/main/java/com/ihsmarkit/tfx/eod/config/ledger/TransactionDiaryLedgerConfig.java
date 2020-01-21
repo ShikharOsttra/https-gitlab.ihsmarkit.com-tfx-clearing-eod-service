@@ -9,6 +9,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.support.SimpleFlow;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.orm.JpaQueryProvider;
@@ -23,8 +24,7 @@ import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODTransactionDiaryLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeListQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeTransactionDiaryLedgerProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TransactionDiaryLedgerProcessor;
-import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.support.ListItemWriter;
 
 import lombok.AllArgsConstructor;
 
@@ -58,30 +58,49 @@ public class TransactionDiaryLedgerConfig {
 
     @Bean(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
     Step tradeTransactionDiaryLedger() {
-        return getStep(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(tradeListQueryProvider), tradeTransactionDiaryLedgerProcessor);
+        return getStep(
+            TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME,
+            transactionDiaryReader(tradeListQueryProvider),
+            tradeTransactionDiaryLedgerProcessor,
+            new ListItemWriter<>(transactionDiaryWriter())
+        );
     }
 
     @Bean(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
     Step sodTransactionDiaryLedger() {
-        return getStep(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(sodQueryProvider), sodTransactionDiaryLedgerProcessor);
+        return getStep(
+            SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME,
+            transactionDiaryReader(sodQueryProvider),
+            sodTransactionDiaryLedgerProcessor,
+            transactionDiaryWriter()
+        );
     }
 
     @Bean(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME)
     Step netTransactionDiaryLedger() {
-        return getStep(NET_TRANSACTION_DIARY_LEDGER_STEP_NAME, transactionDiaryReader(netQueryProvider), netTransactionDiaryLedgerProcessor);
+        return getStep(
+            NET_TRANSACTION_DIARY_LEDGER_STEP_NAME,
+            transactionDiaryReader(netQueryProvider),
+            netTransactionDiaryLedgerProcessor,
+            transactionDiaryWriter()
+        );
     }
 
     @Bean
-    ItemWriter<TransactionDiary> transactionDiaryWriter() {
+    <O> ItemWriter<O> transactionDiaryWriter() {
         return ledgerStepFactory.listWriter(transactionDiaryLedgerSql);
     }
 
-    private <T> Step getStep(final String transactionDiaryLedgerStepName, final ItemReader<T> tradeEntityItemReader,
-        final TransactionDiaryLedgerProcessor<T> transactionDiaryLedgerProcessor) {
-        return ledgerStepFactory.<T, TransactionDiary>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
+    private <T, O> Step getStep(
+        final String transactionDiaryLedgerStepName,
+        final ItemReader<T> tradeEntityItemReader,
+        final ItemProcessor<T, O> transactionDiaryLedgerProcessor,
+        final ItemWriter<O> writer
+    ) {
+        return ledgerStepFactory.<T, O>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
             .reader(tradeEntityItemReader)
             .processor(transactionDiaryLedgerProcessor)
-            .writer(transactionDiaryWriter())
+            .writer(writer)
             .build();
     }
 

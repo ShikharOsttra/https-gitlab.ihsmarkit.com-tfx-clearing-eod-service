@@ -97,7 +97,31 @@ public class PositionBalance {
         } else {
             return rebalanceImpl(sell, buy, rounding, identity());
         }
+    }
 
+    public Stream<BalanceTrade> allocateResidual() {
+        if (buy.getNet().compareTo(sell.getNet().abs()) >= 0) {
+            return allocateResidual(buy, sell, BigDecimal::negate);
+        } else {
+            return allocateResidual(sell, buy, identity());
+        }
+    }
+
+    private Stream<BalanceTrade> allocateResidual(
+        final PositionList from,
+        final PositionList to,
+        final UnaryOperator<BigDecimal> amountAdjuster
+    ) {
+
+        final Optional<RawPositionData> fromPosition = from.getPositions().stream().sorted(BY_AMOUNT_AND_PARTICIPANT_CODE).findFirst();
+
+        if (fromPosition.isPresent()) {
+            final RawPositionData other = fromPosition.get();
+            return to.getPositions().stream()
+                .map(position -> new BalanceTrade(other.getParticipant(), position.getParticipant(), amountAdjuster.apply(position.getAmount().abs())));
+        } else {
+            return Stream.of();
+        }
     }
 
     private Stream<BalanceTrade> rebalanceImpl(

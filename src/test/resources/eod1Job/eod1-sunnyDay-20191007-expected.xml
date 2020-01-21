@@ -176,7 +176,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.1"
-            amount="300000"
+            amount="330000"
             currency="EUR"
     />
 
@@ -188,7 +188,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.1"
-            amount="-300000"
+            amount="-330000"
             currency="EUR"
 
     />
@@ -337,9 +337,9 @@
             counterparty_id="102"
             direction="BUY"
             base_ccy="EUR"
-            base_ccy_amt="300000.00"
+            base_ccy_amt="330000.00"
             value_ccy="USD"
-            value_ccy_amt="272727.27"
+            value_ccy_amt="300000.00"
             spot_rate="1.1"
             matching_status="CONFIRMED"
             clearing_status="NOVATED"
@@ -372,7 +372,7 @@
             trade_date="2019-10-08"
             value_date="2019-10-11"
             price="1.1"
-            amount="30000.00"
+            amount="0"
             currency="EUR"
     />
 
@@ -384,7 +384,7 @@
             trade_date="2019-10-08"
             value_date="2019-10-11"
             price="1.1"
-            amount="-699999.94"
+            amount="-669999.94"
             currency="EUR"
     />
 </dataset>

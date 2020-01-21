@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -49,6 +50,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
         log.info("Read trades for Daily Market Data Ledger for trade date: {}", businessDate);
 
         return tradeRepository.findAllNovatedForTradeDateAndDirection(businessDate, Side.SELL)
+            .filter(trade -> trade.getTransactionType() != TransactionType.BALANCE)
             .collect(
                 Collectors.groupingBy(
                     trade -> trade.getCurrencyPair().getCode(),
@@ -71,7 +73,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             .highPriceTime(tradeHolder.getHighTrade().getVersionTsp())
             .highPrice(tradeHolder.getHighTrade().getSpotRate())
 
-            .tradingVolumeAmount(tradeHolder.getTotalBaseAmountSum())
+            .shortPositionsAmount(tradeHolder.getTotalShortPositionsAmountSum())
             .currencyPairCode(tradeHolder.getCurrencyPairCode())
 
             .build();
@@ -91,7 +93,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
         private TradeEntity closeTrade;
         private TradeEntity highTrade;
         private TradeEntity lowTrade;
-        private BigDecimal totalBaseAmountSum = BigDecimal.ZERO;
+        private BigDecimal totalShortPositionsAmountSum = BigDecimal.ZERO;
         private String currencyPairCode;
 
         void acceptTrade(final TradeEntity candidate) {
@@ -100,7 +102,10 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             lowTrade = findMinBy(Stream.of(lowTrade, candidate), LOW_TRADE_COMPARATOR);
             highTrade = findMinBy(Stream.of(highTrade, candidate), HIGH_TRADE_COMPARATOR);
             currencyPairCode = candidate.getCurrencyPair().getCode();
-            totalBaseAmountSum = totalBaseAmountSum.add(candidate.getBaseAmount().getValue());
+            // this should be total for “ShortPosition” only.
+            if (candidate.getDirection() == Side.SELL) {
+                totalShortPositionsAmountSum = totalShortPositionsAmountSum.add(candidate.getBaseAmount().getValue());
+            }
         }
 
         static TradeHolder merge(final TradeHolder a, final TradeHolder b) {
@@ -109,7 +114,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
                 findMinBy(concatTrades(a, b), CLOSE_TRADE_COMPARATOR),
                 findMinBy(concatTrades(a, b), HIGH_TRADE_COMPARATOR),
                 findMinBy(concatTrades(a, b), LOW_TRADE_COMPARATOR),
-                a.getTotalBaseAmountSum().add(b.getTotalBaseAmountSum()),
+                a.getTotalShortPositionsAmountSum().add(b.getTotalShortPositionsAmountSum()),
                 a.getCurrencyPairCode()
             );
         }

@@ -19,7 +19,6 @@ import static java.util.stream.Collectors.toMap;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -57,8 +56,6 @@ import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
-import com.ihsmarkit.tfx.eod.model.PositionBalance;
-import com.ihsmarkit.tfx.eod.model.RawPositionData;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 import lombok.RequiredArgsConstructor;
@@ -72,6 +69,8 @@ public class EODCalculator {
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
+
+    private final SingleCurrencyRebalanceCalculator rebalanceCalculator;
 
     private BigDecimal getJpyAmount(final CurrencyPairEntity currencyPair, final BigDecimal amount, final Function<String, BigDecimal> jpyRates) {
         return Optional.of(currencyPair)
@@ -292,7 +291,8 @@ public class EODCalculator {
             .map(t -> calculateMtmValue(t, dsp, jpyRates));
     }
 
-    public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions) {
+    public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions,
+                                                                            final Map<CurrencyPairEntity, BigDecimal> thresholds) {
 
         return positions
             .map(tradeOrPositionMapper::convertPosition)
@@ -303,7 +303,7 @@ public class EODCalculator {
                 .collect(
                     toMap(
                         Map.Entry::getKey,
-                        entry -> rebalanceSingleCurrency(entry.getValue(), DEFAULT_ROUNDING) //FIXME: Rounding by ccy
+                        entry -> rebalanceCalculator.rebalance(entry.getValue(), thresholds.get(entry.getKey()), DEFAULT_ROUNDING)
                     )
                 );
     }
@@ -380,28 +380,6 @@ public class EODCalculator {
                     requiredInitialMargin.map(BigDecimal::negate)
                 ))
             .build();
-    }
-
-    private List<BalanceTrade> rebalanceSingleCurrency(final List<TradeOrPositionEssentials> list, final int rounding) {
-
-        PositionBalance balance = PositionBalance.of(
-            list.stream()
-                .map(position -> new RawPositionData(position.getParticipant(), position.getAmount()))
-        );
-
-        final BigDecimal threshold = BigDecimal.TEN.pow(rounding);
-        final List<BalanceTrade> trades = new ArrayList<>();
-
-        int tradesInIteration = Integer.MAX_VALUE;
-
-        while (tradesInIteration > 0 && balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(threshold) > 0) {
-            final List<BalanceTrade> iterationTrades = balance.rebalance(rounding).collect(Collectors.toList());
-            tradesInIteration = iterationTrades.size();
-            trades.addAll(iterationTrades);
-            balance = balance.applyTrades(iterationTrades.stream());
-        }
-
-        return trades;
     }
 
     public static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {

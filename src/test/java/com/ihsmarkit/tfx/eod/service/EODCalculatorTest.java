@@ -283,16 +283,16 @@ class EODCalculatorTest {
     void shouldRebalancePositions() {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
             eodCalculator.rebalanceLPPositions(
-                Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M)
+                Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M),
+                Map.of(EURUSD, BigDecimal.valueOf(100000), USDJPY, BigDecimal.valueOf(100000))
             );
 
         assertThat(balanceTrades.get(EURUSD))
             .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
             .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT_A, PARTICIPANT_C, -123539000),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, -25761000),
-                tuple(PARTICIPANT_B, PARTICIPANT_D, -21100000),
-                tuple(PARTICIPANT_A, PARTICIPANT_D, -100000)
+                tuple(PARTICIPANT_A, PARTICIPANT_D, -25900000),
+                tuple(PARTICIPANT_B, PARTICIPANT_D, -21100000)
             );
         assertThat(balanceTrades.get(USDJPY))
             .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
@@ -319,10 +319,10 @@ class EODCalculatorTest {
     }
 
     @TestConfiguration
-    @ComponentScan(basePackageClasses = { EODCalculator.class, TradeOrPositionEssentialsMapper.class },
+    @ComponentScan(basePackageClasses = { EODCalculator.class, TradeOrPositionEssentialsMapper.class, SingleCurrencyRebalanceCalculator.class },
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = { EODCalculator.class, TradeOrPositionEssentialsMapper.class })
+            classes = { EODCalculator.class, TradeOrPositionEssentialsMapper.class, SingleCurrencyRebalanceCalculator.class })
     )
     static class TestConfig {
 

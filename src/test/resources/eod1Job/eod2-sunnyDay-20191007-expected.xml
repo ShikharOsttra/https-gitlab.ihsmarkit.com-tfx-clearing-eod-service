@@ -148,6 +148,7 @@
     <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="3" collateral_purpose="Clearing deposit" total_deposit="0" cash="0" lg="0" securities="0" required_amount="3000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-3000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
     <eod_ledger_collateral_balance business_date="2019-10-07" trade_date="2019/10/07" participant_code="P23" participant_name="Party_423" participant_type="FXB" collateral_purpose_type="4" collateral_purpose="Special purpose collateral" total_deposit="0" cash="0" lg="0" securities="0" required_amount="4000" total_initial_margin="" total_variation_margin="" total_excess_deficit="-4000" deficit_in_cash_settlement="" cash_settlement="" cash_settlement_following_day="" initial_mtm_total="" initial_mtm_day="" initial_mtm_following_day="" daily_mtm_total="" daily_mtm_day="" daily_mtm_following_day="" swap_point_total="" swap_point_day="" swap_point_following_day="" following_applicable_day_for_clearing_deposit=""/>
 
+    <!-- SOD EUR/USD : P11 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -162,7 +163,7 @@
         clear_date="2019/10/07"
         clear_time="07:00:00"
         clearing_id=""
-        trade_price="1.10000000"
+        trade_price="3.12000000"
         sell_amount=""
         buy_amount=""
         counterparty_code=""
@@ -176,6 +177,7 @@
         trade_type=""
         reference=""
         user_reference=""/>
+    <!-- SOD EUR/USD : P23 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -190,7 +192,7 @@
         clear_date="2019/10/07"
         clear_time="07:00:00"
         clearing_id=""
-        trade_price="1.10000000"
+        trade_price="3.12000000"
         sell_amount=""
         buy_amount=""
         counterparty_code=""
@@ -204,6 +206,7 @@
         trade_type=""
         reference=""
         user_reference=""/>
+    <!-- Trade P11 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -232,6 +235,7 @@
         trade_type="1"
         reference=""
         user_reference=""/>
+    <!-- Trade P11 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -260,6 +264,7 @@
         trade_type="1"
         reference=""
         user_reference=""/>
+    <!-- Trade P11 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -288,6 +293,7 @@
         trade_type="1"
         reference=""
         user_reference=""/>
+    <!-- Trade EUR/USD : P11 -->
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -316,6 +322,36 @@
         trade_type="2"
         reference=""
         user_reference=""/>
+    <!-- NET EUR/USD : P11 -->
+    <eod_ledger_transaction_diary
+            business_date="2019-10-07"
+            trade_date="2019/10/07"
+            participant_code="P22"
+            participant_name="Party_422"
+            participant_type="LP"
+            currency_no="102"
+            currency_pair="EUR/USD"
+            match_date=""
+            match_time=""
+            match_id=""
+            clear_date=""
+            clear_time=""
+            clearing_id=""
+            trade_price="1.10000000"
+            sell_amount="300000.00"
+            buy_amount=""
+            counterparty_code="P11"
+            counterparty_type="LP"
+            dsp="1.10000000"
+            daily_mtm_amount="0"
+            swap_point="28221"
+            outstanding_position_amount=""
+            settlement_date="2019/10/10"
+            trade_id="test"
+            trade_type="2"
+            reference=""
+            user_reference=""/>
+
     <eod_ledger_transaction_diary
         business_date="2019-10-07"
         trade_date="2019/10/07"
@@ -330,7 +366,7 @@
         clear_date=""
         clear_time=""
         clearing_id=""
-        trade_price="3.12000000"
+        trade_price="1.10000000"
         sell_amount=""
         buy_amount=""
         counterparty_code=""

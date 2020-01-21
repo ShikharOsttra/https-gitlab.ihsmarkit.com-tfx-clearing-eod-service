@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         when(participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(any())).thenReturn(positions);
 
-        when(eodCalculator.rebalanceLPPositions(any())).thenReturn(
+        when(eodCalculator.rebalanceLPPositions(any(), any())).thenReturn(
             Collections.singletonMap(
                 EURUSD,
                 List.of(
@@ -128,7 +129,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         verify(participantPositionRepository).findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(BUSINESS_DATE);
 
-        verify(eodCalculator).rebalanceLPPositions(positions);
+        verify(eodCalculator).rebalanceLPPositions(positions, Map.of());
 
         verify(tradeRepository).saveAll(tradeCaptor.capture());
         assertThat(tradeCaptor.getValue())
