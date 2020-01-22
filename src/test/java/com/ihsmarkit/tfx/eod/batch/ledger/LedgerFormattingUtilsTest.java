@@ -2,9 +2,11 @@ package com.ihsmarkit.tfx.eod.batch.ledger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.MonthDay;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -52,6 +54,23 @@ class LedgerFormattingUtilsTest {
             Arguments.of(CollateralProductType.LOG, "LG"),
             Arguments.of(CollateralProductType.BOND, "JGB"),
             Arguments.of(CollateralProductType.EQUITY, "Equities")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("nullFormatting")
+    void shouldFormatNull(final Function<Object, String> formatMethod) {
+        assertThat(formatMethod.apply(null)).isEmpty();
+    }
+
+    private static Stream nullFormatting() {
+        return Stream.of(
+            Arguments.of((Function<LocalDate, String>) LedgerFormattingUtils::formatDate),
+            Arguments.of((Function<LocalDateTime, String>) LedgerFormattingUtils::formatDateTime),
+            Arguments.of((Function<LocalDateTime, String>) LedgerFormattingUtils::formatTime),
+            Arguments.of((Function<MonthDay, String>) LedgerFormattingUtils::formatMonthDay),
+            Arguments.of((Function<Enum, String>) LedgerFormattingUtils::formatEnum),
+            Arguments.of((Function<BigDecimal, String>) LedgerFormattingUtils::formatBigDecimal)
         );
     }
 
