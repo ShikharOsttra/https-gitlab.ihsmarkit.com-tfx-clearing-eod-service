@@ -30,7 +30,7 @@ public class CurrencyPairSwapPointService {
             businessDate -> eodSwapPointRepository.findAllByDateOrderedByProductNumber(date).stream()
                 .filter(swapPoint -> swapPoint.getSwapPointDays() != 0)
                 .collect(Collectors.toMap(item -> item.getCurrencyPair().getCode(), EodSwapPointEntity::getSwapPoint))
-        ).get(currencyPair);
+        ).getOrDefault(currencyPair, BigDecimal.ZERO); //TODO zero confirmed by Markit BA, TBC by TFX
     }
 
     public BigDecimal getSwapPoint(final LocalDate date, final CurrencyPairEntity currencyPair) {

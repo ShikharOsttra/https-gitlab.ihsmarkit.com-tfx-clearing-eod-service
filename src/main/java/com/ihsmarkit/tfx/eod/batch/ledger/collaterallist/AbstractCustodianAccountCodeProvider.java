@@ -13,6 +13,9 @@ import com.google.common.collect.Tables;
 import com.ihsmarkit.tfx.core.dl.entity.custodianaccount.CustodianAccountEntity;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AbstractCustodianAccountCodeProvider {
 
     private final Lazy<Table<String, CollateralPurpose, String>> codes;
@@ -32,7 +35,13 @@ public class AbstractCustodianAccountCodeProvider {
     }
 
     public Optional<String> getCode(final String participantCode, final CollateralPurpose purpose) {
-        return Optional.ofNullable(codes.get().get(participantCode, purpose));
+        try {
+            return Optional.ofNullable(codes.get().get(participantCode, purpose));
+        } catch (final Exception ex) {
+            log.error("error while retrieving custodian account information for participantCode: {} and purpose: {} with message: {}",
+                participantCode, purpose, ex.getMessage());
+            return Optional.empty();
+        }
     }
 
 }

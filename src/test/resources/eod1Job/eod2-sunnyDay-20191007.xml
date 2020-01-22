@@ -257,6 +257,19 @@
         type="SELL"
     />
 
+    <participant_position
+        id="8"
+        currency_pair_id="13"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2019-11-08"
+        value_date="2019-11-11"
+        price="3.12"
+        amount="-1000000"
+        currency="JPY"
+        type="SOD"
+    />
+
     <eod_product_cash_settlement
             id="1"
             participant_id="101"

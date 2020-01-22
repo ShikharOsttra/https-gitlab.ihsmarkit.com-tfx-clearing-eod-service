@@ -16,11 +16,11 @@
         dsp="1.12000000"
         previous_day_dsp="1.15000000"
         dsp_change="-0.03000000"
-        swap_point="4230.000"
+        swap_point="4.230"
         trading_volume_amount="7444.50"
         trading_volume_in_unit="7.4445"
-        open_position_amount="1022.00"
-        open_position_in_unit="1.022" />
+        open_position_amount="522.00"
+        open_position_in_unit="0.522" />
 
     <eod_ledger_market_data
         business_date="2019-02-02"
@@ -39,11 +39,11 @@
         dsp="1.17000000"
         previous_day_dsp="1.10000000"
         dsp_change="0.07000000"
-        swap_point="1340.000"
+        swap_point="1.340"
         trading_volume_amount="13503.50"
         trading_volume_in_unit="13.5035"
-        open_position_amount="5402.00"
-        open_position_in_unit="5.402" />
+        open_position_amount="2201.00"
+        open_position_in_unit="2.201" />
 
     <eod_ledger_market_data
         business_date="2019-02-02"
@@ -62,9 +62,9 @@
         dsp="1.11000000"
         previous_day_dsp="1.12000000"
         dsp_change="-0.01000000"
-        swap_point="2230.000"
+        swap_point="2.230"
         trading_volume_amount="16615.85"
         trading_volume_in_unit="16.61585"
-        open_position_amount="4802.00"
-        open_position_in_unit="4.802" />
+        open_position_amount="0"
+        open_position_in_unit="0" />
 </dataset>

@@ -17,6 +17,12 @@ paths:
         - eod-service-controller
       summary: remove results of the current business day EOD
       operationId: undoCurrentEOD
+      parameters:
+        - in: query
+          name: keepMarketData
+          required: true
+          schema:
+            type: boolean
       responses:
         200:
           description: current business date
@@ -36,6 +42,12 @@ paths:
         - eod-service-controller
       summary: remove results of the current and previous business days EOD and unroll business day
       operationId: undoPreviousEOD
+      parameters:
+        - in: query
+          name: keepMarketData
+          required: true
+          schema:
+            type: boolean
       responses:
         200:
           description: current business date

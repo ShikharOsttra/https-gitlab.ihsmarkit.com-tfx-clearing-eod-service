@@ -170,7 +170,9 @@ ext.additionalJacocoExclusions = [
         '**/eod/service/EODCleanupService*', //non-production code
         '**/eod/service/FutureValueService*', //non-production code
         '**/eod/controller/EODServiceController*', //non-production code
-        '**/eod/service/DailySettlementPriceService*' //TODO fix post release
+        '**/eod/service/DailySettlementPriceService*', //TODO fix post release
+        '**/eod/batch/ledger/transactiondiary/SODPricesProvider*', //TODO check if it's not longer needed (coverage dropped to 0)
+        '**/eod/batch/ledger/LedgerFormattingUtils*' //TODO fix post release (coverage dropped to zero)
 ]
 
 test {

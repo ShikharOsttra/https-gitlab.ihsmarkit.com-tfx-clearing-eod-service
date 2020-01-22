@@ -49,15 +49,15 @@ public class EODControlService {
     }
 
     @Transactional
-    public LocalDate undoPreviousDayEOD() {
+    public LocalDate undoPreviousDayEOD(final boolean keepMarketData) {
         LocalDate currentBusinessDate = getCurrentBusinessDate();
         log.info("[control-service] undo previous day EOD called for business date: {}", currentBusinessDate);
-        cleanupService.undoEODByDate(currentBusinessDate);
+        cleanupService.undoEODByDate(currentBusinessDate, keepMarketData);
 
         final LocalDate previousBusinessDate = getPreviousBusinessDate(currentBusinessDate);
 
         if (!previousBusinessDate.isEqual(currentBusinessDate)) {
-            cleanupService.undoEODByDate(previousBusinessDate);
+            cleanupService.undoEODByDate(previousBusinessDate, keepMarketData);
             log.info("[cleanup] unrolling futures values for business date: {}", currentBusinessDate);
             futureValueService.unrollFutureValues(currentBusinessDate);
             log.info("[cleanup] setting current business date to : {}", previousBusinessDate);
@@ -69,10 +69,10 @@ public class EODControlService {
     }
 
     @Transactional
-    public LocalDate undoCurrentDayEOD() {
+    public LocalDate undoCurrentDayEOD(final boolean keepMarketData) {
         final LocalDate currentBusinessDate = getCurrentBusinessDate();
         log.info("[control-service] undo current day EOD called for business date: {}", currentBusinessDate);
-        cleanupService.undoEODByDate(currentBusinessDate);
+        cleanupService.undoEODByDate(currentBusinessDate, keepMarketData);
         log.info("[control-service] undo current day EOD completed for business date: {}", currentBusinessDate);
         return currentBusinessDate;
     }

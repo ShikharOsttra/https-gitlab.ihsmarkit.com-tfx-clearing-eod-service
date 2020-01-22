@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.BALANCE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -9,11 +11,15 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +40,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @StepScope
-public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<TradeEntity> {
+public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<TradeEntity, List<TransactionDiary>> {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -50,16 +56,41 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
 
     @Override
-    public TransactionDiary process(final TradeEntity trade) {
+    public List<TransactionDiary> process(final TradeEntity trade) {
 
-        final ParticipantEntity originatorParticipant = trade.getOriginator().getParticipant();
-        @Nullable
-        final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
-        @Nullable
-        final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
-        final ParticipantEntity counterpartyParticipant = trade.getCounterparty().getParticipant();
-        final String baseAmount = trade.getBaseAmount().getValue().toString();
-        final String swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount().toString();
+        final ParticipantEntity originator = trade.getOriginator().getParticipant();
+
+        final ParticipantEntity counterparty = trade.getCounterparty().getParticipant();
+        final String baseAmount = formatBigDecimal(trade.getBaseAmount().getValue());
+        final BigDecimal swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount();
+        final BigDecimal mtm = eodCalculator.calculateInitialMtmValue(trade, this::getDailySettlementPrice, this::getJpyRate).getAmount();
+
+        final String sellAmount = trade.getDirection() == Side.SELL ? baseAmount : EMPTY;
+        final String buyAmount = trade.getDirection() == Side.BUY ? baseAmount : EMPTY;
+
+        if (trade.getTransactionType() == BALANCE) {
+            return List.of(
+                convertTrade(trade, originator, counterparty, sellAmount, buyAmount, formatBigDecimal(mtm), formatBigDecimal(swapPoint)),
+                convertTrade(trade, counterparty, originator, buyAmount, sellAmount, formatBigDecimal(mtm.negate()), formatBigDecimal(swapPoint.negate()))
+            );
+        } else {
+            return List.of(
+                convertTrade(trade, originator, counterparty, sellAmount, buyAmount, mtm.toString(), swapPoint.toString())
+            );
+        }
+    }
+
+    private TransactionDiary convertTrade(
+        final TradeEntity trade,
+        final ParticipantEntity originatorParticipant,
+        final ParticipantEntity counterpartyParticipant,
+        final String sellamount,
+        final String buyAmount,
+        final String mtmAmount,
+        final String swapPoint
+    ) {
+        @Nullable final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
+        @Nullable final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -77,12 +108,12 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
             .clearTime(clearingTsp == null ? EMPTY : formatTime(clearingTsp))
             .clearingId(getSafeString(trade.getClearingRef()))
             .tradePrice(trade.getSpotRate().toString())
-            .sellAmount(trade.getDirection() == Side.SELL ? baseAmount : EMPTY)
-            .buyAmount(trade.getDirection() == Side.BUY ? baseAmount : EMPTY)
+            .sellAmount(sellamount)
+            .buyAmount(buyAmount)
             .counterpartyCode(counterpartyParticipant.getCode())
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
-            .dailyMtMAmount(eodCalculator.calculateInitialMtmValue(trade, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString())
+            .dailyMtMAmount(mtmAmount)
             .swapPoint(swapPoint)
             .outstandingPositionAmount(EMPTY)
             .settlementDate(formatDate(trade.getValueDate()))
@@ -111,8 +142,11 @@ public class TradeTransactionDiaryLedgerProcessor implements TransactionDiaryLed
         return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
+    //todo: refactor it - extract it and reuse
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
-        return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
+        return utcTime == null ? null : OffsetDateTime.of(utcTime, ZoneOffset.UTC)
+            .withOffsetSameInstant(clockService.getServerZoneOffset())
+            .toLocalDateTime();
     }
 }

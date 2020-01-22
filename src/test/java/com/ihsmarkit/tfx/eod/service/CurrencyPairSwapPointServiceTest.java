@@ -55,7 +55,7 @@ class CurrencyPairSwapPointServiceTest {
         when(eodSwapPointRepository.findAllByDateOrderedByProductNumber(any())).thenReturn(List.of(SWAP_PNT_USDJPY, SWAP_PNT_EURUSD));
 
         assertThat(currencyPairSwapPointService.getSwapPoint(BUSINESS_DATE, USDJPY)).isEqualByComparingTo(BigDecimal.ONE);
-        assertThat(currencyPairSwapPointService.getSwapPoint(BUSINESS_DATE, EURUSD)).isNull();
+        assertThat(currencyPairSwapPointService.getSwapPoint(BUSINESS_DATE, EURUSD)).isEqualByComparingTo(BigDecimal.ZERO);
 
         verify(eodSwapPointRepository).findAllByDateOrderedByProductNumber(BUSINESS_DATE);
 

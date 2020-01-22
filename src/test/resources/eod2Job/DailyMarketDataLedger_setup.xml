@@ -22,18 +22,24 @@
     <eod_daily_settlement_price currency_pair_id="83" dsp="1.11" previous_dsp="1.12" business_date="2019-02-02" remarks="[]"/>
 
     <participant_position id="1" currency_pair_id="81" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="1011" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-1011" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="NET"/>
+    <participant_position id="11" currency_pair_id="81" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
+                          trade_date="2019-02-02" value_date="2019-11-01" amount="500" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="REBALANCING"/>
     <participant_position id="2" currency_pair_id="82" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="2201" currency="EUR" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-2201" currency="EUR" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
     <participant_position id="3" currency_pair_id="83" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="2301" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-2301" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+    <participant_position id="13" currency_pair_id="83" participant_id="101" participant_type="LIQUIDITY_PROVIDER"
+                          trade_date="2019-02-02" value_date="2019-11-01" amount="2301" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="REBALANCING"/>
 
     <participant_position id="4" currency_pair_id="81" participant_id="102" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="11" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-11" currency="USD" price="1.16" timestamp="2019-10-30 16:22:11" type="NET"/>
     <participant_position id="5" currency_pair_id="82" participant_id="102" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="3201" currency="EUR" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-3201" currency="EUR" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+    <participant_position id="15" currency_pair_id="82" participant_id="102" participant_type="LIQUIDITY_PROVIDER"
+                          trade_date="2019-02-02" value_date="2019-11-01" amount="5403" currency="EUR" price="8.5" timestamp="2019-10-30 17:08:29" type="REBALANCING"/>
     <participant_position id="6" currency_pair_id="83" participant_id="102" participant_type="LIQUIDITY_PROVIDER"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="2501" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="501" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
 
     <trade
         id="111"

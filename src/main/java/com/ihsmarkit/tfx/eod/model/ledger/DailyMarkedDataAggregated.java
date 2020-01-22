@@ -12,7 +12,7 @@ import lombok.Value;
 @AllArgsConstructor(staticName = "of")
 public class DailyMarkedDataAggregated {
     private final String currencyPairCode;
-    private final BigDecimal tradingVolumeAmount;
+    private final BigDecimal shortPositionsAmount;
     private final BigDecimal openPrice;
     private final LocalDateTime openPriceTime;
     private final BigDecimal highPrice;

@@ -34,4 +34,14 @@ class BojCodeProviderTest {
         assertThat(bojCodeProvider.getCode(PARTICIPANT_CODE, CollateralPurpose.MARKET_ENTRY_DEPOSIT)).get().isEqualTo("0001");
     }
 
+    @Test
+    void shouldReturnEmptyOnMultipleResults() {
+        when(custodianAccountRepository.findAllBondCustodianAccounts()).thenReturn(List.of(
+            EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build(),
+            EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build()
+        ));
+
+        assertThat(bojCodeProvider.getCode(PARTICIPANT_CODE, CollateralPurpose.MARKET_ENTRY_DEPOSIT)).isEmpty();
+    }
+
 }

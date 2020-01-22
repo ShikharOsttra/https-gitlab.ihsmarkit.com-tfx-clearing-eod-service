@@ -3,7 +3,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantType.FX_BROKER;
-import static com.ihsmarkit.tfx.core.domain.type.TransactionType.BALANCE;
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.REGULAR;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -77,7 +78,8 @@ class TradeTransactionDiaryLedgerProcessorTest {
     @Test
     @SuppressWarnings("unchecked")
     void processTradeEntity() {
-        when(clockService.utcTimeToServerTime(any())).thenReturn(LocalDateTime.of(2019, 1, 1, 1, 30));
+        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
+
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
@@ -92,7 +94,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .build());
 
         assertThat(processor.process(aTrade()))
-            .isEqualTo(TransactionDiary.builder()
+            .containsExactly(TransactionDiary.builder()
                 .businessDate(BUSINESS_DATE)
                 .tradeDate("2019/01/01")
                 .recordDate("2019/01/02 11:30:00")
@@ -118,7 +120,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .outstandingPositionAmount(EMPTY)
                 .settlementDate("2019/01/02")
                 .tradeId("tradeRef")
-                .tradeType("2")
+                .tradeType("1")
                 .reference(EMPTY)
                 .userReference(EMPTY)
                 .build());
@@ -138,7 +140,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .direction(Side.SELL)
             .valueDate(BUSINESS_DATE.plusDays(1))
             .tradeReference("tradeRef")
-            .transactionType(BALANCE)
+            .transactionType(REGULAR)
             .build();
     }
 }

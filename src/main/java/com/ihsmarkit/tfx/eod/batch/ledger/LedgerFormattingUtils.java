@@ -8,6 +8,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -41,8 +43,15 @@ public class LedgerFormattingUtils {
         return RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name());
     }
 
+    public static String quote(final String value) {
+        if (StringUtils.isBlank(value)) {
+            return value;
+        } else {
+            return "\"" + value + "\"";
+        }
+    }
+
     public static String formatBigDecimal(final BigDecimal bigDecimal) {
-        // todo: formatting, rounding?
-        return bigDecimal.toString();
+        return bigDecimal.toPlainString();
     }
 }
