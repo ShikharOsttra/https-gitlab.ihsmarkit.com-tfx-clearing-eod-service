@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
@@ -72,7 +72,7 @@ public class RebalancingTasklet implements Tasklet {
                             BalanceTrade::getOriginator,
                             Collectors.groupingBy(
                                 BalanceTrade::getCounterparty,
-                                Collectors.reducing(BigDecimal.ZERO, BalanceTrade::getAmount, BigDecimal::add)
+                                Streams.summingBigDecimal(BalanceTrade::getAmount)
                             )
                         )
                     ).entrySet().stream()

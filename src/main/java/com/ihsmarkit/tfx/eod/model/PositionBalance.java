@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.eod.service.Slicer;
 
@@ -71,7 +72,7 @@ public class PositionBalance {
             ).collect(
                 groupingBy(
                     RawPositionData::getParticipant,
-                    reducing(BigDecimal.ZERO, RawPositionData::getAmount, BigDecimal::add)
+                    Streams.summingBigDecimal(RawPositionData::getAmount)
                 )
             );
 
