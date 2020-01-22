@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
