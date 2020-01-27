@@ -89,8 +89,8 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getHighPriceTime
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:01:00", "01:01:00", "01:02:00"),
-                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:03:00", "01:03:00", "01:03:00")
+                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:03:00", "01:03:00", "01:03:00"),
+                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:01:00", "01:01:00", "01:02:00")
             );
     }
 
