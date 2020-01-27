@@ -154,7 +154,8 @@ public class EODCalculator {
         return aggregatePositions(positions)
             .map(position -> ImmutablePair.of(
                 position.getParticipant(),
-                getJpyAmount(position.getCurrencyPair(), position.getAmount().abs(), jpyRates)
+                jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
+                    .multiply(position.getAmount())
                     .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant()))
                     .setScale(0, RoundingMode.CEILING)
             )).collect(
