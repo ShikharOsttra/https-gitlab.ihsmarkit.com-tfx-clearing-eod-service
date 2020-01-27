@@ -91,7 +91,7 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .clearingId(EMPTY)
                 .tradePrice(PRICE.toPlainString())
                 .sellAmount(EMPTY)
-                .buyAmount(EMPTY)
+                .buyAmount("10")
                 .counterpartyCode(EMPTY)
                 .counterpartyType(EMPTY)
                 .dsp("10")

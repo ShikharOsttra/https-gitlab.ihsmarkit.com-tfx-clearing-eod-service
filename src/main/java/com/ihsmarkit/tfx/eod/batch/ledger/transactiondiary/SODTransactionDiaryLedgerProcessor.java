@@ -55,6 +55,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()));
         final String tradePrice = formatBigDecimal(participantPosition.getPrice());
         final String tradeDate = formatDate(participantPosition.getTradeDate());
+        final BigDecimal positionAmount = participantPosition.getAmount().getValue();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -72,8 +73,8 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
             .tradePrice(tradePrice)
-            .sellAmount(EMPTY)
-            .buyAmount(EMPTY)
+            .sellAmount(positionAmount.signum() < 0 ? formatBigDecimal(positionAmount.abs()) : EMPTY)
+            .buyAmount(positionAmount.signum() > 0 ? formatBigDecimal(positionAmount) : EMPTY)
             .counterpartyCode(EMPTY)
             .counterpartyType(EMPTY)
             .dsp(dsp)
@@ -88,7 +89,6 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .build();
     }
 
-    //todo: refactor it - extract it and reuse
     private BigDecimal getDailySettlementPrice(final CurrencyPairEntity ccy) {
         return dailySettlementPriceService.getPrice(businessDate, ccy);
     }

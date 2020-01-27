@@ -11,8 +11,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -89,8 +87,10 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         final String mtmAmount,
         final String swapPoint
     ) {
-        @Nullable final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
-        @Nullable final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
+        @Nullable
+        final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
+        @Nullable
+        final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -142,11 +142,8 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
-    //todo: refactor it - extract it and reuse
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
-        return utcTime == null ? null : OffsetDateTime.of(utcTime, ZoneOffset.UTC)
-            .withOffsetSameInstant(clockService.getServerZoneOffset())
-            .toLocalDateTime();
+        return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
     }
 }

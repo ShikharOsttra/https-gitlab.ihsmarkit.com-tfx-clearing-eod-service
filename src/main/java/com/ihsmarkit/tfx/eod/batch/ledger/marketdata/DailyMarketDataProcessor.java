@@ -8,8 +8,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTim
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -93,13 +91,13 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .currencyNumber(fxSpotProduct.getProductNumber())
             .currencyPairCode(currencyPairCode)
             .openPrice(formatBigDecimal(aggregated.getOpenPrice()))
-            .openPriceTime(formatTime(utcTimeToServerTime(aggregated.getOpenPriceTime())))
+            .openPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getOpenPriceTime())))
             .highPrice(formatBigDecimal(aggregated.getHighPrice()))
-            .highPriceTime(formatTime(utcTimeToServerTime(aggregated.getHighPriceTime())))
+            .highPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getHighPriceTime())))
             .lowPrice(formatBigDecimal(aggregated.getLowPrice()))
-            .lowPriceTime(formatTime(utcTimeToServerTime(aggregated.getLowPriceTime())))
+            .lowPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getLowPriceTime())))
             .closePrice(formatBigDecimal(aggregated.getClosePrice()))
-            .closePriceTime(formatTime(utcTimeToServerTime(aggregated.getClosePriceTime())))
+            .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
             .previousDsp(formatBigDecimal(previousDsp))
             .currentDsp(formatBigDecimal(currentDsp))
@@ -148,12 +146,6 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                             entry -> entry.getValue().values().stream().map(BigDecimal.ZERO::min).collect(Streams.summingBigDecimal(BigDecimal::abs))
                         )
                     );
-    }
-
-    private LocalDateTime utcTimeToServerTime(final LocalDateTime utcTime) {
-        return OffsetDateTime.of(utcTime, ZoneOffset.UTC)
-            .withOffsetSameInstant(clockService.getServerZoneOffset())
-            .toLocalDateTime();
     }
 
     private static BigDecimal getDspValue(@Nullable final DailySettlementPriceEntity dsp, final Function<DailySettlementPriceEntity, BigDecimal> extractor) {

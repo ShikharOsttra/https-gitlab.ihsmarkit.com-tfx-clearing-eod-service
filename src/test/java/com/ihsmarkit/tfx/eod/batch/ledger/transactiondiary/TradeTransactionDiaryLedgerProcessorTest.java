@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +77,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
     @Test
     @SuppressWarnings("unchecked")
     void processTradeEntity() {
-        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
+        when(clockService.utcTimeToServerTime(any())).thenReturn(MATCHING_DATE);
 
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);

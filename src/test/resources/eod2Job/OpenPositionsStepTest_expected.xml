@@ -14,7 +14,7 @@
             long_position="60000.00"
             initial_mtm_amount="-10.00"
             daily_mtm_amount="-14.00"
-            swap_point="188.00"
+            swap_point="13"
             total_variation_margin="164.00"
     />
 
@@ -32,7 +32,7 @@
             long_position="0"
             initial_mtm_amount="120.00"
             daily_mtm_amount="674.00"
-            swap_point="-88.00"
+            swap_point="-4"
             total_variation_margin="706.00"
     />
 
@@ -50,7 +50,7 @@
             long_position="130000.00"
             initial_mtm_amount="330.00"
             daily_mtm_amount="-11.00"
-            swap_point="-99.00"
+            swap_point="29"
             total_variation_margin="220.00"
     />
 
@@ -68,7 +68,7 @@
             long_position="500000.00"
             initial_mtm_amount="900.00"
             daily_mtm_amount="-77.00"
-            swap_point="-23.00"
+            swap_point="170"
             total_variation_margin="800.00"
     />
 

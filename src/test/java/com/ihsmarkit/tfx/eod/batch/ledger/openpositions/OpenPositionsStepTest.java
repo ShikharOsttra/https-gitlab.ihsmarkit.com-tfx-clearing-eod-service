@@ -27,14 +27,14 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @Import({EOD2JobConfig.class, CacheConfig.class})
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-public class OpenPositionsStepTest extends AbstractSpringBatchTest {
+class OpenPositionsStepTest extends AbstractSpringBatchTest {
     @MockBean
     private ClockService clockService;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod2Job/OpenPositionsStepTest_setup.xml"})
     @ExpectedDatabase(value = "/eod2Job/OpenPositionsStepTest_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void shouldRuOpenPositionsStep() throws Exception {
+    void shouldRunOpenPositionsStep() throws Exception {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
         final JobParameters jobParams = new JobParametersBuilder()
