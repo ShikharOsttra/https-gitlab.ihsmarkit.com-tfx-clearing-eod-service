@@ -41,7 +41,6 @@ import lombok.Getter;
 @Service
 @AllArgsConstructor
 @JobScope
-@Getter(PRIVATE)
 public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     @Value("#{jobParameters['businessDate']}")
@@ -57,6 +56,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     private final CashSettlementMapper cashSettlementMapper;
 
+    @Getter(PRIVATE)
     private final CollateralProductRepository collateralProductRepository;
 
     private final Lazy<CollateralProductEntity> cashProduct =
