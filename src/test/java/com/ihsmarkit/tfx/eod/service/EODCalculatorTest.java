@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -121,21 +122,21 @@ class EODCalculatorTest {
 
     private static final ParticipantPositionEntity A_POS_USD_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(USDJPY)
-        .amount(AmountEntity.of(BigDecimal.valueOf(100000), "USD"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(100_000), "USD"))
         .price(BigDecimal.valueOf(99.3))
         .participant(PARTICIPANT_A)
         .build();
 
     private static final ParticipantPositionEntity A_POS_EUR_L_100K = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
-        .amount(AmountEntity.of(BigDecimal.valueOf(100000), "EUR"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(100_000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
         .participant(PARTICIPANT_A)
         .build();
 
     private static final ParticipantPositionEntity A_POS_EUR_L_212M = ParticipantPositionEntity.builder()
         .currencyPair(EURUSD)
-        .amount(AmountEntity.of(BigDecimal.valueOf(212000000), "EUR"))
+        .amount(AmountEntity.of(BigDecimal.valueOf(212_000_000), "EUR"))
         .price(BigDecimal.valueOf(1.09))
         .participant(PARTICIPANT_A)
         .build();
@@ -316,6 +317,19 @@ class EODCalculatorTest {
             tuple(PARTICIPANT_B, EURUSD, 30000000)
         );
 
+    }
+
+    @Test
+    void shouldCalculateRequiredInitialMargin() {
+        final Stream<ParticipantPositionEntity> positions = Stream.of(A_POS_EUR_L_212M, A_POS_EUR_L_100K, A_POS_USD_L_100K);
+        final Map<CurrencyPairEntity, BigDecimal> marginRatios = Map.of(EURUSD, BigDecimal.valueOf(0.0501), USDJPY, BigDecimal.valueOf(0.1701));
+        final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver =
+            (pairEntity, participantEntity) -> marginRatios.get(pairEntity);
+        final Map<String, BigDecimal> jpyRates = Map.of("EUR", BigDecimal.valueOf(122.081), "USD", BigDecimal.valueOf(109.511));
+        final Map<ParticipantEntity, BigDecimal> initialMargin = eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver,
+            jpyRates::get);
+        assertThat(initialMargin.size()).isOne();
+        assertThat(initialMargin.get(PARTICIPANT_A)).isEqualByComparingTo(BigDecimal.valueOf(1299121127));
     }
 
     @TestConfiguration
