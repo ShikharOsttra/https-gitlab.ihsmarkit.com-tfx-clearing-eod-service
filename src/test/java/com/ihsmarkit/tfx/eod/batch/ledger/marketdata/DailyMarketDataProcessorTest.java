@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -89,21 +90,15 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getHighPriceTime
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:03:00", "01:03:00", "01:03:00"),
-                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:01:00", "01:01:00", "01:02:00")
+                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:01:00", "01:01:00", "01:02:00"),
+                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:03:00", "01:03:00", "01:03:00")
             );
     }
 
     private void mockClockService() {
-        when(clockService.utcTimeToServerTime(any())).thenReturn(
-            DATE_TIME_2019_1_1_1_1,
-            DATE_TIME_2019_1_1_1_2,
-            DATE_TIME_2019_1_1_1_1,
-            DATE_TIME_2019_1_1_1_3,
-            DATE_TIME_2019_1_1_1_3,
-            DATE_TIME_2019_1_1_1_3,
-            DATE_TIME_2019_1_1_1_3,
-            DATE_TIME_2019_1_1_1_3);
+        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_2)).thenReturn(DATE_TIME_2019_1_1_1_2);
+        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_3)).thenReturn(DATE_TIME_2019_1_1_1_3);
+        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_1)).thenReturn(DATE_TIME_2019_1_1_1_1);
     }
 
     private void mockSwapPoints() {
