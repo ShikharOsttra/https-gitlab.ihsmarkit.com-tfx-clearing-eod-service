@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARGIN;
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.partitioningBy;
+import static lombok.AccessLevel.PRIVATE;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,7 +41,7 @@ import lombok.Getter;
 @Service
 @AllArgsConstructor
 @JobScope
-@Getter
+@Getter(PRIVATE)
 public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     @Value("#{jobParameters['businessDate']}")
