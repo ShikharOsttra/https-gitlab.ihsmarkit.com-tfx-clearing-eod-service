@@ -2,7 +2,6 @@ package com.ihsmarkit.tfx.eod.batch.ledger.openpositions;
 
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DAILY_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
-import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
@@ -41,14 +40,19 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
+import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
+import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
+import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @StepScope
+@Slf4j
 public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAndCurrencyPair, OpenPositionsListItem> {
 
     @Value("#{jobParameters['businessDate']}")
@@ -58,12 +62,12 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     private final LocalDateTime recordDate;
 
     private final ParticipantPositionRepository participantPositionRepository;
-
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
-
     private final FXSpotProductService fxSpotProductService;
-
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
+    private final EODCalculator eodCalculator;
+    private final CurrencyPairSwapPointService currencyPairSwapPointService;
+    private final JPYRateService jpyRateService;
 
     @Override
     public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) {
@@ -75,9 +79,12 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             participantPositionRepository.findAllByParticipantAndCurrencyPairAndTradeDate(participant, currencyPair, businessDate)
                 .collect(Collectors.toMap(ParticipantPositionEntity::getType, Function.identity()));
 
-        final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins =
+        final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> cashSettlements =
             eodProductCashSettlementRepository.findAllByParticipantAndCurrencyPairAndDate(participant, currencyPair, businessDate)
                 .collect(Collectors.toMap(EodProductCashSettlementEntity::getType, Function.identity()));
+
+        final Optional<BigDecimal> eodPositionAmount = getPositionsSummed(positions, NET, REBALANCING);
+        final BigDecimal swapPoints = getEodSwapPoints(participant, currencyPair);
 
         return OpenPositionsListItem.builder()
             .businessDate(businessDate)
@@ -91,15 +98,26 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .longPositionPreviousDay(formatAmount(longPosition(getPosition(positions, SOD))))
             .buyTradingAmount(formatBigDecimal(getPosition(positions, BUY).orElse(ZERO).abs()))
             .sellTradingAmount(formatBigDecimal(getPosition(positions, SELL).orElse(ZERO).abs()))
-            .shortPosition(formatAmount(shortPosition(getPositionsSummed(positions, NET, REBALANCING))))
-            .longPosition(formatAmount(longPosition(getPositionsSummed(positions, NET, REBALANCING))))
-            .initialMtmAmount(formatAmount(getMargin(margins, INITIAL_MTM)))
-            .dailyMtmAmount(formatAmount(getMargin(margins, DAILY_MTM)))
-            .swapPoint(formatAmount(getMargin(margins, SWAP_PNL)))
-            .totalVariationMargin(formatAmount(getMargin(margins, TOTAL_VM)))
+            .shortPosition(formatAmount(shortPosition(eodPositionAmount)))
+            .longPosition(formatAmount(longPosition(eodPositionAmount)))
+            .initialMtmAmount(formatAmount(getMargin(cashSettlements, INITIAL_MTM)))
+            .dailyMtmAmount(formatAmount(getMargin(cashSettlements, DAILY_MTM)))
+            .swapPoint(formatBigDecimal(swapPoints))
+            .totalVariationMargin(formatAmount(getMargin(cashSettlements, TOTAL_VM)))
             .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
             .build();
+    }
+
+    private BigDecimal getEodSwapPoints(final ParticipantEntity participant, final CurrencyPairEntity currencyPair) {
+        final Optional<ParticipantPositionEntity> eodPosition = participantPositionRepository.findNextDayPosition(participant, currencyPair, SOD,
+            businessDate);
+        return eodPosition.map(positionEntity -> eodCalculator.calculateSwapPoint(positionEntity, this::getSwapPoint, this::getJpyRate).getAmount())
+            .orElseGet(() -> {
+                log.warn("[openPositionsLedger] next day SOD not found for participant: {} and currencyPair: {} and businessDate: {}",
+                        participant, currencyPair, businessDate);
+                return ZERO;
+            });
     }
 
 
@@ -141,6 +159,14 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .map(ParticipantPositionEntity::getAmount)
             .map(AmountEntity::getValue)
             .reduce(BigDecimal::add);
+    }
+
+    private BigDecimal getSwapPoint(final CurrencyPairEntity ccy) {
+        return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
+    }
+
+    private BigDecimal getJpyRate(final String ccy) {
+        return jpyRateService.getJpyRate(businessDate, ccy);
     }
 
 }

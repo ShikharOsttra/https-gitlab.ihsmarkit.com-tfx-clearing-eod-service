@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,6 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
-import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 @ExtendWith(MockitoExtension.class)
 class NETTransactionDiaryLedgerProcessorTest {
@@ -49,23 +48,20 @@ class NETTransactionDiaryLedgerProcessorTest {
     private FXSpotProductService fxSpotProductService;
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
-    @Mock
-    private TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @BeforeEach
     void init() {
         this.processor =
             new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService,
-                    participantPositionRepository, tradeAndSettlementDateService);
+                    participantPositionRepository);
     }
 
     @Test
     void processParticipantPositionEntity() {
         when(fxSpotProductService.getFxSpotProduct(any(CurrencyPairEntity.class))).thenReturn(FX_SPOT_PRODUCT);
         when(dailySettlementPriceService.getPrice(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(BigDecimal.TEN);
-        when(tradeAndSettlementDateService.getNextTradeDate(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(NEXT_BUSINESS_DATE);
-        when(participantPositionRepository.findAllByParticipantAndCurrencyPairAndTradeDate(any(ParticipantEntity.class), any(CurrencyPairEntity.class),
-            any(LocalDate.class))).thenReturn(Stream.of(ParticipantPositionEntity.builder()
+        when(participantPositionRepository.findNextDayPosition(any(ParticipantEntity.class), any(CurrencyPairEntity.class), any(ParticipantPositionType.class),
+            any(LocalDate.class))).thenReturn(Optional.of(ParticipantPositionEntity.builder()
             .type(ParticipantPositionType.SOD)
             .amount(AmountEntity.builder().value(BigDecimal.valueOf(12)).build())
             .build()));
