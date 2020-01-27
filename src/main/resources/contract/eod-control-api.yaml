@@ -156,3 +156,22 @@ paths:
           $ref: 'common-types.yaml#/components/responses/Forbidden'
         500:
           $ref: 'common-types.yaml#/components/responses/InternalServerError'
+  /updateCashBallances:
+    post:
+      tags:
+        - eod-service-controller
+      summary: update cash balances to reflect total variation margin
+      operationId: updateCashBalances
+      responses:
+        200:
+          description: status
+          content:
+            text/plain:
+              schema:
+                type: string
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
