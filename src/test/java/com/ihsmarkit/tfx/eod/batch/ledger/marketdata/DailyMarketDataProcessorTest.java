@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +40,9 @@ import lombok.SneakyThrows;
 class DailyMarketDataProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
-    private static final LocalDateTime RECORD_DATE = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1));
+    public static final LocalDateTime DATE_TIME_2019_1_1_1_3 = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3));
+    private static final LocalDateTime DATE_TIME_2019_1_1_1_1 = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1));
+    private static final LocalDateTime DATE_TIME_2019_1_1_1_2 = LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 2));
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
 
     @Mock
@@ -59,16 +60,16 @@ class DailyMarketDataProcessorTest {
 
     @BeforeEach
     void beforeEach() {
-        when(clockService.getServerZoneOffset()).thenReturn(ZoneOffset.UTC);
         aggregator = new DailyMarketDataProcessor(
             currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductRepository,
-            participantPositionRepository, clockService, BUSINESS_DATE, RECORD_DATE
+            participantPositionRepository, clockService, BUSINESS_DATE, DATE_TIME_2019_1_1_1_1
         );
     }
 
     @Test
     @SneakyThrows
     void shouldAggregateAllRecords() {
+        mockClockService();
         mockSwapPoints();
         mockDsp();
         mockOpenPositionAmount();
@@ -81,12 +82,28 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getBusinessDate,
                 DailyMarketDataEnriched::getDspChange,
                 DailyMarketDataEnriched::getSwapPoint,
-                DailyMarketDataEnriched::getOpenPositionAmount
+                DailyMarketDataEnriched::getOpenPositionAmount,
+                DailyMarketDataEnriched::getClosePriceTime,
+                DailyMarketDataEnriched::getOpenPriceTime,
+                DailyMarketDataEnriched::getLowPriceTime,
+                DailyMarketDataEnriched::getHighPriceTime
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0"),
-                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444")
+                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:01:00", "01:01:00", "01:02:00"),
+                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:03:00", "01:03:00", "01:03:00")
             );
+    }
+
+    private void mockClockService() {
+        when(clockService.utcTimeToServerTime(any())).thenReturn(
+            DATE_TIME_2019_1_1_1_1,
+            DATE_TIME_2019_1_1_1_2,
+            DATE_TIME_2019_1_1_1_1,
+            DATE_TIME_2019_1_1_1_3,
+            DATE_TIME_2019_1_1_1_3,
+            DATE_TIME_2019_1_1_1_3,
+            DATE_TIME_2019_1_1_1_3,
+            DATE_TIME_2019_1_1_1_3);
     }
 
     private void mockSwapPoints() {
@@ -144,17 +161,17 @@ class DailyMarketDataProcessorTest {
         return Map.of(
             "USD/JPY", DailyMarkedDataAggregated.of(
                 "USD/JPY", new BigDecimal("1011.3"),
-                new BigDecimal("1.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1)),
-                new BigDecimal("1000.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 2)),
-                new BigDecimal("1.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 1)),
-                new BigDecimal("10.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
+                new BigDecimal("1.1"), DATE_TIME_2019_1_1_1_1,
+                new BigDecimal("1000.1"), DATE_TIME_2019_1_1_1_2,
+                new BigDecimal("1.1"), DATE_TIME_2019_1_1_1_1,
+                new BigDecimal("10.1"), DATE_TIME_2019_1_1_1_3
             ),
             "EUR/JPY", DailyMarkedDataAggregated.of(
                 "EUR/JPY", new BigDecimal("117.2"),
-                new BigDecimal("17.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
-                new BigDecimal("100.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
-                new BigDecimal("17.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3)),
-                new BigDecimal("100.1"), LocalDateTime.of(BUSINESS_DATE, LocalTime.of(1, 3))
+                new BigDecimal("17.1"), DATE_TIME_2019_1_1_1_3,
+                new BigDecimal("100.1"), DATE_TIME_2019_1_1_1_3,
+                new BigDecimal("17.1"), DATE_TIME_2019_1_1_1_3,
+                new BigDecimal("100.1"), DATE_TIME_2019_1_1_1_3
             )
         );
     }
