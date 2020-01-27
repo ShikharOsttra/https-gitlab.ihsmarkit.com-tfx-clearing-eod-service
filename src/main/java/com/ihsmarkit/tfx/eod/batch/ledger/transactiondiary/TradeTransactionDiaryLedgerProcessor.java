@@ -148,10 +148,10 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
         if (utcTime != null) {
-            log.info("utcTime = " + utcTime);
+            log.info("utcTime = {}", utcTime);
             final LocalDateTime convertedTime = clockService.utcTimeToServerTime(utcTime);
-            log.info("utcTime after conversion = " + convertedTime);
-            log.info("zone offset = " + clockService.getServerZoneOffset());
+            log.info("utcTime after conversion = {}", convertedTime);
+            log.info("zone offset = {}", clockService.getServerZoneOffset());
             return convertedTime;
         }
         return null;
