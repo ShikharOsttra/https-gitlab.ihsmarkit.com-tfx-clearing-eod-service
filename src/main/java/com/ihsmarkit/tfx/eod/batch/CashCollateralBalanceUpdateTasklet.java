@@ -77,7 +77,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         final Map<Boolean, List<Pair<EodCashSettlementEntity, CollateralBalanceEntity>>> separated = margins
             .stream()
             .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
-            .collect(partitioningBy(this::sameAmounts));
+            .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
 
         collateralBalanceRepository.deleteAll(separated.get(Boolean.TRUE).stream().map(Pair::getRight)::iterator);
         collateralBalanceRepository.saveAll(separated.get(Boolean.FALSE).stream().map(this::adjustAmount)::iterator);
@@ -91,7 +91,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         return cashSettlementMapper.toEodCashBalanceAdjustmentEntity(margin, clockService.getCurrentDateTimeUTC());
     }
 
-    private boolean sameAmounts(final Pair<EodCashSettlementEntity, CollateralBalanceEntity> pair) {
+    private static boolean sameAmounts(final Pair<EodCashSettlementEntity, CollateralBalanceEntity> pair) {
         return 0 == Optional.ofNullable(pair.getRight())
             .map(CollateralBalanceEntity::getAmount).orElse(ZERO)
             .compareTo(pair.getLeft().getAmount().getValue());
