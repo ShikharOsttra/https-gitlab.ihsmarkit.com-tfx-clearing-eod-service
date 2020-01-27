@@ -151,6 +151,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             log.info("utcTime = " + utcTime);
             final LocalDateTime convertedTime = clockService.utcTimeToServerTime(utcTime);
             log.info("utcTime after conversion = " + convertedTime);
+            log.info("zone offset = " + clockService.getServerZoneOffset());
             return convertedTime;
         }
         return null;
