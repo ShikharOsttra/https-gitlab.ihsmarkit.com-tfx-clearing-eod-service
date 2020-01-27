@@ -51,7 +51,7 @@ public class CashBalanceUpdateJobIntegrationTest {
     @ExpectedDatabase(value = "/cash-balance-update/cash-balance-update-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testBalanceUpdate() throws Exception {
 
-        final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
+        final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191008").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(job, jobParams);
 
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
