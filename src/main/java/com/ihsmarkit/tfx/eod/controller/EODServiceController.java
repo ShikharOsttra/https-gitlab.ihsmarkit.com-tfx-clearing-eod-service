@@ -67,6 +67,7 @@ public class EODServiceController implements EodServiceControllerApi {
         return getCurrentBusinessDay();
     }
 
+    @Override
     public ResponseEntity<String> updateCashBalances() {
         return ResponseEntity.ok(eodControlService.runEODJob(CASH_BALANCE_UPDATE_BATCH_JOB_NAME).name());
     }
