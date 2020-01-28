@@ -82,6 +82,22 @@ public class EODCalculator {
     }
 
     private ParticipantCurrencyPairAmount calc(
+        final ParticipantCurrencyPairAmount position,
+        final Function<String, BigDecimal> jpyRates,
+        final BigDecimal multiplier
+    ) {
+
+        return ParticipantCurrencyPairAmount.of(
+            position.getParticipant(),
+            position.getCurrencyPair(),
+            getJpyAmount(position.getCurrencyPair(), position.getAmount(), jpyRates)
+                .multiply(multiplier)
+                .setScale(0, RoundingMode.FLOOR)
+        );
+
+    }
+
+    private ParticipantCurrencyPairAmount calc(
         final TradeOrPositionEssentials trade,
         final Function<String, BigDecimal> jpyRates,
         final BigDecimal multiplier
@@ -128,6 +144,17 @@ public class EODCalculator {
             .ofNullable(swapPointResolver.apply(trade.getCurrencyPair()))
             .map(swapPoint -> calc(trade, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
             .orElseGet(() -> ParticipantCurrencyPairAmount.of(trade.getParticipant(), trade.getCurrencyPair(), ZERO));
+    }
+
+    public ParticipantCurrencyPairAmount calculateSwapPoint(
+        final ParticipantCurrencyPairAmount position,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return Optional
+            .ofNullable(swapPointResolver.apply(position.getCurrencyPair()))
+            .map(swapPoint -> calc(position, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
+            .orElseGet(() -> ParticipantCurrencyPairAmount.of(position.getParticipant(), position.getCurrencyPair(), ZERO));
     }
 
     public ParticipantCurrencyPairAmount calculateSwapPoint(
@@ -229,7 +256,7 @@ public class EODCalculator {
                     EodProductCashSettlementEntity::getParticipant,
                     groupingBy(
                         EodProductCashSettlementEntity::getType,
-                        () -> new EnumMap<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>(EodProductCashSettlementType.class),
+                        () -> new EnumMap<>(EodProductCashSettlementType.class),
                         twoWayCollector(
                             margin -> businessDate.isEqual(margin.getSettlementDate()),
                             margin -> margin.getAmount().getValue(),

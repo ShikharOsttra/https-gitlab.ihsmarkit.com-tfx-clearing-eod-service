@@ -1,111 +1,109 @@
 <dataset>
 
-    <!--id="1"-->
-    <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="13"
-            amount="5500"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="DAILY_MTM"
-    />
-
     <!--id="2"-->
     <eod_product_cash_settlement
-            participant_id="102"
-            currency_pair_id="13"
-            amount="7500"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="INITIAL_MTM"
+        participant_id="102"
+        currency_pair_id="13"
+        amount="7500"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="INITIAL_MTM"
+    />
+
+    <!--id="1"-->
+    <eod_product_cash_settlement
+        participant_id="101"
+        currency_pair_id="13"
+        amount="5500"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="DAILY_MTM"
     />
 
     <!--id="3"-->
     <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="13"
-            amount="9500"
-            currency="JPY"
-            settlement_date="2019-10-07"
-            date="2019-10-06"
-            type="DAILY_MTM"
+        participant_id="101"
+        currency_pair_id="13"
+        amount="9500"
+        currency="JPY"
+        settlement_date="2019-10-07"
+        date="2019-10-06"
+        type="DAILY_MTM"
     />
 
     <!--id="4"-->
     <eod_product_cash_settlement
+        participant_id="102"
+        currency_pair_id="13"
+        amount="9700"
+        currency="JPY"
+        settlement_date="2019-10-07"
+        date="2019-10-06"
+        type="DAILY_MTM"
+    />
 
-            participant_id="102"
-            currency_pair_id="13"
-            amount="9700"
-            currency="JPY"
-            settlement_date="2019-10-07"
-            date="2019-10-06"
-            type="DAILY_MTM"
+    <eod_product_cash_settlement
+        participant_id="102"
+        currency_pair_id="13"
+        amount="-31043.00"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="SWAP_PNL"
+    />
+
+    <eod_product_cash_settlement
+        participant_id="101"
+        currency_pair_id="13"
+        amount="-28222.00"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="SWAP_PNL"
     />
 
     <!--id="5"-->
     <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="13"
-            amount="9500"
-            currency="JPY"
-            settlement_date="2019-10-07"
-            date="2019-10-06"
-            type="TOTAL_VM"
+        participant_id="101"
+        currency_pair_id="13"
+        amount="9500"
+        currency="JPY"
+        settlement_date="2019-10-07"
+        date="2019-10-06"
+        type="TOTAL_VM"
     />
 
     <!--id="6"-->
     <eod_product_cash_settlement
-
-            participant_id="102"
-            currency_pair_id="13"
-            amount="9700"
-            currency="JPY"
-            settlement_date="2019-10-07"
-            date="2019-10-06"
-            type="TOTAL_VM"
+        participant_id="102"
+        currency_pair_id="13"
+        amount="9700"
+        currency="JPY"
+        settlement_date="2019-10-07"
+        date="2019-10-06"
+        type="TOTAL_VM"
     />
 
     <eod_product_cash_settlement
-            participant_id="102"
-            currency_pair_id="13"
-            amount="-31043.00"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="SWAP_PNL"
+        participant_id="102"
+        currency_pair_id="13"
+        amount="-23543.00"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="TOTAL_VM"
     />
 
     <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="13"
-            amount="-28222.00"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="SWAP_PNL"
-    />
-
-    <eod_product_cash_settlement
-            participant_id="102"
-            currency_pair_id="13"
-            amount="-23543.00"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="TOTAL_VM"
-    />
-
-    <eod_product_cash_settlement
-            participant_id="101"
-            currency_pair_id="13"
-            amount="-22722.00"
-            currency="JPY"
-            settlement_date="2019-10-10"
-            date="2019-10-07"
-            type="TOTAL_VM"
+        participant_id="101"
+        currency_pair_id="13"
+        amount="-22722.00"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="TOTAL_VM"
     />
 
     <eod_cash_settlement participant_id="101" date="2019-10-07" amount="9500"   date_type="DAY"       type="DAILY_MTM"/>
