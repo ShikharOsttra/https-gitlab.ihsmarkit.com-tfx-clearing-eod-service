@@ -17,6 +17,7 @@ public final class EodJobConstants {
 
     public static final String EOD1_BATCH_JOB_NAME = "eod1Job";
     public static final String EOD2_BATCH_JOB_NAME = "eod2Job";
+    public static final String CASH_BALANCE_UPDATE_BATCH_JOB_NAME = "cashBalanceUpdateJob";
     public static final String ROLL_BUSINESS_DATE_JOB_NAME = "rollBusinessDateJob";
 
     public static final String JOB_NAME_PARAM_NAME = "jobName";
@@ -41,6 +42,9 @@ public final class EodJobConstants {
     public static final String DAILY_MARKET_DATA_LEDGER_STEP_NAME = "dailyMarketDataLedger";
     public static final String MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME = "monthlyTradingVolumeLedger";
     public static final String MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME = "monthlyTradingVolumeLedgerFlow";
+
+    public static final String CASH_BALANCE_UPDATE_STEP_NAME = "cashBalanceUpdate";
+
 
     public static final String ROLL_BUSINESS_DATE_STEP_NAME = "rollBusinessDate";
 }
