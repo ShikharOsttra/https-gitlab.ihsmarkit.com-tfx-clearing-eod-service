@@ -34,9 +34,7 @@ import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @StepScope
@@ -144,17 +142,8 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
     }
 
-    //todo: remove logs after bug fix
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
-        if (utcTime == null) {
-            return null;
-        }
-
-        log.info("utcTime = {}", utcTime);
-        final LocalDateTime convertedTime = clockService.utcTimeToServerTime(utcTime);
-        log.info("utcTime after conversion = {}", convertedTime);
-        log.info("zone offset = {}", clockService.getServerZoneOffset());
-        return convertedTime;
+        return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
     }
 }
