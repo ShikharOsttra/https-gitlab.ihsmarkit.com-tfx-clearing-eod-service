@@ -111,11 +111,13 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     }
 
     private CollateralBalanceEntity adjustAmount(final Pair<EodCashSettlementEntity, CollateralBalanceEntity> pair) {
-        if (pair.getRight() == null) {
-            return newBalance(pair.getLeft());
+        final CollateralBalanceEntity balance = pair.getRight();
+        final EodCashSettlementEntity settlement = pair.getLeft();
+        if (balance == null) {
+            return newBalance(settlement);
         } else {
-            reduceBalance(pair.getLeft(), pair.getRight());
-            return pair.getRight();
+            reduceBalance(settlement, balance);
+            return balance;
         }
     }
 }
