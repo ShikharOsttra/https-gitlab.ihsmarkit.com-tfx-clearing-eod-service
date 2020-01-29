@@ -77,7 +77,6 @@ dependencies {
         [group: 'com.zaxxer', name: 'HikariCP'],
         [group: 'mysql', name: 'mysql-connector-java']
     )
-
     testImplementation(
             [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreDlVersion],
@@ -96,8 +95,10 @@ dependencies {
             [group: 'org.assertj', name: 'assertj-core'],
             [group: 'org.mockito', name: 'mockito-junit-jupiter'],
             [group: 'org.springframework.statemachine', name: 'spring-statemachine-test'],
+//            [group: 'com.github.database-rider', name: 'rider-core', version: '1.10.0'],
             [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
+
 
     swaggerCodegen (
             [group: 'org.openapitools', name: 'openapi-generator-cli']

@@ -1,6 +1,6 @@
 <dataset>
 
-    <margin_ratio id="1" currency_pair_id="13" value="0.80" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <margin_ratio id="1" currency_pair_id="13" value="80" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="1" participant_id="101" currency_pair_id="13" value="0.90" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="2" participant_id="102" currency_pair_id="13" value="0.91" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="3" participant_id="103" currency_pair_id="13" value="0.92" applicable_date="2019-10-07" business_date="2019-10-07"/>
