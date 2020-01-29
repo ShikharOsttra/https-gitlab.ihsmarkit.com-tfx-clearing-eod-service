@@ -28,8 +28,9 @@ class JasdecCodeProviderTest {
 
     @Test
     void shouldReturnJasdecCode() {
-        final EquityCustodianAccountEntity account = EntityTestDataFactory.
-            anEquityCustodianAccountEntityBuilder().build();
+        final EquityCustodianAccountEntity account = EntityTestDataFactory
+            .anEquityCustodianAccountEntityBuilder()
+            .build();
 
         when(custodianAccountRepository.findAllEquityCustodianAccounts()).thenReturn(List.of(
             account,

@@ -28,7 +28,9 @@ class BojCodeProviderTest {
 
     @Test
     void shouldReturnBojCode() {
-        final BondCustodianAccountEntity account = EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build();
+        final BondCustodianAccountEntity account = EntityTestDataFactory
+            .aBondCustodianAccountEntityBuilder()
+            .build();
 
         when(custodianAccountRepository.findAllBondCustodianAccounts()).thenReturn(List.of(
             account,
