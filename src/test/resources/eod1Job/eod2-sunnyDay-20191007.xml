@@ -147,7 +147,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1000000"
+        amount="-1010000"
         currency="JPY"
         type="SOD"
     />
@@ -160,7 +160,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1000000"
+        amount="-1030000"
         currency="JPY"
         type="SOD"
     />
@@ -173,7 +173,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1000000"
+        amount="11010000"
         currency="JPY"
         type="NET"
     />
@@ -186,7 +186,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1000000"
+        amount="-1030000"
         currency="JPY"
         type="NET"
     />
@@ -282,4 +282,16 @@
             date="2019-10-06"
             type="TOTAL_VM"
     />
+
+    <eod_product_cash_settlement
+        id="7"
+        participant_id="103"
+        currency_pair_id="13"
+        amount="1500"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="INITIAL_MTM"
+    />
+
 </dataset>
