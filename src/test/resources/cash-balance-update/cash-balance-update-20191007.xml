@@ -24,14 +24,14 @@
     <eod_cash_settlement id="12" participant_id="101" date="2019-10-07" amount="15000"  currency="JPY" date_type="TOTAL"     type="DAILY_MTM" timestamp="2019-03-05 16:00:00" />
     <eod_cash_settlement id="13" participant_id="101" date="2019-10-07" amount="-28222" currency="JPY" date_type="FOLLOWING" type="SWAP_PNL" timestamp="2019-03-05 16:00:00" />
     <eod_cash_settlement id="14" participant_id="101" date="2019-10-07" amount="-28222" currency="JPY" date_type="TOTAL"     type="SWAP_PNL" timestamp="2019-03-05 16:00:00" />
-    <eod_cash_settlement id="15" participant_id="101" date="2019-10-07" amount="9500"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
+    <eod_cash_settlement id="15" participant_id="101" date="2019-10-07" amount="-9500"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
     <eod_cash_settlement id="16" participant_id="101" date="2019-10-07" amount="-22722" currency="JPY" date_type="FOLLOWING" type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
     <eod_cash_settlement id="17" participant_id="101" date="2019-10-07" amount="-13222" currency="JPY" date_type="TOTAL"     type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
-    <eod_cash_settlement id="18" participant_id="102" date="2019-10-07" amount="9700"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
+    <eod_cash_settlement id="18" participant_id="102" date="2019-10-07" amount="-9700"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
-    <eod_cash_settlement id="19" participant_id="103" date="2019-10-07" amount="19700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
+    <eod_cash_settlement id="19" participant_id="103" date="2019-10-07" amount="-19700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
-    <eod_cash_settlement id="20" participant_id="104" date="2019-10-07" amount="49700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
+    <eod_cash_settlement id="20" participant_id="104" date="2019-10-07" amount="-49700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
 </dataset>
