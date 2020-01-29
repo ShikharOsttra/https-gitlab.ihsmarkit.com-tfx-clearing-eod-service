@@ -30,18 +30,16 @@ public class AbstractCustodianAccountCodeProvider {
                     account -> account.getParticipant().getCode(),
                     CustodianAccountEntity::getPurpose,
                     codeMapping,
+                    (v1, v2) -> {
+                        log.warn("Found multiple custodian accounts with code: {}", v2);
+                        return v2;
+                    },
                     HashBasedTable::create
                 )));
     }
 
     public Optional<String> getCode(final String participantCode, final CollateralPurpose purpose) {
-        try {
-            return Optional.ofNullable(codes.get().get(participantCode, purpose));
-        } catch (final Exception ex) {
-            log.error("error while retrieving custodian account information for participantCode: {} and purpose: {} with message: {}",
-                participantCode, purpose, ex.getMessage());
-            return Optional.empty();
-        }
+        return Optional.ofNullable(codes.get().get(participantCode, purpose));
     }
 
 }
