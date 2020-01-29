@@ -117,7 +117,16 @@
             "valueFrom": {
               "configMapKeyRef": {
                 "name": "environment-config",
-                "key": "eod1.job.enabled"
+                "key": "eod.service.eod1.job.enabled"
+              }
+            }
+          },
+          {
+            "name": "CASH_COLLATERAL_BALANCE_UPDATE_JOB_ENABLED",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "environment-config",
+                "key": "eod-service.cash.collateral.balance.job.enabled"
               }
             }
           },
@@ -149,6 +158,12 @@
         },
         "volumeMounts": [
           {
+            "name": "app-config",
+            "configMap": {
+              "name": "eod-service-app-config"
+            }
+          },
+          {
             "name": "db-credentials",
             "readOnly": true,
             "mountPath": "/etc/.db_creds"
@@ -157,6 +172,11 @@
             "name": "amq-credentials",
             "readOnly": true,
             "mountPath": "/etc/.amq_creds"
+          },
+          {
+            "name": "app-config",
+            "readOnly": true,
+            "mountPath": "/opt/app/config"
           },
           {
             "name": "logs-storage",

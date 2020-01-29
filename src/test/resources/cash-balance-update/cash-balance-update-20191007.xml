@@ -1,6 +1,6 @@
 <dataset>
-    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10"/>
-    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" value_date="2019-10-11"/>
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-10-10"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-10-08" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-10-11"/>
 
     <collateral_product id="4" enabled="true" deleted="false" type="2"/>
     <log_collateral_product id="4" issuer_bank_id="1" deposit_date="2020-2-2" maturity_date="2020-2-2"/>
@@ -33,7 +33,5 @@
     <eod_cash_settlement id="19" participant_id="103" date="2019-10-07" amount="19700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
     <eod_cash_settlement id="20" participant_id="104" date="2019-10-07" amount="49700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
-
-
 
 </dataset>
