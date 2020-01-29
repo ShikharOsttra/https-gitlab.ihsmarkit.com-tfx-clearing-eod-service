@@ -329,7 +329,7 @@ class EODCalculatorTest {
         final Map<ParticipantEntity, BigDecimal> initialMargin = eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver,
             jpyRates::get);
         assertThat(initialMargin.size()).isOne();
-        assertThat(initialMargin.get(PARTICIPANT_A)).isEqualByComparingTo(BigDecimal.valueOf(1299121127));
+        assertThat(initialMargin.get(PARTICIPANT_A)).isEqualByComparingTo(BigDecimal.valueOf(12991212));
     }
 
     @TestConfiguration
