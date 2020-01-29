@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
@@ -23,13 +24,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.assertj.core.matcher.AssertionMatcher;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.hamcrest.MockitoHamcrest;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -139,25 +137,23 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        final Matcher<Function<CurrencyPairEntity, BigDecimal>> dspMatcher =
-            assertionMatcher(
-                actual -> assertThat(actual)
-                    .returns(USD_RATE, a -> a.apply(CURRENCY_PAIR_USD))
-                    .returns(JPY_RATE, a -> a.apply(CURRENCY_PAIR_JPY))
-            );
+        final Consumer<Function<CurrencyPairEntity, BigDecimal>> dspAssertion =
+            actual -> assertThat(actual)
+                .returns(USD_RATE, a -> a.apply(CURRENCY_PAIR_USD))
+                .returns(JPY_RATE, a -> a.apply(CURRENCY_PAIR_JPY));
 
-        final Matcher<Function<String, BigDecimal>> jpyRates =
-            assertionMatcher(actual -> assertThat(actual).returns(JPY_RATE, a -> a.apply(USD)));
+        final Consumer<Function<String, BigDecimal>> jpyRatesAssertion =
+            actual -> assertThat(actual).returns(JPY_RATE, a -> a.apply(USD));
 
         verify(eodCalculator).calculateAndAggregateDailyMtm(
             eq(positions),
-            MockitoHamcrest.argThat(dspMatcher),
-            MockitoHamcrest.argThat(jpyRates)
+            argThat(dspAssertion),
+            argThat(jpyRatesAssertion)
         );
         verify(eodCalculator).calculateAndAggregateInitialMtm(
             eq(trades),
-            MockitoHamcrest.argThat(dspMatcher),
-            MockitoHamcrest.argThat(jpyRates)
+            argThat(dspAssertion),
+            argThat(jpyRatesAssertion)
         );
 
         verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
@@ -180,14 +176,4 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
             dailySettlementPriceService
         );
     }
-
-    static <T> AssertionMatcher<T> assertionMatcher(Consumer<T> consumer) {
-        return new AssertionMatcher<T>() {
-            @Override
-            public void assertion(T actual) {
-                consumer.accept(actual);
-            }
-        };
-    }
-
 }
