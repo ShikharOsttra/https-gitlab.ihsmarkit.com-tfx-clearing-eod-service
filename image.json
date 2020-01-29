@@ -117,7 +117,7 @@
             "valueFrom": {
               "configMapKeyRef": {
                 "name": "environment-config",
-                "key": "eod.service.eod1.job.enabled"
+                "key": "eod-service.eod1.job.enabled"
               }
             }
           },
