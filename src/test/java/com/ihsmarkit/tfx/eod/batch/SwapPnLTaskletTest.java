@@ -9,17 +9,13 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.USD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -111,8 +107,12 @@ class SwapPnLTaskletTest extends AbstractSpringBatchTest {
         when(currencyPairSwapPointService.getSwapPoint(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(EURJPY_SWP_PNT);
         when(jpyRateService.getJpyRate(BUSINESS_DATE, USD)).thenReturn(USDJPY_RATE);
 
-        when(eodCalculator.calculateAndAggregateSwapPnL(any(), any(), any()))
+        when(eodCalculator.aggregatePositions(any()))
             .thenReturn(Stream.of(INITIAL_POS_1, INITIAL_POS_2));
+
+        when(eodCalculator.calculateSwapPoint(any(ParticipantCurrencyPairAmount.class), any(), any()))
+            .thenReturn(INITIAL_POS_1)
+            .thenReturn(INITIAL_POS_2);
 
         when(eodCashSettlementMappingService.mapSwapPnL(INITIAL_POS_1)).thenReturn(POS_ENTITY_1);
         when(eodCashSettlementMappingService.mapSwapPnL(INITIAL_POS_2)).thenReturn(POS_ENTITY_2);
@@ -124,34 +124,14 @@ class SwapPnLTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        final Consumer<Function<CurrencyPairEntity, BigDecimal>> dspAssertion =
-            actual -> assertThat(actual)
-                    .returns(EURUSD_SWP_PNT, a -> a.apply(CURRENCY_PAIR_USD))
-                    .returns(EURJPY_SWP_PNT, a -> a.apply(CURRENCY_PAIR_JPY));
-
-        final Consumer<Function<String, BigDecimal>> jpyRatesAssertion =
-            actual -> assertThat(actual).returns(USDJPY_RATE, a -> a.apply(USD));
-
-        verify(eodCalculator).calculateAndAggregateSwapPnL(
-            eq(trades),
-            argThat(dspAssertion),
-            argThat(jpyRatesAssertion)
-        );
-
-        verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
+        verify(eodCalculator).aggregatePositions(any());
 
         verify(eodProductCashSettlementRepository).saveAll(captor.capture());
         assertThat(captor.getValue())
             .containsExactlyInAnyOrder(POS_ENTITY_1, POS_ENTITY_2);
 
-        verify(jpyRateService, atLeastOnce()).getJpyRate(BUSINESS_DATE, USD);
-        verify(currencyPairSwapPointService, atLeastOnce()).getSwapPoint(BUSINESS_DATE, CURRENCY_PAIR_JPY);
-        verify(currencyPairSwapPointService, atLeastOnce()).getSwapPoint(BUSINESS_DATE, CURRENCY_PAIR_USD);
-
         verifyNoMoreInteractions(
             tradeRepository,
-            participantPositionRepository,
-            eodCalculator,
             eodProductCashSettlementRepository,
             jpyRateService,
             currencyPairSwapPointService

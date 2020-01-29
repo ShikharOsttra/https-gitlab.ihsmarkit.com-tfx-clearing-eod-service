@@ -67,6 +67,7 @@ public class EODCalculator {
 
     private static final int DEFAULT_ROUNDING = 5;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
+    private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
@@ -79,6 +80,22 @@ public class EODCalculator {
             .map(jpyRates)
             .map(amount::multiply)
             .orElse(amount);
+    }
+
+    private ParticipantCurrencyPairAmount calc(
+        final ParticipantCurrencyPairAmount position,
+        final Function<String, BigDecimal> jpyRates,
+        final BigDecimal multiplier
+    ) {
+
+        return ParticipantCurrencyPairAmount.of(
+            position.getParticipant(),
+            position.getCurrencyPair(),
+            getJpyAmount(position.getCurrencyPair(), position.getAmount(), jpyRates)
+                .multiply(multiplier)
+                .setScale(0, RoundingMode.FLOOR)
+        );
+
     }
 
     private ParticipantCurrencyPairAmount calc(
@@ -131,6 +148,17 @@ public class EODCalculator {
     }
 
     public ParticipantCurrencyPairAmount calculateSwapPoint(
+        final ParticipantCurrencyPairAmount position,
+        final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
+        final Function<String, BigDecimal> jpyRates) {
+
+        return Optional
+            .ofNullable(swapPointResolver.apply(position.getCurrencyPair()))
+            .map(swapPoint -> calc(position, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
+            .orElseGet(() -> ParticipantCurrencyPairAmount.of(position.getParticipant(), position.getCurrencyPair(), ZERO));
+    }
+
+    public ParticipantCurrencyPairAmount calculateSwapPoint(
         final ParticipantPositionEntity participantPosition,
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
         final Function<String, BigDecimal> jpyRates) {
@@ -156,7 +184,8 @@ public class EODCalculator {
                 position.getParticipant(),
                 jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
                     .multiply(position.getAmount())
-                    .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant()))
+                    .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
+                        .multiply(MARGIN_RATIO_FACTOR))
                     .setScale(0, RoundingMode.CEILING)
             )).collect(
                 toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
@@ -229,7 +258,7 @@ public class EODCalculator {
                     EodProductCashSettlementEntity::getParticipant,
                     groupingBy(
                         EodProductCashSettlementEntity::getType,
-                        () -> new EnumMap<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>(EodProductCashSettlementType.class),
+                        () -> new EnumMap<>(EodProductCashSettlementType.class),
                         twoWayCollector(
                             margin -> businessDate.isEqual(margin.getSettlementDate()),
                             margin -> margin.getAmount().getValue(),

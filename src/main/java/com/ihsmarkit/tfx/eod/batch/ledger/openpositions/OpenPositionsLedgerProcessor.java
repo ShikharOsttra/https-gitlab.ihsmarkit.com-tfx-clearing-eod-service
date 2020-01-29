@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.openpositions;
 
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DAILY_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
+import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
@@ -40,10 +41,7 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
-import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
-import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
-import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
@@ -65,9 +63,6 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
     private final FXSpotProductService fxSpotProductService;
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
-    private final EODCalculator eodCalculator;
-    private final CurrencyPairSwapPointService currencyPairSwapPointService;
-    private final JPYRateService jpyRateService;
 
     @Override
     public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) {
@@ -84,7 +79,6 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
                 .collect(Collectors.toMap(EodProductCashSettlementEntity::getType, Function.identity()));
 
         final Optional<BigDecimal> eodPositionAmount = getPositionsSummed(positions, NET, REBALANCING);
-        final BigDecimal swapPoints = getEodSwapPoints(participant, currencyPair);
 
         return OpenPositionsListItem.builder()
             .businessDate(businessDate)
@@ -102,24 +96,12 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .longPosition(formatAmount(longPosition(eodPositionAmount)))
             .initialMtmAmount(formatAmount(getMargin(cashSettlements, INITIAL_MTM)))
             .dailyMtmAmount(formatAmount(getMargin(cashSettlements, DAILY_MTM)))
-            .swapPoint(formatBigDecimal(swapPoints))
+            .swapPoint(formatAmount(getMargin(cashSettlements, SWAP_PNL)))
             .totalVariationMargin(formatAmount(getMargin(cashSettlements, TOTAL_VM)))
             .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
             .build();
     }
-
-    private BigDecimal getEodSwapPoints(final ParticipantEntity participant, final CurrencyPairEntity currencyPair) {
-        final Optional<ParticipantPositionEntity> eodPosition = participantPositionRepository.findNextDayPosition(participant, currencyPair, SOD,
-            businessDate);
-        return eodPosition.map(positionEntity -> eodCalculator.calculateSwapPoint(positionEntity, this::getSwapPoint, this::getJpyRate).getAmount())
-            .orElseGet(() -> {
-                log.warn("[openPositionsLedger] next day SOD not found for participant: {} and currencyPair: {} and businessDate: {}",
-                        participant, currencyPair, businessDate);
-                return ZERO;
-            });
-    }
-
 
     private static String formatAmount(final Optional<BigDecimal> value) {
         return value.orElse(ZERO).toString();
@@ -160,13 +142,4 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .map(AmountEntity::getValue)
             .reduce(BigDecimal::add);
     }
-
-    private BigDecimal getSwapPoint(final CurrencyPairEntity ccy) {
-        return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
-    }
-
-    private BigDecimal getJpyRate(final String ccy) {
-        return jpyRateService.getJpyRate(businessDate, ccy);
-    }
-
 }

@@ -1,6 +1,6 @@
 <dataset>
 
-    <margin_ratio id="1" currency_pair_id="13" value="0.80" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <margin_ratio id="1" currency_pair_id="13" value="80" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="1" participant_id="101" currency_pair_id="13" value="0.90" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="2" participant_id="102" currency_pair_id="13" value="0.91" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <margin_ratio_multiplier id="3" participant_id="103" currency_pair_id="13" value="0.92" applicable_date="2019-10-07" business_date="2019-10-07"/>
@@ -28,34 +28,6 @@
 
     <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true"/>
     <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true"/>
-
-    <trade
-            id="110"
-            transaction_type="1"
-            currency_pair_id="13"
-            product_code="EUR/USD"
-            trade_ref="some_ref"
-            activity="NEW"
-            originator_id="101"
-            counterparty_id="102"
-            direction="BUY"
-            base_ccy="EUR"
-            base_ccy_amt="1.11"
-            value_ccy="USD"
-            value_ccy_amt="2.11"
-            spot_rate="3.11"
-            matching_status="CONFIRMED"
-            clearing_status="NOVATED"
-            trade_date="2019-10-06"
-            value_date="2019-10-09"
-            execution_time="2019-03-06 22:00:00"
-            source_system="GUI"
-            submission_tsp="2019-03-06 16:00:00"
-            user_name="john.doe"
-            matching_ref="[null]"
-            version_tsp="2019-03-06 16:00:00"
-            message_id="WEB0000000011"
-    />
 
     <trade
             id="111"
@@ -166,6 +138,7 @@
             message_id="test"
     />
 
+    <!-- found -->
     <participant_position
         id="1"
         currency_pair_id="13"
@@ -174,61 +147,48 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="3.12"
-        amount="-1000000"
+        amount="-1010000"
         currency="JPY"
         type="SOD"
     />
 
     <participant_position
-            id="2"
-            currency_pair_id="13"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="101"
-            trade_date="2019-10-06"
-            value_date="2019-10-09"
-            price="3.12"
-            amount="-1"
-            currency="JPY"
-            type="SOD"
+        id="4"
+        currency_pair_id="13"
+        participant_type="FX_BROKER"
+        participant_id="103"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="-1030000"
+        currency="JPY"
+        type="SOD"
     />
 
     <participant_position
-            id="3"
-            currency_pair_id="13"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="101"
-            trade_date="2019-10-06"
-            value_date="2019-10-09"
-            price="3.12"
-            amount="-1"
-            currency="JPY"
-            type="NET"
+        id="5"
+        currency_pair_id="13"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="11010000"
+        currency="JPY"
+        type="NET"
     />
 
     <participant_position
-            id="4"
-            currency_pair_id="13"
-            participant_type="FX_BROKER"
-            participant_id="103"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="3.12"
-            amount="-1000000"
-            currency="JPY"
-            type="SOD"
-    />
-
-    <participant_position
-            id="5"
-            currency_pair_id="13"
-            participant_type="LIQUIDITY_PROVIDER"
-            participant_id="101"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
-            price="3.12"
-            amount="-1000000"
-            currency="JPY"
-            type="NET"
+        id="8"
+        currency_pair_id="13"
+        participant_type="FX_BROKER"
+        participant_id="103"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="-1030000"
+        currency="JPY"
+        type="NET"
     />
 
     <participant_position
@@ -255,19 +215,6 @@
         amount="-4000000"
         currency="JPY"
         type="SELL"
-    />
-
-    <participant_position
-        id="8"
-        currency_pair_id="13"
-        participant_type="LIQUIDITY_PROVIDER"
-        participant_id="101"
-        trade_date="2019-11-08"
-        value_date="2019-11-11"
-        price="3.12"
-        amount="-1000000"
-        currency="JPY"
-        type="SOD"
     />
 
     <eod_product_cash_settlement
@@ -335,4 +282,16 @@
             date="2019-10-06"
             type="TOTAL_VM"
     />
+
+    <eod_product_cash_settlement
+        id="7"
+        participant_id="103"
+        currency_pair_id="13"
+        amount="1500"
+        currency="JPY"
+        settlement_date="2019-10-10"
+        date="2019-10-07"
+        type="INITIAL_MTM"
+    />
+
 </dataset>

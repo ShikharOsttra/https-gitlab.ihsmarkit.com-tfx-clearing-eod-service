@@ -14,23 +14,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
-import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
+import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
 @JobScope
+@Slf4j
 public class SwapPnLTasklet implements Tasklet {
-
-    private final TradeRepository tradeRepository;
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
@@ -42,6 +41,8 @@ public class SwapPnLTasklet implements Tasklet {
 
     private final EodCashSettlementMappingService eodCashSettlementMappingService;
 
+    private final ParticipantPositionRepository participantPositionRepository;
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -51,13 +52,12 @@ public class SwapPnLTasklet implements Tasklet {
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver = ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
         final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
-        final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
+        final Stream<EodProductCashSettlementEntity> eodProductCashSettlementEntityStream = eodCalculator
+            .aggregatePositions(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate))
+            .map(position -> eodCalculator.calculateSwapPoint(position, swapPointResolver, jpyRatesResolver))
+            .map(eodCashSettlementMappingService::mapSwapPnL);
 
-        final Stream<EodProductCashSettlementEntity> swapPnL =
-            eodCalculator.calculateAndAggregateSwapPnL(novatedTrades, swapPointResolver, jpyRatesResolver)
-                .map(eodCashSettlementMappingService::mapSwapPnL);
-
-        eodProductCashSettlementRepository.saveAll(swapPnL::iterator);
+        eodProductCashSettlementRepository.saveAll(eodProductCashSettlementEntityStream::iterator);
 
         return RepeatStatus.FINISHED;
     }
