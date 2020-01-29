@@ -67,6 +67,7 @@ public class EODCalculator {
 
     private static final int DEFAULT_ROUNDING = 5;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
+    private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
@@ -184,7 +185,7 @@ public class EODCalculator {
                 jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
                     .multiply(position.getAmount())
                     .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
-                        .multiply(BigDecimal.ONE.scaleByPowerOfTen(-2)))
+                        .multiply(MARGIN_RATIO_FACTOR))
                     .setScale(0, RoundingMode.CEILING)
             )).collect(
                 toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
