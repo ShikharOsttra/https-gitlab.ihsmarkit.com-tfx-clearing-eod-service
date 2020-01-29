@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
+import com.ihsmarkit.tfx.core.dl.entity.custodianaccount.EquityCustodianAccountEntity;
 import com.ihsmarkit.tfx.core.dl.repository.CustodianAccountRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 
@@ -27,9 +28,12 @@ class JasdecCodeProviderTest {
 
     @Test
     void shouldReturnJasdecCode() {
+        final EquityCustodianAccountEntity account = EntityTestDataFactory.
+            anEquityCustodianAccountEntityBuilder().build();
+
         when(custodianAccountRepository.findAllEquityCustodianAccounts()).thenReturn(List.of(
-            EntityTestDataFactory.
-                anEquityCustodianAccountEntityBuilder().build()
+            account,
+            account
         ));
 
         assertThat(jasdecCodeProvider.getCode(PARTICIPANT_CODE, CollateralPurpose.CLEARING_DEPOSIT)).get().isEqualTo("1234512");

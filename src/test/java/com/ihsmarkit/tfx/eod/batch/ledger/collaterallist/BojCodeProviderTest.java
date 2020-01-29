@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
+import com.ihsmarkit.tfx.core.dl.entity.custodianaccount.BondCustodianAccountEntity;
 import com.ihsmarkit.tfx.core.dl.repository.CustodianAccountRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 
@@ -27,21 +28,14 @@ class BojCodeProviderTest {
 
     @Test
     void shouldReturnBojCode() {
+        final BondCustodianAccountEntity account = EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build();
+
         when(custodianAccountRepository.findAllBondCustodianAccounts()).thenReturn(List.of(
-            EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build()
+            account,
+            account
         ));
 
         assertThat(bojCodeProvider.getCode(PARTICIPANT_CODE, CollateralPurpose.MARKET_ENTRY_DEPOSIT)).get().isEqualTo("0001");
-    }
-
-    @Test
-    void shouldReturnEmptyOnMultipleResults() {
-        when(custodianAccountRepository.findAllBondCustodianAccounts()).thenReturn(List.of(
-            EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build(),
-            EntityTestDataFactory.aBondCustodianAccountEntityBuilder().build()
-        ));
-
-        assertThat(bojCodeProvider.getCode(PARTICIPANT_CODE, CollateralPurpose.MARKET_ENTRY_DEPOSIT)).isEmpty();
     }
 
 }
