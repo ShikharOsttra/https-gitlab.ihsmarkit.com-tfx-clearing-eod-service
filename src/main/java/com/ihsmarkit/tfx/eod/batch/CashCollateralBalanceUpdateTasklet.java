@@ -28,6 +28,7 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashBalanceAdjustmentEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashBalanceAdjustmentRepository;
@@ -45,6 +46,8 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
+
+    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     private final EodCashSettlementRepository eodCashSettlementRepository;
 
@@ -65,7 +68,9 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
-        final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(businessDate);
+        final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
+
+        final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
 
         final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
             collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(

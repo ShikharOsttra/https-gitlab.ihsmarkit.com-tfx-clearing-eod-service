@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;

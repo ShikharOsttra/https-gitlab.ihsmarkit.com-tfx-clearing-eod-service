@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.config;
 
 import static com.ihsmarkit.tfx.core.time.ClockService.JST;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CASH_BALANCE_UPDATE_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 
 import java.util.TimeZone;
@@ -27,6 +28,10 @@ public class QuartzConfig {
     private static final String EOD1_JOB_DETAIL_NAME = "eod1JobDetail";
     private static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
     private static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
+    private static final String BALANCE_UPDATE_JOB_IS_ENABLED_PROPERTY = "cashCollateralBalanceUpdate.job.enabled";
+    private static final String BALANCE_UPDATE_JOB_DETAIL_NAME = "cashCollateralBalanceUpdateJobDetail";
+    private static final String BALANCE_UPDATE_JOB_TRIGGER_NAME = "cashCollateralBalanceUpdateJobTrigger";
+
     private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(JST);
 
     @Value("${eod1.job.trigger1.cron}")
@@ -34,6 +39,9 @@ public class QuartzConfig {
 
     @Value("${eod1.job.trigger2.cron}")
     private final String eod1JobTrigger2Cron;
+
+    @Value("${cashCollateralBalanceUpdate.job.trigger.cron}")
+    private final String cashCollateralBalanceUpdateJobTriggerCron;
 
     @Bean(EOD1_JOB_DETAIL_NAME)
     @ConditionalOnProperty(EOD1_JOB_IS_ENABLED_PROPERTY)
@@ -71,6 +79,31 @@ public class QuartzConfig {
             .newTrigger()
             .forJob(eod1JobDetail())
             .withIdentity(EOD1_JOB_TRIGGER2_NAME)
+            .withSchedule(scheduleBuilder)
+            .build();
+    }
+
+    @Bean(BALANCE_UPDATE_JOB_DETAIL_NAME)
+    @ConditionalOnProperty(BALANCE_UPDATE_JOB_IS_ENABLED_PROPERTY)
+    public JobDetail cashCollateralBalanceUpdateJobDetail() {
+
+        return JobBuilder.newJob(CashCollateralBalanceUpdateQuartzJob.class)
+            .withIdentity(CASH_BALANCE_UPDATE_BATCH_JOB_NAME)
+            .storeDurably()
+            .build();
+    }
+
+    @Bean
+    @ConditionalOnBean(name = BALANCE_UPDATE_JOB_TRIGGER_NAME)
+    public Trigger cashCollateralBalanceUpdateJobTrigger() {
+        final ScheduleBuilder<CronTrigger> scheduleBuilder = CronScheduleBuilder
+            .cronSchedule(cashCollateralBalanceUpdateJobTriggerCron)
+            .inTimeZone(TIME_ZONE);
+
+        return TriggerBuilder
+            .newTrigger()
+            .forJob(cashCollateralBalanceUpdateJobDetail())
+            .withIdentity(BALANCE_UPDATE_JOB_TRIGGER_NAME)
             .withSchedule(scheduleBuilder)
             .build();
     }
