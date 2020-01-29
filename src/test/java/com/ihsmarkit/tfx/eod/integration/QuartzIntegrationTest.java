@@ -39,7 +39,7 @@ import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 @Import({IntegrationTestConfig.class, QuartzConfig.class, StateMachineConfig.class, CashCollateralBalanceUpdateJobConfig.class})
 @TestPropertySource(
     locations = "classpath:/application.properties",
-    properties = {"eod1.job.enabled=true", "cashCollateralBalanceUpdate.job.enabled=true", "logging.level.org.quartz=DEBUG"}
+    properties = {"eod1.job.enabled=true", "cashCollateralBalanceUpdate.job.enabled=true"}
 )
 public class QuartzIntegrationTest {
 
