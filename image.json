@@ -33,6 +33,12 @@
       "serviceAccount": "tfx-clearing-systemuser",
       "volumes": [
         {
+          "name": "app-config",
+          "configMap": {
+            "name": "eod-service-app-config"
+          }
+        },
+        {
           "name": "db-credentials",
           "secret": {
             "secretName": "db-user"
