@@ -70,7 +70,8 @@ dependencies {
             [group: 'io.springfox', name: 'springfox-swagger-ui'],
             [group: 'org.springframework.statemachine', name: 'spring-statemachine-core'],
             [group: 'org.yaml', name: 'snakeyaml'],
-            [group: 'org.apache.commons', name: 'commons-csv']
+            [group: 'org.apache.commons', name: 'commons-csv'],
+            [group: 'io.vavr', name: 'vavr', version: '0.10.2']
     )
 
     runtimeOnly(
