@@ -164,12 +164,6 @@
         },
         "volumeMounts": [
           {
-            "name": "app-config",
-            "configMap": {
-              "name": "eod-service-app-config"
-            }
-          },
-          {
             "name": "db-credentials",
             "readOnly": true,
             "mountPath": "/etc/.db_creds"
