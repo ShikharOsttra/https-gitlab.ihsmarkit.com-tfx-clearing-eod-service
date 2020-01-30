@@ -6,9 +6,9 @@
     <collateral_balance purpose="1" participant_id="104" product_id="1" amount="-49700" version="0"/>
     <collateral_balance purpose="1" participant_id="105" product_id="1" amount="2000" version="1"/>
 
-    <eod_cash_balance_adjustment participant_id="101" date="2019-10-07" amount="9500"   currency="JPY" />
-    <eod_cash_balance_adjustment participant_id="102" date="2019-10-07" amount="9700"   currency="JPY" />
-    <eod_cash_balance_adjustment participant_id="103" date="2019-10-07" amount="19700"  currency="JPY" />
-    <eod_cash_balance_adjustment participant_id="104" date="2019-10-07" amount="49700"  currency="JPY" />
+    <eod_cash_balance_adjustment participant_id="101" date="2019-10-07" amount="-9500"   currency="JPY" />
+    <eod_cash_balance_adjustment participant_id="102" date="2019-10-07" amount="-9700"   currency="JPY" />
+    <eod_cash_balance_adjustment participant_id="103" date="2019-10-07" amount="-19700"  currency="JPY" />
+    <eod_cash_balance_adjustment participant_id="104" date="2019-10-07" amount="-49700"  currency="JPY" />
 
 </dataset>

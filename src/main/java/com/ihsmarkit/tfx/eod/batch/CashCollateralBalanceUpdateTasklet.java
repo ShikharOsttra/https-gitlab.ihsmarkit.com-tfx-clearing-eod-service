@@ -99,17 +99,17 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     private static boolean sameAmounts(final Pair<EodCashSettlementEntity, CollateralBalanceEntity> pair) {
         return 0 == Optional.ofNullable(pair.getRight())
             .map(CollateralBalanceEntity::getAmount).orElse(ZERO)
-            .compareTo(pair.getLeft().getAmount().getValue());
+            .compareTo(pair.getLeft().getAmount().getValue().negate());
     }
 
-    private void reduceBalance(final EodCashSettlementEntity settlement, final CollateralBalanceEntity balance) {
-        balance.setAmount(balance.getAmount().subtract(settlement.getAmount().getValue()));
+    private void adjustBalance(final EodCashSettlementEntity settlement, final CollateralBalanceEntity balance) {
+        balance.setAmount(balance.getAmount().add(settlement.getAmount().getValue()));
     }
 
     private CollateralBalanceEntity newBalance(final EodCashSettlementEntity settlement) {
         return CollateralBalanceEntity.builder()
             .product(cashProduct.get())
-            .amount(settlement.getAmount().getValue().negate())
+            .amount(settlement.getAmount().getValue())
             .participant(settlement.getParticipant())
             .purpose(MARGIN)
             .build();
@@ -121,7 +121,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         if (balance == null) {
             return newBalance(settlement);
         } else {
-            reduceBalance(settlement, balance);
+            adjustBalance(settlement, balance);
             return balance;
         }
     }
