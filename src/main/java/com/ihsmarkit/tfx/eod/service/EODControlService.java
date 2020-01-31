@@ -24,10 +24,14 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodStage;
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
+import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
-import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
+import com.ihsmarkit.tfx.core.time.ClockService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,13 +46,16 @@ public class EODControlService {
     private final CalendarTradingSwapPointRepository calendarRepository;
 
     private final JobLauncher jobLauncher;
+
     private final JobLocator jobLocator;
 
     private final EODCleanupService cleanupService;
 
     private final FutureValueService futureValueService;
 
-    private final StateMachineActionsConfig stateMachineActionsConfig;
+    private final EodStatusRepository eodStatusRepository;
+
+    private final ClockService clockService;
 
     public LocalDate getCurrentBusinessDate() {
         return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
@@ -92,7 +99,7 @@ public class EODControlService {
     public BatchStatus runEOD1Job() {
         final BatchStatus status = runJob(EOD1_BATCH_JOB_NAME);
         if (BatchStatus.COMPLETED == status) {
-            stateMachineActionsConfig.eod1CompleteAction();
+            this.saveEodStatus(EodStage.EOD1_COMPLETE, getCurrentBusinessDate());
         }
         return status;
     }
@@ -100,7 +107,7 @@ public class EODControlService {
     public BatchStatus runEOD2Job() {
         final BatchStatus status = runJob(EOD2_BATCH_JOB_NAME);
         if (BatchStatus.COMPLETED == status) {
-            stateMachineActionsConfig.eod2CompleteAction();
+            this.saveEodStatus(EodStage.EOD2_COMPLETE, getCurrentBusinessDate());
         }
         return status;
     }
@@ -126,5 +133,14 @@ public class EODControlService {
 
     private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
         return calendarRepository.findPreviousTradingDate(currentBusinessDate.minusDays(1)).orElse(currentBusinessDate);
+    }
+
+    private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {
+        eodStatusRepository.save(
+            EodStatusEntity.builder()
+                .id(new EodStatusCompositeId(stage, businessDate))
+                .timestamp(clockService.getCurrentDateTimeUTC())
+                .build()
+        );
     }
 }
