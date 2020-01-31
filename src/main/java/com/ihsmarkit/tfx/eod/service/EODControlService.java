@@ -90,7 +90,7 @@ public class EODControlService {
         return currentBusinessDate;
     }
 
-    public BatchStatus runJob(String jobName) {
+    public BatchStatus runJob(final String jobName) {
         final LocalDate currentBusinessDay = getCurrentBusinessDate();
         log.info("[control-service] triggering eod job: {} for business date: {}", jobName, currentBusinessDay);
         return triggerEOD(jobName, currentBusinessDay);
