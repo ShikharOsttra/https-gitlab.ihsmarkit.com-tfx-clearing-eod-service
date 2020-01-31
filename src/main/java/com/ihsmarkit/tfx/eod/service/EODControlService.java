@@ -3,6 +3,9 @@ package com.ihsmarkit.tfx.eod.service;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
+import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,8 @@ public class EODControlService {
     private final EODCleanupService cleanupService;
 
     private final FutureValueService futureValueService;
+
+    private final StateMachineActionsConfig stateMachineActionsConfig;
 
     public LocalDate getCurrentBusinessDate() {
         return systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE);
@@ -77,10 +83,30 @@ public class EODControlService {
         return currentBusinessDate;
     }
 
-    public BatchStatus runEODJob(final String jobName) {
+    public BatchStatus runJob(String jobName) {
         final LocalDate currentBusinessDay = getCurrentBusinessDate();
         log.info("[control-service] triggering eod job: {} for business date: {}", jobName, currentBusinessDay);
         return triggerEOD(jobName, currentBusinessDay);
+    }
+
+    public BatchStatus runEOD1Job() {
+        final BatchStatus status = runJob(EOD1_BATCH_JOB_NAME);
+        if (BatchStatus.COMPLETED == status) {
+            stateMachineActionsConfig.eod1CompleteAction();
+        }
+        return status;
+    }
+
+    public BatchStatus runEOD2Job() {
+        final BatchStatus status = runJob(EOD2_BATCH_JOB_NAME);
+        if (BatchStatus.COMPLETED == status) {
+            stateMachineActionsConfig.eod2CompleteAction();
+        }
+        return status;
+    }
+
+    public BatchStatus rollBusinessDateJob() {
+        return runJob(ROLL_BUSINESS_DATE_JOB_NAME);
     }
 
     private BatchStatus triggerEOD(final String jobName, final LocalDate businessDate) {
