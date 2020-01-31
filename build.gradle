@@ -96,7 +96,7 @@ dependencies {
             [group: 'org.assertj', name: 'assertj-core'],
             [group: 'org.mockito', name: 'mockito-junit-jupiter'],
             [group: 'org.springframework.statemachine', name: 'spring-statemachine-test'],
-//            [group: 'com.github.database-rider', name: 'rider-core', version: '1.10.0'],
+            [group: 'com.github.database-rider', name: 'rider-core', version: '1.10.0'],
             [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
 
