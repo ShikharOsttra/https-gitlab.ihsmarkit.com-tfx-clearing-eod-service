@@ -24,7 +24,6 @@ import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODTransactionDiaryLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeListQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeTransactionDiaryLedgerProcessor;
-import com.ihsmarkit.tfx.eod.support.ListItemWriter;
 
 import lombok.AllArgsConstructor;
 
@@ -62,7 +61,7 @@ public class TransactionDiaryLedgerConfig {
             TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME,
             transactionDiaryReader(tradeListQueryProvider),
             tradeTransactionDiaryLedgerProcessor,
-            new ListItemWriter<>(transactionDiaryWriter())
+            transactionDiaryWriter()
         );
     }
 
