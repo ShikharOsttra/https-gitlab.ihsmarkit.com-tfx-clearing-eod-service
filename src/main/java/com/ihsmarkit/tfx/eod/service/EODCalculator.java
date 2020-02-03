@@ -181,14 +181,14 @@ public class EODCalculator {
         final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver,
         final Function<String, BigDecimal> jpyRates
     ) {
-        return aggregatePositionsAbs(positions)
+        return aggregatePositions(positions)
             .map(position -> ImmutablePair.of(
                 position.getParticipant(),
                 jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
                     .multiply(position.getAmount())
                     .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
                         .multiply(MARGIN_RATIO_FACTOR))
-                    .setScale(0, RoundingMode.CEILING)
+                    .setScale(0, RoundingMode.CEILING).abs()
             )).collect(
                 toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
             );
@@ -228,10 +228,6 @@ public class EODCalculator {
         return aggregate(input, reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add));
     }
 
-    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregateAbs(final Stream<? extends CcyParticipantAmount> input) {
-        return aggregate(input, reducing(ZERO, ccyParticipantAmount -> ccyParticipantAmount.getAmount().abs(), BigDecimal::add));
-    }
-
     private <R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
         final Stream<? extends CcyParticipantAmount> input,
         final Collector<CcyParticipantAmount, ?, R> collector
@@ -255,11 +251,6 @@ public class EODCalculator {
     public Stream<ParticipantCurrencyPairAmount> aggregatePositions(final Stream<ParticipantPositionEntity> positions) {
         return flatten(aggregate(positions.map(tradeOrPositionMapper::convertPosition)));
     }
-
-    public Stream<ParticipantCurrencyPairAmount> aggregatePositionsAbs(final Stream<ParticipantPositionEntity> positions) {
-        return flatten(aggregateAbs(positions.map(tradeOrPositionMapper::convertPosition)));
-    }
-
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
                             aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
