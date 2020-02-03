@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -40,20 +39,13 @@ public class PositionRebalancePublishingService {
                     mailClient.sendEmailWithAttachments(
                         String.format("%s rebalance results for %s", businessDate.toString(), entry.getKey().getCode()),
                         StringUtils.EMPTY,
-                        Arrays.asList(entry.getKey().getNotificationEmail()),
+                        Arrays.asList(entry.getKey().getNotificationEmail().split(",")),
                         List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
                             getPositionRebalanceCsv(entry.getValue()))));
                 });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
-    }
-
-    private List<String> getAllParticipantEmails(final List<TradeEntity> trades) {
-        return trades.stream()
-            .flatMap(trade -> Stream.of(trade.getCounterparty().getParticipant().getNotificationEmail(),
-                trade.getOriginator().getParticipant().getNotificationEmail()))
-            .collect(Collectors.toList());
     }
 
     private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
