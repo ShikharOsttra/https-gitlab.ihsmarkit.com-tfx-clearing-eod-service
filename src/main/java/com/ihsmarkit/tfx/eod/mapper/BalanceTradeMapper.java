@@ -37,7 +37,7 @@ public interface BalanceTradeMapper {
     @Mapping(target = "accountInfo", ignore = true)
     @Mapping(target = "comments", ignore = true)
     @Mapping(target = "versionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
-    @Mapping(target = "sourceSystem", constant = "GUI")//FIXME proper value!!!
+    @Mapping(target = "sourceSystem", constant = "GUI")
     @Mapping(target = "utiPrefix", ignore = true)
     @Mapping(target = "utiTradeId", ignore = true)
     @Mapping(target = "userName", ignore = true)
