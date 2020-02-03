@@ -91,9 +91,7 @@ public class FutureValueService {
         final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         final CriteriaQuery<T> query = cb.createQuery(clazz);
         final Root<T> root = query.from(clazz);
-        query.where(cb.and(
-            cb.equal(root.get(FutureValueEntity_.businessDate), businessDate),
-            cb.equal(root.get(FutureValueEntity_.applicableDate), businessDate).not()));
+        query.where(cb.greaterThanOrEqualTo(root.get(FutureValueEntity_.businessDate), businessDate));
 
         entityManager.createQuery(query)
             .getResultList()

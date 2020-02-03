@@ -33,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
 
+    private static final String DEFAULT_TIME = "07:00:00";
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -59,11 +61,11 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantType(formatEnum(participant.getType()))
             .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
             .currencyPair(currencyPair.getCode())
-            .matchDate(EMPTY)
-            .matchTime(EMPTY)
+            .matchDate(formatDate(businessDate))
+            .matchTime(DEFAULT_TIME)
             .matchId(EMPTY)
-            .clearDate(EMPTY)
-            .clearTime(EMPTY)
+            .clearDate(formatDate(businessDate))
+            .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
             .tradePrice(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair)))
             .sellAmount(EMPTY)

@@ -116,7 +116,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .dsp("10")
                 .dailyMtMAmount("0")
                 .swapPoint("0")
-                .outstandingPositionAmount(EMPTY)
+                .outstandingPositionAmount("0")
                 .settlementDate("2019/01/02")
                 .tradeId("tradeRef")
                 .tradeType("1")

@@ -115,7 +115,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
             .dailyMtMAmount(mtmAmount)
             .swapPoint(swapPoint)
-            .outstandingPositionAmount(EMPTY)
+            .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
             .settlementDate(formatDate(trade.getValueDate()))
             .tradeId(trade.getTradeReference())
             .tradeType(trade.getTransactionType().getValue().toString())
