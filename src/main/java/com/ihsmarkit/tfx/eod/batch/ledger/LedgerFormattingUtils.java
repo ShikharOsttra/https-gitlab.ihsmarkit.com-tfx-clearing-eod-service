@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
@@ -51,11 +50,11 @@ public class LedgerFormattingUtils {
         return safeFormat(enumValue, value -> RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name()));
     }
 
-    public static String formatBigDecimalForceTwoDecimals(@Nonnull final Optional<BigDecimal> bigDecimal) {
+    public static String formatBigDecimalForceTwoDecimals(final Optional<BigDecimal> bigDecimal) {
         return bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)).map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
     }
 
-    public static String formatBigDecimal(@Nonnull final Optional<BigDecimal> bigDecimal) {
+    public static String formatBigDecimal(final Optional<BigDecimal> bigDecimal) {
         return bigDecimal.map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
     }
 
