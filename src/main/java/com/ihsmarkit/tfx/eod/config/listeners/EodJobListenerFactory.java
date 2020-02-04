@@ -26,7 +26,7 @@ public class EodJobListenerFactory {
         return new JobExecutionListener() {
             @Override
             public void beforeJob(final JobExecution jobExecution) {
-                final EodAlert eodAlert = eodStartAlert.apply(clockService.getCurrentDateTime());
+                final EodAlert eodAlert = eodStartAlert.apply(clockService.getCurrentDateTimeUTC());
                 alertSender.sendAlert(eodAlert);
 
                 log.info("Sent EOD start alert: {}", eodAlert);
@@ -34,7 +34,7 @@ public class EodJobListenerFactory {
 
             @Override
             public void afterJob(final JobExecution jobExecution) {
-                final EodAlert eodAlert = oedCompleteAlert.apply(clockService.getCurrentDateTime());
+                final EodAlert eodAlert = oedCompleteAlert.apply(clockService.getCurrentDateTimeUTC());
                 alertSender.sendAlert(eodAlert);
 
                 log.info("Sent EOD competed alert: {}", eodAlert);
