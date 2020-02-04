@@ -7,4 +7,9 @@
     <eod_threshold_future_value id="2" product_id="14" value="100000" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <forced_allocation_threshold_future_value id="1" product_id="13" value="0" applicable_date="2019-10-07" business_date="2019-10-07"/>
     <forced_allocation_threshold_future_value id="2" product_id="14" value="0" applicable_date="2019-10-07" business_date="2019-10-07"/>
+
+    <eod_threshold_future_value id="3" product_id="13" value="100000" applicable_date="2019-10-08" business_date="2019-10-08"/>
+    <forced_allocation_threshold_future_value id="3" product_id="13" value="0" applicable_date="2019-10-08" business_date="2019-10-08"/>
+    <eod_threshold_future_value id="4" product_id="14" value="100000" applicable_date="2019-10-08" business_date="2019-10-08"/>
+    <forced_allocation_threshold_future_value id="4" product_id="14" value="0" applicable_date="2019-10-08" business_date="2019-10-08"/>
 </dataset>

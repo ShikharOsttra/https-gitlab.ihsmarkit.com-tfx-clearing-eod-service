@@ -66,7 +66,7 @@ public class RebalancingTasklet implements Tasklet {
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
-        final Map<CurrencyPairEntity, Long> thresholds = eodThresholdFutureValueRepository.findNotOutdatedByBusinessDate(businessDate).stream()
+        final Map<CurrencyPairEntity, Long> thresholds = eodThresholdFutureValueRepository.findByBusinessDate(businessDate).stream()
             .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), EODThresholdFutureValueEntity::getValue));
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
