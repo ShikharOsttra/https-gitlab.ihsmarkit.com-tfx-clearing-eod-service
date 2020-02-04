@@ -23,7 +23,7 @@ public class EodAlertStepListener extends StepExecutionListenerSupport {
     @Override
     public ExitStatus afterStep(final StepExecution stepExecution) {
         // todo: get readable step name
-        final EodStepCompleteAlert alert = EodStepCompleteAlert.of(clockService.getCurrentDateTime(), stepExecution.getStepName());
+        final EodStepCompleteAlert alert = EodStepCompleteAlert.of(clockService.getCurrentDateTimeUTC(), stepExecution.getStepName());
         alertSender.sendAlert(alert);
 
         log.debug("Sent alert about step complete: {}", alert);
