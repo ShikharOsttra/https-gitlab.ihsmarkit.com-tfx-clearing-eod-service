@@ -88,31 +88,27 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .currencyCode(currencyPair.getCode())
             .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
             .tradeDate(formatDate(businessDate))
-            .shortPositionPreviousDay(formatAmount(shortPosition(getPosition(positions, SOD))))
-            .longPositionPreviousDay(formatAmount(longPosition(getPosition(positions, SOD))))
+            .shortPositionPreviousDay(formatBigDecimal(shortPosition(getPosition(positions, SOD))))
+            .longPositionPreviousDay(formatBigDecimal(longPosition(getPosition(positions, SOD))))
             .buyTradingAmount(formatBigDecimal(getPosition(positions, BUY).orElse(ZERO).abs()))
             .sellTradingAmount(formatBigDecimal(getPosition(positions, SELL).orElse(ZERO).abs()))
-            .shortPosition(formatAmount(shortPosition(eodPositionAmount)))
-            .longPosition(formatAmount(longPosition(eodPositionAmount)))
-            .initialMtmAmount(formatAmount(getMargin(cashSettlements, INITIAL_MTM)))
-            .dailyMtmAmount(formatAmount(getMargin(cashSettlements, DAILY_MTM)))
-            .swapPoint(formatAmount(getMargin(cashSettlements, SWAP_PNL)))
-            .totalVariationMargin(formatAmount(getMargin(cashSettlements, TOTAL_VM)))
+            .shortPosition(formatBigDecimal(shortPosition(eodPositionAmount)))
+            .longPosition(formatBigDecimal(longPosition(eodPositionAmount)))
+            .initialMtmAmount(formatBigDecimal(getMargin(cashSettlements, INITIAL_MTM)))
+            .dailyMtmAmount(formatBigDecimal(getMargin(cashSettlements, DAILY_MTM)))
+            .swapPoint(formatBigDecimal(getMargin(cashSettlements, SWAP_PNL)))
+            .totalVariationMargin(formatBigDecimal(getMargin(cashSettlements, TOTAL_VM)))
             .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
             .build();
     }
 
-    private static String formatAmount(final Optional<BigDecimal> value) {
-        return value.orElse(ZERO).toString();
-    }
-
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
-        return amount.map(ZERO::max);
+        return amount.map(ZERO::max).or(() -> Optional.of(ZERO));
     }
 
     private static Optional<BigDecimal> shortPosition(final Optional<BigDecimal> amount) {
-        return amount.map(ZERO::min).map(BigDecimal::negate);
+        return amount.map(ZERO::min).map(BigDecimal::negate).or(() -> Optional.of(ZERO));
     }
 
     private static Optional<BigDecimal> getMargin(

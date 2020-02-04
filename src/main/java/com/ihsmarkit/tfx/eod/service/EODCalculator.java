@@ -394,7 +394,7 @@ public class EODCalculator {
                 twoWayCollector(
                     balance -> balance.getProduct().getType() == CASH,
                     evaluator,
-                    (cash, nonCash) -> new BalanceContribution(sumAll(nonCash, cash).orElse(ZERO), cash.orElse(ZERO))
+                    (cash, nonCash) -> new BalanceContribution(nonCash.orElse(ZERO), cash.orElse(ZERO))
                 )
             )
         );
@@ -422,22 +422,22 @@ public class EODCalculator {
         final Optional<DayAndTotalCashSettlement> dayCashSettlement,
         final Optional<BalanceContribution> balance) {
 
+        final Optional<BigDecimal> pnl = dayCashSettlement.map(DayAndTotalCashSettlement::getTotal);
+        final Optional<BigDecimal> cashCollateral = balance.map(BalanceContribution::getCashBalanceContribution);
+        final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
+        final Optional<BigDecimal> daySettlement = dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay);
+
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
-            .requiredAmount(sumAll(requiredInitialMargin, dayCashSettlement.map(DayAndTotalCashSettlement::getTotal).map(BigDecimal::negate)))
-            .totalDeficit(
-                sumAll(
-                    balance.map(BalanceContribution::getTotalBalanceContribution),
-                    dayCashSettlement.map(DayAndTotalCashSettlement::getTotal),
-                    requiredInitialMargin.map(BigDecimal::negate)
-                ))
-            .cashDeficit(
-                sumAll(
-                    balance.map(BalanceContribution::getCashBalanceContribution),
-                    dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay),
-                    requiredInitialMargin.map(BigDecimal::negate)
-                ))
+            .pnl(pnl)
+            .cashCollateralAmount(cashCollateral)
+            .logCollateralAmount(logCollateral)
+            .todaySettlement(daySettlement)
+            .nextDaySettlement(Optional.of(ZERO)) //FIXME!!!!!!
+            .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
+            .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
+            .cashDeficit(sumAll(cashCollateral, daySettlement, requiredInitialMargin.map(BigDecimal::negate)))
             .build();
     }
 

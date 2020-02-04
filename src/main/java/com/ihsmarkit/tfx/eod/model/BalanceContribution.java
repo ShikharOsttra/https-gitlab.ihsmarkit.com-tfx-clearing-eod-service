@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class BalanceContribution {
 
-    private final BigDecimal totalBalanceContribution;
+    private final BigDecimal logBalanceContribution;
     private final BigDecimal cashBalanceContribution;
 
 }
