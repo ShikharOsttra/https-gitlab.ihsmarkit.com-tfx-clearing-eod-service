@@ -12,6 +12,11 @@ import lombok.Getter;
 @Builder
 public class ParticipantMargin {
     private final ParticipantEntity participant;
+    private final Optional<BigDecimal> cashCollateralAmount;
+    private final Optional<BigDecimal> logCollateralAmount;
+    private final Optional<BigDecimal> pnl;
+    private final Optional<BigDecimal> todaySettlement;
+    private final Optional<BigDecimal> nextDaySettlement;
     private final Optional<BigDecimal> initialMargin;
     private final Optional<BigDecimal> requiredAmount;
     private final Optional<BigDecimal> totalDeficit;
