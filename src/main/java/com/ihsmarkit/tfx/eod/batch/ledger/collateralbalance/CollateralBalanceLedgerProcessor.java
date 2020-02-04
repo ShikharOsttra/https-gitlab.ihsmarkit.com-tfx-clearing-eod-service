@@ -10,6 +10,8 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DA
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalForceTwoDecimals;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -39,7 +41,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
-import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
@@ -120,10 +121,10 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .cash(balances.getOrDefault(purpose, ZERO_BALANCE).getCash().toString())
             .lg(balances.getOrDefault(purpose, ZERO_BALANCE).getLg().toString())
             .securities(balances.getOrDefault(purpose, ZERO_BALANCE).getSecurities().toString())
-            .requiredAmount(requiredAmount.toString())
+            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
             .totalInitialMargin(getFromMarginEntity(purpose, margin, EodParticipantMarginEntity::getInitialMargin))
             .totalVariationMargin(getForMargin(purpose, cashSettlement.get(TOTAL_VM, TOTAL)))
-            .totalExcessDeficit(totalExcessDeficit.toString())
+            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
             .deficitInCashSettlement(getFromMarginEntity(purpose, margin, EodParticipantMarginEntity::getCashDeficit))
             .cashSettlement(getForMargin(purpose, cashSettlement.get(TOTAL_VM, DAY)))
             .cashSettlementFollowingDay(getForMargin(purpose, cashSettlement.get(TOTAL_VM, FOLLOWING)))
@@ -146,7 +147,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         final ParticipantEntity participant
     ) {
         return purpose == MARGIN
-               ? margin.map(marginVal -> marginVal.getRequiredAmount().getValue())
+               ? margin.map(EodParticipantMarginEntity::getRequiredAmount)
                : collateralRequirementProvider.getRequiredAmount(participant.getId(), purpose);
     }
 
@@ -178,17 +179,13 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     private static String getFromMarginEntity(
         final CollateralPurpose purpose,
         final Optional<EodParticipantMarginEntity> margin,
-        final Function<EodParticipantMarginEntity, AmountEntity> amountMapper
+        final Function<EodParticipantMarginEntity, BigDecimal> amountMapper
     ) {
-        return purpose == MARGIN
-               ? margin.map(amountMapper).map(amount -> amount.getValue().toString()).orElse(EMPTY)
-               : EMPTY;
+        return purpose == MARGIN ? formatBigDecimalForceTwoDecimals(margin.map(amountMapper)) : EMPTY;
     }
 
     private static String getForMargin(final CollateralPurpose purpose, final @Nullable BigDecimal value) {
-        return purpose == MARGIN
-               ? Optional.ofNullable(value).map(BigDecimal::toString).orElse(EMPTY)
-               : EMPTY;
+        return purpose == MARGIN ? formatBigDecimal(value) : EMPTY;
     }
 
 }
