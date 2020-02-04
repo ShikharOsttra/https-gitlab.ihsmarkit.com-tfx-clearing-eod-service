@@ -60,7 +60,7 @@ public class SingleCurrencyRebalanceCalculatorTest {
                 .spotRate(BigDecimal.TEN)
                 .build());
 
-        final List<BalanceTrade> rebalance = rebalanceCalculator.rebalance(positions, BigDecimal.valueOf(100_000), 5);
+        final List<BalanceTrade> rebalance = rebalanceCalculator.rebalance(positions, 100_000L, 5);
 
         assertThat(rebalance).hasSize(3)
             .extracting(

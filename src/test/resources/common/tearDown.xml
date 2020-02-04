@@ -24,7 +24,6 @@
     <equity_custodian_account/>
     <log_custodian_account/>
     <fx_spot_product/>
-    <fx_spot_eod_position_setting/>
     <fx_spot_single_ticket_limit/>
     <fx_spot_tick_size/>
     <margin_alert_configuration/>
@@ -58,4 +57,6 @@
     <eod_daily_settlement_price/>
     <eod_swap_point/>
     <eod_cash_balance_adjustment/>
+    <eod_threshold_future_value />
+    <forced_allocation_threshold_future_value />
 </dataset>

@@ -3,6 +3,8 @@
     <fx_spot_product id="13" product_number="102" product_code="EUR/USD" trading_unit="1" tick_amount_val="0" tick_amount_ccy="USD" description="desc"/>
     <fx_spot_product id="14" product_number="103" product_code="USD/JPY" trading_unit="1" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
 
-    <fx_spot_eod_position_setting id="13" eod_threshold_val="100000" eod_threshold_ccy="USD" forced_alloc_val="0" forced_alloc_ccy="USD"/>
-    <fx_spot_eod_position_setting id="14" eod_threshold_val="100000" eod_threshold_ccy="JPY" forced_alloc_val="0" forced_alloc_ccy="JPY"/>
+    <eod_threshold_future_value id="1" product_id="13" value="100000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <eod_threshold_future_value id="2" product_id="14" value="100000" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <forced_allocation_threshold_future_value id="1" product_id="13" value="0" applicable_date="2019-10-07" business_date="2019-10-07"/>
+    <forced_allocation_threshold_future_value id="2" product_id="14" value="0" applicable_date="2019-10-07" business_date="2019-10-07"/>
 </dataset>
