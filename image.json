@@ -74,6 +74,15 @@
             "value": "eod-service.jar"
           },
           {
+            "name": "JAVA_OPTS",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "environment-config",
+                "key": "eod-service.java-opts"
+              }
+            }
+          },
+          {
             "name": "DB_URL",
             "valueFrom": {
               "configMapKeyRef": {

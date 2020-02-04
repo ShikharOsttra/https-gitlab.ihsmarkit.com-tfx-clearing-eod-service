@@ -18,4 +18,4 @@ fi
 
 [[ -d ${LOG_PATH} ]] || mkdir -p ${LOG_PATH}
 
-java -jar /opt/app/${JAVA_APP_JAR} --spring.config.location=classpath:/application.properties,classpath:/application-env.properties,file:${CREDENTIALS_FILE},file:/opt/app/config/application.properties
+java ${JAVA_OPTS} -jar /opt/app/${JAVA_APP_JAR} --spring.config.location=classpath:/application.properties,classpath:/application-env.properties,file:${CREDENTIALS_FILE},file:/opt/app/config/application.properties
