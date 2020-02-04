@@ -60,8 +60,8 @@ public class EODCleanupService {
 
     private void removeEODStageRecordsForDate(final LocalDate businessDate) {
         Stream.of(
-//            EodStage.EOD1_COMPLETE,
-//            EodStage.EOD2_COMPLETE,
+            EodStage.EOD1_COMPLETE,
+            EodStage.EOD2_COMPLETE,
             EodStage.DSP_APPROVED,
             EodStage.SWAP_POINTS_APPROVED
         )

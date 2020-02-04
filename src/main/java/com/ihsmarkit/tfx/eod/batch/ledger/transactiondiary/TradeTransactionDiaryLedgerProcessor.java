@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
-import static com.ihsmarkit.tfx.core.domain.type.TransactionType.BALANCE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -11,7 +10,6 @@ import static org.apache.logging.log4j.util.Strings.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @StepScope
-public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<TradeEntity, List<TransactionDiary>> {
+public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<TradeEntity, TransactionDiary> {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -54,7 +52,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
 
     @Override
-    public List<TransactionDiary> process(final TradeEntity trade) {
+    public TransactionDiary process(final TradeEntity trade) {
 
         final ParticipantEntity originator = trade.getOriginator().getParticipant();
 
@@ -66,16 +64,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         final String sellAmount = trade.getDirection() == Side.SELL ? baseAmount : EMPTY;
         final String buyAmount = trade.getDirection() == Side.BUY ? baseAmount : EMPTY;
 
-        if (trade.getTransactionType() == BALANCE) {
-            return List.of(
-                convertTrade(trade, originator, counterparty, sellAmount, buyAmount, formatBigDecimal(mtm), formatBigDecimal(swapPoint)),
-                convertTrade(trade, counterparty, originator, buyAmount, sellAmount, formatBigDecimal(mtm.negate()), formatBigDecimal(swapPoint.negate()))
-            );
-        } else {
-            return List.of(
-                convertTrade(trade, originator, counterparty, sellAmount, buyAmount, mtm.toString(), swapPoint.toString())
-            );
-        }
+        return convertTrade(trade, originator, counterparty, sellAmount, buyAmount, mtm.toString(), swapPoint.toString());
     }
 
     private TransactionDiary convertTrade(
@@ -115,7 +104,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
             .dailyMtMAmount(mtmAmount)
             .swapPoint(swapPoint)
-            .outstandingPositionAmount(EMPTY)
+            .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
             .settlementDate(formatDate(trade.getValueDate()))
             .tradeId(trade.getTradeReference())
             .tradeType(trade.getTransactionType().getValue().toString())

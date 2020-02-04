@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -24,7 +26,10 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
+import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.config.EodJobConstants;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
@@ -330,6 +335,67 @@ class EODCalculatorTest {
             jpyRates::get);
         assertThat(initialMargin.size()).isOne();
         assertThat(initialMargin.get(PARTICIPANT_A)).isEqualByComparingTo(BigDecimal.valueOf(12991212));
+    }
+
+    @Test
+    void shouldAggregateRequiredMargin() {
+
+        final LocalDate today = LocalDate.of(2020, 10, 10);
+        final LocalDate tomorrow = LocalDate.of(2020, 10, 11);
+        final LocalDate dayAfterTomorrow = LocalDate.of(2020, 10, 12);
+
+        final EodProductCashSettlementEntity dailyMtmT = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(100)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(today)
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
+        final EodProductCashSettlementEntity dailyMtmTB = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(100)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_B)
+            .settlementDate(today)
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
+        final EodProductCashSettlementEntity initialMtmT = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(100)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(today)
+            .type(EodProductCashSettlementType.INITIAL_MTM)
+            .build();
+        final EodProductCashSettlementEntity dailyMtmT11 = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(200)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(tomorrow)
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
+        final EodProductCashSettlementEntity dailyMtmT12 = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(120)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(tomorrow)
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
+        final EodProductCashSettlementEntity dailyMtmT2 = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(200)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(dayAfterTomorrow)
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
+
+        final Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>> participantEntityMapMap =
+            eodCalculator.aggregateRequiredMargin(List.of(dailyMtmTB, initialMtmT, dailyMtmT, dailyMtmT11, dailyMtmT12, dailyMtmT2), today);
+
+        assertThat(participantEntityMapMap)
+            .extracting(
+                map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.DAY),
+                map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.FOLLOWING),
+                map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.TOTAL))
+            .containsExactly(BigDecimal.valueOf(100), BigDecimal.valueOf(320), BigDecimal.valueOf(620));
     }
 
     @TestConfiguration

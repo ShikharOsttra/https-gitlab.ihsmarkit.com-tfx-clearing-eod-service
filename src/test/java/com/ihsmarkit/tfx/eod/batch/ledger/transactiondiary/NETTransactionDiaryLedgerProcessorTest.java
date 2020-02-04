@@ -33,7 +33,6 @@ import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 class NETTransactionDiaryLedgerProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
-    private static final LocalDate NEXT_BUSINESS_DATE = LocalDate.of(2019, 1, 2);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
     private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
@@ -76,11 +75,11 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .participantType("LP")
                 .currencyNo("101")
                 .currencyPair("USD/JPY")
-                .matchDate(EMPTY)
-                .matchTime(EMPTY)
+                .matchDate("2019/01/01")
+                .matchTime("07:00:00")
                 .matchId(EMPTY)
-                .clearDate(EMPTY)
-                .clearTime(EMPTY)
+                .clearDate("2019/01/01")
+                .clearTime("07:00:00")
                 .clearingId(EMPTY)
                 .tradePrice("10")
                 .sellAmount(EMPTY)

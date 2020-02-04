@@ -85,7 +85,9 @@ public class RebalancingTasklet implements Tasklet {
                     ).entrySet().stream()
                     .flatMap(
                         byOriginator -> byOriginator.getValue().entrySet().stream()
-                            .map(byCounterpart -> new BalanceTrade(byOriginator.getKey(), byCounterpart.getKey(), byCounterpart.getValue()))
+                            .flatMap(byCounterpart ->
+                                Stream.of(new BalanceTrade(byOriginator.getKey(), byCounterpart.getKey(), byCounterpart.getValue()),
+                                    new BalanceTrade(byCounterpart.getKey(), byOriginator.getKey(), byCounterpart.getValue().negate())))
                     ).map(
                         trade -> balanceTradeMapper.toTrade(
                             trade,
@@ -111,7 +113,6 @@ public class RebalancingTasklet implements Tasklet {
                             )
                         )
                 )
-
         ).map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
             trade,
             ParticipantPositionType.REBALANCING,

@@ -44,6 +44,9 @@ class Eod2JobIntegrationTest {
     @Autowired
     private JobLauncher jobLauncher;
 
+//    @Autowired
+//    DataSource ds;
+
     @Test
     @DatabaseSetup({
         "/common/currency.xml",

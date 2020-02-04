@@ -145,7 +145,10 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             ).containsExactlyInAnyOrder(
                 tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
                 tuple(ORIG_A, ORIG_D, 25861000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE)
+                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
+                tuple(ORIG_C, ORIG_A, 123539000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
+                tuple(ORIG_D, ORIG_A, 25861000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
+                tuple(ORIG_D, ORIG_B, 21100000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE)
             );
 
         verify(eodCalculator).netAll(netCaptor.capture());

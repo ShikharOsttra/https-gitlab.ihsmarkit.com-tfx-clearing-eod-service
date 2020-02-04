@@ -352,6 +352,31 @@
             message_id="test"
     />
 
+    <trade
+        transaction_type="2"
+        currency_pair_id="13"
+        product_code="EUR/USD"
+        trade_ref="test"
+        activity="NEW"
+        originator_id="102"
+        counterparty_id="101"
+        direction="SELL"
+        base_ccy="EUR"
+        base_ccy_amt="330000.00"
+        value_ccy="USD"
+        value_ccy_amt="300000.00"
+        spot_rate="1.1"
+        matching_status="CONFIRMED"
+        clearing_status="NOVATED"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        execution_time="2019-11-12 10:10:00"
+        source_system="GUI"
+        submission_tsp="2019-11-12 10:10:00"
+        version_tsp="2019-11-12 10:10:00"
+        message_id="test"
+    />
+
     <participant_position
             currency_pair_id="13"
             participant_type="FX_BROKER"

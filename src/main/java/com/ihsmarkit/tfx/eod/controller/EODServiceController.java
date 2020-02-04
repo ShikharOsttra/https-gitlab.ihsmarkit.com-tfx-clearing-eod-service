@@ -1,12 +1,8 @@
 package com.ihsmarkit.tfx.eod.controller;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CASH_BALANCE_UPDATE_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
-import java.util.stream.Stream;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -45,30 +41,32 @@ public class EODServiceController implements EodServiceControllerApi {
 
     @Override
     public ResponseEntity<String> runEOD1() {
-        return ResponseEntity.ok(eodControlService.runEODJob(EOD1_BATCH_JOB_NAME).name());
+        return ResponseEntity.ok(eodControlService.runEOD1Job().name());
     }
 
     @Override
     public ResponseEntity<String> runEOD2() {
-        return ResponseEntity.ok(eodControlService.runEODJob(EOD2_BATCH_JOB_NAME).name());
+        return ResponseEntity.ok(eodControlService.runEOD2Job().name());
     }
 
     @Override
     public ResponseEntity<LocalDate> rollBusinessDate() {
-        eodControlService.runEODJob(ROLL_BUSINESS_DATE_JOB_NAME);
+        eodControlService.rollBusinessDateJob();
         return getCurrentBusinessDay();
     }
 
     @Override
     public ResponseEntity<LocalDate> runAll() {
-        Stream.of(EOD1_BATCH_JOB_NAME, EOD2_BATCH_JOB_NAME, ROLL_BUSINESS_DATE_JOB_NAME)
-            .filter(job -> eodControlService.runEODJob(job) != BatchStatus.COMPLETED)
-            .findFirst();
-        return getCurrentBusinessDay();
+        if (eodControlService.runEOD1Job() == BatchStatus.COMPLETED
+            && eodControlService.runEOD2Job() == BatchStatus.COMPLETED
+            && eodControlService.rollBusinessDateJob() == BatchStatus.COMPLETED) {
+            return getCurrentBusinessDay();
+        }
+        return ResponseEntity.ok(LocalDate.MIN);
     }
 
     @Override
     public ResponseEntity<String> updateCashBalances() {
-        return ResponseEntity.ok(eodControlService.runEODJob(CASH_BALANCE_UPDATE_BATCH_JOB_NAME).name());
+        return ResponseEntity.ok(eodControlService.runJob(CASH_BALANCE_UPDATE_BATCH_JOB_NAME).name());
     }
 }

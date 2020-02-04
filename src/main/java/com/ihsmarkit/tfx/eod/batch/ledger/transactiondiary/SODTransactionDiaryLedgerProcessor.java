@@ -80,7 +80,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .dsp(dsp)
             .dailyMtMAmount(dailyMtMAmount)
             .swapPoint(swapPoint)
-            .outstandingPositionAmount(EMPTY)
+            .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
             .settlementDate(settlementDate)
             .tradeId(EMPTY)
             .tradeType(EMPTY)

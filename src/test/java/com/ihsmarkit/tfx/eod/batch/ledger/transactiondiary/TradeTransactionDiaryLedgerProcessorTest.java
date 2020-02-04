@@ -93,7 +93,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .build());
 
         assertThat(processor.process(aTrade()))
-            .containsExactly(TransactionDiary.builder()
+            .isEqualTo(TransactionDiary.builder()
                 .businessDate(BUSINESS_DATE)
                 .tradeDate("2019/01/01")
                 .recordDate("2019/01/02 11:30:00")
@@ -116,7 +116,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .dsp("10")
                 .dailyMtMAmount("0")
                 .swapPoint("0")
-                .outstandingPositionAmount(EMPTY)
+                .outstandingPositionAmount("0")
                 .settlementDate("2019/01/02")
                 .tradeId("tradeRef")
                 .tradeType("1")

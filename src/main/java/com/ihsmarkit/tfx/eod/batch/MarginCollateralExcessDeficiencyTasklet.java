@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXC
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -76,8 +77,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
-        final Stream<EodProductCashSettlementEntity> margin =
-            eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThanEqual(businessDate);
+        final List<EodProductCashSettlementEntity> margin =
+            eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThanEqual(businessDate).collect(Collectors.toList());
 
         final var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
 

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +59,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
+import io.vavr.Function3;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -186,7 +188,7 @@ public class EODCalculator {
                     .multiply(position.getAmount())
                     .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
                         .multiply(MARGIN_RATIO_FACTOR))
-                    .setScale(0, RoundingMode.CEILING)
+                    .setScale(0, RoundingMode.CEILING).abs()
             )).collect(
                 toMap(ImmutablePair::getLeft, ImmutablePair::getRight, BigDecimal::add)
             );
@@ -251,16 +253,21 @@ public class EODCalculator {
     }
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
-                            aggregateRequiredMargin(final Stream<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
-        return margins
+                            aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
+
+        final Optional<LocalDate> followingDate = margins.stream().filter(margin -> margin.getSettlementDate().isAfter(businessDate))
+            .map(EodProductCashSettlementEntity::getSettlementDate).min(LocalDate::compareTo);
+
+        return margins.stream()
             .collect(
                 groupingBy(
                     EodProductCashSettlementEntity::getParticipant,
                     groupingBy(
                         EodProductCashSettlementEntity::getType,
                         () -> new EnumMap<>(EodProductCashSettlementType.class),
-                        twoWayCollector(
+                        dateTypeCollector(
                             margin -> businessDate.isEqual(margin.getSettlementDate()),
+                            margin -> followingDate.map(date -> date.equals(margin.getSettlementDate())).orElse(Boolean.FALSE),
                             margin -> margin.getAmount().getValue(),
                             EODCalculator::marginMap
                         )
@@ -269,10 +276,32 @@ public class EODCalculator {
             );
     }
 
-    private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following) {
+    private static <T, R> Collector<T, ?, R> dateTypeCollector(
+        final Predicate<T> dayPredicate,
+        final Predicate<T> followingPredicate,
+        final Function<T, BigDecimal> mapper,
+        final Function3<Optional<BigDecimal>, Optional<BigDecimal>, Optional<BigDecimal>, R> finisher) {
+
+        return collectingAndThen(
+            reducing(
+                ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty()),
+                o -> dayPredicate.test(o)
+                     ? ImmutableTriple.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty())
+                     : followingPredicate.test(o)
+                       ? ImmutableTriple.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
+                       : ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)),
+                (a, b) -> ImmutableTriple.of(sumAll(a.left, b.left), sumAll(a.middle, b.middle), sumAll(a.right, b.right))
+            ),
+            res -> finisher.apply(res.left, res.middle, res.right)
+        );
+    }
+
+
+    private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following,
+                                                                            final Optional<BigDecimal> future) {
         return new EnumMap<EodCashSettlementDateType, BigDecimal>(
             Stream.of(
-                sumAll(day, following).map(margin -> Pair.of(TOTAL, margin)),
+                sumAll(day, future, following).map(margin -> Pair.of(TOTAL, margin)),
                 day.map(margin -> Pair.of(DAY, margin)),
                 following.map(margin -> Pair.of(FOLLOWING, margin))
             ).flatMap(Optional::stream).collect(toMap(Pair::getLeft, Pair::getRight))
