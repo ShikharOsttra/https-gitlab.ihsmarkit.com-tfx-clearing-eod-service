@@ -9,9 +9,10 @@
     "credentials.tpl": "/opt/app/"
   },
   "run": [
-    "for i in $(ls /opt/app | egrep '.*-(tests|sources|javadoc|contracts).jar$'); do rm -f /opt/app/$i; done",
+    "for i in $(ls /opt/app | egrep '.*-(tests|sources|contracts).jar$'); do rm -f /opt/app/$i; done",
     "mv `ls /opt/app/*.jar` $(echo `ls /opt/app/*.jar` | sed -En s/-[0-9]+\\.[0-9]+\\.[0-9]+\\(-SNAPSHOT\\)?.jar//p).jar",
-    "mkdir /etc/.creds"
+    "mkdir /etc/.creds",
+    "apt-get -y update && apt-get -y install jq"
   ],
   "entrypoint": "/opt/app/entrypoint.sh",
   "containerConfig": {
@@ -39,15 +40,15 @@
           }
         },
         {
-          "name": "db-credentials",
+          "name": "db-user-secret",
           "secret": {
-            "secretName": "db-user"
+            "secretName": "db-user-secret"
           }
         },
         {
-          "name": "amq-credentials",
+          "name": "amq-user-secret",
           "secret": {
-            "secretName": "amq-user"
+            "secretName": "amq-user-secret"
           }
         },
         {
@@ -173,14 +174,14 @@
         },
         "volumeMounts": [
           {
-            "name": "db-credentials",
+            "name": "db-user-secret",
             "readOnly": true,
-            "mountPath": "/etc/.db_creds"
+            "mountPath": "/etc/secrets/.db_user_secret"
           },
           {
-            "name": "amq-credentials",
+            "name": "amq-user-secret",
             "readOnly": true,
-            "mountPath": "/etc/.amq_creds"
+            "mountPath": "/etc/secrets/.amq_user_secret"
           },
           {
             "name": "app-config",

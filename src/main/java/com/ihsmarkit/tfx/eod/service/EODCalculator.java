@@ -4,7 +4,6 @@ import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
-import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
@@ -52,7 +51,6 @@ import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
-import com.ihsmarkit.tfx.eod.model.DayAndTotalCashSettlement;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
@@ -368,7 +366,7 @@ public class EODCalculator {
     }
 
     public Stream<ParticipantMargin> calculateParticipantMargin(final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
-                                                                final Map<ParticipantEntity, DayAndTotalCashSettlement> dayCashSettlement,
+                                                                final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
                                                                 final Map<ParticipantEntity, BalanceContribution> deposits) {
         return Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
             .map(Map::keySet)
@@ -394,54 +392,40 @@ public class EODCalculator {
                 twoWayCollector(
                     balance -> balance.getProduct().getType() == CASH,
                     evaluator,
-                    (cash, nonCash) -> new BalanceContribution(sumAll(nonCash, cash).orElse(ZERO), cash.orElse(ZERO))
+                    (cash, nonCash) -> new BalanceContribution(nonCash.orElse(ZERO), cash.orElse(ZERO))
                 )
             )
         );
 
     }
 
-    public Map<ParticipantEntity, DayAndTotalCashSettlement> aggregateDayAndTotalCashSettlement(
-        final Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>> aggregated
-    ) {
-        return aggregated.entrySet().stream()
-            .flatMap(
-                byParticipant -> Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
-                    .map(byType -> new DayAndTotalCashSettlement(Optional.ofNullable(byType.get(DAY)), byType.get(TOTAL)))
-                    .map(amount -> ImmutablePair.of(byParticipant.getKey(), amount))
-                    .stream()
-            ).collect(
-            toMap(Pair::getLeft, Pair::getRight)
-        );
-    }
-
-    @SuppressWarnings("unchecked")
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
         final Optional<BigDecimal> requiredInitialMargin,
-        final Optional<DayAndTotalCashSettlement> dayCashSettlement,
+        final Optional<EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
         final Optional<BalanceContribution> balance) {
+
+        final Optional<BigDecimal> pnl = dayCashSettlement.map(vm -> vm.get(TOTAL));
+        final Optional<BigDecimal> todaySettlement = dayCashSettlement.map(vm -> vm.get(DAY));
+        final Optional<BigDecimal> nextDaySettlement = dayCashSettlement.map(vm -> vm.get(FOLLOWING));
+        final Optional<BigDecimal> cashCollateral = balance.map(BalanceContribution::getCashBalanceContribution);
+        final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
 
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
-            .requiredAmount(sumAll(requiredInitialMargin, dayCashSettlement.map(DayAndTotalCashSettlement::getTotal).map(BigDecimal::negate)))
-            .totalDeficit(
-                sumAll(
-                    balance.map(BalanceContribution::getTotalBalanceContribution),
-                    dayCashSettlement.map(DayAndTotalCashSettlement::getTotal),
-                    requiredInitialMargin.map(BigDecimal::negate)
-                ))
-            .cashDeficit(
-                sumAll(
-                    balance.map(BalanceContribution::getCashBalanceContribution),
-                    dayCashSettlement.flatMap(DayAndTotalCashSettlement::getDay),
-                    requiredInitialMargin.map(BigDecimal::negate)
-                ))
+            .pnl(pnl)
+            .cashCollateralAmount(cashCollateral)
+            .logCollateralAmount(logCollateral)
+            .todaySettlement(todaySettlement)
+            .nextDaySettlement(nextDaySettlement)
+            .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
+            .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
+            .cashDeficit(sumAll(cashCollateral, todaySettlement, requiredInitialMargin.map(BigDecimal::negate)))
             .build();
     }
 
-    public static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
+    private static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
         return Streams.concat(left.keySet().stream(), right.keySet().stream())
             .distinct()
             .map(

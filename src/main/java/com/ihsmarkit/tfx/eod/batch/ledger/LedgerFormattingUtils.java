@@ -3,11 +3,13 @@ package com.ihsmarkit.tfx.eod.batch.ledger;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
@@ -18,7 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings("checkstyle:HideUtilityClassConstructor")
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods"})
 public class LedgerFormattingUtils {
 
     private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle("ledger/messages/messages", Locale.ROOT);
@@ -48,6 +50,18 @@ public class LedgerFormattingUtils {
         return safeFormat(enumValue, value -> RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name()));
     }
 
+    public static String formatBigDecimalForceTwoDecimals(final Optional<BigDecimal> bigDecimal) {
+        return bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)).map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
+    }
+
+    public static String formatBigDecimal(final Optional<BigDecimal> bigDecimal) {
+        return bigDecimal.map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
+    }
+
+    public static String formatBigDecimalForceTwoDecimals(@Nullable final BigDecimal bigDecimal) {
+        return safeFormat(bigDecimal, value -> value.setScale(2, RoundingMode.UNNECESSARY).toPlainString());
+    }
+
     public static String formatBigDecimal(@Nullable final BigDecimal bigDecimal) {
         return safeFormat(bigDecimal, BigDecimal::toPlainString);
     }
@@ -61,6 +75,6 @@ public class LedgerFormattingUtils {
     }
 
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
-        return value == null ? EMPTY : mappingFunction.apply(value);
+        return Optional.ofNullable(value).map(mappingFunction).orElse(EMPTY);
     }
 }
