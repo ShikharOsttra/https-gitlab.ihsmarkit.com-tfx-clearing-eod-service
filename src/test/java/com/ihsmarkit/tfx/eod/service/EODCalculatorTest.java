@@ -290,7 +290,7 @@ class EODCalculatorTest {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
             eodCalculator.rebalanceLPPositions(
                 Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M),
-                Map.of(EURUSD, BigDecimal.valueOf(100000), USDJPY, BigDecimal.valueOf(100000))
+                Map.of(EURUSD, 100000L, USDJPY, 100000L)
             );
 
         assertThat(balanceTrades.get(EURUSD))

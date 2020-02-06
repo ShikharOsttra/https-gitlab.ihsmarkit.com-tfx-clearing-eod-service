@@ -15,7 +15,7 @@ import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 @Component
 public class SingleCurrencyRebalanceCalculator {
 
-    List<BalanceTrade> rebalance(final List<TradeOrPositionEssentials> positions, final BigDecimal threshold, final int rounding) {
+    List<BalanceTrade> rebalance(final List<TradeOrPositionEssentials> positions, final Long threshold, final int rounding) {
 
         PositionBalance balance = PositionBalance.of(
             positions.stream()
@@ -26,7 +26,7 @@ public class SingleCurrencyRebalanceCalculator {
 
         int tradesInIteration = Integer.MAX_VALUE;
 
-        while (tradesInIteration > 0 && balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(threshold) > 0) {
+        while (tradesInIteration > 0 && balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(BigDecimal.valueOf(threshold)) > 0) {
             final List<BalanceTrade> iterationTrades = balance.rebalance(rounding).collect(Collectors.toList());
             tradesInIteration = iterationTrades.size();
             trades.addAll(iterationTrades);

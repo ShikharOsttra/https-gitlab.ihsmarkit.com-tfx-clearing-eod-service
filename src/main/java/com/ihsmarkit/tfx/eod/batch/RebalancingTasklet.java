@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +16,10 @@ import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.EODThresholdFutureValueEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
-import com.ihsmarkit.tfx.core.dl.repository.FxSpotEodPositionRepository;
+import com.ihsmarkit.tfx.core.dl.repository.EODThresholdFutureValueRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -55,7 +55,7 @@ public class RebalancingTasklet implements Tasklet {
 
     private final PositionRebalancePublishingService publishingService;
 
-    private final FxSpotEodPositionRepository fxSpotEodPositionRepository;
+    private final EODThresholdFutureValueRepository eodThresholdFutureValueRepository;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -66,8 +66,8 @@ public class RebalancingTasklet implements Tasklet {
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
-        final Map<CurrencyPairEntity, BigDecimal> thresholds = fxSpotEodPositionRepository.findAllOrderByProductNumberAsc().stream()
-            .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), setting -> setting.getEodThresholdAmount().getValue()));
+        final Map<CurrencyPairEntity, Long> thresholds = eodThresholdFutureValueRepository.findByBusinessDate(businessDate).stream()
+            .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), EODThresholdFutureValueEntity::getValue));
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
 

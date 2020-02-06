@@ -15,6 +15,8 @@ import javax.persistence.criteria.Root;
 
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.core.dl.entity.EODThresholdFutureValueEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ForcedAllocationThresholdFutureValueEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FutureValueEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FutureValueEntity_;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotTickSizeEntity;
@@ -42,6 +44,8 @@ public class FutureValueService {
         rollFutureValue(currentBusinessDate, nextBusinessDate, ParticipantCollateralRequirementEntity.class, ParticipantCollateralRequirementEntity::getPurpose,
             entity -> entity.getParticipant().getId());
         rollFutureValue(currentBusinessDate, nextBusinessDate, FxSpotTickSizeEntity.class, entity -> entity.getFxSpotProduct().getId());
+        rollFutureValue(currentBusinessDate, nextBusinessDate, EODThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId());
+        rollFutureValue(currentBusinessDate, nextBusinessDate, ForcedAllocationThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId());
         rollFutureValue(currentBusinessDate, nextBusinessDate, LogHaircutRateEntity.class, entity -> entity.getIssuer().getId());
         rollFutureValue(currentBusinessDate, nextBusinessDate, BondHaircutRateEntity.class, BondHaircutRateEntity::getBondSubType,
             BondHaircutRateEntity::getRemainingDuration);
@@ -53,6 +57,8 @@ public class FutureValueService {
         unrollFutureValue(businessDate, MarginRatioMultiplierEntity.class);
         unrollFutureValue(businessDate, ParticipantCollateralRequirementEntity.class);
         unrollFutureValue(businessDate, FxSpotTickSizeEntity.class);
+        unrollFutureValue(businessDate, EODThresholdFutureValueEntity.class);
+        unrollFutureValue(businessDate, ForcedAllocationThresholdFutureValueEntity.class);
         unrollFutureValue(businessDate, LogHaircutRateEntity.class);
         unrollFutureValue(businessDate, BondHaircutRateEntity.class);
         unrollFutureValue(businessDate, EquityHaircutRateEntity.class);

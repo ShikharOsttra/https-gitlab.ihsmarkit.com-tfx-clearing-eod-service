@@ -349,7 +349,7 @@ public class EODCalculator {
     }
 
     public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions,
-                                                                            final Map<CurrencyPairEntity, BigDecimal> thresholds) {
+                                                                            final Map<CurrencyPairEntity, Long> thresholds) {
 
         return positions
             .map(tradeOrPositionMapper::convertPosition)
