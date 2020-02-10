@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -27,13 +27,13 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
-import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 
 import lombok.SneakyThrows;
 
@@ -51,7 +51,7 @@ class DailyMarketDataProcessorTest {
     @Mock
     private DailySettlementPriceRepository dailySettlementPriceRepository;
     @Mock
-    private FxSpotProductRepository fxSpotProductRepository;
+    private FXSpotProductService fxSpotProductService;
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
     @Mock
@@ -62,7 +62,7 @@ class DailyMarketDataProcessorTest {
     @BeforeEach
     void beforeEach() {
         aggregator = new DailyMarketDataProcessor(
-            currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductRepository,
+            currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductService,
             participantPositionRepository, clockService, BUSINESS_DATE, DATE_TIME_2019_1_1_1_1
         );
     }
@@ -75,6 +75,7 @@ class DailyMarketDataProcessorTest {
         mockDsp();
         mockOpenPositionAmount();
         mockTradingUnit();
+        mockCurrencyScale();
 
         assertThat(aggregator.process(getInputData()))
             .isNotEmpty()
@@ -85,20 +86,28 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getSwapPoint,
                 DailyMarketDataEnriched::getOpenPositionAmount,
                 DailyMarketDataEnriched::getClosePriceTime,
+                DailyMarketDataEnriched::getClosePrice,
                 DailyMarketDataEnriched::getOpenPriceTime,
+                DailyMarketDataEnriched::getOpenPrice,
                 DailyMarketDataEnriched::getLowPriceTime,
-                DailyMarketDataEnriched::getHighPriceTime
+                DailyMarketDataEnriched::getLowPrice,
+                DailyMarketDataEnriched::getHighPriceTime,
+                DailyMarketDataEnriched::getHighPrice
             )
             .containsExactlyInAnyOrder(
-                tuple("USD/JPY", BUSINESS_DATE, "0.0600000", "1", "0", "01:03:00", "01:01:00", "01:01:00", "01:02:00"),
-                tuple("EUR/JPY", BUSINESS_DATE, "0.0000000", "1", "4444", "01:03:00", "01:03:00", "01:03:00", "01:03:00")
+                tuple(
+                    "USD/JPY", BUSINESS_DATE, "0.0600", "1", "0",
+                    "01:03:00", "10.1000", "01:01:00", "1.1000", "01:01:00", "1.1000", "01:02:00", "1000.1000"
+                ),
+                tuple(
+                    "EUR/JPY", BUSINESS_DATE, "0.000000", "1", "4444",
+                    "01:03:00", "100.100000", "01:03:00", "17.100000", "01:03:00", "17.100000", "01:03:00", "100.100000"
+                )
             );
     }
 
     private void mockClockService() {
-        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_2)).thenReturn(DATE_TIME_2019_1_1_1_2);
-        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_3)).thenReturn(DATE_TIME_2019_1_1_1_3);
-        lenient().when(clockService.utcTimeToServerTime(DATE_TIME_2019_1_1_1_1)).thenReturn(DATE_TIME_2019_1_1_1_1);
+        when(clockService.utcTimeToServerTime(any())).then(answer -> answer.getArgument(0));
     }
 
     private void mockSwapPoints() {
@@ -139,17 +148,24 @@ class DailyMarketDataProcessorTest {
     }
 
     private void mockTradingUnit() {
-        when(fxSpotProductRepository.findAllOrderByProductNumberAsc())
-            .thenReturn(List.of(
-                aFxSpotProductEntity()
-                    .currencyPair(currencyPair("USD", "JPY"))
-                    .tradingUnit(1000L)
-                    .build(),
-                aFxSpotProductEntity()
-                    .currencyPair(currencyPair("EUR", "JPY"))
-                    .tradingUnit(1000L)
-                    .build()
-            ));
+        doReturn(
+            aFxSpotProductEntity()
+                .currencyPair(currencyPair("USD", "JPY"))
+                .tradingUnit(1000L)
+                .build()
+        ).when(fxSpotProductService).getFxSpotProduct("USD/JPY");
+
+        doReturn(
+            aFxSpotProductEntity()
+                .currencyPair(currencyPair("EUR", "JPY"))
+                .tradingUnit(1000L)
+                .build()
+        ).when(fxSpotProductService).getFxSpotProduct("EUR/JPY");
+    }
+
+    private void mockCurrencyScale() {
+        doReturn(4).when(fxSpotProductService).getScaleForCurrencyPair("USD/JPY");
+        doReturn(6).when(fxSpotProductService).getScaleForCurrencyPair("EUR/JPY");
     }
 
     private static Map<String, DailyMarkedDataAggregated> getInputData() {
