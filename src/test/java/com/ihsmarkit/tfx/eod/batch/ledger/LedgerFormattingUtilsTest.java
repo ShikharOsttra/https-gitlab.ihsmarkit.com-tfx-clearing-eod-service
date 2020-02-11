@@ -79,7 +79,7 @@ class LedgerFormattingUtilsTest {
     @CsvSource({
         "123.2331234, 3, 123.233",
         "123.2335, 3, 123.234",
-        "0.000123, 4, 0.0001",
+        "0.000123, 4, 0.0001"
     })
     void shouldFormatBigDecimalWithSpecifiedNumberOfDecimalPlaces(final BigDecimal passed, final int decimalPlaces, final String expected) {
         assertThat(LedgerFormattingUtils.formatBigDecimal(passed, decimalPlaces)).isEqualTo(expected);
