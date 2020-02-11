@@ -101,12 +101,14 @@ class CollateralListLedgerProcessorTest {
         return collateralListItemBuilder()
             .collateralType("LG")
             .maturityDate("2020/02/02")
+            .collateralName("Mizuho Bank,Ltd.")
             .build();
     }
 
     private static CollateralListItem collateralListItemCash() {
         return collateralListItemBuilder()
             .collateralType("Cash")
+            .collateralName("Yen Cash")
             .build();
     }
 
@@ -148,7 +150,6 @@ class CollateralListLedgerProcessorTest {
             .participantType("LP")
             .collateralPurposeType("1")
             .collateralPurpose("Margin")
-            .collateralName(EMPTY)
             .collateralType(EMPTY)
             .securityCode(EMPTY)
             .isinCode(EMPTY)
