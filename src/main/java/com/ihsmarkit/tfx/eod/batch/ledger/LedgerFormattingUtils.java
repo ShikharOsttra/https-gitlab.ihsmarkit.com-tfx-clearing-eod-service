@@ -46,12 +46,12 @@ public class LedgerFormattingUtils {
         return safeFormat(monthDay, MONTH_DAY_FORMATTER::format);
     }
 
-    public static String formatEnum(@Nullable final Enum enumValue) {
+    public static String formatEnum(@Nullable final Enum<?> enumValue) {
         return safeFormat(enumValue, value -> RESOURCE_BUNDLE.getString(value.getClass().getName() + "." + value.name()));
     }
 
     public static String formatBigDecimalForceTwoDecimals(final Optional<BigDecimal> bigDecimal) {
-        return bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)).map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
+        return formatBigDecimal(bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)));
     }
 
     public static String formatBigDecimal(final Optional<BigDecimal> bigDecimal) {
@@ -64,6 +64,10 @@ public class LedgerFormattingUtils {
 
     public static String formatBigDecimal(@Nullable final BigDecimal bigDecimal) {
         return safeFormat(bigDecimal, BigDecimal::toPlainString);
+    }
+
+    public static String formatBigDecimal(@Nullable final BigDecimal bigDecimal, final int decimalPlaces) {
+        return safeFormat(bigDecimal, value -> value.setScale(decimalPlaces, RoundingMode.HALF_UP).toPlainString());
     }
 
     public static String quote(final String value) {

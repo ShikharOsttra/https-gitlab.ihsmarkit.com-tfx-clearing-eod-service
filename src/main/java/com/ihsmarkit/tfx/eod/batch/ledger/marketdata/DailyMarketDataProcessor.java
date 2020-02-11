@@ -27,7 +27,6 @@ import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
-import com.ihsmarkit.tfx.core.dl.repository.FxSpotProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -35,6 +34,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarkedDataAggregated;
 import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
+import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
 
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
-    private final FxSpotProductRepository fxSpotProductRepository;
+    private final FXSpotProductService fxSpotProductService;
     private final ParticipantPositionRepository participantPositionRepository;
     private final ClockService clockService;
     @Value("#{jobParameters['businessDate']}")
@@ -62,22 +62,21 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final Function<String, BigDecimal> swapPointsMapper = getSwapPointsMapper();
         final Map<String, DailySettlementPriceEntity> dspMap = getDspMap();
         final Map<String, BigDecimal> currencyPairOpenPosition = getOpenPositionAmount();
-        final Map<String, FxSpotProductEntity> fxSpotProductsMap = getFxSpotProductsMap();
 
         return aggregatedMap.entrySet().stream()
-            .map(entry -> mapToEnrichedItem(entry, swapPointsMapper, dspMap, fxSpotProductsMap, currencyPairOpenPosition))
+            .map(entry -> mapToEnrichedItem(entry, swapPointsMapper, dspMap, currencyPairOpenPosition))
             .collect(Collectors.toUnmodifiableList());
     }
 
     private DailyMarketDataEnriched mapToEnrichedItem(
         final Map.Entry<String, DailyMarkedDataAggregated> aggregatedEntry, final Function<String, BigDecimal> swapPointMapper,
-        final Map<String, DailySettlementPriceEntity> dspMap, final Map<String, FxSpotProductEntity> fxSpotProductsMap,
-        final Map<String, BigDecimal> currencyPairOpenPosition
+        final Map<String, DailySettlementPriceEntity> dspMap, final Map<String, BigDecimal> currencyPairOpenPosition
     ) {
         final String currencyPairCode = aggregatedEntry.getKey();
+        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPairCode);
         final DailyMarkedDataAggregated aggregated = aggregatedEntry.getValue();
         final DailySettlementPriceEntity dsp = dspMap.get(currencyPairCode);
-        final FxSpotProductEntity fxSpotProduct = fxSpotProductsMap.get(currencyPairCode);
+        final FxSpotProductEntity fxSpotProduct = fxSpotProductService.getFxSpotProduct(currencyPairCode);
         final BigDecimal tradingUnit = BigDecimal.valueOf(fxSpotProduct.getTradingUnit());
         // todo: do we expect nulls in any of the below vars?
         final BigDecimal openPositionAmount = currencyPairOpenPosition.getOrDefault(currencyPairCode, BigDecimal.ZERO);
@@ -90,18 +89,18 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .recordDate(formatDateTime(recordDate))
             .currencyNumber(fxSpotProduct.getProductNumber())
             .currencyPairCode(currencyPairCode)
-            .openPrice(formatBigDecimal(aggregated.getOpenPrice()))
+            .openPrice(formatBigDecimal(aggregated.getOpenPrice(), priceScale))
             .openPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getOpenPriceTime())))
-            .highPrice(formatBigDecimal(aggregated.getHighPrice()))
+            .highPrice(formatBigDecimal(aggregated.getHighPrice(), priceScale))
             .highPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getHighPriceTime())))
-            .lowPrice(formatBigDecimal(aggregated.getLowPrice()))
+            .lowPrice(formatBigDecimal(aggregated.getLowPrice(), priceScale))
             .lowPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getLowPriceTime())))
-            .closePrice(formatBigDecimal(aggregated.getClosePrice()))
+            .closePrice(formatBigDecimal(aggregated.getClosePrice(), priceScale))
             .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
             .previousDsp(formatBigDecimal(previousDsp))
             .currentDsp(formatBigDecimal(currentDsp))
-            .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp)))
+            .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp), priceScale))
             .tradingVolumeAmount(formatBigDecimal(aggregated.getShortPositionsAmount()))
             // todo: rounding?
             .tradingVolumeAmountInUnit(formatBigDecimal(aggregated.getShortPositionsAmount().divide(tradingUnit)))
@@ -118,11 +117,6 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
     private Map<String, DailySettlementPriceEntity> getDspMap() {
         return dailySettlementPriceRepository.findAllByBusinessDate(businessDate).stream()
             .collect(Collectors.toUnmodifiableMap(item -> item.getCurrencyPair().getCode(), Function.identity()));
-    }
-
-    private Map<String, FxSpotProductEntity> getFxSpotProductsMap() {
-        return fxSpotProductRepository.findAllOrderByProductNumberAsc().stream()
-            .collect(Collectors.toMap(item -> item.getCurrencyPair().getCode(), Function.identity()));
     }
 
     private Map<String, BigDecimal> getOpenPositionAmount() {
