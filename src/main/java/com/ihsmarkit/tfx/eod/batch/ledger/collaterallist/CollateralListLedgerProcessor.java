@@ -35,6 +35,8 @@ import lombok.RequiredArgsConstructor;
 @StepScope
 public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBalanceEntity, CollateralListItem> {
 
+    private static final String CASH_COLLATERAL_NAME = "Yen Cash";
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -59,7 +61,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .participantType(formatEnum(balance.getParticipant().getType()))
             .collateralPurposeType(balance.getPurpose().getValue().toString())
             .collateralPurpose(formatEnum(balance.getPurpose()))
-            .collateralName(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityName))
+            .collateralName(getCollateralName(balance))
             .collateralType(formatEnum(balance.getProduct().getType()))
             .securityCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityCode))
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
@@ -116,5 +118,19 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
         final Function<T, String> mapper
     ) {
         return type.isAssignableFrom(product.getClass()) ? mapper.apply(type.cast(product)) : EMPTY;
+    }
+
+    private static String getCollateralName(final CollateralBalanceEntity balance) {
+        switch (balance.getProduct().getType()) {
+            case CASH:
+                return CASH_COLLATERAL_NAME;
+            case LOG:
+                return ((LogCollateralProductEntity) balance.getProduct()).getIssuer().getName();
+            case BOND:
+            case EQUITY:
+                return getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityName);
+            default:
+                throw new IllegalArgumentException(String.format("Unsupported product type, %s", balance.getProduct().getType()));
+        }
     }
 }
