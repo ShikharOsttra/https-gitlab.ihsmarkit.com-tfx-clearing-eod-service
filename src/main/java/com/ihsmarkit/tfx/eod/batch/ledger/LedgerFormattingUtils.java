@@ -51,7 +51,7 @@ public class LedgerFormattingUtils {
     }
 
     public static String formatBigDecimalForceTwoDecimals(final Optional<BigDecimal> bigDecimal) {
-        return bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)).map(LedgerFormattingUtils::formatBigDecimal).orElse(EMPTY);
+        return formatBigDecimal(bigDecimal.map(value -> value.setScale(2, RoundingMode.UNNECESSARY)));
     }
 
     public static String formatBigDecimal(final Optional<BigDecimal> bigDecimal) {

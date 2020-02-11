@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
@@ -41,7 +42,7 @@ class LedgerFormattingUtilsTest {
         assertThat(LedgerFormattingUtils.formatEnum(value)).isEqualTo(message);
     }
 
-    private static Stream enumFormatting() {
+    private static Stream<Arguments> enumFormatting() {
 
         return Stream.of(
             Arguments.of(ParticipantType.FX_BROKER, "FXB"),
@@ -63,15 +64,25 @@ class LedgerFormattingUtilsTest {
         assertThat(formatMethod.apply(null)).isEmpty();
     }
 
-    private static Stream nullFormatting() {
+    private static Stream<Arguments> nullFormatting() {
         return Stream.of(
             Arguments.of((Function<LocalDate, String>) LedgerFormattingUtils::formatDate),
             Arguments.of((Function<LocalDateTime, String>) LedgerFormattingUtils::formatDateTime),
             Arguments.of((Function<LocalDateTime, String>) LedgerFormattingUtils::formatTime),
             Arguments.of((Function<MonthDay, String>) LedgerFormattingUtils::formatMonthDay),
-            Arguments.of((Function<Enum, String>) LedgerFormattingUtils::formatEnum),
+            Arguments.of((Function<Enum<?>, String>) LedgerFormattingUtils::formatEnum),
             Arguments.of((Function<BigDecimal, String>) LedgerFormattingUtils::formatBigDecimal)
         );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "123.2331234, 3, 123.233",
+        "123.2335, 3, 123.234",
+        "0.000123, 4, 0.0001",
+    })
+    void shouldFormatBigDecimalWithSpecifiedNumberOfDecimalPlaces(final BigDecimal passed, final int decimalPlaces, final String expected) {
+        assertThat(LedgerFormattingUtils.formatBigDecimal(passed, decimalPlaces)).isEqualTo(expected);
     }
 
 }
