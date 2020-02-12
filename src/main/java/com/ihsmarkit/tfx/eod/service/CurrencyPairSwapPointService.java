@@ -24,13 +24,15 @@ public class CurrencyPairSwapPointService {
 
     private final EodSwapPointRepository eodSwapPointRepository;
 
+    private final static BigDecimal ZERO_SWAP_POINTS = BigDecimal.ZERO.setScale(3);
+
     public BigDecimal getSwapPoint(final LocalDate date, final String currencyPair) {
         return swapPoints.computeIfAbsent(
             date,
             businessDate -> eodSwapPointRepository.findAllByDateOrderedByProductNumber(date).stream()
                 .filter(swapPoint -> swapPoint.getSwapPointDays() != 0)
                 .collect(Collectors.toMap(item -> item.getCurrencyPair().getCode(), EodSwapPointEntity::getSwapPoint))
-        ).getOrDefault(currencyPair, BigDecimal.ZERO); //TODO zero confirmed by Markit BA, TBC by TFX
+        ).getOrDefault(currencyPair, ZERO_SWAP_POINTS);
     }
 
     public BigDecimal getSwapPoint(final LocalDate date, final CurrencyPairEntity currencyPair) {
