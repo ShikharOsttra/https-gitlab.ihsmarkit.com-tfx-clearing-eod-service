@@ -20,11 +20,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CurrencyPairSwapPointService {
 
+    private static final BigDecimal ZERO_SWAP_POINTS = BigDecimal.ZERO.setScale(3);
+
     private final Map<LocalDate, Map<String, BigDecimal>> swapPoints = new ConcurrentHashMap<>();
 
     private final EodSwapPointRepository eodSwapPointRepository;
-
-    private final static BigDecimal ZERO_SWAP_POINTS = BigDecimal.ZERO.setScale(3);
 
     public BigDecimal getSwapPoint(final LocalDate date, final String currencyPair) {
         return swapPoints.computeIfAbsent(
