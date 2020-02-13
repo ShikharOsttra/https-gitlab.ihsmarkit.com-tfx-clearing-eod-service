@@ -80,7 +80,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
         when(clockService.utcTimeToServerTime(any())).thenReturn(MATCHING_DATE);
 
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
-        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(new BigDecimal("1.11111"));
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(participantCurrencyPairAmount);
         when(eodCalculator.calculateSwapPoint(any(TradeEntity.class), any(Function.class), any(Function.class)))
@@ -91,6 +91,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .code("counterparty")
             .type(FX_BROKER)
             .build());
+        when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(3);
 
         assertThat(processor.process(aTrade()))
             .isEqualTo(TransactionDiary.builder()
@@ -108,12 +109,12 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .clearDate("2019/01/01")
                 .clearTime("01:30:00")
                 .clearingId("clearingRef")
-                .tradePrice("10")
+                .tradePrice("1.432")
                 .sellAmount("10")
                 .buyAmount(EMPTY)
                 .counterpartyCode("counterparty")
                 .counterpartyType("FXB")
-                .dsp("10")
+                .dsp("1.111")
                 .dailyMtMAmount("0")
                 .swapPoint("0")
                 .outstandingPositionAmount("0")
@@ -134,7 +135,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .matchingRef("matchingRef")
             .clearingTsp(MATCHING_DATE)
             .clearingRef("clearingRef")
-            .spotRate(BigDecimal.TEN)
+            .spotRate(new BigDecimal("1.4321"))
             .baseAmount(AMOUNT)
             .direction(Side.SELL)
             .valueDate(BUSINESS_DATE.plusDays(1))

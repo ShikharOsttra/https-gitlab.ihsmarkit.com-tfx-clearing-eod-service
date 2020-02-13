@@ -51,6 +51,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
 
         final ParticipantEntity participant = participantPosition.getParticipant();
         final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
+        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPair);
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -67,12 +68,12 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearDate(formatDate(businessDate))
             .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
-            .tradePrice(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair)))
+            .tradePrice(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale))
             .sellAmount(EMPTY)
             .buyAmount(EMPTY)
             .counterpartyCode(EMPTY)
             .counterpartyType(EMPTY)
-            .dsp(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair)))
+            .dsp(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale))
             .dailyMtMAmount(EMPTY)
             .swapPoint(EMPTY)
             .outstandingPositionAmount(formatBigDecimal(getSODNextDayAmount(participant, currencyPair)))

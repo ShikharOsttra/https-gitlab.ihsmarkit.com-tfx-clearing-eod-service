@@ -80,6 +80,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         final LocalDateTime matchingTsp = utcTimeToServerTime(trade.getMatchingTsp());
         @Nullable
         final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
+        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(trade.getCurrencyPair());
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -96,12 +97,12 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .clearDate(clearingTsp == null ? EMPTY : formatDate(clearingTsp.toLocalDate()))
             .clearTime(clearingTsp == null ? EMPTY : formatTime(clearingTsp))
             .clearingId(getSafeString(trade.getClearingRef()))
-            .tradePrice(trade.getSpotRate().toString())
+            .tradePrice(formatBigDecimal(trade.getSpotRate(), priceScale))
             .sellAmount(sellamount)
             .buyAmount(buyAmount)
             .counterpartyCode(counterpartyParticipant.getCode())
             .counterpartyType(formatEnum(counterpartyParticipant.getType()))
-            .dsp(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()).toString())
+            .dsp(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair()), priceScale))
             .dailyMtMAmount(mtmAmount)
             .swapPoint(swapPoint)
             .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
