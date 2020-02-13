@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.SWAP_POINTS_DECIMAL_PLACES;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -97,7 +98,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .lowPriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getLowPriceTime())))
             .closePrice(formatBigDecimal(aggregated.getClosePrice(), priceScale))
             .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getClosePriceTime())))
-            .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
+            .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode), SWAP_POINTS_DECIMAL_PLACES))
             .previousDsp(formatBigDecimal(previousDsp, priceScale))
             .currentDsp(formatBigDecimal(currentDsp, priceScale))
             .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp), priceScale))

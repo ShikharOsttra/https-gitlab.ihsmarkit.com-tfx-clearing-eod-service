@@ -23,6 +23,8 @@ import lombok.experimental.UtilityClass;
 @SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods"})
 public class LedgerFormattingUtils {
 
+    public static final int SWAP_POINTS_DECIMAL_PLACES = 3;
+
     private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle("ledger/messages/messages", Locale.ROOT);
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
