@@ -58,12 +58,13 @@ class NETTransactionDiaryLedgerProcessorTest {
     @Test
     void processParticipantPositionEntity() {
         when(fxSpotProductService.getFxSpotProduct(any(CurrencyPairEntity.class))).thenReturn(FX_SPOT_PRODUCT);
-        when(dailySettlementPriceService.getPrice(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(BigDecimal.TEN);
+        when(dailySettlementPriceService.getPrice(any(LocalDate.class), any(CurrencyPairEntity.class))).thenReturn(new BigDecimal("10.000100"));
         when(participantPositionRepository.findNextDayPosition(any(ParticipantEntity.class), any(CurrencyPairEntity.class), any(ParticipantPositionType.class),
             any(LocalDate.class))).thenReturn(Optional.of(ParticipantPositionEntity.builder()
             .type(ParticipantPositionType.SOD)
             .amount(AmountEntity.builder().value(BigDecimal.valueOf(12)).build())
             .build()));
+        when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
 
         assertThat(processor.process(aParticipantPosition()))
             .isEqualTo(TransactionDiary.builder()
@@ -81,12 +82,12 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .clearDate("2019/01/01")
                 .clearTime("07:00:00")
                 .clearingId(EMPTY)
-                .tradePrice("10")
+                .tradePrice("10.00010")
                 .sellAmount(EMPTY)
                 .buyAmount(EMPTY)
                 .counterpartyCode(EMPTY)
                 .counterpartyType(EMPTY)
-                .dsp("10")
+                .dsp("10.00010")
                 .dailyMtMAmount(EMPTY)
                 .swapPoint(EMPTY)
                 .outstandingPositionAmount("12")

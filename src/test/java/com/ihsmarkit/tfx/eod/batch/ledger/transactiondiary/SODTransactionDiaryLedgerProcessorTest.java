@@ -66,12 +66,13 @@ class SODTransactionDiaryLedgerProcessorTest {
     @SuppressWarnings("unchecked")
     void processParticipantPositionEntity() {
         when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
-        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(BigDecimal.TEN);
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(new BigDecimal("10.000100"));
         when(eodCalculator.calculateSwapPoint(any(ParticipantPositionEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(participantCurrencyPairAmount);
         when(eodCalculator.calculateDailyMtmValue(any(ParticipantPositionEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(participantCurrencyPairAmount);
         when(participantCurrencyPairAmount.getAmount()).thenReturn(BigDecimal.ZERO);
+        when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
 
         assertThat(processor.process(aParticipantPosition()))
             .isEqualTo(TransactionDiary.builder()
@@ -89,12 +90,12 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .clearDate("2019/01/01")
                 .clearTime("07:00:00")
                 .clearingId(EMPTY)
-                .tradePrice(PRICE.toPlainString())
+                .tradePrice("123.44500")
                 .sellAmount(EMPTY)
                 .buyAmount("10")
                 .counterpartyCode(EMPTY)
                 .counterpartyType(EMPTY)
-                .dsp("10")
+                .dsp("10.00010")
                 .dailyMtMAmount("0")
                 .swapPoint("0")
                 .outstandingPositionAmount("0")

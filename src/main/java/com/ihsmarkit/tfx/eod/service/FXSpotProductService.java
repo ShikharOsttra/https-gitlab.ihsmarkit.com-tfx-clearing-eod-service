@@ -58,6 +58,10 @@ public class FXSpotProductService {
             .scale();
     }
 
+    public int getScaleForCurrencyPair(final CurrencyPairEntity currencyPair) {
+        return getScaleForCurrencyPair(currencyPair.getCode());
+    }
+
     private LocalDate getBusinessDate() {
         return systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE);
     }

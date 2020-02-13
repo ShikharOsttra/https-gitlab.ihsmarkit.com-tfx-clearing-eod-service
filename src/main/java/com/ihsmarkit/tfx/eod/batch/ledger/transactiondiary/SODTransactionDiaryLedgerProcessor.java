@@ -52,8 +52,9 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             eodCalculator.calculateDailyMtmValue(participantPosition, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString();
         final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, this::getSwapPoint, this::getJpyRate).getAmount().toString();
         final String settlementDate = formatDate(participantPosition.getValueDate());
-        final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()));
-        final String tradePrice = formatBigDecimal(participantPosition.getPrice());
+        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(participantPosition.getCurrencyPair());
+        final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()), priceScale);
+        final String tradePrice = formatBigDecimal(participantPosition.getPrice(), priceScale);
         final String tradeDate = formatDate(participantPosition.getTradeDate());
         final BigDecimal positionAmount = participantPosition.getAmount().getValue();
 

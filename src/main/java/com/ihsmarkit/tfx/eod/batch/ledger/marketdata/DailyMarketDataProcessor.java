@@ -98,8 +98,8 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .closePrice(formatBigDecimal(aggregated.getClosePrice(), priceScale))
             .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregated.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode)))
-            .previousDsp(formatBigDecimal(previousDsp))
-            .currentDsp(formatBigDecimal(currentDsp))
+            .previousDsp(formatBigDecimal(previousDsp, priceScale))
+            .currentDsp(formatBigDecimal(currentDsp, priceScale))
             .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp), priceScale))
             .tradingVolumeAmount(formatBigDecimal(aggregated.getShortPositionsAmount()))
             // todo: rounding?
