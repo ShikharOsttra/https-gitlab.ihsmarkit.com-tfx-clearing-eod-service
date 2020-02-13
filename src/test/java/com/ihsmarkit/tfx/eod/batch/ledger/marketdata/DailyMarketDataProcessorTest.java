@@ -96,11 +96,11 @@ class DailyMarketDataProcessorTest {
             )
             .containsExactlyInAnyOrder(
                 tuple(
-                    "USD/JPY", BUSINESS_DATE, "0.0600", "1", "0",
+                    "USD/JPY", BUSINESS_DATE, "0.0600", "1.000", "0",
                     "01:03:00", "10.1000", "01:01:00", "1.1000", "01:01:00", "1.1000", "01:02:00", "1000.1000"
                 ),
                 tuple(
-                    "EUR/JPY", BUSINESS_DATE, "0.000000", "1", "4444",
+                    "EUR/JPY", BUSINESS_DATE, "0.000000", "1.000", "4444",
                     "01:03:00", "100.100000", "01:03:00", "17.100000", "01:03:00", "17.100000", "01:03:00", "100.100000"
                 )
             );
