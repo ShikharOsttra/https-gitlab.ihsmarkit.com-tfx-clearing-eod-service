@@ -100,6 +100,9 @@ dependencies {
             [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
     )
 
+    testRuntimeOnly(
+        [group: 'com.h2database', name: 'h2']
+    )
 
     swaggerCodegen (
             [group: 'org.openapitools', name: 'openapi-generator-cli']

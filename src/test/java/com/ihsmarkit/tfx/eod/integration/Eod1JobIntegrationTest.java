@@ -13,8 +13,8 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -22,7 +22,6 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
-import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
@@ -30,10 +29,10 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-@ContextHierarchy({
-    @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = EOD1JobConfig.class)}
-)
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    EOD1JobConfig.class
+})
 @TestPropertySource("classpath:/application.properties")
 class Eod1JobIntegrationTest {
 
@@ -43,9 +42,6 @@ class Eod1JobIntegrationTest {
 
     @Autowired
     private JobLauncher jobLauncher;
-
-    @MockBean
-    private AlertSender alertSender;
 
     @MockBean
     private AwsSesMailClient mailClient;

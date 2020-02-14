@@ -23,12 +23,13 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Component;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
@@ -42,6 +43,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+@ContextConfiguration(classes = CacheConfigTest.TestConfig.class)
 class CacheConfigTest extends AbstractSpringBatchTest {
 
     private static final String TEST_STEP = "TEST_STEP";
@@ -56,9 +58,6 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
     private static final DailySettlementPriceEntity USD_DSP = DailySettlementPriceEntity.builder().currencyPair(USDJPY).dailySettlementPrice(USD_RATE).build();
     private static final DailySettlementPriceEntity EUR_DSP = DailySettlementPriceEntity.builder().currencyPair(EURJPY).dailySettlementPrice(EUR_RATE).build();
-
-    @Autowired
-    private Job job;
 
     @MockBean
     private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
@@ -137,7 +136,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = {SpringBatchConfig.class, CacheConfig.class, CacheConfigTest.TestTasklet.class, CacheConfigTest.TestTaskletNext.class})
     )
-    @Configuration
+    @TestConfiguration
     static class TestConfig {
 
         @Bean
