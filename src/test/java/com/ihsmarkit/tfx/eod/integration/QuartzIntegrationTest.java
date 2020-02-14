@@ -19,11 +19,13 @@ import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.guard.Guard;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -36,10 +38,22 @@ import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 
 @ExtendWith(SpringExtension.class)
-@Import({IntegrationTestConfig.class, QuartzConfig.class, StateMachineConfig.class, CashCollateralBalanceUpdateJobConfig.class})
+@ImportAutoConfiguration({
+    QuartzAutoConfiguration.class,
+    com.ihsmarkit.tfx.core.config.QuartzConfig.class
+})
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    QuartzConfig.class,
+    StateMachineConfig.class,
+    CashCollateralBalanceUpdateJobConfig.class
+})
 @TestPropertySource(
     locations = "classpath:/application.properties",
-    properties = {"eod1.job.enabled=true", "cashCollateralBalanceUpdate.job.enabled=true"}
+    properties = {
+        "eod1.job.enabled=true",
+        "cashCollateralBalanceUpdate.job.enabled=true"
+    }
 )
 public class QuartzIntegrationTest {
 
@@ -88,7 +102,7 @@ public class QuartzIntegrationTest {
     private Scheduler scheduler;
 
     @Test
-    void shouldTriggerExection() throws SchedulerException, InterruptedException {
+    void shouldTriggerExecution() throws SchedulerException, InterruptedException {
         final StateWaitingListener listener = new StateWaitingListener(EOD1);
         stateMachine.addStateListener(listener);
         scheduler.triggerJob(new JobKey(EOD1_BATCH_JOB_NAME, null));
@@ -97,7 +111,7 @@ public class QuartzIntegrationTest {
     }
 
     @Test
-    void shouldTriggerBalanceUpdateExection() throws Exception {
+    void shouldTriggerBalanceUpdateExecution() throws Exception {
         when(systemParameterRepository.getParameterValueFailFast(any())).thenReturn(OCT_7);
         when(calendarTradingSwapPointRepository.findPreviousTradingDate(any())).thenReturn(Optional.of(OCT_7));
 
@@ -114,5 +128,4 @@ public class QuartzIntegrationTest {
 
         assertThat(finished.await(5, TimeUnit.SECONDS)).isTrue();
     }
-
 }

@@ -12,7 +12,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
@@ -24,7 +24,10 @@ import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
-@Import({EOD2JobConfig.class, CacheConfig.class})
+@ContextConfiguration(classes = {
+    EOD2JobConfig.class,
+    CacheConfig.class
+})
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
 class OpenPositionsStepTest extends AbstractSpringBatchTest {

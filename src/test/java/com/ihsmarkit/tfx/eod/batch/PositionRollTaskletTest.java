@@ -22,7 +22,7 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
@@ -36,7 +36,7 @@ import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
-@Import(EOD1JobConfig.class)
+@ContextConfiguration(classes = EOD1JobConfig.class)
 class PositionRollTaskletTest extends AbstractSpringBatchTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 10, 6);

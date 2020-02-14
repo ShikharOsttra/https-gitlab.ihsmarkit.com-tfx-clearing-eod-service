@@ -19,11 +19,12 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -31,7 +32,6 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
-import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
@@ -46,16 +46,18 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-@ContextHierarchy({
-    @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = {
-        EOD1JobConfig.class,
-        EOD2JobConfig.class,
-        RollBusinessDateJobConfig.class,
-        StateMachineConfig.class,
-        StateMachineActionsConfig.class
-    })}
-)
+@ImportAutoConfiguration({
+    QuartzAutoConfiguration.class,
+    com.ihsmarkit.tfx.core.config.QuartzConfig.class
+})
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    EOD1JobConfig.class,
+    EOD2JobConfig.class,
+    RollBusinessDateJobConfig.class,
+    StateMachineConfig.class,
+    StateMachineActionsConfig.class
+})
 @TestPropertySource("classpath:/application.properties")
 class StateMachineIntegrationTest {
 
@@ -72,9 +74,6 @@ class StateMachineIntegrationTest {
 
     @Autowired
     private EodStatusRepository eodStatusRepository;
-
-    @MockBean
-    private AlertSender alertSender;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
