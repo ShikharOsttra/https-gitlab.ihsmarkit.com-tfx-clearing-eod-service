@@ -132,7 +132,7 @@ public class EODControlService {
     }
 
     private LocalDate getPreviousBusinessDate(final LocalDate currentBusinessDate) {
-        return calendarRepository.findPreviousTradingDate(currentBusinessDate.minusDays(1)).orElse(currentBusinessDate);
+        return calendarRepository.findPreviousTradingDate(currentBusinessDate).orElse(currentBusinessDate);
     }
 
     private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {
