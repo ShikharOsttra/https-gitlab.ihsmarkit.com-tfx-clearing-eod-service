@@ -16,12 +16,13 @@ public class CacheConfig extends CachingConfigurerSupport {
 
     public static final String TRADE_DATES_CACHE = "tradeDates";
     public static final String VALUE_DATES_CACHE = "valueDates";
+    public static final String VM_SETTLEMENT_DATES_CACHE = "vmSettlementDates";
     public static final String JPY_RATES_CACHE = "joyRatesCache";
 
     @Bean
     @JobScope
     public CacheManager jobCacheManager() {
-        return new ConcurrentMapCacheManager(TRADE_DATES_CACHE, VALUE_DATES_CACHE, JPY_RATES_CACHE);
+        return new ConcurrentMapCacheManager(TRADE_DATES_CACHE, VALUE_DATES_CACHE, VM_SETTLEMENT_DATES_CACHE, JPY_RATES_CACHE);
     }
 
     @Bean
