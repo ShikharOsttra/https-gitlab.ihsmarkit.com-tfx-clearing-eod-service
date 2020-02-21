@@ -47,7 +47,7 @@ public class PositionRebalancePublishingService {
                         Arrays.asList(entry.getNotificationEmail().split(",")),
                         List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
                             getPositionRebalanceCsv(participantTradesMap.getOrDefault(entry.getCode(), List.of())))));
-            });
+                });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
