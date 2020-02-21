@@ -2,6 +2,9 @@ package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,7 +87,6 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getBusinessDate,
                 DailyMarketDataEnriched::getDspChange,
                 DailyMarketDataEnriched::getSwapPoint,
-                DailyMarketDataEnriched::getOpenPositionAmount,
                 DailyMarketDataEnriched::getClosePriceTime,
                 DailyMarketDataEnriched::getClosePrice,
                 DailyMarketDataEnriched::getOpenPriceTime,
@@ -92,16 +94,28 @@ class DailyMarketDataProcessorTest {
                 DailyMarketDataEnriched::getLowPriceTime,
                 DailyMarketDataEnriched::getLowPrice,
                 DailyMarketDataEnriched::getHighPriceTime,
-                DailyMarketDataEnriched::getHighPrice
+                DailyMarketDataEnriched::getHighPrice,
+                DailyMarketDataEnriched::getOpenPositionAmount,
+                DailyMarketDataEnriched::getOpenPositionAmountInUnit,
+                DailyMarketDataEnriched::getTradingVolumeAmount,
+                DailyMarketDataEnriched::getTradingVolumeAmountInUnit,
+                DailyMarketDataEnriched::getRecordType,
+                DailyMarketDataEnriched::getOrderId
             )
             .containsExactlyInAnyOrder(
                 tuple(
-                    "USD/JPY", BUSINESS_DATE, "0.0600", "1.000", "0",
-                    "01:03:00", "10.1000", "01:01:00", "1.1000", "01:01:00", "1.1000", "01:02:00", "1000.1000"
+                    "USD/JPY", BUSINESS_DATE, "0.0600", "1.000",
+                    "01:03:00", "10.1000", "01:01:00", "1.1000", "01:01:00", "1.1000", "01:02:00", "1000.1000", "0", "0", "1011", "1",
+                    ITEM_RECORD_TYPE, 101L
                 ),
                 tuple(
-                    "EUR/JPY", BUSINESS_DATE, "0.000000", "1.000", "4444",
-                    "01:03:00", "100.100000", "01:03:00", "17.100000", "01:03:00", "17.100000", "01:03:00", "100.100000"
+                    "EUR/JPY", BUSINESS_DATE, "0.000000", "1.000",
+                    "01:03:00", "100.100000", "01:03:00", "17.100000", "01:03:00", "17.100000", "01:03:00", "100.100000", "4444", "4", "117", "0",
+                    ITEM_RECORD_TYPE, 102L
+                ),
+                tuple(
+                    "Total", BUSINESS_DATE, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, "4", EMPTY, "1",
+                    TOTAL_RECORD_TYPE, Long.MAX_VALUE
                 )
             );
     }
@@ -152,6 +166,7 @@ class DailyMarketDataProcessorTest {
             aFxSpotProductEntity()
                 .currencyPair(currencyPair("USD", "JPY"))
                 .tradingUnit(1000L)
+                .productNumber("101")
                 .build()
         ).when(fxSpotProductService).getFxSpotProduct("USD/JPY");
 
@@ -159,6 +174,7 @@ class DailyMarketDataProcessorTest {
             aFxSpotProductEntity()
                 .currencyPair(currencyPair("EUR", "JPY"))
                 .tradingUnit(1000L)
+                .productNumber("102")
                 .build()
         ).when(fxSpotProductService).getFxSpotProduct("EUR/JPY");
     }

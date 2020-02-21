@@ -18,7 +18,9 @@ INSERT INTO eod_ledger_market_data(business_date,
                                    trading_volume_amount,
                                    trading_volume_in_unit,
                                    open_position_amount,
-                                   open_position_in_unit)
+                                   open_position_in_unit,
+                                   record_type,
+                                   order_id)
     VALUES (:businessDate,
            :tradeDate,
            :recordDate,
@@ -39,4 +41,6 @@ INSERT INTO eod_ledger_market_data(business_date,
            :tradingVolumeAmount,
            :tradingVolumeAmountInUnit,
            :openPositionAmount,
-           :openPositionAmountInUnit)
+           :openPositionAmountInUnit,
+           :recordType,
+           :orderId)

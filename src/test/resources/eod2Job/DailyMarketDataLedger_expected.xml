@@ -17,10 +17,13 @@
         previous_day_dsp="1.150000"
         dsp_change="-0.030000"
         swap_point="4.230"
-        trading_volume_amount="7444.50"
-        trading_volume_in_unit="7.4445"
-        open_position_amount="522.00"
-        open_position_in_unit="0.522" />
+        trading_volume_amount="7444"
+        trading_volume_in_unit="7"
+        open_position_amount="522"
+        open_position_in_unit="0"
+        record_type="1"
+        order_id="101"
+    />
 
     <eod_ledger_market_data
         business_date="2019-02-02"
@@ -40,10 +43,13 @@
         previous_day_dsp="1.100000"
         dsp_change="0.070000"
         swap_point="1.340"
-        trading_volume_amount="13503.50"
-        trading_volume_in_unit="13.5035"
-        open_position_amount="2201.00"
-        open_position_in_unit="2.201" />
+        trading_volume_amount="13503"
+        trading_volume_in_unit="13"
+        open_position_amount="2201"
+        open_position_in_unit="2"
+        record_type="1"
+        order_id="102"
+    />
 
     <eod_ledger_market_data
         business_date="2019-02-02"
@@ -63,8 +69,37 @@
         previous_day_dsp="1.1200"
         dsp_change="-0.0100"
         swap_point="2.230"
-        trading_volume_amount="16615.85"
-        trading_volume_in_unit="16.61585"
+        trading_volume_amount="16615"
+        trading_volume_in_unit="16"
         open_position_amount="0"
-        open_position_in_unit="0" />
+        open_position_in_unit="0"
+        record_type="1"
+        order_id="103"
+    />
+
+    <eod_ledger_market_data
+        business_date="2019-02-02"
+        trade_date=""
+        record_date=""
+        currency_no=""
+        currency_pair="Total"
+        open_price=""
+        open_price_time=""
+        high_price=""
+        high_price_time=""
+        low_price=""
+        low_price_time=""
+        close_price=""
+        close_price_time=""
+        dsp=""
+        previous_day_dsp=""
+        dsp_change=""
+        swap_point=""
+        trading_volume_amount=""
+        trading_volume_in_unit="36"
+        open_position_amount=""
+        open_position_in_unit="2"
+        record_type="3"
+        order_id="9223372036854775807"
+    />
 </dataset>

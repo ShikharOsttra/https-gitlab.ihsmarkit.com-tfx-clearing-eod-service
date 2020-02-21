@@ -1,10 +1,18 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.FORCE_ALLOCATION;
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.NEW_TRANSACTION_BY_CLHS;
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.POSITION_OFFSET;
+import static com.ihsmarkit.tfx.core.domain.type.TransactionType.REGULAR;
+import static java.util.function.Predicate.not;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,9 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarkedDataAggregated>> {
 
+    private static final Set<TransactionType> TRANSACTION_TYPES = Set.of(REGULAR, FORCE_ALLOCATION, NEW_TRANSACTION_BY_CLHS, POSITION_OFFSET);
+
     private final TradeRepository tradeRepository;
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
+    private final OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
     private boolean isFinished;
 
     @Override
@@ -49,14 +60,18 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
 
         log.info("Read trades for Daily Market Data Ledger for trade date: {}", businessDate);
 
-        return tradeRepository.findAllNovatedForTradeDateAndDirection(businessDate, Side.SELL)
-            .filter(trade -> trade.getTransactionType() != TransactionType.BALANCE)
+        return tradeRepository.findAllNovatedForTradeDateAndDirectionAndTransactionTypes(businessDate, Side.SELL, TRANSACTION_TYPES)
+            .filter(not(offsettedByTransactionPredicate()))
             .collect(
                 Collectors.groupingBy(
                     trade -> trade.getCurrencyPair().getCode(),
                     Collector.of(TradeHolder::new, TradeHolder::acceptTrade, TradeHolder::merge, DailyMarketDataReader::finisher)
                 )
             );
+    }
+
+    private Predicate<TradeEntity> offsettedByTransactionPredicate() {
+        return tradeEntity -> offsettedTradeMatchIdProvider.getOffsettingMatchIds().contains(tradeEntity.getMatchingRef());
     }
 
     private static DailyMarkedDataAggregated finisher(final TradeHolder tradeHolder) {

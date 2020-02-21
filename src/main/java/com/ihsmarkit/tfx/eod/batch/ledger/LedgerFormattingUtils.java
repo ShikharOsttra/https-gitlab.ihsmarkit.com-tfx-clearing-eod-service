@@ -15,8 +15,6 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.StringUtils;
-
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -72,12 +70,8 @@ public class LedgerFormattingUtils {
         return safeFormat(bigDecimal, value -> value.setScale(decimalPlaces, RoundingMode.HALF_UP).toPlainString());
     }
 
-    public static String quote(final String value) {
-        if (StringUtils.isBlank(value)) {
-            return value;
-        } else {
-            return "\"" + value + "\"";
-        }
+    public static String formatBigDecimalRoundTo1Jpy(@Nullable final BigDecimal bigDecimal) {
+        return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString());
     }
 
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
