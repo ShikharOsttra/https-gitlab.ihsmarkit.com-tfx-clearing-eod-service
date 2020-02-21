@@ -6,19 +6,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
+import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
 
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -30,19 +33,21 @@ public class PositionRebalancePublishingService {
 
     private final PositionRebalanceCSVWriter csvWriter;
 
+    private final ParticipantRepository participantRepository;
+
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         try {
-            final Map<@NonNull ParticipantEntity, List<TradeEntity>> participantTradesMap = trades.stream().collect(
-                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant()));
-            participantTradesMap.entrySet().stream()
-                .forEach(entry -> {
+            final Map<String, List<TradeEntity>> participantTradesMap = trades.stream().collect(
+                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()));
+            getAllActiveLPs().
+                forEach(entry -> {
                     mailClient.sendEmailWithAttachments(
-                        String.format("%s rebalance results for %s", businessDate.toString(), entry.getKey().getCode()),
+                        String.format("%s rebalance results for %s", businessDate.toString(), entry.getCode()),
                         StringUtils.EMPTY,
-                        Arrays.asList(entry.getKey().getNotificationEmail().split(",")),
+                        Arrays.asList(entry.getNotificationEmail().split(",")),
                         List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                            getPositionRebalanceCsv(entry.getValue()))));
-                });
+                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(entry.getCode(), List.of())))));
+            });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
@@ -68,5 +73,11 @@ public class PositionRebalancePublishingService {
 
     private byte[] getPositionRebalanceCsv(final List<TradeEntity> trades) {
         return csvWriter.getRecordsAsCsv(getPositionRebalanceTradesAsRecords(trades)).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private Stream<ParticipantEntity> getAllActiveLPs() {
+        return participantRepository.findAllNotDeletedParticipantListItems().stream()
+            .filter(participantEntity -> ParticipantType.LIQUIDITY_PROVIDER == participantEntity.getType())
+            .filter(participantEntity -> ParticipantStatus.ACTIVE == participantEntity.getStatus());
     }
 }
