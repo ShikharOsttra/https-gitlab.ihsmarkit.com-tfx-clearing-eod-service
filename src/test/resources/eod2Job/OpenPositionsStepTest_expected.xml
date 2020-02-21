@@ -2,7 +2,7 @@
 
     <eod_ledger_open_position
             trade_date="2019/01/31"
-            settlement_date="2019/02/02"
+            settlement_date="2019/02/03"
             record_date="2019/02/01 11:30:00"
             participant_code="P11"
             currency_pair="EUR/USD"
@@ -20,7 +20,7 @@
 
     <eod_ledger_open_position
             trade_date="2019/01/31"
-            settlement_date="2019/02/02"
+            settlement_date="2019/02/03"
             record_date="2019/02/01 11:30:00"
             participant_code="P11"
             currency_pair="USD/JPY"
@@ -38,7 +38,7 @@
 
     <eod_ledger_open_position
             trade_date="2019/01/31"
-            settlement_date="2019/02/02"
+            settlement_date="2019/02/03"
             record_date="2019/02/01 11:30:00"
             participant_code="P22"
             currency_pair="EUR/USD"
@@ -56,7 +56,7 @@
 
     <eod_ledger_open_position
             trade_date="2019/01/31"
-            settlement_date="2019/02/02"
+            settlement_date="2019/02/03"
             record_date="2019/02/01 11:30:00"
             participant_code="P22"
             currency_pair="USD/JPY"
