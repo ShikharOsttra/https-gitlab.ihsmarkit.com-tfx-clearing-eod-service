@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +29,9 @@ import lombok.RequiredArgsConstructor;
 @Getter(AccessLevel.PRIVATE)
 public class MarginRatioService {
 
+    private static final int MARGIN_RATIO_SCALE = 2;
+    private static final RoundingMode MARGIN_RATIO_ROUNDING = RoundingMode.CEILING;
+
     private final MarginRatioRepository marginRatioRepository;
     private final MarginRatioMultiplierRepository marginRatioMultiplierRepository;
 
@@ -47,7 +51,7 @@ public class MarginRatioService {
             p -> marginRatioMultiplierRepository.findAllByBusinessDateAndParticipantCode(businessDate, participant.getCode()).stream()
                                 .collect(Collectors.toMap(MarginRatioMultiplierEntity::getCurrencyPair, MarginRatioMultiplierEntity::getValue))
         ).get(currencyPair)
-            .multiply(marginRatio.get().get(currencyPair));
-
+            .multiply(marginRatio.get().get(currencyPair))
+            .setScale(MARGIN_RATIO_SCALE, MARGIN_RATIO_ROUNDING);
     }
 }
