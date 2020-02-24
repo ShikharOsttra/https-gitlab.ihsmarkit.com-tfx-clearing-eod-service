@@ -145,7 +145,8 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
 
     private BigDecimal convertToTradingUnit(final BigDecimal amount, final String currencyPairCode) {
         return amount.setScale(0, FLOOR)
-            .divide(BigDecimal.valueOf(fxSpotProductService.getFxSpotProduct(currencyPairCode).getTradingUnit()));
+            .divide(BigDecimal.valueOf(fxSpotProductService.getFxSpotProduct(currencyPairCode).getTradingUnit()))
+            .setScale(0, FLOOR);
     }
 
     private Function<String, BigDecimal> getSwapPointsMapper() {
