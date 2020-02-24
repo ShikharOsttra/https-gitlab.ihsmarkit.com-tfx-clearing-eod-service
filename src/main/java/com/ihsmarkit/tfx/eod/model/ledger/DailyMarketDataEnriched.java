@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
-import static org.apache.logging.log4j.util.Strings.EMPTY;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
 
