@@ -1,34 +1,56 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.time.LocalDate;
 
 import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder(builderClassName = "Builder")
+@Builder
 @SuppressWarnings("PMD.TooManyFields")
 public class DailyMarketDataEnriched {
 
     private final LocalDate businessDate;
-    private final String tradeDate;
-    private final String recordDate;
-    private final String currencyNumber;
-    private final String currencyPairCode;
-    private final String openPrice;
-    private final String openPriceTime;
-    private final String highPrice;
-    private final String highPriceTime;
-    private final String lowPrice;
-    private final String lowPriceTime;
-    private final String closePrice;
-    private final String closePriceTime;
-    private final String swapPoint;
-    private final String previousDsp;
-    private final String currentDsp;
-    private final String dspChange;
-    private final String tradingVolumeAmount;
+    @Builder.Default
+    private final String tradeDate = EMPTY;
+    @Builder.Default
+    private final String recordDate = EMPTY;
+    @Builder.Default
+    private final String currencyNumber = EMPTY;
+    @Builder.Default
+    private final String currencyPairCode = EMPTY;
+    @Builder.Default
+    private final String openPrice = EMPTY;
+    @Builder.Default
+    private final String openPriceTime = EMPTY;
+    @Builder.Default
+    private final String highPrice = EMPTY;
+    @Builder.Default
+    private final String highPriceTime = EMPTY;
+    @Builder.Default
+    private final String lowPrice = EMPTY;
+    @Builder.Default
+    private final String lowPriceTime = EMPTY;
+    @Builder.Default
+    private final String closePrice = EMPTY;
+    @Builder.Default
+    private final String closePriceTime = EMPTY;
+    @Builder.Default
+    private final String swapPoint = EMPTY;
+    @Builder.Default
+    private final String previousDsp = EMPTY;
+    @Builder.Default
+    private final String currentDsp = EMPTY;
+    @Builder.Default
+    private final String dspChange = EMPTY;
+    @Builder.Default
+    private final String tradingVolumeAmount = EMPTY;
     private final String tradingVolumeAmountInUnit;
-    private final String openPositionAmount;
+    @Builder.Default
+    private final String openPositionAmount = EMPTY;
     private final String openPositionAmountInUnit;
+    private final long orderId;
+    private final int recordType;
 }

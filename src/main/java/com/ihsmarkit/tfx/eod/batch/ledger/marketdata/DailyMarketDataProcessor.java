@@ -1,10 +1,16 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.marketdata;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.SWAP_POINTS_DECIMAL_PLACES;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
+import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.FLOOR;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -64,9 +70,36 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final Map<String, DailySettlementPriceEntity> dspMap = getDspMap();
         final Map<String, BigDecimal> currencyPairOpenPosition = getOpenPositionAmount();
 
-        return aggregatedMap.entrySet().stream()
-            .map(entry -> mapToEnrichedItem(entry, swapPointsMapper, dspMap, currencyPairOpenPosition))
-            .collect(Collectors.toUnmodifiableList());
+        return Stream.concat(
+
+            aggregatedMap.entrySet().stream()
+                .map(entry -> mapToEnrichedItem(entry, swapPointsMapper, dspMap, currencyPairOpenPosition)),
+
+            Stream.of(aggregatedMap.entrySet().stream()
+                .map(entry -> mapToTotal(entry, currencyPairOpenPosition))
+                .reduce(Total::add)
+                .map(this::mapToEnrichedItem)
+                .orElseGet(() -> mapToEnrichedItem(Total.of(ZERO, ZERO))))
+
+        ).collect(Collectors.toUnmodifiableList());
+    }
+
+    private Total mapToTotal(final Map.Entry<String, DailyMarkedDataAggregated> aggregatedEntry, final Map<String, BigDecimal> currencyPairOpenPosition) {
+        return Total.of(
+            convertToTradingUnit(aggregatedEntry.getValue().getShortPositionsAmount(), aggregatedEntry.getKey()),
+            convertToTradingUnit(currencyPairOpenPosition.getOrDefault(aggregatedEntry.getKey(), ZERO), aggregatedEntry.getKey())
+        );
+    }
+
+    private DailyMarketDataEnriched mapToEnrichedItem(final Total total) {
+        return DailyMarketDataEnriched.builder()
+            .businessDate(businessDate)
+            .currencyPairCode(TOTAL)
+            .tradingVolumeAmountInUnit(formatBigDecimalRoundTo1Jpy(total.getTradingVolumeAmountInUnit()))
+            .openPositionAmountInUnit(formatBigDecimalRoundTo1Jpy(total.getOpenPositionAmountInUnit()))
+            .orderId(Long.MAX_VALUE)
+            .recordType(TOTAL_RECORD_TYPE)
+            .build();
     }
 
     private DailyMarketDataEnriched mapToEnrichedItem(
@@ -78,9 +111,8 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final DailyMarkedDataAggregated aggregated = aggregatedEntry.getValue();
         final DailySettlementPriceEntity dsp = dspMap.get(currencyPairCode);
         final FxSpotProductEntity fxSpotProduct = fxSpotProductService.getFxSpotProduct(currencyPairCode);
-        final BigDecimal tradingUnit = BigDecimal.valueOf(fxSpotProduct.getTradingUnit());
         // todo: do we expect nulls in any of the below vars?
-        final BigDecimal openPositionAmount = currencyPairOpenPosition.getOrDefault(currencyPairCode, BigDecimal.ZERO);
+        final BigDecimal openPositionAmount = currencyPairOpenPosition.getOrDefault(currencyPairCode, ZERO);
         final BigDecimal currentDsp = getDspValue(dsp, DailySettlementPriceEntity::getDailySettlementPrice);
         final BigDecimal previousDsp = getDspValue(dsp, DailySettlementPriceEntity::getPreviousDailySettlementPrice);
 
@@ -102,13 +134,19 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .previousDsp(formatBigDecimal(previousDsp, priceScale))
             .currentDsp(formatBigDecimal(currentDsp, priceScale))
             .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp), priceScale))
-            .tradingVolumeAmount(formatBigDecimal(aggregated.getShortPositionsAmount()))
-            // todo: rounding?
-            .tradingVolumeAmountInUnit(formatBigDecimal(aggregated.getShortPositionsAmount().divide(tradingUnit)))
-            .openPositionAmount(formatBigDecimal(openPositionAmount))
-            // todo: rounding?
-            .openPositionAmountInUnit(formatBigDecimal(openPositionAmount.divide(tradingUnit)))
+            .tradingVolumeAmount(formatBigDecimalRoundTo1Jpy(aggregated.getShortPositionsAmount()))
+            .tradingVolumeAmountInUnit(formatBigDecimalRoundTo1Jpy(convertToTradingUnit(aggregated.getShortPositionsAmount(), currencyPairCode)))
+            .openPositionAmount(formatBigDecimalRoundTo1Jpy(openPositionAmount))
+            .openPositionAmountInUnit(formatBigDecimalRoundTo1Jpy(convertToTradingUnit(openPositionAmount, currencyPairCode)))
+            .recordType(ITEM_RECORD_TYPE)
+            .orderId(Long.parseLong(fxSpotProduct.getProductNumber()))
             .build();
+    }
+
+    private BigDecimal convertToTradingUnit(final BigDecimal amount, final String currencyPairCode) {
+        return amount.setScale(0, FLOOR)
+            .divide(BigDecimal.valueOf(fxSpotProductService.getFxSpotProduct(currencyPairCode).getTradingUnit()))
+            .setScale(0, FLOOR);
     }
 
     private Function<String, BigDecimal> getSwapPointsMapper() {
@@ -135,17 +173,32 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                         )
                     )
                 ).entrySet().stream()
-                    .collect(
-                        Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> entry.getValue().values().stream().map(BigDecimal.ZERO::min).collect(Streams.summingBigDecimal(BigDecimal::abs))
-                        )
-                    );
+                .collect(
+                    Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().values().stream().map(ZERO::min).collect(Streams.summingBigDecimal(BigDecimal::abs))
+                    )
+                );
     }
 
     private static BigDecimal getDspValue(@Nullable final DailySettlementPriceEntity dsp, final Function<DailySettlementPriceEntity, BigDecimal> extractor) {
         return Optional.ofNullable(dsp)
             .map(extractor)
-            .orElse(BigDecimal.ZERO);
+            .orElse(ZERO);
+    }
+
+
+    @lombok.Value(staticConstructor = "of")
+    private static class Total {
+
+        private final BigDecimal tradingVolumeAmountInUnit;
+        private final BigDecimal openPositionAmountInUnit;
+
+        Total add(final Total total) {
+            return Total.of(
+                this.tradingVolumeAmountInUnit.add(total.tradingVolumeAmountInUnit),
+                this.openPositionAmountInUnit.add(total.openPositionAmountInUnit)
+            );
+        }
     }
 }
