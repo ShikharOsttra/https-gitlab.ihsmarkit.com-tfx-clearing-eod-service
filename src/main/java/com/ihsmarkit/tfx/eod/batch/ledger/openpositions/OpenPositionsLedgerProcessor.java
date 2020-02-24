@@ -98,7 +98,7 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .dailyMtmAmount(formatBigDecimal(getMargin(cashSettlements, DAILY_MTM)))
             .swapPoint(formatBigDecimal(getMargin(cashSettlements, SWAP_PNL)))
             .totalVariationMargin(formatBigDecimal(getMargin(cashSettlements, TOTAL_VM)))
-            .settlementDate(formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)))
+            .settlementDate(formatDate(tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair)))
             .recordDate(formatDateTime(recordDate))
             .build();
     }

@@ -34,7 +34,7 @@ public class EodCashSettlementMappingService {
         return mtmMapper.toEodProductCashSettlement(
             mtm,
             businessDate,
-            tradeAndSettlementDateService.getValueDate(businessDate, mtm.getCurrencyPair()),
+            tradeAndSettlementDateService.getVmSettlementDate(businessDate, mtm.getCurrencyPair()),
             type
         );
     }
