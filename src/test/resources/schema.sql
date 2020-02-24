@@ -54,7 +54,9 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     jasdec_code             varchar(7)   not null,
     interest_payment_day    varchar(5)   not null,
     interest_payment_day2   varchar(5)   not null,
-    maturity_date           varchar(10)  not null
+    maturity_date           varchar(10)  not null,
+    record_type             int          not null,
+    order_id                bigint       not null
 );
 
 CREATE TABLE IF NOT EXISTS eod_ledger_market_data

@@ -2,14 +2,17 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.BOND;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.EQUITY;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMonthDay;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -26,6 +29,7 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.RequiredArgsConstructor;
@@ -43,14 +47,24 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
 
+    @Value("#{stepExecutionContext['total']}")
+    private final Map<String, BigDecimal> total;
+
     private final BojCodeProvider bojCodeProvider;
 
     private final JasdecCodeProvider jasdecCodeProvider;
 
     private final CollateralCalculator collateralCalculator;
 
+    private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
     @Override
     public CollateralListItem process(final CollateralBalanceEntity balance) {
+        final BigDecimal evaluatedAmount = collateralCalculator.calculateEvaluatedAmount(balance);
+
+        total.compute(balance.getParticipant().getCode(), totalRemappingFunction(evaluatedAmount));
+        total.compute(EMPTY, totalRemappingFunction(evaluatedAmount));
+
         return CollateralListItem.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
@@ -68,12 +82,14 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .amount(balance.getAmount().toString())
             .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toString()))
             .evaluatedPrice(getFromSecurityProduct(balance.getProduct(), product -> collateralCalculator.calculateEvaluatedPrice(product).toString()))
-            .evaluatedAmount(collateralCalculator.calculateEvaluatedAmount(balance).toString())
+            .evaluatedAmount(evaluatedAmount.toString())
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))
             .interestPaymentDay(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate1())))
             .interestPaymentDay2(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate2())))
             .maturityDate(getMaturityDate(balance.getProduct()))
+            .recordType(ITEM_RECORD_TYPE)
+            .orderId(getOrderId(balance))
             .build();
     }
 
@@ -83,6 +99,11 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     private String getBojCode(final CollateralBalanceEntity balance) {
         return getCustodianAccountCode(balance, BOND, bojCodeProvider::getCode);
+    }
+
+    @SuppressWarnings("PMD.UselessStringValueOf")
+    private long getOrderId(final CollateralBalanceEntity balance) {
+        return Long.parseLong(String.valueOf(participantCodeOrderIdProvider.get(balance.getParticipant().getCode())) + balance.getPurpose().getValue());
     }
 
     private static String getCustodianAccountCode(
@@ -133,4 +154,9 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
                 throw new IllegalArgumentException(String.format("Unsupported product type, %s", balance.getProduct().getType()));
         }
     }
+
+    private static BiFunction<String, BigDecimal, BigDecimal> totalRemappingFunction(final BigDecimal amount) {
+        return (key, currentTotal) -> currentTotal == null ? amount : currentTotal.add(amount);
+    }
+
 }
