@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Lazy;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.HashBasedTable;
@@ -33,7 +34,7 @@ public class CollateralRequirementProvider {
 
     private final Lazy<Table<Long, CollateralPurpose, BigDecimal>> requiredAmounts = Lazy.of(this::loadRequiredAmount);
 
-    private final Lazy<Map<Long, LocalDate>> nextApplicableDateForClearingDeposit = Lazy.of(this::loadNextApplicableDateForClearingDeposit);
+    private final Lazy<Map<Long, Pair<LocalDate, BigDecimal>>> nextClearingDepositRequiredAmount = Lazy.of(this::loadNextClearingDepositRequiredAmount);
 
     private Table<Long, CollateralPurpose, BigDecimal> loadRequiredAmount() {
 
@@ -45,18 +46,21 @@ public class CollateralRequirementProvider {
                 HashBasedTable::create));
     }
 
-    private Map<Long, LocalDate> loadNextApplicableDateForClearingDeposit() {
+    private Map<Long, Pair<LocalDate, BigDecimal>> loadNextClearingDepositRequiredAmount() {
         return requirementRepository.findFutureOnlyByBusinessDate(businessDate).stream()
             .filter(requirement -> requirement.getPurpose() == CollateralPurpose.CLEARING_DEPOSIT)
-            .collect(Collectors.toMap(requirement -> requirement.getParticipant().getId(), ParticipantCollateralRequirementEntity::getApplicableDate));
+            .collect(Collectors.toMap(
+                requiredAmount -> requiredAmount.getParticipant().getId(),
+                requiredAmount -> Pair.of(requiredAmount.getApplicableDate(), requiredAmount.getValue().setScale(0, RoundingMode.DOWN))
+            ));
     }
 
     public Optional<BigDecimal> getRequiredAmount(final Long participantId, final CollateralPurpose purpose) {
         return Optional.ofNullable(requiredAmounts.get().get(participantId, purpose));
     }
 
-    public Optional<LocalDate> getNextApplicableDateForClearingDeposit(final Long participantId) {
-        return Optional.ofNullable(nextApplicableDateForClearingDeposit.get().get(participantId));
+    public Optional<Pair<LocalDate, BigDecimal>> getNextClearingDepositRequiredAmount(final Long participantId) {
+        return Optional.ofNullable(nextClearingDepositRequiredAmount.get().get(participantId));
     }
 
 }

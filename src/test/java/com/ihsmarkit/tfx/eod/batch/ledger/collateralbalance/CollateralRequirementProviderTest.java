@@ -64,7 +64,7 @@ class CollateralRequirementProviderTest {
                     .build()
             ));
 
-        assertThat(collateralRequirementProvider.getNextApplicableDateForClearingDeposit(11L)).get().isEqualTo(applicableDate);
+        assertThat(collateralRequirementProvider.getNextClearingDepositRequiredAmount(11L)).get().isEqualTo(applicableDate);
     }
 
 

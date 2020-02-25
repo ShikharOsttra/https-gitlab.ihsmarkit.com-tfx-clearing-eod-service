@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.time.LocalDate;
 
 import lombok.Builder;
@@ -16,28 +18,50 @@ public class CollateralBalanceItem {
     private final String participantCode;
     private final String participantName;
     private final String participantType;
-    private final String collateralPurposeType;
+    @Builder.Default
+    private final String collateralPurposeType = EMPTY;
     private final String collateralPurpose;
-    private final String totalDeposit;
-    private final String cash;
-    private final String lg;
-    private final String securities;
+    @Builder.Default
+    private final String totalDeposit = EMPTY;
+    @Builder.Default
+    private final String cash = EMPTY;
+    @Builder.Default
+    private final String lg = EMPTY;
+    @Builder.Default
+    private final String securities = EMPTY;
     private final String requiredAmount;
-    private final String totalInitialMargin;
-    private final String totalVariationMargin;
+    @Builder.Default
+    private final String totalInitialMargin = EMPTY;
+    @Builder.Default
+    private final String totalVariationMargin = EMPTY;
     private final String totalExcessDeficit;
-    private final String deficitInCashSettlement;
-    private final String cashSettlement;
-    private final String cashSettlementFollowingDay;
-    private final String initialMtmTotal;
-    private final String initialMtmDay;
-    private final String initialMtmFollowingDay;
-    private final String dailyMtmTotal;
-    private final String dailyMtmDay;
-    private final String dailyMtmFollowingDay;
-    private final String swapPointTotal;
-    private final String swapPointDay;
-    private final String swapPointFollowingDay;
-    private final String followingApplicableDayForClearingDeposit;
+    @Builder.Default
+    private final String deficitInCashSettlement = EMPTY;
+    @Builder.Default
+    private final String cashSettlement = EMPTY;
+    @Builder.Default
+    private final String cashSettlementFollowingDay = EMPTY;
+    @Builder.Default
+    private final String initialMtmTotal = EMPTY;
+    @Builder.Default
+    private final String initialMtmDay = EMPTY;
+    @Builder.Default
+    private final String initialMtmFollowingDay = EMPTY;
+    @Builder.Default
+    private final String dailyMtmTotal = EMPTY;
+    @Builder.Default
+    private final String dailyMtmDay = EMPTY;
+    @Builder.Default
+    private final String dailyMtmFollowingDay = EMPTY;
+    @Builder.Default
+    private final String swapPointTotal = EMPTY;
+    @Builder.Default
+    private final String swapPointDay = EMPTY;
+    @Builder.Default
+    private final String swapPointFollowingDay = EMPTY;
+    @Builder.Default
+    private final String followingApplicableDayForClearingDeposit = EMPTY;
+    private final long orderId;
+    private final int recordType;
 
 }

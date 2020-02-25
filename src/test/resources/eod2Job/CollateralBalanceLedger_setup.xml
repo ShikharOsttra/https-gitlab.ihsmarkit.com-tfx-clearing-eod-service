@@ -43,15 +43,15 @@
 
     <eod_participant_margin participant_id="1" date="2019-01-01" required_amount="1000" initial_margin_amount="78753600.00" total_deficit_amount="43023.00" cash_deficit_amount="501.00" pnl_amount="1" cash_collateral_amount="2" log_collateral_amount="3" today_settlement_amount="4" next_day_settlement_amount="5" timestamp="2019-12-04 22:00:00"/>
     <participant_collateral_requirement id="1" participant_id="1" purpose="MARKET_ENTRY_DEPOSIT" value="2000" applicable_date="2019-01-01" business_date="2019-01-01"/>
-    <participant_collateral_requirement id="2" participant_id="1" purpose="CLEARING_DEPOSIT" value="3000" applicable_date="2019-01-02" business_date="2019-01-01"/>
+    <participant_collateral_requirement id="2" participant_id="1" purpose="CLEARING_DEPOSIT" value="3000" applicable_date="2019-01-01" business_date="2019-01-01"/>
     <participant_collateral_requirement id="3" participant_id="1" purpose="CLEARING_DEPOSIT" value="30000" applicable_date="2019-01-05" business_date="2019-01-05"/>
-    <participant_collateral_requirement id="4" participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-01-03" business_date="2019-01-01"/>
+    <participant_collateral_requirement id="4" participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-01-01" business_date="2019-01-01"/>
 
     <collateral_balance id="7" purpose="1" participant_id="2" product_id="1" amount="220000" version="1"/>
     <collateral_balance id="8" purpose="1" participant_id="2" product_id="4" amount="1500" version="1"/>
 
     <participant_collateral_requirement id="5" participant_id="2" purpose="MARKET_ENTRY_DEPOSIT" value="5000" applicable_date="2019-01-01" business_date="2019-01-01"/>
-    <participant_collateral_requirement id="6" participant_id="2" purpose="CLEARING_DEPOSIT" value="6000" applicable_date="2019-01-02" business_date="2019-01-01"/>
-    <participant_collateral_requirement id="7" participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" value="7000" applicable_date="2019-01-03" business_date="2019-01-01"/>
+    <participant_collateral_requirement id="6" participant_id="2" purpose="CLEARING_DEPOSIT" value="6000" applicable_date="2019-01-01" business_date="2019-01-01"/>
+    <participant_collateral_requirement id="7" participant_id="2" purpose="SPECIAL_PURPOSE_COLLATERAL" value="7000" applicable_date="2019-01-01" business_date="2019-01-01"/>
 
 </dataset>
