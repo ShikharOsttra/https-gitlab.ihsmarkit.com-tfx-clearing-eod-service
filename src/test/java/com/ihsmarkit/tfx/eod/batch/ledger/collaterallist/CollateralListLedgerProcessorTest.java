@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
+import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
@@ -41,6 +42,7 @@ class CollateralListLedgerProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
+    private static final LocalDate EVALUATION_DATE = LocalDate.of(2019, 1, 2);
 
     @Mock
     private BojCodeProvider bojCodeProvider;
@@ -53,6 +55,9 @@ class CollateralListLedgerProcessorTest {
 
     @Mock
     private ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
+    @Mock
+    private EvaluationDateProvider evaluationDateProvider;
 
     private Map<String, BigDecimal> total;
 
@@ -73,11 +78,13 @@ class CollateralListLedgerProcessorTest {
             bojCodeProvider,
             jasdecCodeProvider,
             collateralCalculator,
-            participantCodeOrderIdProvider
+            participantCodeOrderIdProvider,
+            evaluationDateProvider
         );
 
         lenient().when(bojCodeProvider.getCode(any(), any())).thenReturn(Optional.of("bojc"));
         lenient().when(jasdecCodeProvider.getCode(any(), any())).thenReturn(Optional.of("jasdec1"));
+        when(evaluationDateProvider.get()).thenReturn(EVALUATION_DATE);
     }
 
     @ParameterizedTest
@@ -174,7 +181,7 @@ class CollateralListLedgerProcessorTest {
         return CollateralListItem.builder()
             .businessDate(BUSINESS_DATE)
             .tradeDate("2019/01/01")
-            .evaluationDate("2019/01/01")
+            .evaluationDate("2019/01/02")
             .recordDate("2019/01/02 11:30:00")
             .participantCode("BNP")
             .participantName("BNP Paribas Securities(Japan) Limited")

@@ -15,6 +15,7 @@ public class CollateralBalanceItem {
     private final LocalDate businessDate;
     private final String tradeDate;
     private final String recordDate;
+    private final String evaluationDate;
     private final String participantCode;
     private final String participantName;
     private final String participantType;

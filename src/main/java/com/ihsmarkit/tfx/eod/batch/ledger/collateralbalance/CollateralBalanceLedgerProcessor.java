@@ -49,6 +49,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralBalanceItem;
@@ -89,6 +90,8 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     private final CollateralCalculator collateralCalculator;
 
     private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
+    private final EvaluationDateProvider evaluationDateProvider;
 
     @Override
     public List<CollateralBalanceItem> process(final ParticipantEntity participant) {
@@ -194,6 +197,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
+            .evaluationDate(formatDate(evaluationDateProvider.get()))
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))

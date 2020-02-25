@@ -1,0 +1,6 @@
+<dataset>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-01-01" is_relevant_currency_trade="true" value_date="2019-01-03" is_exchange_business_date="true" is_bank_business_date="true"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-01-02" is_relevant_currency_trade="true" value_date="2019-01-04" is_exchange_business_date="true" is_bank_business_date="true"/>
+
+</dataset>
