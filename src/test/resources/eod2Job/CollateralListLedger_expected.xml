@@ -10,6 +10,7 @@
         collateral_purpose_type="1"
         collateral_purpose="Margin"
         collateral_name="Yen Cash"
+        collateral_type_no="1"
         collateral_type="Cash"
         security_code=""
         isin_code=""
@@ -23,7 +24,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="1"
+        order_id="11"
     />
 
     <eod_ledger_collateral_list
@@ -37,6 +38,7 @@
         collateral_purpose_type="2"
         collateral_purpose="Market entry deposit"
         collateral_name="bond1"
+        collateral_type_no="3"
         collateral_type="JGB"
         security_code="5678"
         isin_code="JP11111111"
@@ -50,7 +52,7 @@
         interest_payment_day2="12/10"
         maturity_date="2022/10/10"
         record_type="1"
-        order_id="2"
+        order_id="23"
     />
 
     <eod_ledger_collateral_list
@@ -64,6 +66,7 @@
         collateral_purpose_type="3"
         collateral_purpose="Clearing deposit"
         collateral_name="equity1"
+        collateral_type_no="4"
         collateral_type="Equities"
         security_code="1234"
         isin_code="JP22222222"
@@ -77,7 +80,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="13"
+        order_id="134"
     />
 
     <eod_ledger_collateral_list
@@ -91,6 +94,7 @@
         collateral_purpose_type="4"
         collateral_purpose="Special purpose collateral"
         collateral_name="Mizuho Bank,Ltd."
+        collateral_type_no="2"
         collateral_type="LG"
         security_code=""
         isin_code=""
@@ -104,7 +108,7 @@
         interest_payment_day2=""
         maturity_date="2020/02/02"
         record_type="1"
-        order_id="14"
+        order_id="142"
     />
 
     <eod_ledger_collateral_list
@@ -118,6 +122,7 @@
         collateral_purpose_type=""
         collateral_purpose=""
         collateral_name=""
+        collateral_type_no=""
         collateral_type=""
         security_code=""
         isin_code=""
@@ -145,6 +150,7 @@
         collateral_purpose_type=""
         collateral_purpose=""
         collateral_name=""
+        collateral_type_no=""
         collateral_type=""
         security_code=""
         isin_code=""
@@ -168,6 +174,7 @@
         record_date=""
         participant_code=""
         participant_name="Total"
+        collateral_type_no=""
         participant_type=""
         collateral_purpose_type=""
         collateral_purpose=""
