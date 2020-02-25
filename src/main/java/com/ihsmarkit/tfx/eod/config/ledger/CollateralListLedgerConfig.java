@@ -2,6 +2,9 @@ package com.ihsmarkit.tfx.eod.config.ledger;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.batch.core.Step;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -12,9 +15,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
+import com.ihsmarkit.tfx.eod.batch.ledger.ItemWriterWithTotal;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListTotalSupplier;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+import com.ihsmarkit.tfx.eod.support.BeforeStepListener;
 
 import lombok.AllArgsConstructor;
 
@@ -29,12 +35,14 @@ public class CollateralListLedgerConfig {
     @Value("classpath:/ledger/sql/eod_ledger_collateral_list_insert.sql")
     private final Resource collateralListLedgerSql;
 
+    private final CollateralListTotalSupplier collateralListTotalSupplier;
     private final CollateralListLedgerProcessor collateralListProcessor;
     private final LedgerStepFactory ledgerStepFactory;
 
     @Bean(COLLATERAL_LIST_LEDGER_STEP_NAME)
     Step collateralListLedger() {
-        return ledgerStepFactory.<CollateralBalanceEntity, CollateralListItem>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize)
+        return ledgerStepFactory.<CollateralBalanceEntity, CollateralListItem>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize,
+            Set.of(initTotalMapListener()))
             .reader(collateralListReader())
             .processor(collateralListProcessor)
             .writer(collateralListWriter())
@@ -54,6 +62,18 @@ public class CollateralListLedgerConfig {
 
     @Bean
     ItemWriter<CollateralListItem> collateralListWriter() {
+        return new ItemWriterWithTotal<>(
+            collateralListTotalSupplier,
+            collateralListJdbcWriter()
+        );
+    }
+
+    @Bean
+    ItemWriter<CollateralListItem> collateralListJdbcWriter() {
         return ledgerStepFactory.listWriter(collateralListLedgerSql);
+    }
+
+    private static BeforeStepListener initTotalMapListener() {
+        return new BeforeStepListener(stepExecution -> stepExecution.getExecutionContext().put("total", new ConcurrentHashMap<>()));
     }
 }

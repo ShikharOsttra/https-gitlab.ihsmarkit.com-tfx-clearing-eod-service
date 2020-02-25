@@ -38,7 +38,7 @@ class CollateralListLedgerStepTest extends AbstractSpringBatchTest {
         "/common/haircuts.xml",
         "/eod2Job/CollateralListLedger_setup.xml"
     })
-    @ExpectedDatabase(value = "/eod2Job/CollateralListLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
+    @ExpectedDatabase(value = "/eod2Job/CollateralListLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testCollateralListLedgerStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 1, 2, 11, 30, 0, 0));
 

@@ -19,7 +19,9 @@ INSERT INTO eod_ledger_collateral_list(business_date,
                                        jasdec_code,
                                        interest_payment_day,
                                        interest_payment_day2,
-                                       maturity_date)
+                                       maturity_date,
+                                       record_type,
+                                       order_id)
 VALUES (:businessDate,
         :tradeDate,
         :evaluationDate,
@@ -41,4 +43,6 @@ VALUES (:businessDate,
         :jasdecCode,
         :interestPaymentDay,
         :interestPaymentDay2,
-        :maturityDate)
+        :maturityDate,
+        :recordType,
+        :orderId)

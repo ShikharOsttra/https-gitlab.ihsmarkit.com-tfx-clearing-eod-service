@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.time.LocalDate;
 
 import lombok.Builder;
@@ -11,26 +13,46 @@ import lombok.Value;
 public class CollateralListItem {
 
     private final LocalDate businessDate;
-    private final String tradeDate;
-    private final String evaluationDate;
-    private final String recordDate;
+    @Builder.Default
+    private final String tradeDate = EMPTY;
+    @Builder.Default
+    private final String evaluationDate = EMPTY;
+    @Builder.Default
+    private final String recordDate = EMPTY;
     private final String participantCode;
     private final String participantName;
-    private final String participantType;
-    private final String collateralPurposeType;
-    private final String collateralPurpose;
-    private final String collateralName;
-    private final String collateralType;
-    private final String securityCode;
-    private final String isinCode;
-    private final String amount;
-    private final String marketPrice;
-    private final String evaluatedPrice;
+    @Builder.Default
+    private final String participantType = EMPTY;
+    @Builder.Default
+    private final String collateralPurposeType = EMPTY;
+    @Builder.Default
+    private final String collateralPurpose = EMPTY;
+    @Builder.Default
+    private final String collateralName = EMPTY;
+    @Builder.Default
+    private final String collateralType = EMPTY;
+    @Builder.Default
+    private final String securityCode = EMPTY;
+    @Builder.Default
+    private final String isinCode = EMPTY;
+    @Builder.Default
+    private final String amount = EMPTY;
+    @Builder.Default
+    private final String marketPrice = EMPTY;
+    @Builder.Default
+    private final String evaluatedPrice = EMPTY;
     private final String evaluatedAmount;
-    private final String bojCode;
-    private final String jasdecCode;
-    private final String interestPaymentDay;
-    private final String interestPaymentDay2;
-    private final String maturityDate;
+    @Builder.Default
+    private final String bojCode = EMPTY;
+    @Builder.Default
+    private final String jasdecCode = EMPTY;
+    @Builder.Default
+    private final String interestPaymentDay = EMPTY;
+    @Builder.Default
+    private final String interestPaymentDay2 = EMPTY;
+    @Builder.Default
+    private final String maturityDate = EMPTY;
+    private final long orderId;
+    private final int recordType;
 
 }

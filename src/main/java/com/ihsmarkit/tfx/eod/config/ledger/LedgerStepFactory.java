@@ -1,11 +1,15 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
+import java.util.Set;
+
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -48,10 +52,16 @@ public class LedgerStepFactory {
     }
 
     <I, O> SimpleStepBuilder<I, O> stepBuilder(final String stepName, final int chunkSize) {
-        return steps.get(stepName)
+        return stepBuilder(stepName, chunkSize, Set.of());
+    }
+
+    <I, O> SimpleStepBuilder<I, O> stepBuilder(final String stepName, final int chunkSize, final Set<StepExecutionListener> listeners) {
+        final StepBuilder stepBuilder = steps.get(stepName)
             .listener(recordDateSetter)
-            .listener(eodAlertStepListener)
-            .chunk(chunkSize);
+            .listener(eodAlertStepListener);
+
+        listeners.forEach(stepBuilder::listener);
+        return stepBuilder.chunk(chunkSize);
     }
 
     @SneakyThrows

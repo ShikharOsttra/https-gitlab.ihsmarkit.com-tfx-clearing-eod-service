@@ -5,6 +5,8 @@ import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCashCollatera
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCollateralBalanceEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.anEquityCollateralProductEntityBuilder;
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.PARTICIPANT_CODE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +16,9 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +31,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @ExtendWith(MockitoExtension.class)
 class CollateralListLedgerProcessorTest {
@@ -44,16 +51,29 @@ class CollateralListLedgerProcessorTest {
     @Mock
     private CollateralCalculator collateralCalculator;
 
+    @Mock
+    private ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
+    private Map<String, BigDecimal> total;
+
     private CollateralListLedgerProcessor processor;
 
     @BeforeEach
+    @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
     void setUp() {
+        total = new ConcurrentHashMap<>() {{
+            put(PARTICIPANT_CODE, BigDecimal.valueOf(1200));
+            put(EMPTY, BigDecimal.valueOf(3000));
+        }};
+
         processor = new CollateralListLedgerProcessor(
             BUSINESS_DATE,
             RECORD_DATE,
+            total,
             bojCodeProvider,
             jasdecCodeProvider,
-            collateralCalculator
+            collateralCalculator,
+            participantCodeOrderIdProvider
         );
 
         lenient().when(bojCodeProvider.getCode(any(), any())).thenReturn(Optional.of("bojc"));
@@ -63,6 +83,7 @@ class CollateralListLedgerProcessorTest {
     @ParameterizedTest
     @MethodSource("collateralList")
     void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem collateralListItem) {
+        when(participantCodeOrderIdProvider.get(PARTICIPANT_CODE)).thenReturn(7);
         if (balance.getProduct() instanceof SecurityCollateralProductEntity) {
             when(collateralCalculator.calculateEvaluatedPrice((SecurityCollateralProductEntity) balance.getProduct())).thenReturn(new BigDecimal("10.01"));
         }
@@ -70,6 +91,8 @@ class CollateralListLedgerProcessorTest {
         when(collateralCalculator.calculateEvaluatedAmount(balance)).thenReturn(new BigDecimal("1300"));
 
         assertThat(processor.process(balance)).isEqualTo(collateralListItem);
+        assertThat(total.get(PARTICIPANT_CODE)).isEqualTo(BigDecimal.valueOf(2500));
+        assertThat(total.get(EMPTY)).isEqualTo(BigDecimal.valueOf(4300));
     }
 
     private static Stream collateralList() {
@@ -161,7 +184,9 @@ class CollateralListLedgerProcessorTest {
             .jasdecCode(EMPTY)
             .interestPaymentDay(EMPTY)
             .interestPaymentDay2(EMPTY)
-            .maturityDate(EMPTY);
+            .maturityDate(EMPTY)
+            .orderId(71)
+            .recordType(ITEM_RECORD_TYPE);
     }
 
 }
