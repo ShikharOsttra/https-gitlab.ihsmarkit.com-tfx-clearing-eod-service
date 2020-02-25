@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.util.Pair;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.ParticipantCollateralRequirementEntity;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.ParticipantCollateralRequirementRepository;
@@ -49,12 +50,14 @@ class CollateralRequirementProviderTest {
 
     @Test
     void shouldReturnNextApplicableDateForClearingDeposit() {
+        final BigDecimal nextValue = BigDecimal.TEN;
         final LocalDate applicableDate = LocalDate.of(2019, 10, 10);
 
         when(participantCollateralRequirementRepository.findFutureOnlyByBusinessDate(BUSINESS_DATE)).thenReturn(
             Set.of(ParticipantCollateralRequirementEntity.builder()
                     .participant(aParticipantEntityBuilder().build())
                     .purpose(CLEARING_DEPOSIT)
+                    .value(nextValue)
                     .applicableDate(applicableDate)
                     .build(),
                 ParticipantCollateralRequirementEntity.builder()
@@ -64,7 +67,7 @@ class CollateralRequirementProviderTest {
                     .build()
             ));
 
-        assertThat(collateralRequirementProvider.getNextClearingDepositRequiredAmount(11L)).get().isEqualTo(applicableDate);
+        assertThat(collateralRequirementProvider.getNextClearingDepositRequiredAmount(11L)).get().isEqualTo(Pair.of(applicableDate, nextValue));
     }
 
 
