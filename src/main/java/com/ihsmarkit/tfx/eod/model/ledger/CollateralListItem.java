@@ -32,6 +32,8 @@ public class CollateralListItem {
     @Builder.Default
     private final String collateralType = EMPTY;
     @Builder.Default
+    private final String collateralTypeNo = EMPTY;
+    @Builder.Default
     private final String securityCode = EMPTY;
     @Builder.Default
     private final String isinCode = EMPTY;

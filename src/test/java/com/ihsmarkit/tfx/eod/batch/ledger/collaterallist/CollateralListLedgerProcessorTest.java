@@ -122,34 +122,41 @@ class CollateralListLedgerProcessorTest {
 
     private static CollateralListItem collateralListItemLog() {
         return collateralListItemBuilder()
+            .collateralTypeNo("2")
             .collateralType("LG")
             .maturityDate("2020/02/02")
             .collateralName("Mizuho Bank,Ltd.")
+            .orderId(712)
             .build();
     }
 
     private static CollateralListItem collateralListItemCash() {
         return collateralListItemBuilder()
+            .collateralTypeNo("1")
             .collateralType("Cash")
             .collateralName("Yen Cash")
+            .orderId(711)
             .build();
     }
 
     private static CollateralListItem collateralListItemEquity() {
         return collateralListItemBuilder()
             .collateralName("security name")
+            .collateralTypeNo("4")
             .collateralType("Equities")
             .securityCode("1234")
             .isinCode("JP1150481859")
             .marketPrice("1.0")
             .evaluatedPrice("10.01")
             .jasdecCode("jasdec1")
+            .orderId(714)
             .build();
     }
 
     private static CollateralListItem collateralListItemBond() {
         return collateralListItemBuilder()
             .collateralName("security name")
+            .collateralTypeNo("3")
             .collateralType("JGB")
             .securityCode("123456789")
             .isinCode("JP1150481859")
@@ -159,6 +166,7 @@ class CollateralListLedgerProcessorTest {
             .interestPaymentDay("01/01")
             .interestPaymentDay2("02/02")
             .maturityDate("2020/02/02")
+            .orderId(713)
             .build();
     }
 
@@ -185,7 +193,6 @@ class CollateralListLedgerProcessorTest {
             .interestPaymentDay(EMPTY)
             .interestPaymentDay2(EMPTY)
             .maturityDate(EMPTY)
-            .orderId(71)
             .recordType(ITEM_RECORD_TYPE);
     }
 

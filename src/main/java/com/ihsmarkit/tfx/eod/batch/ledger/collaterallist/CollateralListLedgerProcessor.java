@@ -76,6 +76,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .collateralPurposeType(balance.getPurpose().getValue().toString())
             .collateralPurpose(formatEnum(balance.getPurpose()))
             .collateralName(getCollateralName(balance))
+            .collateralTypeNo(balance.getProduct().getType().getValue().toString())
             .collateralType(formatEnum(balance.getProduct().getType()))
             .securityCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityCode))
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
@@ -103,7 +104,11 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     @SuppressWarnings("PMD.UselessStringValueOf")
     private long getOrderId(final CollateralBalanceEntity balance) {
-        return Long.parseLong(String.valueOf(participantCodeOrderIdProvider.get(balance.getParticipant().getCode())) + balance.getPurpose().getValue());
+        return Long.parseLong(
+            String.valueOf(participantCodeOrderIdProvider.get(balance.getParticipant().getCode())) +
+                balance.getPurpose().getValue() +
+                balance.getProduct().getType().getValue()
+        );
     }
 
     private static String getCustodianAccountCode(
