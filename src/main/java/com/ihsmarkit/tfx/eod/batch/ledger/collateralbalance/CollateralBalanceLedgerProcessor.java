@@ -2,7 +2,8 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collateralbalance;
 
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.CLEARING_DEPOSIT;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARGIN;
-import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.values;
+import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARKET_ENTRY_DEPOSIT;
+import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.SPECIAL_PURPOSE_COLLATERAL;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
@@ -10,6 +11,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DA
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalForceTwoDecimals;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
@@ -19,23 +21,19 @@ import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.HashBasedTable;
@@ -51,7 +49,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
-import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralBalanceItem;
 
@@ -62,7 +60,17 @@ import lombok.RequiredArgsConstructor;
 @StepScope
 public class CollateralBalanceLedgerProcessor implements ItemProcessor<ParticipantEntity, List<CollateralBalanceItem>> {
 
+    private static final String FOLLOWING_CLEARING_DEPOSIT_PURPOSE = "(The Following Applicable Amount)";
+
     private static final TotalBalance ZERO_BALANCE = TotalBalance.of(ZERO, ZERO, ZERO, ZERO);
+
+    private static final Map<String, Integer> PURPOSE_ORDER_ID_MAP = Map.of(
+        MARGIN.name(), 1,
+        MARKET_ENTRY_DEPOSIT.name(), 2,
+        CLEARING_DEPOSIT.name(), 3,
+        FOLLOWING_CLEARING_DEPOSIT_PURPOSE, 4,
+        SPECIAL_PURPOSE_COLLATERAL.name(), 5
+    );
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -80,6 +88,8 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
 
     private final CollateralCalculator collateralCalculator;
 
+    private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
     @Override
     public List<CollateralBalanceItem> process(final ParticipantEntity participant) {
 
@@ -87,27 +97,99 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         final var margin = eodParticipantMarginRepository.findByDateAndParticipant(businessDate, participant);
         final var cashSettlement = margin.map(marginVal -> getCashSettlement(participant)).orElseGet(HashBasedTable::create);
 
-        return Stream.of(values())
-            .sorted(Comparator.comparing(CollateralPurpose::getValue))
-            .map(purpose -> mapToCollateralBalance(purpose, participant, balances, margin, cashSettlement))
+        return Stream.of(CollateralPurpose.values())
+            .flatMap(purpose -> mapToCollateralBalance(purpose, participant, balances.getOrDefault(purpose, ZERO_BALANCE), margin, cashSettlement))
             .collect(toList());
     }
 
-    private CollateralBalanceItem mapToCollateralBalance(
+    private Stream<CollateralBalanceItem> mapToCollateralBalance(
         final CollateralPurpose purpose,
         final ParticipantEntity participant,
-        final Map<CollateralPurpose, TotalBalance> balances,
+        final TotalBalance balance,
         final Optional<EodParticipantMarginEntity> margin,
         final Table<EodProductCashSettlementType, EodCashSettlementDateType, BigDecimal> cashSettlement
     ) {
-        final BigDecimal requiredAmount = getRequiredAmount(purpose, margin, participant).orElse(ZERO);
-        final BigDecimal totalExcessDeficit = balances.getOrDefault(purpose, ZERO_BALANCE).getTotal().subtract(requiredAmount);
-        final String applicableDayForClearingDeposit = purpose == CLEARING_DEPOSIT
-                                                       ? collateralRequirementProvider.getNextApplicableDateForClearingDeposit(participant.getId())
-                                                           .map(LedgerFormattingUtils::formatDate)
-                                                           .orElse(EMPTY)
-                                                       : EMPTY;
+        switch (purpose) {
+            case MARGIN:
+                return Stream.of(mapToMarginItem(participant, balance, margin, cashSettlement));
+            case CLEARING_DEPOSIT:
+                return mapToClearingDepositItems(participant, balance);
+            default:
+                return Stream.of(mapToPurposeItem(purpose, participant, balance));
+        }
+    }
 
+    private Stream<CollateralBalanceItem> mapToClearingDepositItems(final ParticipantEntity participant, final TotalBalance balance) {
+        final Optional<Pair<LocalDate, BigDecimal>> nextClearingDepositRequiredAmount = collateralRequirementProvider.getNextClearingDepositRequiredAmount(
+            participant.getId());
+
+        final CollateralBalanceItem clearingDepositItem = mapToPurposeItem(CLEARING_DEPOSIT, participant, balance);
+
+        return nextClearingDepositRequiredAmount
+            .map(nextRequiredAmount -> mapToNextClearingDepositItem(nextRequiredAmount, participant, balance))
+            .map(nextClearingDepositItem -> Stream.of(clearingDepositItem, nextClearingDepositItem))
+            .orElseGet(() -> Stream.of(clearingDepositItem));
+    }
+
+    private CollateralBalanceItem mapToNextClearingDepositItem(
+        final Pair<LocalDate, BigDecimal> nextClearingDepositRequiredAmount,
+        final ParticipantEntity participant,
+        final TotalBalance balance
+    ) {
+        return itemBuilder(participant)
+            .collateralPurpose(FOLLOWING_CLEARING_DEPOSIT_PURPOSE)
+            .requiredAmount(formatBigDecimalForceTwoDecimals(nextClearingDepositRequiredAmount.getSecond()))
+            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(balance.getTotal().subtract(nextClearingDepositRequiredAmount.getSecond())))
+            .followingApplicableDayForClearingDeposit(formatDate(nextClearingDepositRequiredAmount.getFirst()))
+            .orderId(getOrderId(participant, FOLLOWING_CLEARING_DEPOSIT_PURPOSE))
+            .build();
+    }
+
+    private CollateralBalanceItem mapToPurposeItem(
+        final CollateralPurpose purpose,
+        final ParticipantEntity participant,
+        final TotalBalance balance
+    ) {
+        final BigDecimal requiredAmount = collateralRequirementProvider.getRequiredAmount(participant.getId(), purpose).orElse(ZERO);
+        final BigDecimal totalExcessDeficit = balance.getTotal().subtract(requiredAmount);
+
+        return purposeItemBuilder(purpose, participant, balance)
+            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
+            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
+            .orderId(getOrderId(participant, purpose.name()))
+            .build();
+    }
+
+    private CollateralBalanceItem mapToMarginItem(
+        final ParticipantEntity participant,
+        final TotalBalance balance,
+        final Optional<EodParticipantMarginEntity> margin,
+        final Table<EodProductCashSettlementType, EodCashSettlementDateType, BigDecimal> cashSettlement
+    ) {
+        final BigDecimal requiredAmount = margin.map(EodParticipantMarginEntity::getRequiredAmount).orElse(ZERO);
+        final BigDecimal totalExcessDeficit = balance.getTotal().subtract(requiredAmount);
+
+        return purposeItemBuilder(MARGIN, participant, balance)
+            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
+            .totalInitialMargin(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getInitialMargin)))
+            .totalVariationMargin(formatBigDecimal(cashSettlement.get(TOTAL_VM, TOTAL)))
+            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
+            .deficitInCashSettlement(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getCashDeficit)))
+            .cashSettlement(formatBigDecimal(cashSettlement.get(TOTAL_VM, DAY)))
+            .cashSettlementFollowingDay(formatBigDecimal(cashSettlement.get(TOTAL_VM, FOLLOWING)))
+            .initialMtmTotal(formatBigDecimal(cashSettlement.get(INITIAL_MTM, TOTAL)))
+            .initialMtmDay(formatBigDecimal(cashSettlement.get(INITIAL_MTM, DAY)))
+            .initialMtmFollowingDay(formatBigDecimal(cashSettlement.get(INITIAL_MTM, FOLLOWING)))
+            .dailyMtmTotal(formatBigDecimal(cashSettlement.get(DAILY_MTM, TOTAL)))
+            .dailyMtmDay(formatBigDecimal(cashSettlement.get(DAILY_MTM, DAY)))
+            .dailyMtmFollowingDay(formatBigDecimal(cashSettlement.get(DAILY_MTM, FOLLOWING)))
+            .swapPointTotal(formatBigDecimal(cashSettlement.get(SWAP_PNL, TOTAL)))
+            .swapPointDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, DAY)))
+            .swapPointFollowingDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, FOLLOWING)))
+            .build();
+    }
+
+    private CollateralBalanceItem.CollateralBalanceItemBuilder itemBuilder(final ParticipantEntity participant) {
         return CollateralBalanceItem.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
@@ -115,40 +197,22 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .collateralPurposeType(purpose.getValue().toString())
-            .collateralPurpose(formatEnum(purpose))
-            .totalDeposit(balances.getOrDefault(purpose, ZERO_BALANCE).getTotal().toString())
-            .cash(balances.getOrDefault(purpose, ZERO_BALANCE).getCash().toString())
-            .lg(balances.getOrDefault(purpose, ZERO_BALANCE).getLg().toString())
-            .securities(balances.getOrDefault(purpose, ZERO_BALANCE).getSecurities().toString())
-            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
-            .totalInitialMargin(getFromMarginEntity(purpose, margin, EodParticipantMarginEntity::getInitialMargin))
-            .totalVariationMargin(getForMargin(purpose, cashSettlement.get(TOTAL_VM, TOTAL)))
-            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
-            .deficitInCashSettlement(getFromMarginEntity(purpose, margin, EodParticipantMarginEntity::getCashDeficit))
-            .cashSettlement(getForMargin(purpose, cashSettlement.get(TOTAL_VM, DAY)))
-            .cashSettlementFollowingDay(getForMargin(purpose, cashSettlement.get(TOTAL_VM, FOLLOWING)))
-            .initialMtmTotal(getForMargin(purpose, cashSettlement.get(INITIAL_MTM, TOTAL)))
-            .initialMtmDay(getForMargin(purpose, cashSettlement.get(INITIAL_MTM, DAY)))
-            .initialMtmFollowingDay(getForMargin(purpose, cashSettlement.get(INITIAL_MTM, FOLLOWING)))
-            .dailyMtmTotal(getForMargin(purpose, cashSettlement.get(DAILY_MTM, TOTAL)))
-            .dailyMtmDay(getForMargin(purpose, cashSettlement.get(DAILY_MTM, DAY)))
-            .dailyMtmFollowingDay(getForMargin(purpose, cashSettlement.get(DAILY_MTM, FOLLOWING)))
-            .swapPointTotal(getForMargin(purpose, cashSettlement.get(SWAP_PNL, TOTAL)))
-            .swapPointDay(getForMargin(purpose, cashSettlement.get(SWAP_PNL, DAY)))
-            .swapPointFollowingDay(getForMargin(purpose, cashSettlement.get(SWAP_PNL, FOLLOWING)))
-            .followingApplicableDayForClearingDeposit(applicableDayForClearingDeposit)
-            .build();
+            .recordType(ITEM_RECORD_TYPE);
     }
 
-    private Optional<BigDecimal> getRequiredAmount(
+    private CollateralBalanceItem.CollateralBalanceItemBuilder purposeItemBuilder(
         final CollateralPurpose purpose,
-        final Optional<EodParticipantMarginEntity> margin,
-        final ParticipantEntity participant
+        final ParticipantEntity participant,
+        final TotalBalance balance
     ) {
-        return purpose == MARGIN
-               ? margin.map(EodParticipantMarginEntity::getRequiredAmount)
-               : collateralRequirementProvider.getRequiredAmount(participant.getId(), purpose);
+        return itemBuilder(participant)
+            .collateralPurposeType(purpose.getValue().toString())
+            .collateralPurpose(formatEnum(purpose))
+            .totalDeposit(balance.getTotal().toString())
+            .cash(balance.getCash().toString())
+            .lg(balance.getLg().toString())
+            .securities(balance.getSecurities().toString())
+            .orderId(getOrderId(participant, purpose.name()));
     }
 
     private Map<CollateralPurpose, TotalBalance> calculateTotalBalances(final ParticipantEntity participant) {
@@ -176,16 +240,9 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             );
     }
 
-    private static String getFromMarginEntity(
-        final CollateralPurpose purpose,
-        final Optional<EodParticipantMarginEntity> margin,
-        final Function<EodParticipantMarginEntity, BigDecimal> amountMapper
-    ) {
-        return purpose == MARGIN ? formatBigDecimalForceTwoDecimals(margin.map(amountMapper)) : EMPTY;
-    }
-
-    private static String getForMargin(final CollateralPurpose purpose, final @Nullable BigDecimal value) {
-        return purpose == MARGIN ? formatBigDecimal(value) : EMPTY;
+    @SuppressWarnings("PMD.UselessStringValueOf")
+    private long getOrderId(final ParticipantEntity participantEntity, final String purpose) {
+        return Long.parseLong(String.valueOf(participantCodeOrderIdProvider.get(participantEntity.getCode())) + PURPOSE_ORDER_ID_MAP.get(purpose));
     }
 
 }
