@@ -26,7 +26,9 @@ INSERT INTO eod_ledger_collateral_balance(business_date,
                                           swap_point_total,
                                           swap_point_day,
                                           swap_point_following_day,
-                                          following_applicable_day_for_clearing_deposit)
+                                          following_applicable_day_for_clearing_deposit,
+                                          record_type,
+                                          order_id)
 VALUES (:businessDate,
         :tradeDate,
         :recordDate,
@@ -55,4 +57,6 @@ VALUES (:businessDate,
         :swapPointTotal,
         :swapPointDay,
         :swapPointFollowingDay,
-        :followingApplicableDayForClearingDeposit)
+        :followingApplicableDayForClearingDeposit,
+        :recordType,
+        :orderId)
