@@ -8,7 +8,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,7 +68,7 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
         final OpenPositionsListItemTotal totalOfSettlementDates = totals.values().stream()
             .reduce(OpenPositionsListItemTotal.ZERO, OpenPositionsListItemTotal::add);
 
-        final List<LocalDate> settlementDates = new ArrayList<>(totals.keySet());
+        final List<LocalDate> settlementDates = totals.keySet().stream().sorted().collect(Collectors.toList());
 
         return Stream.concat(
             Stream.of(mapToItem(participantCode, totalOfSettlementDates, totals.size(), TOTAL, null, recordType)),
