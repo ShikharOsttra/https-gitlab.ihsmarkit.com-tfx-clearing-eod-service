@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.model.ledger;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
@@ -11,24 +13,37 @@ import lombok.Value;
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
 public class OpenPositionsListItem {
+
     private final LocalDate businessDate;
-    private final String tradeDate;
-    private final String recordDate;
+    @Builder.Default
+    private final String tradeDate = EMPTY;
+    @Builder.Default
+    private final String recordDate = EMPTY;
     private final String participantCode;
     private final String participantName;
-    private final String participantType;
-    private final String currencyNo;
+    @Builder.Default
+    private final String participantType = EMPTY;
+    @Builder.Default
+    private final String currencyNo = EMPTY;
     private final String currencyCode;
-    private final String shortPositionPreviousDay;
-    private final String longPositionPreviousDay;
-    private final String sellTradingAmount;
-    private final String buyTradingAmount;
-    private final String shortPosition;
-    private final String longPosition;
+    @Builder.Default
+    private final String shortPositionPreviousDay = EMPTY;
+    @Builder.Default
+    private final String longPositionPreviousDay = EMPTY;
+    @Builder.Default
+    private final String sellTradingAmount = EMPTY;
+    @Builder.Default
+    private final String buyTradingAmount = EMPTY;
+    @Builder.Default
+    private final String shortPosition = EMPTY;
+    @Builder.Default
+    private final String longPosition = EMPTY;
     private final String initialMtmAmount;
     private final String dailyMtmAmount;
     private final String swapPoint;
     private final String totalVariationMargin;
     private final String settlementDate;
+    private final long orderId;
+    private final int recordType;
 }
 

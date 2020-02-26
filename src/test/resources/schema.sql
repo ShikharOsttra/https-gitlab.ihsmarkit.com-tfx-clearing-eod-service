@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS eod_ledger_open_position
     participant_name            varchar(255) not null,
     participant_type            varchar(3)   not null,
     currency_no                 varchar(3)   not null,
-    currency_pair               varchar(7)   not null,
+    currency_pair               varchar(21)  not null,
     short_position_previous_day varchar(30)  not null,
     long_position_previous_day  varchar(30)  not null,
     sell_trading_amount         varchar(30)  not null,
@@ -124,7 +124,9 @@ CREATE TABLE IF NOT EXISTS eod_ledger_open_position
     daily_mtm_amount            varchar(30)  not null,
     swap_point                  varchar(30)  not null,
     total_variation_margin      varchar(30)  not null,
-    settlement_date             varchar(30)  not null
+    settlement_date             varchar(30)  not null,
+    record_type                 int          not null,
+    order_id                    bigint       not null
 );
 
 CREATE TABLE IF NOT EXISTS eod_ledger_transaction_diary
