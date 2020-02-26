@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.repository.MarginAlertConfigurationRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
@@ -62,6 +63,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     private final EodParticipantMarginRepository eodParticipantMarginRepository;
 
     private final CollateralBalanceRepository collateralBalanceRepository;
+
+    private final MarginAlertConfigurationRepository marginAlertConfigurationRepository;
 
     private final ClockService clockService;
 
@@ -120,10 +123,17 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             );
 
         final var deposits = calculateDeposits(uniqueParticipantIds(requiredInitialMargin, variationMargins));
+        final var marginAlertConfigurationPerParticipant = marginAlertConfigurationRepository.findAll().stream()
+            .collect(Collectors.groupingBy(entity -> entity.getParticipant().getId()));
 
         final var participantMargin =
             eodCalculator
-                .calculateParticipantMargin(requiredInitialMargin, variationMargins, deposits)
+                .calculateParticipantMargin(
+                    requiredInitialMargin,
+                    variationMargins,
+                    deposits,
+                    marginAlertConfigurationPerParticipant
+                )
                 .map(marginEntry -> participantMarginMapper.toEntity(marginEntry, businessDate, clockService.getCurrentDateTimeUTC()));
 
         eodParticipantMarginRepository.saveAll(participantMargin::iterator);
