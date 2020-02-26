@@ -29,6 +29,7 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
+import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
@@ -58,6 +59,8 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
 
+    private final EvaluationDateProvider evaluationDateProvider;
+
     @Override
     public CollateralListItem process(final CollateralBalanceEntity balance) {
         final BigDecimal evaluatedAmount = collateralCalculator.calculateEvaluatedAmount(balance);
@@ -68,7 +71,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
         return CollateralListItem.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
-            .evaluationDate(formatDate(businessDate))
+            .evaluationDate(formatDate(evaluationDateProvider.get()))
             .recordDate(formatDateTime(recordDate))
             .participantCode(balance.getParticipant().getCode())
             .participantName(balance.getParticipant().getName())

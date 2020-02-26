@@ -26,28 +26,28 @@
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
 
-    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" variation_margin_settlement_date="2019-10-10"/>
-    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true" variation_margin_settlement_date="2019-11-11"/>
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-11-11"/>
 
     <trade
-            id="111"
-            transaction_type="1"
-            currency_pair_id="13"
-            product_code="EUR/USD"
-            trade_ref="some_ref"
-            activity="NEW"
-            originator_id="101"
-            counterparty_id="102"
-            direction="BUY"
-            base_ccy="EUR"
-            base_ccy_amt="1.17"
-            value_ccy="USD"
-            value_ccy_amt="2.11"
-            spot_rate="3.11"
-            matching_status="CONFIRMED"
-            clearing_status="NOVATED"
-            trade_date="2019-10-07"
-            value_date="2019-10-10"
+        id="111"
+        transaction_type="1"
+        currency_pair_id="13"
+        product_code="EUR/USD"
+        trade_ref="some_ref"
+        activity="NEW"
+        originator_id="101"
+        counterparty_id="102"
+        direction="BUY"
+        base_ccy="EUR"
+        base_ccy_amt="1.17"
+        value_ccy="USD"
+        value_ccy_amt="2.11"
+        spot_rate="3.11"
+        matching_status="CONFIRMED"
+        clearing_status="NOVATED"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
             execution_time="2019-03-06 22:00:00"
             source_system="GUI"
             submission_tsp="2019-03-06 16:00:00"

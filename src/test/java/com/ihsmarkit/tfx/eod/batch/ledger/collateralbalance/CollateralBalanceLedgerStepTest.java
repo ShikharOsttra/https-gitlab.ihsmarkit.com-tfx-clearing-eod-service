@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_BALANCE_LE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,8 @@ class CollateralBalanceLedgerStepTest extends AbstractSpringBatchTest {
         "/common/business_date_2019_1_1.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
+        "/common/currency.xml",
+        "/common/calendar.xml",
         "/eod2Job/CollateralBalanceLedger_setup.xml"
     })
     @ExpectedDatabase(value = "/eod2Job/CollateralBalanceLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
