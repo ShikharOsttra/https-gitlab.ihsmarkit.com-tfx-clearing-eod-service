@@ -19,7 +19,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants;
 import com.ihsmarkit.tfx.eod.batch.ledger.TotalSupplier;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
