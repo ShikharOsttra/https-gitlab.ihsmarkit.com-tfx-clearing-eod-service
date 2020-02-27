@@ -10,6 +10,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
 import static java.util.function.Function.identity;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
@@ -79,7 +80,7 @@ public class EODCalculator {
     private BigDecimal getJpyAmount(final CurrencyPairEntity currencyPair, final BigDecimal amount, final Function<String, BigDecimal> jpyRates) {
         return Optional.of(currencyPair)
             .map(CurrencyPairEntity::getValueCurrency)
-            .filter(Predicate.not(JPY::equals))
+            .filter(not(JPY::equals))
             .map(jpyRates)
             .map(amount::multiply)
             .orElse(amount);
@@ -419,33 +420,36 @@ public class EODCalculator {
         final Optional<BigDecimal> nextDaySettlement = dayCashSettlement.map(vm -> vm.get(FOLLOWING));
         final Optional<BigDecimal> cashCollateral = balance.map(BalanceContribution::getCashBalanceContribution);
         final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
-        final Optional<BigDecimal> totalDeficit = sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate));
-        final Optional<BigDecimal> requiredAmount = sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate));
-        final Optional<BigDecimal> effectiveMargin = calculateEffectiveMarginRatio(totalDeficit, requiredInitialMargin, requiredAmount);
+        final Optional<BigDecimal> effectiveMargin = calculateEffectiveMarginRatio(cashCollateral, logCollateral, pnl, requiredInitialMargin);
 
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
+            .marginRatio(effectiveMargin)
             .marginAlertLevel(toMarginAlertLevel(marginAlertConfigurations, effectiveMargin))
             .pnl(pnl)
             .cashCollateralAmount(cashCollateral)
             .logCollateralAmount(logCollateral)
             .todaySettlement(todaySettlement)
             .nextDaySettlement(nextDaySettlement)
-            .requiredAmount(requiredAmount)
-            .totalDeficit(totalDeficit)
+            .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
+            .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
             .cashDeficit(sumAll(cashCollateral, todaySettlement, requiredInitialMargin.map(BigDecimal::negate)))
             .build();
     }
 
     private static Optional<BigDecimal> calculateEffectiveMarginRatio(
-        final Optional<BigDecimal> totalDeficit,
-        final Optional<BigDecimal> requiredInitialMargin,
-        final Optional<BigDecimal> requiredAmount
+        final Optional<BigDecimal> cashCollateral,
+        final Optional<BigDecimal> logCollateral,
+        final Optional<BigDecimal> pnl,
+        final Optional<BigDecimal> initialMargin
     ) {
-        return totalDeficit
-            .flatMap(value -> requiredInitialMargin.map(value::add))
-            .flatMap(value -> requiredAmount.map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN)));
+        return cashCollateral
+            .flatMap(value -> logCollateral.map(value::add))
+            .flatMap(value -> pnl.map(value::add))
+            .flatMap(value -> initialMargin
+                .filter(not(ZERO::equals))
+                .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN)));
     }
 
     private static Optional<MarginAlertLevel> toMarginAlertLevel(
