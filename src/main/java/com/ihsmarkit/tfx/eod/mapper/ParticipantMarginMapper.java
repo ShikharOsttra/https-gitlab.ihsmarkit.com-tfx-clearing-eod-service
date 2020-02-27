@@ -1,10 +1,11 @@
 package com.ihsmarkit.tfx.eod.mapper;
 
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,6 +25,7 @@ public interface ParticipantMarginMapper {
     @Mapping(target = "participant", source = "margin.participant")
     @Mapping(target = "requiredAmount", source = "margin.requiredAmount", qualifiedByName = UNWRAP_BIG_DECIMAL)
     @Mapping(target = "initialMargin", source = "margin.initialMargin", qualifiedByName = UNWRAP_BIG_DECIMAL)
+    @Mapping(target = "marginRatio", source = "margin.marginRatio", qualifiedByName = UNWRAP_BIG_DECIMAL)
     @Mapping(target = "marginAlertLevel", source = "margin.marginAlertLevel", qualifiedByName = UNWRAP)
     @Mapping(target = "totalDeficit", source = "margin.totalDeficit", qualifiedByName = UNWRAP_BIG_DECIMAL)
     @Mapping(target = "cashDeficit", source = "margin.cashDeficit", qualifiedByName = UNWRAP_BIG_DECIMAL)

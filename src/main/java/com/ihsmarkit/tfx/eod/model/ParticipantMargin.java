@@ -14,6 +14,7 @@ import lombok.Getter;
 public class ParticipantMargin {
     private final ParticipantEntity participant;
     private final Optional<MarginAlertLevel> marginAlertLevel;
+    private final Optional<BigDecimal> marginRatio;
     private final Optional<BigDecimal> cashCollateralAmount;
     private final Optional<BigDecimal> logCollateralAmount;
     private final Optional<BigDecimal> pnl;
