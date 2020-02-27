@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
 
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,15 +46,16 @@ public class CollateralListTotalSupplier implements TotalSupplier<CollateralList
                 total.entrySet().stream()
                     .map(totalEntry -> mapToItem(totalEntry.getKey(), totalEntry.getValue(), PARTICIPANT_TOTAL_RECORD_TYPE)),
 
-                Stream.of(mapToItem(EMPTY, totalOfTotals, TOTAL_RECORD_TYPE))
+                Stream.of(mapToItem(null, totalOfTotals, TOTAL_RECORD_TYPE))
             ).collect(Collectors.toList());
     }
 
-    private CollateralListItem mapToItem(final String participantCode, final BigDecimal amount, final int recordType) {
+    private CollateralListItem mapToItem(@Nullable final String participantCode, final BigDecimal amount, final int recordType) {
         return CollateralListItem.builder()
             .businessDate(businessDate)
-            .participantName(LedgerConstants.TOTAL)
-            .participantCode(participantCode)
+            .participantName(recordType == TOTAL_RECORD_TYPE ? TOTAL : EMPTY)
+            .participantCode(recordType == PARTICIPANT_TOTAL_RECORD_TYPE ? participantCode : EMPTY)
+            .collateralPurposeType(recordType == PARTICIPANT_TOTAL_RECORD_TYPE ? TOTAL : EMPTY)
             .evaluatedAmount(amount.toString())
             .orderId(Long.MAX_VALUE)
             .recordType(recordType)

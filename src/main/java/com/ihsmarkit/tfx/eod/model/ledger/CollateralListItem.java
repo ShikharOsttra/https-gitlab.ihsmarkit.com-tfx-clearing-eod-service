@@ -23,8 +23,7 @@ public class CollateralListItem {
     private final String participantName;
     @Builder.Default
     private final String participantType = EMPTY;
-    @Builder.Default
-    private final String collateralPurposeType = EMPTY;
+    private final String collateralPurposeType;
     @Builder.Default
     private final String collateralPurpose = EMPTY;
     @Builder.Default
