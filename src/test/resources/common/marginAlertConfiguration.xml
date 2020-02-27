@@ -1,0 +1,18 @@
+<dataset>
+
+    <margin_alert_configuration id="1" participant_id="101" level="MAINTENANCE" trigger_level="200.00" action="NO_ACTION"/>
+    <margin_alert_configuration id="2" participant_id="101" level="ALERT" trigger_level="160.00" action="UI"/>
+    <margin_alert_configuration id="3" participant_id="101" level="HALT" trigger_level="140.00" action="EMAIL"/>
+    <margin_alert_configuration id="4" participant_id="101" level="LOSS_CUT" trigger_level="100.00" action="BOTH"/>
+
+    <margin_alert_configuration id="5" participant_id="102" level="MAINTENANCE" trigger_level="200.00" action="NO_ACTION"/>
+    <margin_alert_configuration id="6" participant_id="102" level="ALERT" trigger_level="160.00" action="UI"/>
+    <margin_alert_configuration id="7" participant_id="102" level="HALT" trigger_level="140.00" action="EMAIL"/>
+    <margin_alert_configuration id="8" participant_id="102" level="LOSS_CUT" trigger_level="100.00" action="BOTH"/>
+
+    <margin_alert_configuration id="9" participant_id="103" level="MAINTENANCE" trigger_level="200.00" action="NO_ACTION"/>
+    <margin_alert_configuration id="10" participant_id="103" level="ALERT" trigger_level="160.00" action="UI"/>
+    <margin_alert_configuration id="11" participant_id="103" level="HALT" trigger_level="140.00" action="EMAIL"/>
+    <margin_alert_configuration id="12" participant_id="103" level="LOSS_CUT" trigger_level="100.00" action="BOTH"/>
+
+</dataset>

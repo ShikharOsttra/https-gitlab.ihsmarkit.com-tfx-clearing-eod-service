@@ -20,6 +20,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
+import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
@@ -46,6 +48,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
+import com.ihsmarkit.tfx.core.domain.type.MarginAlertLevel;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -365,9 +368,12 @@ public class EODCalculator {
                 );
     }
 
-    public Stream<ParticipantMargin> calculateParticipantMargin(final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
-                                                                final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
-                                                                final Map<ParticipantEntity, BalanceContribution> deposits) {
+    public Stream<ParticipantMargin> calculateParticipantMargin(
+        final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
+        final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
+        final Map<ParticipantEntity, BalanceContribution> deposits,
+        final Map<Long, List<MarginAlertConfigurationEntity>> marginAlertConfigurationsProvider
+    ) {
         return Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
             .map(Map::keySet)
             .flatMap(Set::stream)
@@ -375,6 +381,8 @@ public class EODCalculator {
             .map(
                 participant -> createEodParticipantMargin(
                     participant,
+                    Optional.ofNullable(marginAlertConfigurationsProvider.get(participant.getId()))
+                        .orElseThrow(() -> new IllegalStateException("Unable to resolve margin alert configuration for participant: " + participant.getCode())),
                     Optional.ofNullable(requiredInitialMargin.get(participant)),
                     Optional.ofNullable(dayCashSettlement.get(participant)),
                     Optional.ofNullable(deposits.get(participant))
@@ -401,6 +409,7 @@ public class EODCalculator {
 
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
+        final List<MarginAlertConfigurationEntity> marginAlertConfigurations,
         final Optional<BigDecimal> requiredInitialMargin,
         final Optional<EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
         final Optional<BalanceContribution> balance) {
@@ -410,19 +419,44 @@ public class EODCalculator {
         final Optional<BigDecimal> nextDaySettlement = dayCashSettlement.map(vm -> vm.get(FOLLOWING));
         final Optional<BigDecimal> cashCollateral = balance.map(BalanceContribution::getCashBalanceContribution);
         final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
+        final Optional<BigDecimal> totalDeficit = sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate));
+        final Optional<BigDecimal> requiredAmount = sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate));
+        final Optional<BigDecimal> effectiveMargin = calculateEffectiveMarginRatio(totalDeficit, requiredInitialMargin, requiredAmount);
 
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
+            .marginAlertLevel(toMarginAlertLevel(marginAlertConfigurations, effectiveMargin))
             .pnl(pnl)
             .cashCollateralAmount(cashCollateral)
             .logCollateralAmount(logCollateral)
             .todaySettlement(todaySettlement)
             .nextDaySettlement(nextDaySettlement)
-            .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
-            .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
+            .requiredAmount(requiredAmount)
+            .totalDeficit(totalDeficit)
             .cashDeficit(sumAll(cashCollateral, todaySettlement, requiredInitialMargin.map(BigDecimal::negate)))
             .build();
+    }
+
+    private static Optional<BigDecimal> calculateEffectiveMarginRatio(
+        final Optional<BigDecimal> totalDeficit,
+        final Optional<BigDecimal> requiredInitialMargin,
+        final Optional<BigDecimal> requiredAmount
+    ) {
+        return totalDeficit
+            .flatMap(value -> requiredInitialMargin.map(value::add))
+            .flatMap(value -> requiredAmount.map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN)));
+    }
+
+    private static Optional<MarginAlertLevel> toMarginAlertLevel(
+        final List<MarginAlertConfigurationEntity> marginAlertConfigurations,
+        final Optional<BigDecimal> effectiveMargin
+    ) {
+        return effectiveMargin.flatMap(value -> marginAlertConfigurations.stream()
+            .filter(configuration -> configuration.getTriggerLevel().compareTo(value) <= 0)
+            .max(Comparator.comparing(MarginAlertConfigurationEntity::getTriggerLevel))
+            .map(MarginAlertConfigurationEntity::getLevel)
+        );
     }
 
     private static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
