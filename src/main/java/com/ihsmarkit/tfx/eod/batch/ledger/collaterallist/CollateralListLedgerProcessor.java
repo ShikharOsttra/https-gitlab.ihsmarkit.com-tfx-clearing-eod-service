@@ -66,7 +66,6 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
         final BigDecimal evaluatedAmount = collateralCalculator.calculateEvaluatedAmount(balance);
 
         total.compute(balance.getParticipant().getCode(), totalRemappingFunction(evaluatedAmount));
-        total.compute(EMPTY, totalRemappingFunction(evaluatedAmount));
 
         return CollateralListItem.builder()
             .businessDate(businessDate)

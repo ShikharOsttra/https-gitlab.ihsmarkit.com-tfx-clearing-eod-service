@@ -68,7 +68,6 @@ class CollateralListLedgerProcessorTest {
     void setUp() {
         total = new ConcurrentHashMap<>() {{
             put(PARTICIPANT_CODE, BigDecimal.valueOf(1200));
-            put(EMPTY, BigDecimal.valueOf(3000));
         }};
 
         processor = new CollateralListLedgerProcessor(
@@ -99,7 +98,6 @@ class CollateralListLedgerProcessorTest {
 
         assertThat(processor.process(balance)).isEqualTo(collateralListItem);
         assertThat(total.get(PARTICIPANT_CODE)).isEqualTo(BigDecimal.valueOf(2500));
-        assertThat(total.get(EMPTY)).isEqualTo(BigDecimal.valueOf(4300));
     }
 
     private static Stream collateralList() {

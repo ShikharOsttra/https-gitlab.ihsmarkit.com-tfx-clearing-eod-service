@@ -9,6 +9,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.REBALANCING;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,9 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsListItemTotal;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsListItemTotalKey;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -59,10 +64,14 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
 
+    @Value("#{stepExecutionContext['total']}")
+    private final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> total;
+
     private final ParticipantPositionRepository participantPositionRepository;
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
     private final FXSpotProductService fxSpotProductService;
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
+    private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
 
     @Override
     public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) {
@@ -80,13 +89,18 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
 
         final Optional<BigDecimal> eodPositionAmount = getPositionsSummed(positions, NET, REBALANCING);
 
+        final LocalDate settlementDate = tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair);
+        final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
+
+        addToToTotal(participant.getCode(), settlementDate, cashSettlements);
+
         return OpenPositionsListItem.builder()
             .businessDate(businessDate)
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
             .currencyCode(currencyPair.getCode())
-            .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
+            .currencyNo(productNumber)
             .tradeDate(formatDate(businessDate))
             .shortPositionPreviousDay(formatBigDecimal(shortPosition(getPosition(positions, SOD))))
             .longPositionPreviousDay(formatBigDecimal(longPosition(getPosition(positions, SOD))))
@@ -98,9 +112,32 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .dailyMtmAmount(formatBigDecimal(getMargin(cashSettlements, DAILY_MTM)))
             .swapPoint(formatBigDecimal(getMargin(cashSettlements, SWAP_PNL)))
             .totalVariationMargin(formatBigDecimal(getMargin(cashSettlements, TOTAL_VM)))
-            .settlementDate(formatDate(tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair)))
+            .settlementDate(formatDate(settlementDate))
             .recordDate(formatDateTime(recordDate))
+            .recordType(ITEM_RECORD_TYPE)
+            .orderId(Long.parseLong(participantCodeOrderIdProvider.get(participant.getCode()) + productNumber))
             .build();
+    }
+
+    private void addToToTotal(
+        final String participantCode,
+        final LocalDate settlementDate,
+        final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins
+    ) {
+        final OpenPositionsListItemTotal openPositionsListItemTotal = OpenPositionsListItemTotal.builder()
+            .initialMtmAmount(getMarginOrZero(margins, INITIAL_MTM))
+            .dailyMtmAmount(getMarginOrZero(margins, DAILY_MTM))
+            .swapPoint(getMarginOrZero(margins, SWAP_PNL))
+            .totalVariationMargin(getMarginOrZero(margins, TOTAL_VM))
+            .build();
+
+        total.compute(OpenPositionsListItemTotalKey.of(participantCode, settlementDate), totalRemappingFunction(openPositionsListItemTotal));
+    }
+
+    private static BiFunction<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal, OpenPositionsListItemTotal> totalRemappingFunction(
+        final OpenPositionsListItemTotal positionTotal
+    ) {
+        return (key, currentTotal) -> currentTotal == null ? positionTotal : currentTotal.add(positionTotal);
     }
 
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
@@ -111,11 +148,18 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
         return amount.map(ZERO::min).map(BigDecimal::negate).or(() -> Optional.of(ZERO));
     }
 
+    private static BigDecimal getMarginOrZero(
+        final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins,
+        final EodProductCashSettlementType cashSettlementType
+    ) {
+        return getMargin(margins, cashSettlementType).orElse(ZERO);
+    }
+
     private static Optional<BigDecimal> getMargin(
         final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins,
-        final EodProductCashSettlementType initialMtm
+        final EodProductCashSettlementType cashSettlementType
     ) {
-        return Optional.ofNullable(margins.get(initialMtm)).map(EodProductCashSettlementEntity::getAmount).map(AmountEntity::getValue);
+        return Optional.ofNullable(margins.get(cashSettlementType)).map(EodProductCashSettlementEntity::getAmount).map(AmountEntity::getValue);
     }
 
     private static Optional<BigDecimal> getPosition(
