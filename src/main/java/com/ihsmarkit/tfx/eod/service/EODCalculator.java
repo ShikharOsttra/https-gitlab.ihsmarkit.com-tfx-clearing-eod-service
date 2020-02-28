@@ -488,11 +488,11 @@ public class EODCalculator {
     }
 
     public static <T, R> Collector<T, ?, R> twoWayCollector(
-        final Predicate<T> isBuyPredicate,
+        final Predicate<T> splittingPredicate,
         final Function<T, BigDecimal> mapper,
         final BiFunction<BigDecimal, BigDecimal, R> finisher) {
         return collectingAndThen(
-            groupingBy(isBuyPredicate::test, summingBigDecimal(mapper)),
+            groupingBy(splittingPredicate::test, summingBigDecimal(mapper)),
             map -> finisher.apply(map.getOrDefault(Boolean.TRUE, ZERO), map.getOrDefault(Boolean.FALSE, ZERO))
         );
     }
