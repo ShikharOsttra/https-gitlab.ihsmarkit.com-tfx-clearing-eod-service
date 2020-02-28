@@ -108,6 +108,13 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
         eodCashSettlementRepository.saveAll(cashSettlement::iterator);
 
+//        final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins = aggregated.entrySet().stream()
+//            .flatMap(byParticipant ->
+//                Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
+//                    .map(totals -> Pair.of(byParticipant.getKey(), totals))
+//                    .stream()
+//            ).collect(toMap(Pair::getLeft, Pair::getRight));
+
         final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins = aggregated.entrySet().stream()
             .flatMap(byParticipant ->
                 Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
