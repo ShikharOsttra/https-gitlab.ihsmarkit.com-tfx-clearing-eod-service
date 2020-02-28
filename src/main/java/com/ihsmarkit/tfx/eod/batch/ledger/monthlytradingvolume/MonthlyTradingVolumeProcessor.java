@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -65,8 +64,8 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
 
     private MonthlyTradingVolumeItem mapToTradingVolumeModel(
         final ParticipantAndCurrencyPair item,
-        final Optional<BigDecimal> buyAmount,
-        final Optional<BigDecimal> sellAmount
+        final BigDecimal buyAmount,
+        final BigDecimal sellAmount
     ) {
         final Long tradingUnit = fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getTradingUnit();
 
@@ -84,10 +83,7 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
             .build();
     }
 
-    private String amountInUnit(final Optional<BigDecimal> amount, final Long tradingUnit) {
-        return amount.map(
-            value -> value.divide(BigDecimal.valueOf(tradingUnit), 0, RoundingMode.DOWN)
-        ).orElse(BigDecimal.ZERO)
-            .toString();
+    private String amountInUnit(final BigDecimal amount, final Long tradingUnit) {
+        return amount.divide(BigDecimal.valueOf(tradingUnit), 0, RoundingMode.DOWN).toString();
     }
 }

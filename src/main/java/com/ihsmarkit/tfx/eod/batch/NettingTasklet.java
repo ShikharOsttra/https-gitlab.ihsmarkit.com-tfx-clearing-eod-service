@@ -48,7 +48,7 @@ public class NettingTasklet implements Tasklet {
     private final LocalDate businessDate;
 
     @Override
-    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
         final Stream<ParticipantPositionEntity> positions =
