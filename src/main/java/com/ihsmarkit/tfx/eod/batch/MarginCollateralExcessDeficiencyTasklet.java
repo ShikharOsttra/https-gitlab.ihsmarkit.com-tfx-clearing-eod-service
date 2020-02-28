@@ -2,7 +2,6 @@ package com.ihsmarkit.tfx.eod.batch;
 
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
-import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,12 +9,10 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -47,6 +44,7 @@ import com.ihsmarkit.tfx.eod.service.MarginRatioService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import one.util.streamex.EntryStream;
 
 @Service
 @AllArgsConstructor
@@ -108,19 +106,10 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
         eodCashSettlementRepository.saveAll(cashSettlement::iterator);
 
-//        final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins = aggregated.entrySet().stream()
-//            .flatMap(byParticipant ->
-//                Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
-//                    .map(totals -> Pair.of(byParticipant.getKey(), totals))
-//                    .stream()
-//            ).collect(toMap(Pair::getLeft, Pair::getRight));
-
-        final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins = aggregated.entrySet().stream()
-            .flatMap(byParticipant ->
-                Optional.ofNullable(byParticipant.getValue().get(TOTAL_VM))
-                    .map(totals -> Pair.of(byParticipant.getKey(), totals))
-                    .stream()
-            ).collect(toMap(Pair::getLeft, Pair::getRight));
+        final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins =
+            EntryStream.of(aggregated)
+                .flatMapValues(byParticipant -> Stream.ofNullable(byParticipant.get(TOTAL_VM)))
+                .toMap();
 
         final var requiredInitialMargin = eodCalculator
             .calculateRequiredInitialMargin(
