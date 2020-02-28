@@ -33,6 +33,7 @@ import com.ihsmarkit.tfx.eod.service.PositionRebalancePublishingService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
+import one.util.streamex.EntryStream;
 
 @Service
 @RequiredArgsConstructor
@@ -71,45 +72,50 @@ public class RebalancingTasklet implements Tasklet {
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
 
-        final List<TradeEntity> trades = balanceTrades.entrySet().stream()
-            .flatMap(
-                tradesByCcy -> tradesByCcy.getValue().stream()
-                    .collect(
-                        Collectors.groupingBy(
-                            BalanceTrade::getOriginator,
+        final List<TradeEntity> trades = EntryStream.of(balanceTrades)
+            .flatMapKeyValue((currencyPair, tradesByCcy) ->
+                EntryStream.of(
+                    tradesByCcy.stream()
+                        .collect(
                             Collectors.groupingBy(
-                                BalanceTrade::getCounterparty,
-                                Streams.summingBigDecimal(BalanceTrade::getAmount)
+                                BalanceTrade::getOriginator,
+                                Collectors.groupingBy(
+                                    BalanceTrade::getCounterparty,
+                                    Streams.summingBigDecimal(BalanceTrade::getAmount)
+                                )
                             )
                         )
-                    ).entrySet().stream()
-                    .flatMap(
-                        byOriginator -> byOriginator.getValue().entrySet().stream()
-                            .flatMap(byCounterpart ->
-                                Stream.of(new BalanceTrade(byOriginator.getKey(), byCounterpart.getKey(), byCounterpart.getValue()),
-                                    new BalanceTrade(byCounterpart.getKey(), byOriginator.getKey(), byCounterpart.getValue().negate())))
-                    ).map(
-                        trade -> balanceTradeMapper.toTrade(
-                            trade,
-                            businessDate,
-                            tradeAndSettlementDateService.getValueDate(businessDate, tradesByCcy.getKey()),
-                            tradesByCcy.getKey(),
-                            dailySettlementPriceService.getPrice(businessDate, tradesByCcy.getKey())
+                )
+                    .flatMapKeyValue((originator, counterpartyAmounts) ->
+                        EntryStream.of(counterpartyAmounts)
+                            .flatMapKeyValue((counterparty, counterpartyAmount) ->
+                                Stream.of(
+                                    new BalanceTrade(originator, counterparty, counterpartyAmount),
+                                    new BalanceTrade(counterparty, originator, counterpartyAmount.negate())
+                                )
+                            )
+                    )
+                    .map(trade -> balanceTradeMapper.toTrade(
+                        trade,
+                        businessDate,
+                        tradeAndSettlementDateService.getValueDate(businessDate, currencyPair),
+                        currencyPair,
+                        dailySettlementPriceService.getPrice(businessDate, currencyPair)
                         )
                     )
-                )
+            )
             .collect(Collectors.toList());
 
         tradeRepositiory.saveAll(trades);
 
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
-            balanceTrades.entrySet().stream()
-                .flatMap(
-                    tradesByCcy -> tradesByCcy.getValue().stream()
+            EntryStream.of(balanceTrades)
+                .flatMapKeyValue((currencyPair, ccyPairTrades) ->
+                    ccyPairTrades.stream()
                         .flatMap(
                             trade -> Stream.of(
-                                ParticipantCurrencyPairAmount.of(trade.getOriginator(), tradesByCcy.getKey(), trade.getAmount()),
-                                ParticipantCurrencyPairAmount.of(trade.getCounterparty(), tradesByCcy.getKey(), trade.getAmount().negate())
+                                ParticipantCurrencyPairAmount.of(trade.getOriginator(), currencyPair, trade.getAmount()),
+                                ParticipantCurrencyPairAmount.of(trade.getCounterparty(), currencyPair, trade.getAmount().negate())
                             )
                         )
                 )

@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -20,10 +21,15 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Tables;
 import com.ihsmarkit.tfx.eod.batch.ledger.TotalSupplier;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
+import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 @StepScope
 @Component
@@ -38,21 +44,27 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
     @Value("#{stepExecutionContext['total']}")
     private final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> total;
 
+    @SuppressFBWarnings("PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS")
     @Override
     public List<OpenPositionsListItem> get() {
-        final var totalsPerParticipant = total.entrySet().stream().collect(
-            Collectors.groupingBy(
-                entry -> entry.getKey().getParticipantCode(),
-                Collectors.toMap(entry -> entry.getKey().getSettlementDate(), Map.Entry::getValue)
-            ));
+        final var totalsPerParticipant = EntryStream.of(total)
+            .collect(
+                Tables.toTable(
+                    entry -> entry.getKey().getParticipantCode(),
+                    entry -> entry.getKey().getSettlementDate(),
+                    Map.Entry::getValue,
+                    HashBasedTable::create
+                )
+            );
 
-        final var totalOfTotals = totalsPerParticipant.values().stream()
-            .flatMap(map -> map.entrySet().stream())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, OpenPositionsListItemTotal::add));
+        final var totalOfTotals = StreamEx.of(totalsPerParticipant.rowMap().values())
+            .flatMapToEntry(Function.identity())
+            .toMap(OpenPositionsListItemTotal::add);
 
         return Stream.concat(
 
-            totalsPerParticipant.entrySet().stream().flatMap(entry -> mapToTotalItems(entry.getKey(), entry.getValue(), PARTICIPANT_TOTAL_RECORD_TYPE)),
+            EntryStream.of(totalsPerParticipant.rowMap())
+                .flatMapKeyValue((participantCode, totals) -> mapToTotalItems(participantCode, totals, PARTICIPANT_TOTAL_RECORD_TYPE)),
 
             mapToTotalItems(EMPTY, totalOfTotals, TOTAL_RECORD_TYPE)
 
@@ -68,7 +80,9 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
         final OpenPositionsListItemTotal totalOfSettlementDates = totals.values().stream()
             .reduce(OpenPositionsListItemTotal.ZERO, OpenPositionsListItemTotal::add);
 
-        final List<LocalDate> settlementDates = totals.keySet().stream().sorted().collect(Collectors.toList());
+        final List<LocalDate> settlementDates = totals.keySet().stream()
+            .sorted()
+            .collect(Collectors.toList());
 
         return Stream.concat(
             Stream.of(mapToItem(participantCode, totalOfSettlementDates, totals.size(), TOTAL, null, recordType)),

@@ -89,18 +89,20 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
         final var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
 
-        final Stream<EodCashSettlementEntity> cashSettlement = aggregated.entrySet().stream()
-            .flatMap(
-                byParticipant -> byParticipant.getValue().entrySet().stream()
-                    .flatMap(byType -> byType.getValue().entrySet().stream()
-                        .map(
-                            byDateType -> CashSettlement.builder()
-                                .participant(byParticipant.getKey())
-                                .type(byType.getKey())
-                                .dateType(byDateType.getKey())
-                                .amount(byDateType.getValue())
-                                .build()
-                        ).map(settlement -> cashSettlementMapper.toEntity(settlement, businessDate, clockService.getCurrentDateTimeUTC()))
+        final Stream<EodCashSettlementEntity> cashSettlement = EntryStream.of(aggregated)
+            .flatMapKeyValue((participant, participantSettlements) ->
+                EntryStream.of(participantSettlements)
+                    .flatMapKeyValue((settlementType, settlements) ->
+                        EntryStream.of(settlements)
+                            .mapKeyValue((dateType, amount) ->
+                                CashSettlement.builder()
+                                    .participant(participant)
+                                    .type(settlementType)
+                                    .dateType(dateType)
+                                    .amount(amount)
+                                    .build()
+                            )
+                            .map(settlement -> cashSettlementMapper.toEntity(settlement, businessDate, clockService.getCurrentDateTimeUTC()))
                     )
             );
 

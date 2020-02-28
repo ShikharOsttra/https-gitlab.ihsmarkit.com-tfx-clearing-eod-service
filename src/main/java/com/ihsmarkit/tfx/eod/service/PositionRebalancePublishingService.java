@@ -39,14 +39,14 @@ public class PositionRebalancePublishingService {
         try {
             final Map<String, List<TradeEntity>> participantTradesMap = trades.stream().collect(
                 Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()));
-            getAllActiveLPs().
-                forEach(entry -> {
+            getAllActiveLPs()
+                .forEach(participant -> {
                     mailClient.sendEmailWithAttachments(
-                        String.format("%s rebalance results for %s", businessDate.toString(), entry.getCode()),
+                        String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()),
                         StringUtils.EMPTY,
-                        Arrays.asList(entry.getNotificationEmail().split(",")),
+                        Arrays.asList(participant.getNotificationEmail().split(",")),
                         List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(entry.getCode(), List.of())))));
+                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))));
                 });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());

@@ -245,9 +245,10 @@ public class EODCalculator {
     }
 
     private Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
-        return input.entrySet().stream()
-            .flatMap(participantBalance -> participantBalance.getValue().entrySet().stream()
-                .map(ccyPairBalances -> ParticipantCurrencyPairAmount.of(participantBalance.getKey(), ccyPairBalances.getKey(), ccyPairBalances.getValue()))
+        return EntryStream.of(input)
+            .flatMapKeyValue((participant, balances) ->
+                EntryStream.of(balances)
+                    .mapKeyValue((ccyPair, balance) -> ParticipantCurrencyPairAmount.of(participant, ccyPair, balance))
             );
     }
 
@@ -366,18 +367,18 @@ public class EODCalculator {
     public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions,
         final Map<CurrencyPairEntity, Long> thresholds) {
 
-        return positions
+        return EntryStream.of(
+            positions
             .map(tradeOrPositionMapper::convertPosition)
             .collect(groupingBy(
                 TradeOrPositionEssentials::getCurrencyPair,
                 Collectors.toList()
-            )).entrySet().stream()
-            .collect(
-                toMap(
-                    Map.Entry::getKey,
-                    entry -> rebalanceCalculator.rebalance(entry.getValue(), thresholds.get(entry.getKey()), DEFAULT_ROUNDING)
-                )
-            );
+            ))
+        )
+            .mapToValue((currencyPair, tradeOrPositionEssentials) ->
+                rebalanceCalculator.rebalance(tradeOrPositionEssentials, thresholds.get(currencyPair), DEFAULT_ROUNDING)
+            )
+            .toMap();
     }
 
     public Stream<ParticipantMargin> calculateParticipantMargin(

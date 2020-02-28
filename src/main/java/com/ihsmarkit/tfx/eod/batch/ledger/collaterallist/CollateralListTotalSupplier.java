@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
 
+import static com.ihsmarkit.tfx.common.streams.Streams.summingBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
@@ -23,6 +24,7 @@ import com.ihsmarkit.tfx.eod.batch.ledger.TotalSupplier;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.RequiredArgsConstructor;
+import one.util.streamex.EntryStream;
 
 @StepScope
 @RequiredArgsConstructor
@@ -37,13 +39,13 @@ public class CollateralListTotalSupplier implements TotalSupplier<CollateralList
 
     @Override
     public List<CollateralListItem> get() {
-        final BigDecimal totalOfTotals = total.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        final BigDecimal totalOfTotals = total.values().stream().collect(summingBigDecimal());
 
         return
             Stream.concat(
 
-                total.entrySet().stream()
-                    .map(totalEntry -> mapToItem(totalEntry.getKey(), totalEntry.getValue(), PARTICIPANT_TOTAL_RECORD_TYPE)),
+                EntryStream.of(total)
+                    .mapKeyValue((participantCode, amount) -> mapToItem(participantCode, amount, PARTICIPANT_TOTAL_RECORD_TYPE)),
 
                 Stream.of(mapToItem(null, totalOfTotals, TOTAL_RECORD_TYPE))
             ).collect(Collectors.toList());
