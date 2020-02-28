@@ -95,12 +95,13 @@ public class RebalancingTasklet implements Tasklet {
                                 )
                             )
                     )
-                    .map(trade -> balanceTradeMapper.toTrade(
-                        trade,
-                        businessDate,
-                        tradeAndSettlementDateService.getValueDate(businessDate, currencyPair),
-                        currencyPair,
-                        dailySettlementPriceService.getPrice(businessDate, currencyPair)
+                    .map(trade ->
+                        balanceTradeMapper.toTrade(
+                            trade,
+                            businessDate,
+                            tradeAndSettlementDateService.getValueDate(businessDate, currencyPair),
+                            currencyPair,
+                            dailySettlementPriceService.getPrice(businessDate, currencyPair)
                         )
                     )
             )
