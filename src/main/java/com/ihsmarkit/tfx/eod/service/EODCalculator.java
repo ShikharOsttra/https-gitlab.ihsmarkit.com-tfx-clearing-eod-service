@@ -10,10 +10,10 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
-import static java.util.function.Function.identity;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
 
@@ -32,13 +32,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
@@ -61,6 +58,8 @@ import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 import io.vavr.Function3;
+import io.vavr.Tuple;
+import io.vavr.Tuple3;
 import lombok.RequiredArgsConstructor;
 import one.util.streamex.EntryStream;
 
@@ -69,6 +68,8 @@ import one.util.streamex.EntryStream;
 @SuppressWarnings("PMD.TooManyMethods")
 public class EODCalculator {
 
+    private static final Tuple3<Optional<BigDecimal>, Optional<BigDecimal>, Optional<BigDecimal>> EMPTY_TUPLE3 =
+        Tuple.of(Optional.empty(), Optional.empty(), Optional.empty());
     private static final int DEFAULT_ROUNDING = 5;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
     private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
@@ -145,8 +146,7 @@ public class EODCalculator {
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
         final Function<String, BigDecimal> jpyRates) {
 
-        return Optional
-            .ofNullable(swapPointResolver.apply(trade.getCurrencyPair()))
+        return Optional.ofNullable(swapPointResolver.apply(trade.getCurrencyPair()))
             .map(swapPoint -> calc(trade, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
             .orElseGet(() -> ParticipantCurrencyPairAmount.of(trade.getParticipant(), trade.getCurrencyPair(), ZERO));
     }
@@ -156,8 +156,7 @@ public class EODCalculator {
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver,
         final Function<String, BigDecimal> jpyRates) {
 
-        return Optional
-            .ofNullable(swapPointResolver.apply(position.getCurrencyPair()))
+        return Optional.ofNullable(swapPointResolver.apply(position.getCurrencyPair()))
             .map(swapPoint -> calc(position, jpyRates, SWAP_POINT_UNIT.multiply(swapPoint)))
             .orElseGet(() -> ParticipantCurrencyPairAmount.of(position.getParticipant(), position.getCurrencyPair(), ZERO));
     }
@@ -202,7 +201,6 @@ public class EODCalculator {
         final Function<CurrencyPairEntity, BigDecimal> dsp,
         final Function<String, BigDecimal> jpyRates
     ) {
-
         return flatten(
             aggregate(
                 trades
@@ -227,25 +225,20 @@ public class EODCalculator {
         );
     }
 
-    private Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
-        return aggregate(input, reducing(ZERO, CcyParticipantAmount::getAmount, BigDecimal::add));
-    }
-
-    private <R> Map<ParticipantEntity, Map<CurrencyPairEntity, R>> aggregate(
-        final Stream<? extends CcyParticipantAmount> input,
-        final Collector<CcyParticipantAmount, ?, R> collector
-    ) {
-        return input
-            .collect(
-                groupingBy(
-                    CcyParticipantAmount::getParticipant,
-                    groupingBy(CcyParticipantAmount::getCurrencyPair, collector)
+    private EntryStream<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
+        return EntryStream.of(
+            input
+                .collect(
+                    groupingBy(
+                        CcyParticipantAmount::getParticipant,
+                        groupingBy(CcyParticipantAmount::getCurrencyPair, summingBigDecimal(CcyParticipantAmount::getAmount))
+                    )
                 )
-            );
+        );
     }
 
-    private Stream<ParticipantCurrencyPairAmount> flatten(final Map<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
-        return EntryStream.of(input)
+    private Stream<ParticipantCurrencyPairAmount> flatten(final EntryStream<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
+        return input
             .flatMapKeyValue((participant, balances) ->
                 EntryStream.of(balances)
                     .mapKeyValue((ccyPair, balance) -> ParticipantCurrencyPairAmount.of(participant, ccyPair, balance))
@@ -257,7 +250,7 @@ public class EODCalculator {
     }
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
-                            aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
+        aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
 
         final Optional<LocalDate> followingDate = margins.stream()
             .map(EodProductCashSettlementEntity::getSettlementDate)
@@ -273,7 +266,9 @@ public class EODCalculator {
                         () -> new EnumMap<>(EodProductCashSettlementType.class),
                         dateTypeCollector(
                             margin -> businessDate.isEqual(margin.getSettlementDate()),
-                            margin -> followingDate.map(date -> date.equals(margin.getSettlementDate())).orElse(Boolean.FALSE),
+                            margin -> followingDate
+                                .map(date -> date.equals(margin.getSettlementDate()))
+                                .orElse(Boolean.FALSE),
                             margin -> margin.getAmount().getValue(),
                             EODCalculator::marginMap
                         )
@@ -290,18 +285,25 @@ public class EODCalculator {
 
         return collectingAndThen(
             reducing(
-                ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty()),
-                o -> dayPredicate.test(o)
-                    ? ImmutableTriple.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty())
-                    : followingPredicate.test(o)
-                        ? ImmutableTriple.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
-                        : ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)),
-                (a, b) -> ImmutableTriple.of(sumAll(a.left, b.left), sumAll(a.middle, b.middle), sumAll(a.right, b.right))
+                EMPTY_TUPLE3,
+                item -> {
+                    final Optional<BigDecimal> value = mapper.andThen(Optional::of).apply(item);
+                    return dayPredicate.test(item)
+                        ? EMPTY_TUPLE3.update1(value)
+                        : followingPredicate.test(item)
+                            ? EMPTY_TUPLE3.update2(value)
+                            : EMPTY_TUPLE3.update3(value);
+                },
+                (prev, next) ->
+                    Tuple.of(
+                        sumAll(prev._1(), next._1()),
+                        sumAll(prev._2(), next._2()),
+                        sumAll(prev._3(), next._3())
+                    )
             ),
-            res -> finisher.apply(res.left, res.middle, res.right)
+            result -> result.apply(finisher)
         );
     }
-
 
     private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following,
         final Optional<BigDecimal> future) {
@@ -311,8 +313,8 @@ public class EODCalculator {
                 DAY, day,
                 FOLLOWING, following
             )
-            .flatMapValues(Optional::stream)
-            .toMap()
+                .flatMapValues(Optional::stream)
+                .toMap()
         );
     }
 
@@ -327,32 +329,46 @@ public class EODCalculator {
 
         return mergeAndFlatten(
             positions.collect(
-                toMap(pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()), CcyParticipantAmount::getAmount)
+                toMap(
+                    position -> new ParticipantAndCurrencyPair(position.getParticipant(), position.getCurrencyPair()),
+                    CcyParticipantAmount::getAmount
+                )
             ),
             tradesToNet.collect(
                 groupingBy(
-                    pos -> new ParticipantAndCurrencyPair(pos.getParticipant(), pos.getCurrencyPair()),
+                    tradeToNet -> new ParticipantAndCurrencyPair(tradeToNet.getParticipant(), tradeToNet.getCurrencyPair()),
                     twoWayCollector(
-                        ccyParticipantAmount -> ccyParticipantAmount.getAmount().compareTo(ZERO) > 0,
+                        tradeToNet -> tradeToNet.getAmount().compareTo(ZERO) > 0,
                         CcyParticipantAmount::getAmount,
                         BuySellAmounts::new
                     )
                 )
             ),
-            (key, sod, buySell) ->
-                Stream.of(
+            (key, sod, buySell) -> {
+                final var participant = key.getParticipant();
+                final var currencyPair = key.getCurrencyPair();
+                return Stream.of(
                     buySell
                         .map(BuySellAmounts::getBuy)
                         .filter(EODCalculator::isNotEqualToZero)
-                        .map(buy -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), buy, BUY)),
+                        .map(buy -> ParticipantPosition.of(participant, currencyPair, buy, BUY)),
                     buySell
                         .map(BuySellAmounts::getSell)
                         .filter(EODCalculator::isNotEqualToZero)
-                        .map(sell -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), sell, SELL)),
-                    sumAll(buySell.map(BuySellAmounts::getBuy), buySell.map(BuySellAmounts::getSell), sod)
-                        .map(net -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), net, NET))
-                ).flatMap(Optional::stream)
-        ).flatMap(identity());
+                        .map(sell -> ParticipantPosition.of(participant, currencyPair, sell, SELL)),
+                    sumAll(
+                        buySell
+                            .map(BuySellAmounts::getBuy),
+                        buySell
+                            .map(BuySellAmounts::getSell),
+                        sod
+                    )
+                        .map(net -> ParticipantPosition.of(participant, currencyPair, net, NET))
+                )
+                    .flatMap(Optional::stream);
+            }
+        )
+            .flatMap(Function.identity());
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
@@ -361,7 +377,7 @@ public class EODCalculator {
 
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
-            .map(t -> calculateMtmValue(t, dsp, jpyRates));
+            .map(tradeOrPositionEssentials -> calculateMtmValue(tradeOrPositionEssentials, dsp, jpyRates));
     }
 
     public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions,
@@ -369,11 +385,8 @@ public class EODCalculator {
 
         return EntryStream.of(
             positions
-            .map(tradeOrPositionMapper::convertPosition)
-            .collect(groupingBy(
-                TradeOrPositionEssentials::getCurrencyPair,
-                Collectors.toList()
-            ))
+                .map(tradeOrPositionMapper::convertPosition)
+                .collect(groupingBy(TradeOrPositionEssentials::getCurrencyPair))
         )
             .mapToValue((currencyPair, tradeOrPositionEssentials) ->
                 rebalanceCalculator.rebalance(tradeOrPositionEssentials, thresholds.get(currencyPair), DEFAULT_ROUNDING)
@@ -461,7 +474,8 @@ public class EODCalculator {
             .flatMap(value -> pnl.map(value::add))
             .flatMap(value -> initialMargin
                 .filter(not(ZERO::equals))
-                .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN)));
+                .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
+            );
     }
 
     private static Optional<MarginAlertLevel> toMarginAlertLevel(
@@ -475,11 +489,13 @@ public class EODCalculator {
         );
     }
 
-    private static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Merger<K, T, L, R> merger) {
-        return Streams.concat(left.keySet().stream(), right.keySet().stream())
+    private static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Function3<K, Optional<L>, Optional<R>, T> merger) {
+        return Stream.of(left, right)
+            .map(Map::keySet)
+            .flatMap(Collection::stream)
             .distinct()
             .map(
-                key -> merger.merge(
+                key -> merger.apply(
                     key,
                     Optional.ofNullable(left.get(key)),
                     Optional.ofNullable(right.get(key))
@@ -492,11 +508,15 @@ public class EODCalculator {
         final Function<T, BigDecimal> mapper,
         final BiFunction<BigDecimal, BigDecimal, R> finisher) {
         return collectingAndThen(
-            groupingBy(splittingPredicate::test, summingBigDecimal(mapper)),
-            map -> finisher.apply(map.getOrDefault(Boolean.TRUE, ZERO), map.getOrDefault(Boolean.FALSE, ZERO))
+            partitioningBy(splittingPredicate, summingBigDecimal(mapper)),
+            map -> finisher.apply(
+                map.getOrDefault(Boolean.TRUE, ZERO),
+                map.getOrDefault(Boolean.FALSE, ZERO)
+            )
         );
     }
 
+    @SafeVarargs
     private static Optional<BigDecimal> sumAll(final Optional<BigDecimal>... values) {
         return Arrays.stream(values)
             .flatMap(Optional::stream)
@@ -509,11 +529,5 @@ public class EODCalculator {
 
     private static boolean isEqualToZero(final BigDecimal value) {
         return ZERO.compareTo(value) == 0;
-    }
-
-    @FunctionalInterface
-    interface Merger<K, T, L, R> {
-
-        T merge(K key, Optional<L> left, Optional<R> right);
     }
 }
