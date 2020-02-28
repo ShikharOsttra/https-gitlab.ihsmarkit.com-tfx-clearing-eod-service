@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.common.streams.Streams.summingBigDecimal;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
@@ -288,10 +289,10 @@ public class EODCalculator {
             reducing(
                 ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty()),
                 o -> dayPredicate.test(o)
-                     ? ImmutableTriple.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty())
-                     : followingPredicate.test(o)
-                       ? ImmutableTriple.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
-                       : ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)),
+                    ? ImmutableTriple.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty())
+                    : followingPredicate.test(o)
+                        ? ImmutableTriple.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
+                        : ImmutableTriple.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)),
                 (a, b) -> ImmutableTriple.of(sumAll(a.left, b.left), sumAll(a.middle, b.middle), sumAll(a.right, b.right))
             ),
             res -> finisher.apply(res.left, res.middle, res.right)
@@ -300,7 +301,7 @@ public class EODCalculator {
 
 
     private static EnumMap<EodCashSettlementDateType, BigDecimal> marginMap(final Optional<BigDecimal> day, final Optional<BigDecimal> following,
-                                                                            final Optional<BigDecimal> future) {
+        final Optional<BigDecimal> future) {
         return new EnumMap<EodCashSettlementDateType, BigDecimal>(
             Stream.of(
                 sumAll(day, future, following).map(margin -> Pair.of(TOTAL, margin)),
@@ -335,17 +336,23 @@ public class EODCalculator {
             ),
             (key, sod, buySell) ->
                 Stream.of(
-                    buySell.flatMap(BuySellAmounts::getBuy).map(buy -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), buy, BUY)),
-                    buySell.flatMap(BuySellAmounts::getSell).map(sell -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), sell, SELL)),
-                    sumAll(buySell.flatMap(BuySellAmounts::getBuy), buySell.flatMap(BuySellAmounts::getSell), sod)
+                    buySell
+                        .map(BuySellAmounts::getBuy)
+                        .filter(EODCalculator::isNotEqualToZero)
+                        .map(buy -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), buy, BUY)),
+                    buySell
+                        .map(BuySellAmounts::getSell)
+                        .filter(EODCalculator::isNotEqualToZero)
+                        .map(sell -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), sell, SELL)),
+                    sumAll(buySell.map(BuySellAmounts::getBuy), buySell.map(BuySellAmounts::getSell), sod)
                         .map(net -> ParticipantPosition.of(key.getParticipant(), key.getCurrencyPair(), net, NET))
                 ).flatMap(Optional::stream)
         ).flatMap(identity());
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
-                                                                               final Function<CurrencyPairEntity, BigDecimal> dsp,
-                                                                               final Function<String, BigDecimal> jpyRates) {
+        final Function<CurrencyPairEntity, BigDecimal> dsp,
+        final Function<String, BigDecimal> jpyRates) {
 
         return positions.stream()
             .map(tradeOrPositionMapper::convertPosition)
@@ -353,7 +360,7 @@ public class EODCalculator {
     }
 
     public Map<CurrencyPairEntity, List<BalanceTrade>> rebalanceLPPositions(final Stream<ParticipantPositionEntity> positions,
-                                                                            final Map<CurrencyPairEntity, Long> thresholds) {
+        final Map<CurrencyPairEntity, Long> thresholds) {
 
         return positions
             .map(tradeOrPositionMapper::convertPosition)
@@ -361,12 +368,12 @@ public class EODCalculator {
                 TradeOrPositionEssentials::getCurrencyPair,
                 Collectors.toList()
             )).entrySet().stream()
-                .collect(
-                    toMap(
-                        Map.Entry::getKey,
-                        entry -> rebalanceCalculator.rebalance(entry.getValue(), thresholds.get(entry.getKey()), DEFAULT_ROUNDING)
-                    )
-                );
+            .collect(
+                toMap(
+                    Map.Entry::getKey,
+                    entry -> rebalanceCalculator.rebalance(entry.getValue(), thresholds.get(entry.getKey()), DEFAULT_ROUNDING)
+                )
+            );
     }
 
     public Stream<ParticipantMargin> calculateParticipantMargin(
@@ -401,7 +408,7 @@ public class EODCalculator {
                 twoWayCollector(
                     balance -> balance.getProduct().getType() == CASH,
                     evaluator,
-                    (cash, nonCash) -> new BalanceContribution(nonCash.orElse(ZERO), cash.orElse(ZERO))
+                    BalanceContribution::new
                 )
             )
         );
@@ -476,32 +483,32 @@ public class EODCalculator {
     }
 
     public static <T, R> Collector<T, ?, R> twoWayCollector(
-        final Predicate<T> predicate,
+        final Predicate<T> isBuyPredicate,
         final Function<T, BigDecimal> mapper,
-        final BiFunction<Optional<BigDecimal>, Optional<BigDecimal>, R> finisher) {
-
+        final BiFunction<BigDecimal, BigDecimal, R> finisher) {
         return collectingAndThen(
-            reducing(
-                ImmutablePair.of(Optional.<BigDecimal>empty(), Optional.<BigDecimal>empty()),
-                o -> predicate.test(o)
-                    ? ImmutablePair.of(mapper.andThen(Optional::of).apply(o), Optional.<BigDecimal>empty())
-                    : ImmutablePair.of(Optional.<BigDecimal>empty(), mapper.andThen(Optional::of).apply(o)
-                ),
-                (a, b) -> ImmutablePair.of(sumAll(a.getLeft(), b.getLeft()), sumAll(a.getRight(), b.getRight()))
-            ),
-            res -> finisher.apply(res.getLeft(), res.getRight())
+            groupingBy(isBuyPredicate::test, summingBigDecimal(mapper)),
+            map -> finisher.apply(map.getOrDefault(Boolean.TRUE, ZERO), map.getOrDefault(Boolean.FALSE, ZERO))
         );
     }
 
-    private static Optional<BigDecimal> sumAll(final Optional<BigDecimal>...values) {
-        return Arrays
-            .stream(values)
+    private static Optional<BigDecimal> sumAll(final Optional<BigDecimal>... values) {
+        return Arrays.stream(values)
             .flatMap(Optional::stream)
             .reduce(BigDecimal::add);
     }
 
+    private static boolean isNotEqualToZero(final BigDecimal value) {
+        return !isEqualToZero(value);
+    }
+
+    private static boolean isEqualToZero(final BigDecimal value) {
+        return ZERO.compareTo(value) == 0;
+    }
+
     @FunctionalInterface
     interface Merger<K, T, L, R> {
+
         T merge(K key, Optional<L> left, Optional<R> right);
     }
 }
