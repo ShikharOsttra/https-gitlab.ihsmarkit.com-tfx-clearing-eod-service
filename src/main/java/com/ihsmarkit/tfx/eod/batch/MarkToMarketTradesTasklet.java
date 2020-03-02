@@ -2,7 +2,6 @@ package com.ihsmarkit.tfx.eod.batch;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -63,7 +62,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
             eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
                 .map(eodCashSettlementMappingService::mapInitialMtm);
 
-        final Collection<ParticipantPositionEntity> positions =
+        final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
         final Stream<EodProductCashSettlementEntity> daily =

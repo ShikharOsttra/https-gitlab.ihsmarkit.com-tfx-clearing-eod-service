@@ -51,12 +51,11 @@ public class NettingTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
-        final Stream<ParticipantPositionEntity> positions =
-            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
-            .stream();
+        final Stream<ParticipantPositionEntity> sodParticipantPositions =
+            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
         final Stream<TradeOrPositionEssentials> tradesToNet = novatedTrades.map(tradeOrPositionMapper::convertTrade);
-        final Stream<TradeOrPositionEssentials> sodPositions = positions.map(tradeOrPositionMapper::convertPosition);
+        final Stream<TradeOrPositionEssentials> sodPositions = sodParticipantPositions.map(tradeOrPositionMapper::convertPosition);
 
         final Stream<ParticipantPositionEntity> netted = eodCalculator.netAllByBuySell(tradesToNet, sodPositions)
             .map(position -> participantCurrencyPairAmountMapper.toParticipantPosition(

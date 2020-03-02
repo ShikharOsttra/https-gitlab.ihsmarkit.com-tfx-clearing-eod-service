@@ -15,7 +15,6 @@ import static java.math.RoundingMode.FLOOR;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -168,8 +167,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         return
             EntryStream.of(
                 Stream.of(ParticipantPositionType.NET, ParticipantPositionType.REBALANCING)
-                    .map(positionType -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(positionType, businessDate))
-                    .flatMap(Collection::stream)
+                    .flatMap(positionType -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(positionType, businessDate))
                     .collect(
                         Collectors.groupingBy(
                             item -> item.getCurrencyPair().getCode(),
@@ -180,8 +178,9 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                         )
                     )
             )
-                .mapValues(value ->
-                    value.values().stream()
+                .mapValues(Map::values)
+                .mapValues(values ->
+                    values.stream()
                         .map(ZERO::min)
                         .collect(Streams.summingBigDecimal(BigDecimal::abs))
                 )

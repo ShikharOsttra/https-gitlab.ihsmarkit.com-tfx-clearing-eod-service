@@ -22,14 +22,15 @@ public class SODPricesProvider {
 
     public SODPricesProvider(@Value("#{jobParameters['businessDate']}") final LocalDate businessDate,
         final ParticipantPositionRepository participantPositionRepository) {
-        this.prices = Lazy.of(() -> participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
-            .stream()
-            .collect(Tables.toTable(
-                participantPosition -> participantPosition.getParticipant().getCode(),
-                participantPosition -> participantPosition.getCurrencyPair().getCode(),
-                participantPosition -> participantPosition.getPrice().toString(),
-                HashBasedTable::create
-            )));
+        this.prices = Lazy.of(() ->
+            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
+                .collect(Tables.toTable(
+                    participantPosition -> participantPosition.getParticipant().getCode(),
+                    participantPosition -> participantPosition.getCurrencyPair().getCode(),
+                    participantPosition -> participantPosition.getPrice().toString(),
+                    HashBasedTable::create
+                ))
+        );
     }
 
     public Optional<String> getPrice(final String participantCode, final String currencyPairCode) {

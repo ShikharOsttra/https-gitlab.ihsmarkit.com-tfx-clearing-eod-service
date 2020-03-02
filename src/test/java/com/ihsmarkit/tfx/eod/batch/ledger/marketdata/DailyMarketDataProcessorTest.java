@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -147,18 +148,20 @@ class DailyMarketDataProcessorTest {
 
     private void mockOpenPositionAmount() {
         when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
-            .thenReturn(List.of(
-                ParticipantPositionEntity.builder()
-                    .currencyPair(currencyPair("USD", "JPY"))
-                    .amount(AmountEntity.of(new BigDecimal("1111"), "JPY"))
-                    .participant(PARTICIPANT)
-                    .build(),
-                ParticipantPositionEntity.builder()
-                    .currencyPair(currencyPair("EUR", "JPY"))
-                    .amount(AmountEntity.of(new BigDecimal("-2222"), "JPY"))
-                    .participant(PARTICIPANT)
-                    .build()
-            ));
+            .thenAnswer(invocation ->
+                Stream.of(
+                    ParticipantPositionEntity.builder()
+                        .currencyPair(currencyPair("USD", "JPY"))
+                        .amount(AmountEntity.of(new BigDecimal("1111"), "JPY"))
+                        .participant(PARTICIPANT)
+                        .build(),
+                    ParticipantPositionEntity.builder()
+                        .currencyPair(currencyPair("EUR", "JPY"))
+                        .amount(AmountEntity.of(new BigDecimal("-2222"), "JPY"))
+                        .participant(PARTICIPANT)
+                        .build()
+                )
+            );
     }
 
     private void mockTradingUnit() {

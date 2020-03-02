@@ -371,11 +371,11 @@ public class EODCalculator {
             .flatMap(Function.identity());
     }
 
-    public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Collection<ParticipantPositionEntity> positions,
+    public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Stream<ParticipantPositionEntity> positions,
         final Function<CurrencyPairEntity, BigDecimal> dsp,
         final Function<String, BigDecimal> jpyRates) {
 
-        return positions.stream()
+        return positions
             .map(tradeOrPositionMapper::convertPosition)
             .map(tradeOrPositionEssentials -> calculateMtmValue(tradeOrPositionEssentials, dsp, jpyRates));
     }

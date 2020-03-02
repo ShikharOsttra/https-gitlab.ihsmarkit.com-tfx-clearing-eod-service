@@ -271,7 +271,7 @@ class EODCalculatorTest {
     @Test
     void shouldCalculateAndAggregateMultiplePositions() {
         Stream<ParticipantCurrencyPairAmount> mtm =
-            eodCalculator.calculateAndAggregateDailyMtm(List.of(A_POS_EUR_L_100K, A_POS_USD_L_100K), PRICE_MAP::get, JPY_PRICE_MAP::get);
+            eodCalculator.calculateAndAggregateDailyMtm(Stream.of(A_POS_EUR_L_100K, A_POS_USD_L_100K), PRICE_MAP::get, JPY_PRICE_MAP::get);
 
         assertThat(mtm)
             .extracting(

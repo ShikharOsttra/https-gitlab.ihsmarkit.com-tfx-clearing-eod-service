@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -119,13 +118,11 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_USD)).thenReturn(VALUE_DATE);
         when(tradeAndSettlementDateService.getValueDate(BUSINESS_DATE, CURRENCY_PAIR_JPY)).thenReturn(VALUE_DATE);
 
-        when(tradeRepository.findAllNovatedForTradeDate(any())).thenReturn(
-            Stream.of(A_BUYS_20_USD, A_SELLS_10_USD)
-        );
+        when(tradeRepository.findAllNovatedForTradeDate(any()))
+            .thenReturn(Stream.of(A_BUYS_20_USD, A_SELLS_10_USD));
 
-        when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any())).thenReturn(
-            List.of(POSITION)
-        );
+        when(participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(any(), any()))
+            .thenReturn(Stream.of(POSITION));
 
         when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR_USD))
             .thenReturn(BigDecimal.valueOf(2));

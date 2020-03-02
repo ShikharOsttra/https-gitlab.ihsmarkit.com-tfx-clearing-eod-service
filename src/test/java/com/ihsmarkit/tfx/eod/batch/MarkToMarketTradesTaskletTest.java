@@ -19,7 +19,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -103,7 +102,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
     private Stream<TradeEntity> trades;
 
     @Mock
-    private Collection<ParticipantPositionEntity> positions;
+    private Stream<ParticipantPositionEntity> positions;
 
     @Test
     void shouldCalculateAndStoreDailyAndInitialMtm() {
