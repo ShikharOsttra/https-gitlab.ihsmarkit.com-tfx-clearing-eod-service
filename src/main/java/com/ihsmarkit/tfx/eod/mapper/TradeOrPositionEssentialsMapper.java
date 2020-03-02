@@ -17,7 +17,6 @@ public interface TradeOrPositionEssentialsMapper {
 
     String BASE_AMOUNT_TO_SIGNED_VALUE_MAPPER = "mapBaseAmountToSignedValue";
 
-    @SuppressWarnings("checkstyle:LineLength")
     @Mapping(target = "currencyPair", source = "currencyPair")
     @Mapping(target = "participant", source = "originator.participant")
     @Mapping(target = "amount", source = "trade", qualifiedByName = BASE_AMOUNT_TO_SIGNED_VALUE_MAPPER)

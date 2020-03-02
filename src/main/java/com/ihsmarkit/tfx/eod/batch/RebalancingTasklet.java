@@ -120,13 +120,14 @@ public class RebalancingTasklet implements Tasklet {
                             )
                         )
                 )
-        ).map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
-            trade,
-            ParticipantPositionType.REBALANCING,
-            businessDate,
-            tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
-            dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
-        ));
+        )
+            .map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
+                trade,
+                ParticipantPositionType.REBALANCING,
+                businessDate,
+                tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
+                dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
+            ));
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
         publishingService.publishTrades(businessDate, trades);

@@ -44,17 +44,16 @@ public class PositionRollTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
-        final Stream<ParticipantPositionEntity> aggregated = eodCalculator
-            .aggregatePositions(
-                participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate)
-            ).map(this::mapToParticipantPositionEntity);
+        final Stream<ParticipantPositionEntity> aggregatedSodPositions = eodCalculator
+            .aggregatePositions(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate))
+            .map(this::mapToSodParticipantPositionEntity);
 
-        participantPositionRepository.saveAll(aggregated::iterator);
+        participantPositionRepository.saveAll(aggregatedSodPositions::iterator);
 
         return RepeatStatus.FINISHED;
     }
 
-    private ParticipantPositionEntity mapToParticipantPositionEntity(final ParticipantCurrencyPairAmount position) {
+    private ParticipantPositionEntity mapToSodParticipantPositionEntity(final ParticipantCurrencyPairAmount position) {
 
         final CurrencyPairEntity currencyPair = position.getCurrencyPair();
         final LocalDate nextDate = tradeAndSettlementDateService.getNextTradeDate(businessDate, currencyPair);
