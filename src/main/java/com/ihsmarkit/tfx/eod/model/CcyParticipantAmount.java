@@ -5,11 +5,23 @@ import java.math.BigDecimal;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 
-public interface CcyParticipantAmount {
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-    CurrencyPairEntity getCurrencyPair();
+@SuppressWarnings({ "PMD.AbstractClassWithoutAbstractMethod", "PMD.AbstractClassWithoutAnyMethod" })
+@SuperBuilder
+@Getter
+@ToString
+public abstract class CcyParticipantAmount {
 
-    ParticipantEntity getParticipant();
+    @NonNull
+    private final ParticipantEntity participant;
 
-    BigDecimal getAmount();
+    @NonNull
+    private final CurrencyPairEntity currencyPair;
+
+    @NonNull
+    private final  BigDecimal amount;
 }

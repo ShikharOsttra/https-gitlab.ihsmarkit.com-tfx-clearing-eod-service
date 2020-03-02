@@ -6,22 +6,26 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 
-import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-@RequiredArgsConstructor(staticName = "of")
-@Builder
+@SuperBuilder
 @Getter
-@ToString
-public class ParticipantPosition implements CcyParticipantAmount {
+@ToString(callSuper = true)
+public final class ParticipantPosition extends CcyParticipantAmount {
 
-    private final ParticipantEntity participant;
-
-    private final CurrencyPairEntity currencyPair;
-
-    private final BigDecimal amount;
-
+    @NonNull
     private final ParticipantPositionType type;
+
+    public static ParticipantPosition of(final ParticipantEntity participant, final CurrencyPairEntity currencyPair, final BigDecimal amount,
+        final ParticipantPositionType type) {
+        return builder()
+            .participant(participant)
+            .currencyPair(currencyPair)
+            .amount(amount)
+            .type(type)
+            .build();
+    }
 }

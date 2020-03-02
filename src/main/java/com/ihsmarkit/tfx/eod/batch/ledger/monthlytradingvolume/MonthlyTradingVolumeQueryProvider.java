@@ -17,10 +17,11 @@ import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvide
 public class MonthlyTradingVolumeQueryProvider extends ParticipantAndCurrencyPairQueryProvider {
 
     public MonthlyTradingVolumeQueryProvider(@Value("#{jobParameters['businessDate']}") final LocalDate businessDate) {
-        super((root, cb) -> cb.between(
-            root.get(ParticipantPositionEntity_.tradeDate),
-            businessDate.with(firstDayOfMonth()),
-            businessDate.with(lastDayOfMonth())
+        super((root, cb) ->
+            cb.between(
+                root.get(ParticipantPositionEntity_.tradeDate),
+                businessDate.with(firstDayOfMonth()),
+                businessDate.with(lastDayOfMonth())
             )
         );
     }

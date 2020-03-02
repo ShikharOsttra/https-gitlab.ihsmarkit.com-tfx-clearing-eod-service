@@ -36,10 +36,12 @@ class SODTransactionDiaryLedgerProcessorTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
-    private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
+    private static final CurrencyPairEntity CURRENCY_PAIR = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
+    private static final ParticipantCurrencyPairAmount PARTICIPANT_CURRENCY_PAIR_AMOUNT =
+        ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR, BigDecimal.ZERO);
     private static final BigDecimal PRICE = BigDecimal.valueOf(123.445);
 
     private SODTransactionDiaryLedgerProcessor processor;
@@ -53,8 +55,6 @@ class SODTransactionDiaryLedgerProcessorTest {
     private CurrencyPairSwapPointService currencyPairSwapPointService;
     @Mock
     private JPYRateService jpyRateService;
-    @Mock
-    private ParticipantCurrencyPairAmount participantCurrencyPairAmount;
 
     @BeforeEach
     void init() {
@@ -65,13 +65,12 @@ class SODTransactionDiaryLedgerProcessorTest {
     @Test
     @SuppressWarnings("unchecked")
     void processParticipantPositionEntity() {
-        when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
-        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(new BigDecimal("10.000100"));
+        when(fxSpotProductService.getFxSpotProduct(CURRENCY_PAIR)).thenReturn(FX_SPOT_PRODUCT);
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR)).thenReturn(new BigDecimal("10.000100"));
         when(eodCalculator.calculateSwapPoint(any(ParticipantPositionEntity.class), any(Function.class), any(Function.class)))
-            .thenReturn(participantCurrencyPairAmount);
+            .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(eodCalculator.calculateDailyMtmValue(any(ParticipantPositionEntity.class), any(Function.class), any(Function.class)))
-            .thenReturn(participantCurrencyPairAmount);
-        when(participantCurrencyPairAmount.getAmount()).thenReturn(BigDecimal.ZERO);
+            .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
 
         assertThat(processor.process(aParticipantPosition()))
@@ -110,7 +109,7 @@ class SODTransactionDiaryLedgerProcessorTest {
     private ParticipantPositionEntity aParticipantPosition() {
         return ParticipantPositionEntity.builder()
             .participant(PARTICIPANT)
-            .currencyPair(CURRENCY)
+            .currencyPair(CURRENCY_PAIR)
             .amount(AMOUNT)
             .valueDate(BUSINESS_DATE.plusDays(1))
             .tradeDate(BUSINESS_DATE)

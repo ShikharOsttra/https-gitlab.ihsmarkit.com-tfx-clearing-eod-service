@@ -61,6 +61,9 @@ public interface BalanceTradeMapper {
     @Mapping(target = "tradeDate", source = "tradeDate")
     @Mapping(target = "valueDate", source = "valueDate")
     @Mapping(target = "transactionType", constant = "BALANCE")
+    @Mapping(target = "matchingOwnHash", ignore = true)
+    @Mapping(target = "matchingSearchHash", ignore = true)
+    @Mapping(target = "oboComment", ignore = true)
     TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate,  @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate);
 
     default Side tradeDirection(BigDecimal amount) {

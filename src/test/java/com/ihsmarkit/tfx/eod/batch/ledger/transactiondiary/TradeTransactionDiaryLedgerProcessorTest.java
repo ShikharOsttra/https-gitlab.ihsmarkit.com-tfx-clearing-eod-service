@@ -42,9 +42,11 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
     private static final LocalDateTime MATCHING_DATE = LocalDateTime.of(2019, 1, 1, 1, 30);
-    private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
+    private static final CurrencyPairEntity CURRENCY_PAIR = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
+    private static final ParticipantCurrencyPairAmount PARTICIPANT_CURRENCY_PAIR_AMOUNT =
+        ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR, BigDecimal.ZERO);
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
 
     private TradeTransactionDiaryLedgerProcessor processor;
@@ -56,8 +58,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private EODCalculator eodCalculator;
     @Mock
     private JPYRateService jpyRateService;
-    @Mock
-    private ParticipantCurrencyPairAmount participantCurrencyPairAmount;
+
     @Mock
     private LegalEntity originator;
     @Mock
@@ -79,13 +80,12 @@ class TradeTransactionDiaryLedgerProcessorTest {
     void processTradeEntity() {
         when(clockService.utcTimeToServerTime(any())).thenReturn(MATCHING_DATE);
 
-        when(fxSpotProductService.getFxSpotProduct(CURRENCY)).thenReturn(FX_SPOT_PRODUCT);
-        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY)).thenReturn(new BigDecimal("1.11111"));
+        when(fxSpotProductService.getFxSpotProduct(CURRENCY_PAIR)).thenReturn(FX_SPOT_PRODUCT);
+        when(dailySettlementPriceService.getPrice(BUSINESS_DATE, CURRENCY_PAIR)).thenReturn(new BigDecimal("1.11111"));
         when(eodCalculator.calculateInitialMtmValue(any(TradeEntity.class), any(Function.class), any(Function.class)))
-            .thenReturn(participantCurrencyPairAmount);
+            .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(eodCalculator.calculateSwapPoint(any(TradeEntity.class), any(Function.class), any(Function.class)))
-            .thenReturn(participantCurrencyPairAmount);
-        when(participantCurrencyPairAmount.getAmount()).thenReturn(BigDecimal.ZERO);
+            .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(originator.getParticipant()).thenReturn(PARTICIPANT);
         when(counterparty.getParticipant()).thenReturn(aParticipantEntityBuilder()
             .code("counterparty")
@@ -130,7 +130,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
         return TradeEntity.builder()
             .originator(originator)
             .counterparty(counterparty)
-            .currencyPair(CURRENCY)
+            .currencyPair(CURRENCY_PAIR)
             .matchingTsp(MATCHING_DATE)
             .matchingRef("matchingRef")
             .clearingTsp(MATCHING_DATE)

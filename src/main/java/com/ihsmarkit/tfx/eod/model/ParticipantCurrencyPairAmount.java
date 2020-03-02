@@ -5,24 +5,20 @@ import java.math.BigDecimal;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-@RequiredArgsConstructor(staticName = "of")
-@Builder
+@SuperBuilder
 @Getter
-@ToString
-public class ParticipantCurrencyPairAmount implements CcyParticipantAmount {
+@ToString(callSuper = true)
+public final class ParticipantCurrencyPairAmount extends CcyParticipantAmount {
 
-    @NonNull
-    private final ParticipantEntity participant;
-
-    @NonNull
-    private final CurrencyPairEntity currencyPair;
-
-    @NonNull
-    private final BigDecimal amount;
+    public static ParticipantCurrencyPairAmount of(final ParticipantEntity participant, final CurrencyPairEntity currencyPair, final BigDecimal amount) {
+        return builder()
+            .participant(participant)
+            .currencyPair(currencyPair)
+            .amount(amount)
+            .build();
+    }
 }
