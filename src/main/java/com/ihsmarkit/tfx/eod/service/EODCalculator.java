@@ -473,7 +473,7 @@ public class EODCalculator {
             .flatMap(value -> logCollateral.map(value::add))
             .flatMap(value -> pnl.map(value::add))
             .flatMap(value -> initialMargin
-                .filter(not(ZERO::equals))
+                .filter(amount -> ZERO.compareTo(amount) != 0)
                 .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
             );
     }
