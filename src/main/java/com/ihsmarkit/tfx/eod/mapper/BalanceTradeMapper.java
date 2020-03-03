@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.mapper;
 
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isGreaterThanZero;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -67,7 +69,7 @@ public interface BalanceTradeMapper {
     TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate,  @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate);
 
     default Side tradeDirection(BigDecimal amount) {
-        return amount.compareTo(BigDecimal.ZERO) > 0 ? Side.BUY : Side.SELL;
+        return isGreaterThanZero(amount) ? Side.BUY : Side.SELL;
     }
 
     default LegalEntity fromParticipant(ParticipantEntity participant) {
