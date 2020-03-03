@@ -19,7 +19,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -33,6 +32,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 
+import com.ihsmarkit.tfx.common.function.ThrowingConsumer;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -136,12 +136,12 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        final Consumer<Function<CurrencyPairEntity, BigDecimal>> dspAssertion =
+        final ThrowingConsumer<Function<CurrencyPairEntity, BigDecimal>> dspAssertion =
             actual -> assertThat(actual)
                 .returns(USD_RATE, a -> a.apply(CURRENCY_PAIR_USD))
                 .returns(JPY_RATE, a -> a.apply(CURRENCY_PAIR_JPY));
 
-        final Consumer<Function<String, BigDecimal>> jpyRatesAssertion =
+        final ThrowingConsumer<Function<String, BigDecimal>> jpyRatesAssertion =
             actual -> assertThat(actual).returns(JPY_RATE, a -> a.apply(USD));
 
         verify(eodCalculator).calculateAndAggregateDailyMtm(
