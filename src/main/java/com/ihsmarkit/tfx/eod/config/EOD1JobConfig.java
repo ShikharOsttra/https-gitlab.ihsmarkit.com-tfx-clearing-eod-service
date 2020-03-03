@@ -10,6 +10,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,8 +20,8 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
-import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
+import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
 import lombok.AllArgsConstructor;
 
@@ -56,30 +57,25 @@ public class EOD1JobConfig {
     }
 
     private Step mtmTrades() {
-        return steps.get(MTM_TRADES_STEP_NAME)
-            .listener(eodAlertStepListener)
-            .tasklet(markToMarketTradesTasklet)
-            .build();
+        return createStep(MTM_TRADES_STEP_NAME, markToMarketTradesTasklet);
     }
 
     private Step netTrades() {
-        return steps.get(NET_TRADES_STEP_NAME)
-            .listener(eodAlertStepListener)
-            .tasklet(nettingTasklet)
-            .build();
+        return createStep(NET_TRADES_STEP_NAME, nettingTasklet);
     }
 
     private Step rebalancePositions() {
-        return steps.get(REBALANCE_POSITIONS_STEP_NAME)
-            .listener(eodAlertStepListener)
-            .tasklet(rebalancingTasklet)
-            .build();
+        return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet);
     }
 
     private Step rollPositions() {
-        return steps.get(ROLL_POSITIONS_STEP_NAME)
+        return createStep(ROLL_POSITIONS_STEP_NAME, positionRollTasklet);
+    }
+
+    private Step createStep(final String stepName, final Tasklet stepTasklet) {
+        return steps.get(stepName)
             .listener(eodAlertStepListener)
-            .tasklet(positionRollTasklet)
+            .tasklet(stepTasklet)
             .build();
     }
 }

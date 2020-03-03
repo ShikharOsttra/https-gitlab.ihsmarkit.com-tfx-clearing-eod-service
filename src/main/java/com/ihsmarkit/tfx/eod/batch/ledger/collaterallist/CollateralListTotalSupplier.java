@@ -11,8 +11,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -25,6 +23,7 @@ import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.RequiredArgsConstructor;
 import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 @StepScope
 @RequiredArgsConstructor
@@ -39,16 +38,13 @@ public class CollateralListTotalSupplier implements TotalSupplier<CollateralList
 
     @Override
     public List<CollateralListItem> get() {
-        final BigDecimal totalOfTotals = total.values().stream().collect(summingBigDecimal());
+        final BigDecimal totalOfTotals = StreamEx.of(total.values())
+            .collect(summingBigDecimal());
 
-        return
-            Stream.concat(
-
-                EntryStream.of(total)
-                    .mapKeyValue((participantCode, amount) -> mapToItem(participantCode, amount, PARTICIPANT_TOTAL_RECORD_TYPE)),
-
-                Stream.of(mapToItem(null, totalOfTotals, TOTAL_RECORD_TYPE))
-            ).collect(Collectors.toList());
+        return EntryStream.of(total)
+            .mapKeyValue((participantCode, amount) -> mapToItem(participantCode, amount, PARTICIPANT_TOTAL_RECORD_TYPE))
+            .append(mapToItem(null, totalOfTotals, TOTAL_RECORD_TYPE))
+            .toList();
     }
 
     private CollateralListItem mapToItem(@Nullable final String participantCode, final BigDecimal amount, final int recordType) {

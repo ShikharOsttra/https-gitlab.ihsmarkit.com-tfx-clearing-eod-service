@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -36,6 +35,10 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
+import com.ihsmarkit.tfx.common.collectors.GuavaCollectors;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
@@ -51,17 +54,18 @@ import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
-import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 
 import io.vavr.Function3;
+import io.vavr.Function4;
 import io.vavr.Tuple;
 import io.vavr.Tuple3;
 import lombok.RequiredArgsConstructor;
 import one.util.streamex.EntryStream;
+import one.util.streamex.StreamEx;
 
 @Service
 @RequiredArgsConstructor
@@ -324,30 +328,33 @@ public class EODCalculator {
 
     public Stream<ParticipantPosition> netAllByBuySell(
         final Stream<TradeOrPositionEssentials> tradesToNet,
-        final Stream<? extends CcyParticipantAmount> positions
+        final Stream<? extends CcyParticipantAmount> sodPositions
     ) {
 
         return mergeAndFlatten(
-            positions.collect(
-                toMap(
-                    position -> new ParticipantAndCurrencyPair(position.getParticipant(), position.getCurrencyPair()),
-                    CcyParticipantAmount::getAmount
-                )
-            ),
-            tradesToNet.collect(
-                groupingBy(
-                    tradeToNet -> new ParticipantAndCurrencyPair(tradeToNet.getParticipant(), tradeToNet.getCurrencyPair()),
-                    twoWayCollector(
-                        tradeToNet -> tradeToNet.getAmount().compareTo(ZERO) > 0,
+            StreamEx.of(sodPositions)
+                .collect(
+                    Tables.toTable(
+                        CcyParticipantAmount::getParticipant,
+                        CcyParticipantAmount::getCurrencyPair,
                         CcyParticipantAmount::getAmount,
-                        BuySellAmounts::new
+                        HashBasedTable::create
                     )
-                )
-            ),
-            (key, sod, buySell) -> {
-                final var participant = key.getParticipant();
-                final var currencyPair = key.getCurrencyPair();
-                return Stream.of(
+                ),
+            StreamEx.of(tradesToNet)
+                .collect(
+                    GuavaCollectors.toTable(
+                        CcyParticipantAmount::getParticipant,
+                        CcyParticipantAmount::getCurrencyPair,
+                        twoWayCollector(
+                            tradeToNet -> tradeToNet.getAmount().compareTo(ZERO) > 0,
+                            CcyParticipantAmount::getAmount,
+                            BuySellAmounts::new
+                        )
+                    )
+                ),
+            (participant, currencyPair, sod, buySell) ->
+                Stream.of(
                     buySell
                         .map(BuySellAmounts::getBuy)
                         .filter(EODCalculator::isNotEqualToZero)
@@ -365,10 +372,8 @@ public class EODCalculator {
                     )
                         .map(net -> ParticipantPosition.of(participant, currencyPair, net, NET))
                 )
-                    .flatMap(Optional::stream);
-            }
-        )
-            .flatMap(Function.identity());
+                    .flatMap(Optional::stream)
+        );
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Stream<ParticipantPositionEntity> positions,
@@ -489,16 +494,18 @@ public class EODCalculator {
         );
     }
 
-    private static <K, T, L, R> Stream<T> mergeAndFlatten(final Map<K, L> left, final Map<K, R> right, final Function3<K, Optional<L>, Optional<R>, T> merger) {
-        return Stream.of(left, right)
-            .map(Map::keySet)
-            .flatMap(Collection::stream)
+    private static <R, C, LEFT, RIGHT, T> Stream<T> mergeAndFlatten(final Table<R, C, LEFT> left, final Table<R, C, RIGHT> right,
+        final Function4<R, C, Optional<LEFT>, Optional<RIGHT>, Stream<T>> merger) {
+        return StreamEx.of(left, right)
+            .flatCollection(Table::cellSet)
+            .mapToEntry(Table.Cell::getRowKey, Table.Cell::getColumnKey)
             .distinct()
-            .map(
-                key -> merger.apply(
-                    key,
-                    Optional.ofNullable(left.get(key)),
-                    Optional.ofNullable(right.get(key))
+            .flatMapKeyValue(
+                (rowKey, columnKey) -> merger.apply(
+                    rowKey,
+                    columnKey,
+                    Optional.ofNullable(left.get(rowKey, columnKey)),
+                    Optional.ofNullable(right.get(rowKey, columnKey))
                 )
             );
     }
