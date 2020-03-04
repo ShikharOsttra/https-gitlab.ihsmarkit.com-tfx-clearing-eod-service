@@ -1,5 +1,8 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isEqualToZero;
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isGreaterThanZero;
+
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -32,7 +35,7 @@ public class Slicer<T> {
 
     @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
     private void peek() {
-        while (toConsume == null || toConsume.compareTo(BigDecimal.ZERO) == 0) {
+        while (toConsume == null || isEqualToZero(toConsume)) {
             current = list.remove();
             toConsume = accessor.apply(current);
         }
@@ -59,13 +62,13 @@ public class Slicer<T> {
 
         @Override
         public boolean hasNext() {
-            return toProduce.compareTo(BigDecimal.ZERO) > 0;
+            return isGreaterThanZero(toProduce);
         }
 
         @Override
         public R next() {
 
-            if (toProduce.compareTo(BigDecimal.ZERO) <= 0) {
+            if (!isGreaterThanZero(toProduce)) {
                 throw new NoSuchElementException();
             }
 

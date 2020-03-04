@@ -1,5 +1,8 @@
 package com.ihsmarkit.tfx.eod.model;
 
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isEqualToZero;
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isGreaterThanZero;
+import static java.util.function.Predicate.not;
 import static java.util.function.UnaryOperator.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
@@ -37,11 +40,11 @@ public class PositionBalance {
     public static PositionBalance of(final Stream<RawPositionData> positions) {
 
         final Map<Boolean, PositionList.PositionListBuilder> separatedByDirection = positions
-            .filter(position -> position.getAmount().compareTo(BigDecimal.ZERO) != 0)
+            .filter(not(isEqualToZero(RawPositionData::getAmount)))
             .map(PositionList.PositionListBuilder::of)
             .collect(
                 partitioningBy(
-                    position -> position.getTotal().compareTo(BigDecimal.ZERO) > 0,
+                    isGreaterThanZero(PositionList.PositionListBuilder::getTotal),
                     collectingAndThen(
                         reducing(PositionList.PositionListBuilder::combine),
                         optionalPositionListBuilder -> optionalPositionListBuilder.orElseGet(PositionList.PositionListBuilder::empty)

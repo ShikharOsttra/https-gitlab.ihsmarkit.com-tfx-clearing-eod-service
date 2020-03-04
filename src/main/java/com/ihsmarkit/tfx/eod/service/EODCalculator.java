@@ -1,5 +1,8 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isEqualToZero;
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isGreaterThanZero;
 import static com.ihsmarkit.tfx.common.streams.Streams.summingBigDecimal;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
@@ -205,12 +208,10 @@ public class EODCalculator {
         final Function<CurrencyPairEntity, BigDecimal> dsp,
         final Function<String, BigDecimal> jpyRates
     ) {
-        return flatten(
-            aggregate(
-                trades
-                    .map(tradeOrPositionMapper::convertTrade)
-                    .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
-            )
+        return aggregateAndFlatten(
+            trades
+                .map(tradeOrPositionMapper::convertTrade)
+                .map(essentials -> calculateMtmValue(essentials, dsp, jpyRates))
         );
     }
 
@@ -220,37 +221,32 @@ public class EODCalculator {
         final Function<String, BigDecimal> jpyRates
     ) {
 
-        return flatten(
-            aggregate(
-                trades
-                    .map(tradeOrPositionMapper::convertTrade)
-                    .map(essentials -> calculateSwapPoint(essentials, swapPointResolver, jpyRates))
-            )
+        return aggregateAndFlatten(
+            trades
+                .map(tradeOrPositionMapper::convertTrade)
+                .map(essentials -> calculateSwapPoint(essentials, swapPointResolver, jpyRates))
         );
     }
 
-    private EntryStream<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> aggregate(final Stream<? extends CcyParticipantAmount> input) {
-        return EntryStream.of(
-            input
-                .collect(
-                    groupingBy(
-                        CcyParticipantAmount::getParticipant,
-                        groupingBy(CcyParticipantAmount::getCurrencyPair, summingBigDecimal(CcyParticipantAmount::getAmount))
-                    )
+    private static Stream<ParticipantCurrencyPairAmount> aggregateAndFlatten(final Stream<? extends CcyParticipantAmount> ccyPairAmounts) {
+        final var aggregatedTable = ccyPairAmounts
+            .collect(
+                GuavaCollectors.toTable(
+                    CcyParticipantAmount::getParticipant,
+                    CcyParticipantAmount::getCurrencyPair,
+                    summingBigDecimal(CcyParticipantAmount::getAmount)
                 )
-        );
-    }
-
-    private Stream<ParticipantCurrencyPairAmount> flatten(final EntryStream<ParticipantEntity, Map<CurrencyPairEntity, BigDecimal>> input) {
-        return input
-            .flatMapKeyValue((participant, balances) ->
-                EntryStream.of(balances)
-                    .mapKeyValue((ccyPair, balance) -> ParticipantCurrencyPairAmount.of(participant, ccyPair, balance))
             );
+        return StreamEx.of(aggregatedTable.cellSet())
+            .map(cell -> ParticipantCurrencyPairAmount.of(
+                checkNotNull(cell.getRowKey()),
+                checkNotNull(cell.getColumnKey()),
+                checkNotNull(cell.getValue())
+            ));
     }
 
     public Stream<ParticipantCurrencyPairAmount> aggregatePositions(final Stream<ParticipantPositionEntity> positions) {
-        return flatten(aggregate(positions.map(tradeOrPositionMapper::convertPosition)));
+        return aggregateAndFlatten(positions.map(tradeOrPositionMapper::convertPosition));
     }
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
@@ -323,7 +319,7 @@ public class EODCalculator {
     }
 
     public Stream<ParticipantCurrencyPairAmount> netAll(final Stream<? extends CcyParticipantAmount> trades) {
-        return flatten(aggregate(trades));
+        return aggregateAndFlatten(trades);
     }
 
     public Stream<ParticipantPosition> netAllByBuySell(
@@ -347,7 +343,7 @@ public class EODCalculator {
                         CcyParticipantAmount::getParticipant,
                         CcyParticipantAmount::getCurrencyPair,
                         twoWayCollector(
-                            tradeToNet -> tradeToNet.getAmount().compareTo(ZERO) > 0,
+                            isGreaterThanZero(TradeOrPositionEssentials::getAmount),
                             CcyParticipantAmount::getAmount,
                             BuySellAmounts::new
                         )
@@ -357,11 +353,11 @@ public class EODCalculator {
                 Stream.of(
                     buySell
                         .map(BuySellAmounts::getBuy)
-                        .filter(EODCalculator::isNotEqualToZero)
+                        .filter(not(isEqualToZero()))
                         .map(buy -> ParticipantPosition.of(participant, currencyPair, buy, BUY)),
                     buySell
                         .map(BuySellAmounts::getSell)
-                        .filter(EODCalculator::isNotEqualToZero)
+                        .filter(not(isEqualToZero()))
                         .map(sell -> ParticipantPosition.of(participant, currencyPair, sell, SELL)),
                     sumAll(
                         buySell
@@ -478,7 +474,7 @@ public class EODCalculator {
             .flatMap(value -> logCollateral.map(value::add))
             .flatMap(value -> pnl.map(value::add))
             .flatMap(value -> initialMargin
-                .filter(amount -> ZERO.compareTo(amount) != 0)
+                .filter(not(isEqualToZero()))
                 .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
             );
     }
@@ -528,13 +524,5 @@ public class EODCalculator {
         return Arrays.stream(values)
             .flatMap(Optional::stream)
             .reduce(BigDecimal::add);
-    }
-
-    private static boolean isNotEqualToZero(final BigDecimal value) {
-        return !isEqualToZero(value);
-    }
-
-    private static boolean isEqualToZero(final BigDecimal value) {
-        return ZERO.compareTo(value) == 0;
     }
 }

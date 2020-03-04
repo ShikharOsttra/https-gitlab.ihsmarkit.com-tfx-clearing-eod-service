@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static com.ihsmarkit.tfx.common.math.BigDecimals.isEqualToZero;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +39,7 @@ public class SingleCurrencyRebalanceCalculator {
         }
 
         //outstanding residual amount to be allocated to LP with largest net position
-        if (balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(BigDecimal.ZERO) != 0) {
+        if (!isEqualToZero(balance.getBuy().getNet().min(balance.getSell().getNet().abs()))) {
             final List<BalanceTrade> residualTrades = balance.allocateResidual().collect(Collectors.toList());
             trades.addAll(residualTrades);
         }
