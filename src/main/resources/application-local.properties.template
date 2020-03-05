@@ -8,3 +8,4 @@ spring.liquibase.default-schema=devXX
 
 # Output queues
 jms.any.alert-service.queue=ANY.ALERTSRV.NEW.ALERT.DEV_<USERNAME>
+jms.system.event.notification.topic=SYSTEM.EVENT.NOTIFICATION.DEV_<USERNAME>
