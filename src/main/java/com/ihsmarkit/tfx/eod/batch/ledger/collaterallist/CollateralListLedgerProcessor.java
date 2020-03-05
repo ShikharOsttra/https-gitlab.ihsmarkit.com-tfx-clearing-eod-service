@@ -12,7 +12,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -38,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @StepScope
-public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBalanceEntity, CollateralListItem> {
+public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBalanceEntity, CollateralListItem<BigDecimal>> {
 
     private static final String CASH_COLLATERAL_NAME = "Yen Cash";
 
@@ -47,9 +46,6 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
-
-    @Value("#{stepExecutionContext['total']}")
-    private final Map<String, BigDecimal> total;
 
     private final BojCodeProvider bojCodeProvider;
 
@@ -62,12 +58,9 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
     private final EvaluationDateProvider evaluationDateProvider;
 
     @Override
-    public CollateralListItem process(final CollateralBalanceEntity balance) {
+    public CollateralListItem<BigDecimal> process(final CollateralBalanceEntity balance) {
         final BigDecimal evaluatedAmount = collateralCalculator.calculateEvaluatedAmount(balance);
-
-        total.compute(balance.getParticipant().getCode(), totalRemappingFunction(evaluatedAmount));
-
-        return CollateralListItem.builder()
+        return CollateralListItem.<BigDecimal>builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .evaluationDate(formatDate(evaluationDateProvider.get()))
@@ -85,7 +78,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .amount(balance.getAmount().toString())
             .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toString()))
             .evaluatedPrice(getFromSecurityProduct(balance.getProduct(), product -> collateralCalculator.calculateEvaluatedPrice(product).toString()))
-            .evaluatedAmount(evaluatedAmount.toString())
+            .evaluatedAmount(evaluatedAmount)
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))
             .interestPaymentDay(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate1())))
@@ -161,9 +154,4 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
                 throw new IllegalArgumentException(String.format("Unsupported product type, %s", balance.getProduct().getType()));
         }
     }
-
-    private static BiFunction<String, BigDecimal, BigDecimal> totalRemappingFunction(final BigDecimal amount) {
-        return (key, currentTotal) -> currentTotal == null ? amount : currentTotal.add(amount);
-    }
-
 }

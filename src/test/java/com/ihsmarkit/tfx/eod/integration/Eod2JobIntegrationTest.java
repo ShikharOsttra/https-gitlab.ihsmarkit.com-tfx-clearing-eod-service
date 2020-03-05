@@ -13,7 +13,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -29,10 +28,10 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-@ContextHierarchy({
-    @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = EOD2JobConfig.class) }
-)
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    EOD2JobConfig.class
+})
 @TestPropertySource("classpath:/application.properties")
 @DbUnitConfiguration(dataSetLoader = ReplacementDataSetLoader.class)
 class Eod2JobIntegrationTest {

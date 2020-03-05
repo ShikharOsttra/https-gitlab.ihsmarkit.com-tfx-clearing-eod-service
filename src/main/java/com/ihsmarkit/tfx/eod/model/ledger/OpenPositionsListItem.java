@@ -12,7 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
-public class OpenPositionsListItem {
+public class OpenPositionsListItem<T> {
 
     private final LocalDate businessDate;
     @Builder.Default
@@ -38,12 +38,13 @@ public class OpenPositionsListItem {
     private final String shortPosition = EMPTY;
     @Builder.Default
     private final String longPosition = EMPTY;
-    private final String initialMtmAmount;
-    private final String dailyMtmAmount;
-    private final String swapPoint;
-    private final String totalVariationMargin;
+    private final T initialMtmAmount;
+    private final T dailyMtmAmount;
+    private final T swapPoint;
+    private final T totalVariationMargin;
     private final String settlementDate;
     private final long orderId;
     private final int recordType;
+
 }
 

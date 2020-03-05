@@ -4,9 +4,10 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOT
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,8 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Tables;
-import com.ihsmarkit.tfx.eod.batch.ledger.TotalSupplier;
+import com.ihsmarkit.tfx.eod.batch.ledger.AbstractTotalProcessor;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -34,20 +36,41 @@ import one.util.streamex.StreamEx;
 @StepScope
 @Component
 @RequiredArgsConstructor
-public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsListItem> {
+public class OpenPositionsTotalProcessor extends AbstractTotalProcessor<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal, ParticipantAndCurrencyPair,
+    OpenPositionsListItem<BigDecimal>, OpenPositionsListItem<String>> {
 
     private static final String SETTLEMENT_DATE_TOTAL = "Settlement Date Total";
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
-    @Value("#{stepExecutionContext['total']}")
-    private final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> total;
+    @Override
+    protected OpenPositionsListItemTotalKey toTotalKey(final OpenPositionsListItem<BigDecimal> openPositionsListItem) {
+        return OpenPositionsListItemTotalKey.of(
+            openPositionsListItem.getParticipantCode(),
+            openPositionsListItem.getSettlementDate()
+        );
+    }
+
+    @Override
+    protected OpenPositionsListItemTotal toTotalValue(final OpenPositionsListItem<BigDecimal> openPositionsListItem) {
+        return OpenPositionsListItemTotal.builder()
+            .initialMtmAmount(openPositionsListItem.getInitialMtmAmount())
+            .dailyMtmAmount(openPositionsListItem.getDailyMtmAmount())
+            .swapPoint(openPositionsListItem.getSwapPoint())
+            .totalVariationMargin(openPositionsListItem.getTotalVariationMargin())
+            .build();
+    }
+
+    @Override
+    protected OpenPositionsListItemTotal merge(final OpenPositionsListItemTotal prev, final OpenPositionsListItemTotal stepContribution) {
+        return prev.add(stepContribution);
+    }
 
     @SuppressFBWarnings("PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS")
     @Override
-    public List<OpenPositionsListItem> get() {
-        final var totalsPerParticipant = EntryStream.of(total)
+    protected List<OpenPositionsListItem<String>> extractTotals(final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> totals) {
+        final var totalsPerParticipant = EntryStream.of(totals)
             .collect(
                 Tables.toTable(
                     entry -> entry.getKey().getParticipantCode(),
@@ -62,25 +85,24 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
             .toMap(OpenPositionsListItemTotal::add);
 
         return Stream.concat(
-
             EntryStream.of(totalsPerParticipant.rowMap())
-                .flatMapKeyValue((participantCode, totals) -> mapToTotalItems(participantCode, totals, PARTICIPANT_TOTAL_RECORD_TYPE)),
+                .flatMapKeyValue((participantCode, participantTotals) -> mapToTotalItems(participantCode, participantTotals, PARTICIPANT_TOTAL_RECORD_TYPE)),
 
             mapToTotalItems(EMPTY, totalOfTotals, TOTAL_RECORD_TYPE)
 
         ).collect(Collectors.toList());
     }
 
-    private Stream<OpenPositionsListItem> mapToTotalItems(
+    private Stream<OpenPositionsListItem<String>> mapToTotalItems(
         final String participantCode,
-        final Map<LocalDate, OpenPositionsListItemTotal> totals,
+        final Map<String, OpenPositionsListItemTotal> totals,
         final int recordType
     ) {
 
         final OpenPositionsListItemTotal totalOfSettlementDates = totals.values().stream()
             .reduce(OpenPositionsListItemTotal.ZERO, OpenPositionsListItemTotal::add);
 
-        final List<LocalDate> settlementDates = totals.keySet().stream()
+        final List<String> settlementDates = totals.keySet().stream()
             .sorted()
             .collect(Collectors.toList());
 
@@ -99,15 +121,15 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
         );
     }
 
-    private OpenPositionsListItem mapToItem(
+    private OpenPositionsListItem<String> mapToItem(
         final String participantCode,
         final OpenPositionsListItemTotal total,
         final int orderOffset,
         final String totalName,
-        @Nullable final LocalDate settlementDate,
+        @Nullable final String settlementDate,
         final int recordType
     ) {
-        return OpenPositionsListItem.builder()
+        return OpenPositionsListItem.<String>builder()
             .businessDate(businessDate)
             .participantCode(participantCode)
             .participantName(recordType == TOTAL_RECORD_TYPE ? totalName : EMPTY)
@@ -116,7 +138,7 @@ public class OpenPositionTotalSupplier implements TotalSupplier<OpenPositionsLis
             .dailyMtmAmount(formatBigDecimal(total.getDailyMtmAmount()))
             .swapPoint(formatBigDecimal(total.getSwapPoint()))
             .totalVariationMargin(formatBigDecimal(total.getTotalVariationMargin()))
-            .settlementDate(formatDate(settlementDate))
+            .settlementDate(defaultString(settlementDate))
             .recordType(recordType)
             .orderId(Long.MAX_VALUE - orderOffset)
             .build();

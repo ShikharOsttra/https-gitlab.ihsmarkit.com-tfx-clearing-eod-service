@@ -6,9 +6,11 @@ import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.support.SimpleFlow;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ import org.springframework.core.io.Resource;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeQueryProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeTotalProcessor;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
 
@@ -35,6 +38,7 @@ public class MonthlyTradingVolumeLedgerConfig {
     private final int monthlyTradingVolumeChunkSize;
     private final MonthlyTradingVolumeQueryProvider monthlyTradingVolumeQueryProvider;
     private final MonthlyTradingVolumeProcessor monthlyTradingVolumeProcessor;
+    private final MonthlyTradingVolumeTotalProcessor monthlyTradingVolumeTotalProcessor;
     private final LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
 
     @Bean(MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME)
@@ -47,10 +51,10 @@ public class MonthlyTradingVolumeLedgerConfig {
 
     @Bean(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME)
     Step monthlyTradingVolumeLedger() {
-        return ledgerStepFactory
-            .<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME, monthlyTradingVolumeChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<String>>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME,
+            monthlyTradingVolumeChunkSize)
             .reader(monthlyTradingVolumeReader())
-            .processor(monthlyTradingVolumeProcessor)
+            .processor(monthlyTradingVolumeItemProcessor())
             .writer(monthlyTradingVolumeWriter())
             .build();
     }
@@ -63,8 +67,35 @@ public class MonthlyTradingVolumeLedgerConfig {
     }
 
     @Bean
-    ItemWriter<MonthlyTradingVolumeItem> monthlyTradingVolumeWriter() {
-        return ledgerStepFactory.listWriter(monthlyTradingVolumeLedgerSql);
+    @StepScope
+    ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<String>> monthlyTradingVolumeItemProcessor() {
+        return monthlyTradingVolumeTotalProcessor.wrapItemProcessor(
+            monthlyTradingVolumeProcessor,
+            monthlyTradingVolumeItem ->
+                MonthlyTradingVolumeItem.<String>builder()
+                    .businessDate(monthlyTradingVolumeItem.getBusinessDate())
+                    .tradeDate(monthlyTradingVolumeItem.getTradeDate())
+                    .recordDate(monthlyTradingVolumeItem.getRecordDate())
+                    .participantCode(monthlyTradingVolumeItem.getParticipantCode())
+                    .participantName(monthlyTradingVolumeItem.getParticipantName())
+                    .participantType(monthlyTradingVolumeItem.getParticipantType())
+                    .currencyPairNumber(monthlyTradingVolumeItem.getCurrencyPairNumber())
+                    .currencyPairCode(monthlyTradingVolumeItem.getCurrencyPairCode())
+
+                    .buyTradingVolumeInUnit(monthlyTradingVolumeItem.getBuyTradingVolumeInUnit().toString())
+                    .sellTradingVolumeInUnit(monthlyTradingVolumeItem.getSellTradingVolumeInUnit().toString())
+                    .build()
+        );
     }
 
+    @Bean
+    @StepScope
+    ItemWriter<MonthlyTradingVolumeItem<String>> monthlyTradingVolumeWriter() {
+        return monthlyTradingVolumeTotalProcessor.wrapItemWriter(monthlyTradingVolumeJdbcWriter());
+    }
+
+    @Bean
+    ItemWriter<MonthlyTradingVolumeItem<String>> monthlyTradingVolumeJdbcWriter() {
+        return ledgerStepFactory.listWriter(monthlyTradingVolumeLedgerSql);
+    }
 }

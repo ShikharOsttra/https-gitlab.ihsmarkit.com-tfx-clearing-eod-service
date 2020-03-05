@@ -16,9 +16,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -59,21 +57,14 @@ class CollateralListLedgerProcessorTest {
     @Mock
     private EvaluationDateProvider evaluationDateProvider;
 
-    private Map<String, BigDecimal> total;
-
     private CollateralListLedgerProcessor processor;
 
     @BeforeEach
     @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC_ANON")
     void setUp() {
-        total = new ConcurrentHashMap<>() {{
-            put(PARTICIPANT_CODE, BigDecimal.valueOf(1200));
-        }};
-
         processor = new CollateralListLedgerProcessor(
             BUSINESS_DATE,
             RECORD_DATE,
-            total,
             bojCodeProvider,
             jasdecCodeProvider,
             collateralCalculator,
@@ -88,7 +79,7 @@ class CollateralListLedgerProcessorTest {
 
     @ParameterizedTest
     @MethodSource("collateralList")
-    void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem collateralListItem) {
+    void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem<BigDecimal> collateralListItem) {
         when(participantCodeOrderIdProvider.get(PARTICIPANT_CODE)).thenReturn(7);
         if (balance.getProduct() instanceof SecurityCollateralProductEntity) {
             when(collateralCalculator.calculateEvaluatedPrice((SecurityCollateralProductEntity) balance.getProduct())).thenReturn(new BigDecimal("10.01"));
@@ -97,10 +88,9 @@ class CollateralListLedgerProcessorTest {
         when(collateralCalculator.calculateEvaluatedAmount(balance)).thenReturn(new BigDecimal("1300"));
 
         assertThat(processor.process(balance)).isEqualTo(collateralListItem);
-        assertThat(total.get(PARTICIPANT_CODE)).isEqualTo(BigDecimal.valueOf(2500));
     }
 
-    private static Stream collateralList() {
+    private static Stream<Arguments> collateralList() {
         return Stream.of(
             Arguments.of(aCollateralBalanceEntityBuilder()
                     .product(aBondCollateralProductEntityBuilder().build())
@@ -125,7 +115,7 @@ class CollateralListLedgerProcessorTest {
         );
     }
 
-    private static CollateralListItem collateralListItemLog() {
+    private static CollateralListItem<BigDecimal> collateralListItemLog() {
         return collateralListItemBuilder()
             .collateralTypeNo("2")
             .collateralType("LG")
@@ -135,7 +125,7 @@ class CollateralListLedgerProcessorTest {
             .build();
     }
 
-    private static CollateralListItem collateralListItemCash() {
+    private static CollateralListItem<BigDecimal> collateralListItemCash() {
         return collateralListItemBuilder()
             .collateralTypeNo("1")
             .collateralType("Cash")
@@ -144,7 +134,7 @@ class CollateralListLedgerProcessorTest {
             .build();
     }
 
-    private static CollateralListItem collateralListItemEquity() {
+    private static CollateralListItem<BigDecimal> collateralListItemEquity() {
         return collateralListItemBuilder()
             .collateralName("security name")
             .collateralTypeNo("4")
@@ -158,7 +148,7 @@ class CollateralListLedgerProcessorTest {
             .build();
     }
 
-    private static CollateralListItem collateralListItemBond() {
+    private static CollateralListItem<BigDecimal> collateralListItemBond() {
         return collateralListItemBuilder()
             .collateralName("security name")
             .collateralTypeNo("3")
@@ -175,8 +165,8 @@ class CollateralListLedgerProcessorTest {
             .build();
     }
 
-    private static CollateralListItem.CollateralListItemBuilder collateralListItemBuilder() {
-        return CollateralListItem.builder()
+    private static CollateralListItem.CollateralListItemBuilder<BigDecimal> collateralListItemBuilder() {
+        return CollateralListItem.<BigDecimal>builder()
             .businessDate(BUSINESS_DATE)
             .tradeDate("2019/01/01")
             .evaluationDate("2019/01/02")
@@ -192,7 +182,7 @@ class CollateralListLedgerProcessorTest {
             .amount("1200")
             .marketPrice(EMPTY)
             .evaluatedPrice(EMPTY)
-            .evaluatedAmount("1300")
+            .evaluatedAmount(new BigDecimal("1300"))
             .bojCode(EMPTY)
             .jasdecCode(EMPTY)
             .interestPaymentDay(EMPTY)

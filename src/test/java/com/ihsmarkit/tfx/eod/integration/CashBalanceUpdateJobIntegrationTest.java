@@ -16,7 +16,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -30,10 +29,10 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-@ContextHierarchy({
-    @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = CashCollateralBalanceUpdateJobConfig.class)}
-)
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    CashCollateralBalanceUpdateJobConfig.class
+})
 @TestPropertySource("classpath:/application.properties")
 public class CashBalanceUpdateJobIntegrationTest {
 

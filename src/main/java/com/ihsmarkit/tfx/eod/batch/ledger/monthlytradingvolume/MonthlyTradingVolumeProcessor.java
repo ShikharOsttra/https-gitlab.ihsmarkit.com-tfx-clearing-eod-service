@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @StepScope
 @RequiredArgsConstructor
-public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem> {
+public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<BigDecimal>> {
 
     private static final Set<ParticipantPositionType> MONTHLY_TRADING_VOLUME_POSITION_TYPES = Set.of(
         MONTHLY_VOLUME_NET_BUY,
@@ -51,7 +51,7 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
     private final ParticipantPositionRepository participantPositionRepository;
 
     @Override
-    public MonthlyTradingVolumeItem process(final ParticipantAndCurrencyPair item) {
+    public MonthlyTradingVolumeItem<BigDecimal> process(final ParticipantAndCurrencyPair item) {
         return participantPositionRepository.findAllByParticipantAndCurrencyPairAndTypeInAndTradeDateBetween(
             item.getParticipant(),
             item.getCurrencyPair(),
@@ -67,14 +67,14 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
         );
     }
 
-    private MonthlyTradingVolumeItem mapToTradingVolumeModel(
+    private MonthlyTradingVolumeItem<BigDecimal> mapToTradingVolumeModel(
         final ParticipantAndCurrencyPair item,
         final BigDecimal buyAmount,
         final BigDecimal sellAmount
     ) {
         final Long tradingUnit = fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getTradingUnit();
 
-        return MonthlyTradingVolumeItem.builder()
+        return MonthlyTradingVolumeItem.<BigDecimal>builder()
             .businessDate(businessDate.with(firstDayOfMonth()))
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
@@ -88,7 +88,7 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
             .build();
     }
 
-    private String amountInUnit(final BigDecimal amount, final Long tradingUnit) {
-        return amount.divide(BigDecimal.valueOf(tradingUnit), 0, RoundingMode.DOWN).toString();
+    private BigDecimal amountInUnit(final BigDecimal amount, final Long tradingUnit) {
+        return amount.divide(BigDecimal.valueOf(tradingUnit), 0, RoundingMode.DOWN);
     }
 }

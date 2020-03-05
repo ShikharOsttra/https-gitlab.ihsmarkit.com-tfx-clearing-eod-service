@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,8 +41,6 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
-import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsListItemTotal;
-import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsListItemTotalKey;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -56,16 +53,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @StepScope
 @Slf4j
-public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAndCurrencyPair, OpenPositionsListItem> {
+public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAndCurrencyPair, OpenPositionsListItem<BigDecimal>> {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
     @Value("#{stepExecutionContext['recordDate']}")
     private final LocalDateTime recordDate;
-
-    @Value("#{stepExecutionContext['total']}")
-    private final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> total;
 
     private final ParticipantPositionRepository participantPositionRepository;
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
@@ -74,10 +68,10 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
 
     @Override
-    public OpenPositionsListItem process(final ParticipantAndCurrencyPair item) {
+    public OpenPositionsListItem<BigDecimal> process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
 
-        final ParticipantEntity participant = item.getParticipant();
-        final CurrencyPairEntity currencyPair = item.getCurrencyPair();
+        final ParticipantEntity participant = participantAndCurrencyPair.getParticipant();
+        final CurrencyPairEntity currencyPair = participantAndCurrencyPair.getCurrencyPair();
 
         final Map<ParticipantPositionType, ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByParticipantAndCurrencyPairAndTradeDate(participant, currencyPair, businessDate)
@@ -92,9 +86,7 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
         final LocalDate settlementDate = tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
 
-        addToToTotal(participant.getCode(), settlementDate, cashSettlements);
-
-        return OpenPositionsListItem.builder()
+        return OpenPositionsListItem.<BigDecimal>builder()
             .businessDate(businessDate)
             .participantCode(participant.getCode())
             .participantName(participant.getName())
@@ -108,10 +100,10 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .sellTradingAmount(formatBigDecimal(getPosition(positions, SELL).orElse(ZERO).abs()))
             .shortPosition(formatBigDecimal(shortPosition(eodPositionAmount)))
             .longPosition(formatBigDecimal(longPosition(eodPositionAmount)))
-            .initialMtmAmount(formatBigDecimal(getMargin(cashSettlements, INITIAL_MTM)))
-            .dailyMtmAmount(formatBigDecimal(getMargin(cashSettlements, DAILY_MTM)))
-            .swapPoint(formatBigDecimal(getMargin(cashSettlements, SWAP_PNL)))
-            .totalVariationMargin(formatBigDecimal(getMargin(cashSettlements, TOTAL_VM)))
+            .initialMtmAmount(getMarginOrZero(cashSettlements, INITIAL_MTM))
+            .dailyMtmAmount(getMarginOrZero(cashSettlements, DAILY_MTM))
+            .swapPoint(getMarginOrZero(cashSettlements, SWAP_PNL))
+            .totalVariationMargin(getMarginOrZero(cashSettlements, TOTAL_VM))
             .settlementDate(formatDate(settlementDate))
             .recordDate(formatDateTime(recordDate))
             .recordType(ITEM_RECORD_TYPE)
@@ -119,33 +111,17 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .build();
     }
 
-    private void addToToTotal(
-        final String participantCode,
-        final LocalDate settlementDate,
-        final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins
-    ) {
-        final OpenPositionsListItemTotal openPositionsListItemTotal = OpenPositionsListItemTotal.builder()
-            .initialMtmAmount(getMarginOrZero(margins, INITIAL_MTM))
-            .dailyMtmAmount(getMarginOrZero(margins, DAILY_MTM))
-            .swapPoint(getMarginOrZero(margins, SWAP_PNL))
-            .totalVariationMargin(getMarginOrZero(margins, TOTAL_VM))
-            .build();
-
-        total.compute(OpenPositionsListItemTotalKey.of(participantCode, settlementDate), totalRemappingFunction(openPositionsListItemTotal));
-    }
-
-    private static BiFunction<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal, OpenPositionsListItemTotal> totalRemappingFunction(
-        final OpenPositionsListItemTotal positionTotal
-    ) {
-        return (key, currentTotal) -> currentTotal == null ? positionTotal : currentTotal.add(positionTotal);
-    }
-
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
-        return amount.map(ZERO::max).or(() -> Optional.of(ZERO));
+        return amount
+            .map(ZERO::max)
+            .or(() -> Optional.of(ZERO));
     }
 
     private static Optional<BigDecimal> shortPosition(final Optional<BigDecimal> amount) {
-        return amount.map(ZERO::min).map(BigDecimal::negate).or(() -> Optional.of(ZERO));
+        return amount
+            .map(ZERO::min)
+            .map(BigDecimal::negate)
+            .or(() -> Optional.of(ZERO));
     }
 
     private static BigDecimal getMarginOrZero(
@@ -159,7 +135,9 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
         final Map<EodProductCashSettlementType, EodProductCashSettlementEntity> margins,
         final EodProductCashSettlementType cashSettlementType
     ) {
-        return Optional.ofNullable(margins.get(cashSettlementType)).map(EodProductCashSettlementEntity::getAmount).map(AmountEntity::getValue);
+        return Optional.ofNullable(margins.get(cashSettlementType))
+            .map(EodProductCashSettlementEntity::getAmount)
+            .map(AmountEntity::getValue);
     }
 
     private static Optional<BigDecimal> getPosition(

@@ -1,13 +1,10 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total;
 
-import java.io.Serializable;
-import java.time.LocalDate;
-
 import lombok.Value;
 
 @Value(staticConstructor = "of")
-public class OpenPositionsListItemTotalKey implements Serializable {
+public class OpenPositionsListItemTotalKey {
 
     private final String participantCode;
-    private final LocalDate settlementDate;
+    private final String settlementDate;
 }

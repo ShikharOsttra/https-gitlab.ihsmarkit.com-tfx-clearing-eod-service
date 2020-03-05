@@ -7,7 +7,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class MonthlyTradingVolumeItem {
+public class MonthlyTradingVolumeItem<T> {
 
     private final LocalDate businessDate;
     private final String tradeDate;
@@ -17,7 +17,7 @@ public class MonthlyTradingVolumeItem {
     private final String participantType;
     private final String currencyPairNumber;
     private final String currencyPairCode;
-    private final String sellTradingVolumeInUnit;
-    private final String buyTradingVolumeInUnit;
+    private final T sellTradingVolumeInUnit;
+    private final T buyTradingVolumeInUnit;
 
 }
