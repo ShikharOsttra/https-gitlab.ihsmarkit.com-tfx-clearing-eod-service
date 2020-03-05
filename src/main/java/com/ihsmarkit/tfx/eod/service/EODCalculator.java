@@ -347,7 +347,7 @@ public class EODCalculator {
                         twoWayCollector(
                             isGreaterThanZero(TradeOrPositionEssentials::getAmount),
                             CcyParticipantAmount::getAmount,
-                            BuySellAmounts::new
+                            BuySellAmounts::of
                         )
                     )
                 ),
@@ -383,7 +383,7 @@ public class EODCalculator {
                     twoWayCollector(
                         isGreaterThanZero(TradeOrPositionEssentials::getAmount),
                         CcyParticipantAmount::getAmount,
-                        BuySellAmounts::new
+                        BuySellAmounts::of
                     )
                 )
             );

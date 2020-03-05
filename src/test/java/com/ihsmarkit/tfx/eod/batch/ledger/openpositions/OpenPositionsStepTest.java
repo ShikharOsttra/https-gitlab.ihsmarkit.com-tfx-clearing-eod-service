@@ -37,7 +37,7 @@ class OpenPositionsStepTest extends AbstractSpringBatchTest {
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod2Job/OpenPositionsStepTest_setup.xml"})
     @ExpectedDatabase(value = "/eod2Job/OpenPositionsStepTest_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void shouldRunOpenPositionsStep() throws Exception {
+    void shouldRunOpenPositionsStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
         final JobParameters jobParams = new JobParametersBuilder()

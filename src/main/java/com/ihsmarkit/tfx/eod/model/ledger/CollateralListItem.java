@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
-public class CollateralListItem {
+public class CollateralListItem<T> {
 
     private final LocalDate businessDate;
     @Builder.Default
@@ -42,7 +42,7 @@ public class CollateralListItem {
     private final String marketPrice = EMPTY;
     @Builder.Default
     private final String evaluatedPrice = EMPTY;
-    private final String evaluatedAmount;
+    private final T evaluatedAmount;
     @Builder.Default
     private final String bojCode = EMPTY;
     @Builder.Default

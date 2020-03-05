@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.integration;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -24,17 +22,16 @@ import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.github.springtestdbunit.dataset.ReplacementDataSetLoader;
-import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
-@ContextHierarchy({
-    @ContextConfiguration(classes = IntegrationTestConfig.class),
-    @ContextConfiguration(classes = RollBusinessDateJobConfig.class) }
-)
+@ContextConfiguration(classes = {
+    IntegrationTestConfig.class,
+    RollBusinessDateJobConfig.class
+})
 @TestPropertySource("classpath:/application.properties")
 @DbUnitConfiguration(dataSetLoader = ReplacementDataSetLoader.class)
 class RollBusinessDateJobIntegrationTest {

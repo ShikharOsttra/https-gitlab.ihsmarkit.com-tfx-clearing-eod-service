@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 import lombok.Builder;
@@ -8,7 +7,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class OpenPositionsListItemTotal implements Serializable {
+public class OpenPositionsListItemTotal {
 
     public static final OpenPositionsListItemTotal ZERO = OpenPositionsListItemTotal.builder()
         .initialMtmAmount(BigDecimal.ZERO)

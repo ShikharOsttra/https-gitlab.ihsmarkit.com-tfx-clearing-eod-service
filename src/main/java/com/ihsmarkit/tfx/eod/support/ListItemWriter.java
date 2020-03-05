@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.support;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +23,7 @@ public class ListItemWriter<T> implements ItemWriter<List<T>>, ItemStream, Initi
     @Override
     public void write(final List<? extends List<T>> lists) throws Exception {
         final List<T> items = lists.stream()
-            .flatMap(List::stream)
+            .flatMap(Collection::stream)
             .collect(Collectors.toList());
 
         delegate.write(items);
