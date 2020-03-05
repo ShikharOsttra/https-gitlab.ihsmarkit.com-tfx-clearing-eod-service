@@ -15,6 +15,7 @@ import org.springframework.jmx.support.RegistrationPolicy;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.collateral.calculator.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
+import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
@@ -52,4 +53,7 @@ class IntegrationTestConfig {
 
     @MockBean
     private AlertSender alertSender;
+
+    @MockBean
+    private SystemEventNotificationSender systemEventNotificationSender;
 }
