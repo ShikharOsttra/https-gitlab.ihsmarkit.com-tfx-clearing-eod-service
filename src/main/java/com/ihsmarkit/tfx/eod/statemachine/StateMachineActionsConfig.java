@@ -1,7 +1,9 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
-import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.EOD1_COMPLETE;
-import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.EOD2_COMPLETE;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.DSP_APPROVED;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD1_COMPLETE;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD2_COMPLETE;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.SWAP_POINTS_APPROVED;
 import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
@@ -21,12 +23,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.action.Action;
 
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodStage;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
+import com.ihsmarkit.tfx.core.domain.eod.EodStage;
 import com.ihsmarkit.tfx.core.time.ClockService;
 
 import lombok.RequiredArgsConstructor;
@@ -91,12 +93,12 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodGuard swpPointApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.SWAP_POINTS_APPROVED, date));
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(SWAP_POINTS_APPROVED, date));
     }
 
     @Bean
     public EodGuard dspApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(EodStage.DSP_APPROVED, date));
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date));
     }
 
     @Bean

@@ -13,13 +13,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodStage;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodDataRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.EodSwapPointRepository;
+import com.ihsmarkit.tfx.core.domain.eod.EodStage;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 
 import lombok.RequiredArgsConstructor;

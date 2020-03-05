@@ -1,7 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 
-import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
-import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_BUY;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_SELL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -34,6 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem> {
 
+    private static final Set<ParticipantPositionType> MONTHLY_TRADING_VOLUME_POSITION_TYPES = Set.of(
+        MONTHLY_VOLUME_NET_BUY,
+        MONTHLY_VOLUME_NET_SELL
+    );
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -46,16 +52,15 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
 
     @Override
     public MonthlyTradingVolumeItem process(final ParticipantAndCurrencyPair item) {
-
         return participantPositionRepository.findAllByParticipantAndCurrencyPairAndTypeInAndTradeDateBetween(
             item.getParticipant(),
             item.getCurrencyPair(),
-            Set.of(BUY, SELL),
+            MONTHLY_TRADING_VOLUME_POSITION_TYPES,
             businessDate.with(firstDayOfMonth()),
             businessDate.with(lastDayOfMonth())
         ).collect(
             twoWayCollector(
-                position -> position.getType() == BUY,
+                position -> position.getType() == MONTHLY_VOLUME_NET_BUY,
                 position -> position.getAmount().getValue().abs(),
                 (buyAmount, sellAmount) -> mapToTradingVolumeModel(item, buyAmount, sellAmount)
             )

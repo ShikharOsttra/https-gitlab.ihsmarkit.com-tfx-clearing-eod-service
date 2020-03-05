@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
@@ -41,8 +42,10 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -63,6 +66,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         .build();
 
     private static final TradeEntity A_BUYS_20_USD = TradeEntity.builder()
+        .transactionType(TransactionType.REGULAR)
         .direction(Side.BUY)
         .currencyPair(CURRENCY_PAIR_USD)
         .originator(ORIGINATOR_A)
@@ -71,6 +75,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         .build();
 
     private static final TradeEntity A_SELLS_10_USD = TradeEntity.builder()
+        .transactionType(TransactionType.BALANCE)
         .direction(Side.SELL)
         .currencyPair(CURRENCY_PAIR_USD)
         .originator(ORIGINATOR_A)
@@ -110,7 +115,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private ArgumentCaptor<Stream<TradeOrPositionEssentials>> tradeCaptor;
 
     @Captor
-    private ArgumentCaptor<Stream<TradeOrPositionEssentials>> sodPositionCaptor;
+    private ArgumentCaptor<Stream<CcyParticipantAmount>> sodPositionCaptor;
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
@@ -154,23 +159,36 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 TradeOrPositionEssentials::getCurrencyPair,
                 TradeOrPositionEssentials::getSpotRate,
                 TradeOrPositionEssentials::getAmount
-            ).containsExactlyInAnyOrder(
+            )
+            .containsExactlyInAnyOrder(
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0)),
                 tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.5), BigDecimal.valueOf(-10.0))
             );
 
         assertThat(sodPositionCaptor.getValue())
             .extracting(
+                CcyParticipantAmount::getParticipant,
+                CcyParticipantAmount::getCurrencyPair,
+                CcyParticipantAmount::getAmount
+            )
+            .containsOnly(
+                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(993.0))
+            );
+
+        verify(eodCalculator).netByBuySellForMonthlyVolumeReport(tradeCaptor.capture());
+        assertThat(tradeCaptor.getValue())
+            .extracting(
                 TradeOrPositionEssentials::getParticipant,
                 TradeOrPositionEssentials::getCurrencyPair,
                 TradeOrPositionEssentials::getSpotRate,
                 TradeOrPositionEssentials::getAmount
-            ).containsExactlyInAnyOrder(
-            tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.4), BigDecimal.valueOf(993.0))
-
-        );
+            )
+            .containsOnly(
+                tuple(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.valueOf(99.3), BigDecimal.valueOf(20.0))
+            );
 
         verify(tradeRepository).findAllNovatedForTradeDate(BUSINESS_DATE);
+        verify(tradeRepository).findAllOffsettingMatchIdsByTradeDate(BUSINESS_DATE);
 
         verify(participantPositionRepository).saveAll(positionCaptor.capture());
         assertThat(positionCaptor.getValue())
