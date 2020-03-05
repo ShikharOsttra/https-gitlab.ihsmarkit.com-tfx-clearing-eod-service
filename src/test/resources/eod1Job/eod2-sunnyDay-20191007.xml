@@ -179,7 +179,7 @@
     />
 
     <participant_position
-        id="4"
+        id="2"
         currency_pair_id="13"
         participant_type="FX_BROKER"
         participant_id="103"
@@ -192,7 +192,7 @@
     />
 
     <participant_position
-        id="5"
+        id="3"
         currency_pair_id="13"
         participant_type="LIQUIDITY_PROVIDER"
         participant_id="101"
@@ -205,7 +205,7 @@
     />
 
     <participant_position
-        id="8"
+        id="4"
         currency_pair_id="13"
         participant_type="FX_BROKER"
         participant_id="103"
@@ -218,7 +218,7 @@
     />
 
     <participant_position
-        id="6"
+        id="5"
         currency_pair_id="13"
         participant_type="LIQUIDITY_PROVIDER"
         participant_id="101"
@@ -231,7 +231,7 @@
     />
 
     <participant_position
-        id="7"
+        id="6"
         currency_pair_id="13"
         participant_type="LIQUIDITY_PROVIDER"
         participant_id="103"
@@ -241,6 +241,32 @@
         amount="-4000000"
         currency="JPY"
         type="SELL"
+    />
+
+    <participant_position
+        id="7"
+        currency_pair_id="13"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="101"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="10000"
+        currency="JPY"
+        type="MONTHLY_VOLUME_NET_BUY"
+    />
+
+    <participant_position
+        id="8"
+        currency_pair_id="13"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="103"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="3.12"
+        amount="-4000000"
+        currency="JPY"
+        type="MONTHLY_VOLUME_NET_SELL"
     />
 
     <eod_product_cash_settlement

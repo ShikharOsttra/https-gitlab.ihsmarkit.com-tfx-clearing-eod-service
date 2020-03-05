@@ -9,6 +9,8 @@ import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.FOLLOWING;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.TOTAL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.BUY;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_BUY;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_SELL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
@@ -370,6 +372,37 @@ public class EODCalculator {
                 )
                     .flatMap(Optional::stream)
         );
+    }
+
+    public Stream<ParticipantPosition> netByBuySellForMonthlyVolumeReport(final Stream<TradeOrPositionEssentials> tradesToNet) {
+        final var nettedBuySellAmounts = tradesToNet
+            .collect(
+                GuavaCollectors.toTable(
+                    CcyParticipantAmount::getParticipant,
+                    CcyParticipantAmount::getCurrencyPair,
+                    twoWayCollector(
+                        isGreaterThanZero(TradeOrPositionEssentials::getAmount),
+                        CcyParticipantAmount::getAmount,
+                        BuySellAmounts::new
+                    )
+                )
+            );
+        return StreamEx.of(nettedBuySellAmounts.cellSet())
+            .flatMap(cell -> {
+                final var participant = checkNotNull(cell.getRowKey());
+                final var currencyPair = checkNotNull(cell.getColumnKey());
+                final var buySellAmounts = checkNotNull(cell.getValue());
+                final BigDecimal buyAmount = buySellAmounts.getBuy();
+                final BigDecimal sellAmount = buySellAmounts.getSell();
+                return Stream.concat(
+                    isEqualToZero(buyAmount)
+                        ? Stream.empty()
+                        : Stream.of(ParticipantPosition.of(participant, currencyPair, buyAmount, MONTHLY_VOLUME_NET_BUY)),
+                    isEqualToZero(sellAmount)
+                        ? Stream.empty()
+                        : Stream.of(ParticipantPosition.of(participant, currencyPair, sellAmount, MONTHLY_VOLUME_NET_SELL))
+                );
+            });
     }
 
     public Stream<ParticipantCurrencyPairAmount> calculateAndAggregateDailyMtm(final Stream<ParticipantPositionEntity> positions,

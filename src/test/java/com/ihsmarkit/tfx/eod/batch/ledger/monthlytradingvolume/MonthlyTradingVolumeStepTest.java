@@ -35,7 +35,7 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     @Test
     @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_setup.xml")
     @ExpectedDatabase(value = "/eod2Job/MonthlyTradingVolumeStepTest_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    void shouldRunMonthlyTradingVolumeStep() throws Exception {
+    void shouldRunMonthlyTradingVolumeStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
         final JobParameters jobParams = new JobParametersBuilder()

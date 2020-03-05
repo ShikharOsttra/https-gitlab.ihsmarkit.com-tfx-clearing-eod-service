@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.integration;
 
-import static com.ihsmarkit.tfx.core.dl.entity.eod.EodStage.DSP_APPROVED;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.DSP_APPROVED;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig.BUSINESS_DATE_ATTRIBUTE;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.STOP;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.DSP_NO_TRADES_DELAY;
@@ -21,7 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
-import org.springframework.context.annotation.Import;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
