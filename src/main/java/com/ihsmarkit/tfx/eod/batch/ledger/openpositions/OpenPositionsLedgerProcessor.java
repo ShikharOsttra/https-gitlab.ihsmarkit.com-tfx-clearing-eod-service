@@ -85,10 +85,11 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
 
         final LocalDate settlementDate = tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
+        final String participantCode = participant.getCode();
 
         return OpenPositionsListItem.<BigDecimal>builder()
             .businessDate(businessDate)
-            .participantCode(participant.getCode())
+            .participantCode(participantCode)
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
             .currencyCode(currencyPair.getCode())
@@ -107,8 +108,12 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .settlementDate(formatDate(settlementDate))
             .recordDate(formatDateTime(recordDate))
             .recordType(ITEM_RECORD_TYPE)
-            .orderId(Long.parseLong(participantCodeOrderIdProvider.get(participant.getCode()) + productNumber))
+            .orderId(getOrderId(participantCode, productNumber))
             .build();
+    }
+
+    private long getOrderId(final String participantCode, final String productNumber) {
+        return Long.parseLong(participantCodeOrderIdProvider.get(participantCode) + productNumber);
     }
 
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {

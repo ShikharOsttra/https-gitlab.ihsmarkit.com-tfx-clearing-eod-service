@@ -4,37 +4,89 @@
         business_date="2019-01-01"
         trade_date="2019/01/31"
         record_date="2019/02/01 11:30:00"
-        participant_code="P11"
-        participant_name="Party_123"
-        participant_type="LP"
-        currency_no="101"
-        currency_pair="USD/JPY"
-        sell_trading_volume_in_unit="300"
-        buy_trading_volume_in_unit="0"/>
-
-    <eod_ledger_monthly_trading_volume
-        business_date="2019-01-01"
-        trade_date="2019/01/31"
-        record_date="2019/02/01 11:30:00"
-        participant_code="P11"
-        participant_name="Party_123"
-        participant_type="LP"
-        currency_no="102"
-        currency_pair="EUR/JPY"
-        sell_trading_volume_in_unit="0"
-        buy_trading_volume_in_unit="1100"/>
-
-    <eod_ledger_monthly_trading_volume
-        business_date="2019-01-01"
-        trade_date="2019/01/31"
-        record_date="2019/02/01 11:30:00"
         participant_code="P22"
         participant_name="Party_422"
         participant_type="LP"
         currency_no="102"
         currency_pair="EUR/JPY"
         sell_trading_volume_in_unit="0"
-        buy_trading_volume_in_unit="2400"/>
+        buy_trading_volume_in_unit="2400"
+        record_type="1"
+        order_id="1102"
+    />
+
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-01-01"
+        trade_date="2019/01/31"
+        record_date="2019/02/01 11:30:00"
+        participant_code="P11"
+        participant_name="Party_123"
+        participant_type="LP"
+        currency_no="101"
+        currency_pair="USD/JPY"
+        sell_trading_volume_in_unit="300"
+        buy_trading_volume_in_unit="0"
+        record_type="1"
+        order_id="101"
+    />
+
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-01-01"
+        trade_date="2019/01/31"
+        record_date="2019/02/01 11:30:00"
+        participant_code="P11"
+        participant_name="Party_123"
+        participant_type="LP"
+        currency_no="102"
+        currency_pair="EUR/JPY"
+        sell_trading_volume_in_unit="0"
+        buy_trading_volume_in_unit="1100"
+        record_type="1"
+        order_id="102"
+    />
 
 
+
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-01-31"
+        trade_date=""
+        record_date=""
+        participant_code="P22"
+        participant_name=""
+        participant_type=""
+        currency_no=""
+        currency_pair=""
+        sell_trading_volume_in_unit="0"
+        buy_trading_volume_in_unit="2400"
+        record_type="2"
+        order_id="9223372036854775807"
+    />
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-01-31"
+        trade_date=""
+        record_date=""
+        participant_code="P11"
+        participant_name=""
+        participant_type=""
+        currency_no=""
+        currency_pair=""
+        sell_trading_volume_in_unit="300"
+        buy_trading_volume_in_unit="1100"
+        record_type="2"
+        order_id="9223372036854775807"
+    />
+    <eod_ledger_monthly_trading_volume
+        business_date="2019-01-31"
+        trade_date=""
+        record_date=""
+        participant_code=""
+        participant_name="Total"
+        participant_type=""
+        currency_no=""
+        currency_pair=""
+        sell_trading_volume_in_unit="300"
+        buy_trading_volume_in_unit="3500"
+        record_type="3"
+        order_id="9223372036854775807"
+    />
 </dataset>

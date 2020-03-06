@@ -5,22 +5,31 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import java.time.LocalDate;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.NonNull;
 
-@Value
+@Getter
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
 public class CollateralBalanceItem {
 
+    @NonNull
     private final LocalDate businessDate;
+    @NonNull
     private final String tradeDate;
+    @NonNull
     private final String recordDate;
+    @NonNull
     private final String evaluationDate;
+    @NonNull
     private final String participantCode;
+    @NonNull
     private final String participantName;
+    @NonNull
     private final String participantType;
     @Builder.Default
     private final String collateralPurposeType = EMPTY;
+    @NonNull
     private final String collateralPurpose;
     @Builder.Default
     private final String totalDeposit = EMPTY;
@@ -35,6 +44,7 @@ public class CollateralBalanceItem {
     private final String totalInitialMargin = EMPTY;
     @Builder.Default
     private final String totalVariationMargin = EMPTY;
+    @NonNull
     private final String totalExcessDeficit;
     @Builder.Default
     private final String deficitInCashSettlement = EMPTY;
