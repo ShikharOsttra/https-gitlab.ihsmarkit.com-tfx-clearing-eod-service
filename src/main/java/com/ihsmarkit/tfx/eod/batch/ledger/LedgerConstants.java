@@ -11,5 +11,6 @@ public class LedgerConstants {
     public static final int ITEM_RECORD_TYPE = 1;
     public static final int PARTICIPANT_TOTAL_RECORD_TYPE = 2;
     public static final int TOTAL_RECORD_TYPE = 3;
+    public static final int SUBTOTAL_RECORD_TYPE = 4;
 
 }

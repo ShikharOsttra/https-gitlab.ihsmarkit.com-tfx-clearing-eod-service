@@ -7,7 +7,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMonthDay;
-import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
@@ -30,7 +29,6 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEnti
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
-import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import lombok.RequiredArgsConstructor;
@@ -54,7 +52,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     private final CollateralCalculator collateralCalculator;
 
-    private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+    private final CollateralListItemOrderProvider collateralListItemOrderProvider;
 
     private final EvaluationDateProvider evaluationDateProvider;
 
@@ -86,7 +84,7 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .interestPaymentDay2(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate2())))
             .maturityDate(getMaturityDate(balance.getProduct()))
             .recordType(ITEM_RECORD_TYPE)
-            .orderId(getOrderId(balance))
+            .orderId(collateralListItemOrderProvider.getOrderId(balance, ITEM_RECORD_TYPE))
             .build();
     }
 
@@ -96,15 +94,6 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     private String getBojCode(final CollateralBalanceEntity balance) {
         return getCustodianAccountCode(balance, BOND, bojCodeProvider::getCode);
-    }
-
-    @SuppressWarnings("PMD.UselessStringValueOf")
-    private long getOrderId(final CollateralBalanceEntity balance) {
-        return buildOrderId(
-            participantCodeOrderIdProvider.get(balance.getParticipant().getCode()),
-            balance.getPurpose().getValue(),
-            balance.getProduct().getType().getValue()
-        );
     }
 
     private static String getCustodianAccountCode(

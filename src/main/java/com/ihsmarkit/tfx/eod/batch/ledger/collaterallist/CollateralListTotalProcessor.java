@@ -1,10 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
-import static com.ihsmarkit.tfx.common.streams.Streams.summingBigDecimal;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.SUBTOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,14 +23,20 @@ import one.util.streamex.EntryStream;
 @Component
 @RequiredArgsConstructor
 public class CollateralListTotalProcessor extends
-    AbstractTotalProcessor<String, BigDecimal, CollateralBalanceEntity, CollateralListItem<BigDecimal>, CollateralListItem<String>> {
+    AbstractTotalProcessor<CollateralListItemTotalKey, BigDecimal, CollateralBalanceEntity, CollateralListItem<BigDecimal>, CollateralListItem<String>> {
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
+    private final CollateralListItemOrderProvider collateralListItemOrderProvider;
+
     @Override
-    protected String toTotalKey(final CollateralListItem<BigDecimal> collateralListItem) {
-        return collateralListItem.getParticipantCode();
+    protected CollateralListItemTotalKey toTotalKey(final CollateralListItem<BigDecimal> collateralListItem) {
+        return CollateralListItemTotalKey.of(
+            collateralListItem.getParticipantCode(),
+            collateralListItem.getCollateralPurposeType(),
+            collateralListItem.getCollateralTypeNo()
+        );
     }
 
     @Override
@@ -47,29 +50,16 @@ public class CollateralListTotalProcessor extends
     }
 
     @Override
-    protected List<CollateralListItem<String>> extractTotals(final Map<String, BigDecimal> totals) {
-        final BigDecimal totalOfTotals = totals.values().stream()
-            .collect(summingBigDecimal());
-
+    protected List<CollateralListItem<String>> extractTotals(final Map<CollateralListItemTotalKey, BigDecimal> totals) {
         return EntryStream.of(totals)
-            .mapKeyValue((participantCode, amount) ->
+            .mapKeyValue((collateralListItemTotalKey, amount) ->
                 CollateralListItem.<String>builder()
                     .businessDate(businessDate)
-                    .participantCode(participantCode)
-                    .collateralPurposeType(TOTAL)
+                    .participantCode(collateralListItemTotalKey.getParticipantCode())
+                    .collateralPurpose(TOTAL)
                     .evaluatedAmount(amount.toString())
-                    .orderId(Long.MAX_VALUE)
-                    .recordType(PARTICIPANT_TOTAL_RECORD_TYPE)
-                    .build()
-            )
-            .append(
-                CollateralListItem.<String>builder()
-                    .businessDate(businessDate)
-                    .participantName(TOTAL)
-                    .collateralPurposeType(EMPTY)
-                    .evaluatedAmount(totalOfTotals.toString())
-                    .orderId(Long.MAX_VALUE)
-                    .recordType(TOTAL_RECORD_TYPE)
+                    .orderId(collateralListItemOrderProvider.getOrderId(collateralListItemTotalKey, SUBTOTAL_RECORD_TYPE))
+                    .recordType(SUBTOTAL_RECORD_TYPE)
                     .build()
             )
             .toList();

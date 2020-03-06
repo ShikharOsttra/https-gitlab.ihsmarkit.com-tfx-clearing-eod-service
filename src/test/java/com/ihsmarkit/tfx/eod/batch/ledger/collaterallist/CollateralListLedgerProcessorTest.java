@@ -5,11 +5,11 @@ import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCashCollatera
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCollateralBalanceEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.anEquityCollateralProductEntityBuilder;
-import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.PARTICIPANT_CODE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -25,12 +25,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
-import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -52,7 +52,7 @@ class CollateralListLedgerProcessorTest {
     private CollateralCalculator collateralCalculator;
 
     @Mock
-    private ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+    private CollateralListItemOrderProvider collateralListItemOrderProvider;
 
     @Mock
     private EvaluationDateProvider evaluationDateProvider;
@@ -68,7 +68,7 @@ class CollateralListLedgerProcessorTest {
             bojCodeProvider,
             jasdecCodeProvider,
             collateralCalculator,
-            participantCodeOrderIdProvider,
+            collateralListItemOrderProvider,
             evaluationDateProvider
         );
 
@@ -80,7 +80,7 @@ class CollateralListLedgerProcessorTest {
     @ParameterizedTest
     @MethodSource("collateralList")
     void shouldProcessBalance(final CollateralBalanceEntity balance, final CollateralListItem<BigDecimal> collateralListItem) {
-        when(participantCodeOrderIdProvider.get(PARTICIPANT_CODE)).thenReturn(7);
+        when(collateralListItemOrderProvider.getOrderId(Mockito.<CollateralBalanceEntity>any(), anyInt())).thenReturn(1L);
         if (balance.getProduct() instanceof SecurityCollateralProductEntity) {
             when(collateralCalculator.calculateEvaluatedPrice((SecurityCollateralProductEntity) balance.getProduct())).thenReturn(new BigDecimal("10.01"));
         }
@@ -121,7 +121,7 @@ class CollateralListLedgerProcessorTest {
             .collateralType("LG")
             .maturityDate("2020/02/02")
             .collateralName("Mizuho Bank,Ltd.")
-            .orderId(712)
+            .orderId(1L)
             .build();
     }
 
@@ -130,7 +130,7 @@ class CollateralListLedgerProcessorTest {
             .collateralTypeNo("1")
             .collateralType("Cash")
             .collateralName("Yen Cash")
-            .orderId(711)
+            .orderId(1L)
             .build();
     }
 
@@ -144,7 +144,7 @@ class CollateralListLedgerProcessorTest {
             .marketPrice("1.0")
             .evaluatedPrice("10.01")
             .jasdecCode("jasdec1")
-            .orderId(714)
+            .orderId(1L)
             .build();
     }
 
@@ -161,7 +161,7 @@ class CollateralListLedgerProcessorTest {
             .interestPaymentDay("01/01")
             .interestPaymentDay2("02/02")
             .maturityDate("2020/02/02")
-            .orderId(713)
+            .orderId(1L)
             .build();
     }
 
