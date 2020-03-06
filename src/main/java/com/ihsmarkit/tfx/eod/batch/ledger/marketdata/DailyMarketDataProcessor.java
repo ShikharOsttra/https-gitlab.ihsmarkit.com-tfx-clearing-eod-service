@@ -9,6 +9,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBig
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
 
@@ -144,7 +145,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .openPositionAmount(formatBigDecimalRoundTo1Jpy(openPositionAmount))
             .openPositionAmountInUnit(formatBigDecimalRoundTo1Jpy(convertToTradingUnit(openPositionAmount, currencyPairCode)))
             .recordType(ITEM_RECORD_TYPE)
-            .orderId(Long.parseLong(fxSpotProduct.getProductNumber()))
+            .orderId(buildOrderId(fxSpotProduct.getProductNumber()))
             .build();
     }
 

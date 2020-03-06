@@ -30,7 +30,7 @@
         swap_point_following_day="500.00"
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="11"
+        order_id="10"
     />
 
     <eod_ledger_collateral_balance
@@ -64,7 +64,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="12"
+        order_id="11"
     />
 
     <eod_ledger_collateral_balance
@@ -98,7 +98,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="13"
+        order_id="12"
     />
 
     <eod_ledger_collateral_balance
@@ -132,7 +132,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit="2019/01/05"
         record_type="1"
-        order_id="14"
+        order_id="13"
     />
 
     <eod_ledger_collateral_balance
@@ -166,7 +166,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="15"
+        order_id="14"
     />
 
     <eod_ledger_collateral_balance
@@ -200,7 +200,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="21"
+        order_id="20"
     />
 
     <eod_ledger_collateral_balance
@@ -234,7 +234,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="22"
+        order_id="21"
     />
 
     <eod_ledger_collateral_balance
@@ -268,7 +268,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="23"
+        order_id="22"
     />
 
     <eod_ledger_collateral_balance
@@ -302,7 +302,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="25"
+        order_id="24"
     />
 
 </dataset>

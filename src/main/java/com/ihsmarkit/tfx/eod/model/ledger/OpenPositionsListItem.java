@@ -4,13 +4,11 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.Value;
 
-@AllArgsConstructor
-@Value
+@Getter
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
 public class OpenPositionsListItem<T> {

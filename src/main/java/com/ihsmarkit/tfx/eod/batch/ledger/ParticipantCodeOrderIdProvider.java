@@ -1,12 +1,10 @@
 package com.ihsmarkit.tfx.eod.batch.ledger;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildIndexBasedOrder;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.IntStream;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.data.util.Lazy;
@@ -36,9 +34,7 @@ public class ParticipantCodeOrderIdProvider {
             .sorted()
             .collect(toList());
 
-        return IntStream.range(0, sortedCodes.size())
-            .boxed()
-            .collect(toMap(sortedCodes::get, Function.identity()));
+        return buildIndexBasedOrder(sortedCodes);
     }
 
 }
