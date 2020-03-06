@@ -24,7 +24,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="11"
+        order_id="111"
     />
 
     <eod_ledger_collateral_list
@@ -52,7 +52,7 @@
         interest_payment_day2="12/10"
         maturity_date="2022/10/10"
         record_type="1"
-        order_id="23"
+        order_id="231"
     />
 
     <eod_ledger_collateral_list
@@ -80,7 +80,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="134"
+        order_id="1341"
     />
 
     <eod_ledger_collateral_list
@@ -108,7 +108,7 @@
         interest_payment_day2=""
         maturity_date="2020/02/02"
         record_type="1"
-        order_id="142"
+        order_id="1421"
     />
 
     <eod_ledger_collateral_list
@@ -119,8 +119,8 @@
         participant_code="P11"
         participant_name=""
         participant_type=""
-        collateral_purpose_type="Total"
-        collateral_purpose=""
+        collateral_purpose_type=""
+        collateral_purpose="Total"
         collateral_name=""
         collateral_type_no=""
         collateral_type=""
@@ -129,14 +129,14 @@
         amount=""
         market_price=""
         evaluated_price=""
-        evaluated_amount="11034.20"
+        evaluated_amount="10001"
         boj_code=""
         jasdec_code=""
         interest_payment_day=""
         interest_payment_day2=""
         maturity_date=""
-        record_type="2"
-        order_id="9223372036854775807"
+        record_type="4"
+        order_id="114"
     />
 
     <eod_ledger_collateral_list
@@ -147,8 +147,8 @@
         participant_code="P12"
         participant_name=""
         participant_type=""
-        collateral_purpose_type="Total"
-        collateral_purpose=""
+        collateral_purpose_type=""
+        collateral_purpose="Total"
         collateral_name=""
         collateral_type_no=""
         collateral_type=""
@@ -157,14 +157,14 @@
         amount=""
         market_price=""
         evaluated_price=""
-        evaluated_amount="980194.00"
+        evaluated_amount="9903"
         boj_code=""
         jasdec_code=""
         interest_payment_day=""
         interest_payment_day2=""
         maturity_date=""
-        record_type="2"
-        order_id="9223372036854775807"
+        record_type="4"
+        order_id="1424"
     />
 
     <eod_ledger_collateral_list
@@ -172,26 +172,54 @@
         trade_date=""
         evaluation_date=""
         record_date=""
-        participant_code=""
-        participant_name="Total"
-        collateral_type_no=""
+        participant_code="P11"
+        participant_name=""
         participant_type=""
         collateral_purpose_type=""
-        collateral_purpose=""
+        collateral_purpose="Total"
         collateral_name=""
+        collateral_type_no=""
         collateral_type=""
         security_code=""
         isin_code=""
         amount=""
         market_price=""
         evaluated_price=""
-        evaluated_amount="991228.20"
+        evaluated_amount="1033.20"
         boj_code=""
         jasdec_code=""
         interest_payment_day=""
         interest_payment_day2=""
         maturity_date=""
-        record_type="3"
-        order_id="9223372036854775807"
+        record_type="4"
+        order_id="234"
+    />
+
+    <eod_ledger_collateral_list
+        business_date="2019-01-01"
+        trade_date=""
+        evaluation_date=""
+        record_date=""
+        participant_code="P12"
+        participant_name=""
+        participant_type=""
+        collateral_purpose_type=""
+        collateral_purpose="Total"
+        collateral_name=""
+        collateral_type_no=""
+        collateral_type=""
+        security_code=""
+        isin_code=""
+        amount=""
+        market_price=""
+        evaluated_price=""
+        evaluated_amount="970291.00"
+        boj_code=""
+        jasdec_code=""
+        interest_payment_day=""
+        interest_payment_day2=""
+        maturity_date=""
+        record_type="4"
+        order_id="1344"
     />
 </dataset>
