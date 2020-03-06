@@ -7,6 +7,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMonthDay;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
@@ -99,10 +100,10 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     @SuppressWarnings("PMD.UselessStringValueOf")
     private long getOrderId(final CollateralBalanceEntity balance) {
-        return Long.parseLong(
-            String.valueOf(participantCodeOrderIdProvider.get(balance.getParticipant().getCode())) +
-                balance.getPurpose().getValue() +
-                balance.getProduct().getType().getValue()
+        return buildOrderId(
+            participantCodeOrderIdProvider.get(balance.getParticipant().getCode()),
+            balance.getPurpose().getValue(),
+            balance.getProduct().getType().getValue()
         );
     }
 

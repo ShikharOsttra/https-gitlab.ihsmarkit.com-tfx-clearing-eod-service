@@ -6,6 +6,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYP
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static com.ihsmarkit.tfx.eod.service.EODCalculator.twoWayCollector;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
@@ -101,7 +102,10 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
     }
 
     private long getOrderId(final String participantCode, final String productNumber) {
-        return Long.parseLong(participantCodeOrderIdProvider.get(participantCode) + productNumber);
+        return buildOrderId(
+            participantCodeOrderIdProvider.get(participantCode),
+            productNumber
+        );
     }
 
     private BigDecimal amountInUnit(final BigDecimal amount, final Long tradingUnit) {

@@ -17,6 +17,8 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBig
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildIndexBasedOrder;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
@@ -65,13 +67,14 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
 
     private static final TotalBalance ZERO_BALANCE = TotalBalance.of(ZERO, ZERO, ZERO, ZERO);
 
-    private static final Map<String, Integer> PURPOSE_ORDER_ID_MAP = Map.of(
-        MARGIN.name(), 1,
-        MARKET_ENTRY_DEPOSIT.name(), 2,
-        CLEARING_DEPOSIT.name(), 3,
-        FOLLOWING_CLEARING_DEPOSIT_PURPOSE, 4,
-        SPECIAL_PURPOSE_COLLATERAL.name(), 5
-    );
+    private static final Map<String, Integer> PURPOSE_ORDER_ID_MAP =
+        buildIndexBasedOrder(
+            MARGIN.name(),
+            MARKET_ENTRY_DEPOSIT.name(),
+            CLEARING_DEPOSIT.name(),
+            FOLLOWING_CLEARING_DEPOSIT_PURPOSE,
+            SPECIAL_PURPOSE_COLLATERAL.name()
+        );
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -244,9 +247,11 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             );
     }
 
-    @SuppressWarnings("PMD.UselessStringValueOf")
     private long getOrderId(final ParticipantEntity participantEntity, final String purpose) {
-        return Long.parseLong(String.valueOf(participantCodeOrderIdProvider.get(participantEntity.getCode())) + PURPOSE_ORDER_ID_MAP.get(purpose));
+        return buildOrderId(
+            participantCodeOrderIdProvider.get(participantEntity.getCode()),
+            PURPOSE_ORDER_ID_MAP.get(purpose)
+        );
     }
 
 }

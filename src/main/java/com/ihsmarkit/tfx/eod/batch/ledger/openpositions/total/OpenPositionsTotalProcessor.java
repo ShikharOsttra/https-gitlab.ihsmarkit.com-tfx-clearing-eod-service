@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -107,17 +106,20 @@ public class OpenPositionsTotalProcessor extends AbstractTotalProcessor<OpenPosi
             .collect(Collectors.toList());
 
         return Stream.concat(
-            Stream.of(mapToItem(participantCode, totalOfSettlementDates, totals.size(), TOTAL, null, recordType)),
+            Stream.of(
+                mapToItem(participantCode, totalOfSettlementDates, totals.size(), TOTAL, null, recordType)
+            ),
 
-            IntStream.range(0, settlementDates.size())
-                .mapToObj(index -> mapToItem(
-                    participantCode,
-                    totals.get(settlementDates.get(index)),
-                    totals.size() - 1 - index,
-                    SETTLEMENT_DATE_TOTAL,
-                    settlementDates.get(index),
-                    recordType
-                ))
+            EntryStream.of(settlementDates)
+                .mapKeyValue((index, settlementDate) ->
+                    mapToItem(
+                        participantCode,
+                        totals.get(settlementDate),
+                        totals.size() - 1 - index,
+                        SETTLEMENT_DATE_TOTAL,
+                        settlementDate,
+                        recordType
+                    ))
         );
     }
 

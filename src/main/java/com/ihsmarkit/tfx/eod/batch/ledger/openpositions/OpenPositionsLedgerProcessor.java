@@ -14,6 +14,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBig
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
 
 import java.math.BigDecimal;
@@ -113,7 +114,10 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
     }
 
     private long getOrderId(final String participantCode, final String productNumber) {
-        return Long.parseLong(participantCodeOrderIdProvider.get(participantCode) + productNumber);
+        return buildOrderId(
+            participantCodeOrderIdProvider.get(participantCode),
+            productNumber
+        );
     }
 
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {
