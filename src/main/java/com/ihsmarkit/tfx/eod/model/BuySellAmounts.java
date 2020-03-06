@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class BuySellAmounts {
 
+    private static final BuySellAmounts EMPTY_BUY_SELL_AMOUNTS = BuySellAmounts.of(BigDecimal.ZERO, BigDecimal.ZERO);
+
     private final BigDecimal buy;
     private final BigDecimal sell;
 
@@ -17,5 +19,9 @@ public class BuySellAmounts {
             buy.add(buySellAmounts.getBuy()),
             sell.add(buySellAmounts.getSell())
         );
+    }
+
+    public static BuySellAmounts empty() {
+        return EMPTY_BUY_SELL_AMOUNTS;
     }
 }

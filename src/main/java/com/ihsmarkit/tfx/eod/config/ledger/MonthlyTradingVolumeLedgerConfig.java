@@ -81,6 +81,8 @@ public class MonthlyTradingVolumeLedgerConfig {
                     .participantType(monthlyTradingVolumeItem.getParticipantType())
                     .currencyPairNumber(monthlyTradingVolumeItem.getCurrencyPairNumber())
                     .currencyPairCode(monthlyTradingVolumeItem.getCurrencyPairCode())
+                    .recordType(monthlyTradingVolumeItem.getRecordType())
+                    .orderId(monthlyTradingVolumeItem.getOrderId())
 
                     .buyTradingVolumeInUnit(monthlyTradingVolumeItem.getBuyTradingVolumeInUnit().toString())
                     .sellTradingVolumeInUnit(monthlyTradingVolumeItem.getSellTradingVolumeInUnit().toString())

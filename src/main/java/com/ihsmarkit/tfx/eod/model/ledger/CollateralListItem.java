@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import java.time.LocalDate;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 @Value
@@ -12,6 +13,7 @@ import lombok.Value;
 @SuppressWarnings("PMD.TooManyFields")
 public class CollateralListItem<T> {
 
+    @NonNull
     private final LocalDate businessDate;
     @Builder.Default
     private final String tradeDate = EMPTY;
@@ -19,11 +21,14 @@ public class CollateralListItem<T> {
     private final String evaluationDate = EMPTY;
     @Builder.Default
     private final String recordDate = EMPTY;
-    private final String participantCode;
-    private final String participantName;
+    @Builder.Default
+    private final String participantCode = EMPTY;
+    @Builder.Default
+    private final String participantName = EMPTY;
     @Builder.Default
     private final String participantType = EMPTY;
-    private final String collateralPurposeType;
+    @Builder.Default
+    private final String collateralPurposeType = EMPTY;
     @Builder.Default
     private final String collateralPurpose = EMPTY;
     @Builder.Default

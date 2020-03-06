@@ -101,7 +101,9 @@ CREATE TABLE IF NOT EXISTS eod_ledger_monthly_trading_volume
     currency_no                 varchar(3)   not null,
     currency_pair               varchar(7)   not null,
     sell_trading_volume_in_unit varchar(30)  not null,
-    buy_trading_volume_in_unit  varchar(30)  not null
+    buy_trading_volume_in_unit  varchar(30)  not null,
+    record_type                 int          not null,
+    order_id                    bigint       not null
 );
 
 CREATE TABLE IF NOT EXISTS eod_ledger_open_position

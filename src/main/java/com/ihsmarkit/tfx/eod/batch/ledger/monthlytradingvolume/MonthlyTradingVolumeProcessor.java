@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_BUY;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_SELL;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -20,8 +21,10 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -50,6 +53,8 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
 
     private final ParticipantPositionRepository participantPositionRepository;
 
+    private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+
     @Override
     public MonthlyTradingVolumeItem<BigDecimal> process(final ParticipantAndCurrencyPair item) {
         return participantPositionRepository.findAllByParticipantAndCurrencyPairAndTypeInAndTradeDateBetween(
@@ -72,20 +77,31 @@ public class MonthlyTradingVolumeProcessor implements ItemProcessor<ParticipantA
         final BigDecimal buyAmount,
         final BigDecimal sellAmount
     ) {
-        final Long tradingUnit = fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getTradingUnit();
+        final ParticipantEntity participant = item.getParticipant();
+        final var currencyPair = item.getCurrencyPair();
+        final var tradingUnit = fxSpotProductService.getFxSpotProduct(currencyPair).getTradingUnit();
+        final var productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
+        final var participantCode = participant.getCode();
 
         return MonthlyTradingVolumeItem.<BigDecimal>builder()
             .businessDate(businessDate.with(firstDayOfMonth()))
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
-            .participantCode(item.getParticipant().getCode())
-            .participantName(item.getParticipant().getName())
-            .participantType(formatEnum(item.getParticipant().getType()))
-            .currencyPairCode(item.getCurrencyPair().getCode())
-            .currencyPairNumber(fxSpotProductService.getFxSpotProduct(item.getCurrencyPair()).getProductNumber())
+            .participantCode(participantCode)
+            .participantName(participant.getName())
+            .participantType(formatEnum(participant.getType()))
+            .currencyPairCode(currencyPair.getCode())
+            .currencyPairNumber(productNumber)
             .sellTradingVolumeInUnit(amountInUnit(sellAmount, tradingUnit))
             .buyTradingVolumeInUnit(amountInUnit(buyAmount, tradingUnit))
+
+            .orderId(getOrderId(participantCode, productNumber))
+            .recordType(ITEM_RECORD_TYPE)
             .build();
+    }
+
+    private long getOrderId(final String participantCode, final String productNumber) {
+        return Long.parseLong(participantCodeOrderIdProvider.get(participantCode) + productNumber);
     }
 
     private BigDecimal amountInUnit(final BigDecimal amount, final Long tradingUnit) {

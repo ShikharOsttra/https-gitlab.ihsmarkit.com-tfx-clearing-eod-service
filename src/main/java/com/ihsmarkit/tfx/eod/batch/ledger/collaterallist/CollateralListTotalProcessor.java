@@ -11,8 +11,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -54,20 +52,26 @@ public class CollateralListTotalProcessor extends
             .collect(summingBigDecimal());
 
         return EntryStream.of(totals)
-            .mapKeyValue((participantCode, amount) -> mapToItem(participantCode, amount, PARTICIPANT_TOTAL_RECORD_TYPE))
-            .append(mapToItem(null, totalOfTotals, TOTAL_RECORD_TYPE))
+            .mapKeyValue((participantCode, amount) ->
+                CollateralListItem.<String>builder()
+                    .businessDate(businessDate)
+                    .participantCode(participantCode)
+                    .collateralPurposeType(TOTAL)
+                    .evaluatedAmount(amount.toString())
+                    .orderId(Long.MAX_VALUE)
+                    .recordType(PARTICIPANT_TOTAL_RECORD_TYPE)
+                    .build()
+            )
+            .append(
+                CollateralListItem.<String>builder()
+                    .businessDate(businessDate)
+                    .participantName(TOTAL)
+                    .collateralPurposeType(EMPTY)
+                    .evaluatedAmount(totalOfTotals.toString())
+                    .orderId(Long.MAX_VALUE)
+                    .recordType(TOTAL_RECORD_TYPE)
+                    .build()
+            )
             .toList();
-    }
-
-    private CollateralListItem<String> mapToItem(@Nullable final String participantCode, final BigDecimal amount, final int recordType) {
-        return CollateralListItem.<String>builder()
-            .businessDate(businessDate)
-            .participantName(recordType == TOTAL_RECORD_TYPE ? TOTAL : EMPTY)
-            .participantCode(recordType == PARTICIPANT_TOTAL_RECORD_TYPE ? participantCode : EMPTY)
-            .collateralPurposeType(recordType == PARTICIPANT_TOTAL_RECORD_TYPE ? TOTAL : EMPTY)
-            .evaluatedAmount(amount.toString())
-            .orderId(Long.MAX_VALUE)
-            .recordType(recordType)
-            .build();
     }
 }
