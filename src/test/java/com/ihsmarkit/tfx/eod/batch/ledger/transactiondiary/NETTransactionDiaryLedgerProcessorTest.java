@@ -38,6 +38,7 @@ class NETTransactionDiaryLedgerProcessorTest {
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
+    private static final long ORDER_ID = 1101999999999L;
 
 
     private NETTransactionDiaryLedgerProcessor processor;
@@ -47,12 +48,14 @@ class NETTransactionDiaryLedgerProcessorTest {
     private FXSpotProductService fxSpotProductService;
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
+    @Mock
+    private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @BeforeEach
     void init() {
         this.processor =
             new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService,
-                    participantPositionRepository);
+                participantPositionRepository, transactionDiaryOrderIdProvider);
     }
 
     @Test
@@ -65,6 +68,7 @@ class NETTransactionDiaryLedgerProcessorTest {
             .amount(AmountEntity.builder().value(BigDecimal.valueOf(12)).build())
             .build()));
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
+        when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), '9')).thenReturn(ORDER_ID);
 
         assertThat(processor.process(aParticipantPosition()))
             .isEqualTo(TransactionDiary.builder()
@@ -95,6 +99,7 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .tradeId(EMPTY)
                 .reference(EMPTY)
                 .userReference(EMPTY)
+                .orderId(ORDER_ID)
                 .build());
     }
 

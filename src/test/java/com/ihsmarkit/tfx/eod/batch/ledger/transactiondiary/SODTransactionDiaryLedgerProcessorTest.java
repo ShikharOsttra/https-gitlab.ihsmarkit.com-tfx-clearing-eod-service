@@ -43,6 +43,7 @@ class SODTransactionDiaryLedgerProcessorTest {
     private static final ParticipantCurrencyPairAmount PARTICIPANT_CURRENCY_PAIR_AMOUNT =
         ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR, BigDecimal.ZERO);
     private static final BigDecimal PRICE = BigDecimal.valueOf(123.445);
+    private static final long ORDER_ID = 11010000000000L;
 
     private SODTransactionDiaryLedgerProcessor processor;
     @Mock
@@ -55,11 +56,14 @@ class SODTransactionDiaryLedgerProcessorTest {
     private CurrencyPairSwapPointService currencyPairSwapPointService;
     @Mock
     private JPYRateService jpyRateService;
+    @Mock
+    private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @BeforeEach
     void init() {
         this.processor = new SODTransactionDiaryLedgerProcessor(
-            BUSINESS_DATE, RECORD_DATE, eodCalculator, currencyPairSwapPointService, jpyRateService, dailySettlementPriceService, fxSpotProductService);
+            BUSINESS_DATE, RECORD_DATE, eodCalculator, currencyPairSwapPointService, jpyRateService, dailySettlementPriceService, fxSpotProductService,
+            transactionDiaryOrderIdProvider);
     }
 
     @Test
@@ -72,6 +76,7 @@ class SODTransactionDiaryLedgerProcessorTest {
         when(eodCalculator.calculateDailyMtmValue(any(ParticipantPositionEntity.class), any(Function.class), any(Function.class)))
             .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
+        when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), '9')).thenReturn(ORDER_ID);
 
         assertThat(processor.process(aParticipantPosition()))
             .isEqualTo(TransactionDiary.builder()
@@ -102,6 +107,7 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .tradeId(EMPTY)
                 .reference(EMPTY)
                 .userReference(EMPTY)
+                .orderId(ORDER_ID)
                 .build());
     }
 

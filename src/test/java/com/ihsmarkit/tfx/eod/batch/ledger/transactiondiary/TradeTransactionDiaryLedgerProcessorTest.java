@@ -43,12 +43,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
     private static final LocalDateTime MATCHING_DATE = LocalDateTime.of(2019, 1, 1, 1, 30);
+    private static final LocalDateTime CLEARING_DATE = LocalDateTime.of(2019, 1, 1, 1, 30);
     private static final CurrencyPairEntity CURRENCY_PAIR = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
     private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
     private static final ParticipantCurrencyPairAmount PARTICIPANT_CURRENCY_PAIR_AMOUNT =
         ParticipantCurrencyPairAmount.of(PARTICIPANT, CURRENCY_PAIR, BigDecimal.ZERO);
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
+    private static final long ORDER_ID = 110112345789L;
 
     private TradeTransactionDiaryLedgerProcessor processor;
     @Mock
@@ -70,12 +72,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private CurrencyPairSwapPointService currencyPairSwapPointService;
     @Mock
     private OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
+    @Mock
+    private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService,
-            currencyPairSwapPointService, offsettedTradeMatchIdProvider);
+            currencyPairSwapPointService, offsettedTradeMatchIdProvider, transactionDiaryOrderIdProvider);
     }
 
     @Test
@@ -95,6 +99,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .type(FX_BROKER)
             .build());
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(3);
+        when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), CLEARING_DATE)).thenReturn(ORDER_ID);
 
         assertThat(processor.process(aTrade()))
             .isEqualTo(TransactionDiary.builder()
@@ -125,6 +130,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .tradeId("tradeRef")
                 .reference("1")
                 .userReference(EMPTY)
+                .orderId(ORDER_ID)
                 .build());
     }
 
@@ -135,7 +141,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .currencyPair(CURRENCY_PAIR)
             .matchingTsp(MATCHING_DATE)
             .matchingRef("matchingRef")
-            .clearingTsp(MATCHING_DATE)
+            .clearingTsp(CLEARING_DATE)
             .clearingRef("clearingRef")
             .spotRate(new BigDecimal("1.4321"))
             .baseAmount(AMOUNT)
