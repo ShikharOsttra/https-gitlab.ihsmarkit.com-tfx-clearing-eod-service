@@ -34,8 +34,7 @@ public class CollateralListTotalProcessor extends
     protected CollateralListItemTotalKey toTotalKey(final CollateralListItem<BigDecimal> collateralListItem) {
         return CollateralListItemTotalKey.of(
             collateralListItem.getParticipantCode(),
-            collateralListItem.getCollateralPurposeType(),
-            collateralListItem.getCollateralTypeNo()
+            collateralListItem.getCollateralPurposeType()
         );
     }
 
