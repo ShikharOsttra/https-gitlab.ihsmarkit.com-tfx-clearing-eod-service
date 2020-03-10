@@ -84,7 +84,6 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
             .settlementDate(settlementDate)
             .tradeId(EMPTY)
-            .tradeType(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
             .build();

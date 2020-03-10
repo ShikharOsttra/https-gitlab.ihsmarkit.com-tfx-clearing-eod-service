@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -23,7 +24,9 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.OffsettedTradeMatchIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
@@ -50,6 +53,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     private final FXSpotProductService fxSpotProductService;
     private final ClockService clockService;
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
+    private final OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
@@ -82,11 +86,12 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(trade.getCurrencyPair());
 
+        final String participantCode = originatorParticipant.getCode();
         return TransactionDiary.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
-            .participantCode(originatorParticipant.getCode())
+            .participantCode(participantCode)
             .participantName(originatorParticipant.getName())
             .participantType(formatEnum(originatorParticipant.getType()))
             .currencyNo(fxSpotProductService.getFxSpotProduct(trade.getCurrencyPair()).getProductNumber())
@@ -108,10 +113,8 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
             .settlementDate(formatDate(trade.getValueDate()))
             .tradeId(trade.getTradeReference())
-            .tradeType(trade.getTransactionType().getValue().toString())
-            //todo When the Trade Type is 5 Cancellation, the Trade ID of the trade being cancelled is displayed.
-            .reference(EMPTY)
-            .userReference(EMPTY)
+            .reference(trade.getTransactionType().getValue().toString())
+            .userReference(getUserReference(trade, participantCode))
             .build();
     }
 
@@ -135,5 +138,13 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     @Nullable
     private LocalDateTime utcTimeToServerTime(@Nullable final LocalDateTime utcTime) {
         return utcTime == null ? null : clockService.utcTimeToServerTime(utcTime);
+    }
+
+    private String getUserReference(final TradeEntity tradeEntity, final String participantCode) {
+        if (tradeEntity.getTransactionType() == TransactionType.TRADE_BUST) {
+            final String matchingRef = checkNotNull(tradeEntity.getMatchingRef(), "Trade(TRADE_BUST) doesn't have matchinRef referring to the cancelled trade");
+            return offsettedTradeMatchIdProvider.getCancelledTradeClearingId(matchingRef, participantCode);
+        }
+        return EMPTY;
     }
 }

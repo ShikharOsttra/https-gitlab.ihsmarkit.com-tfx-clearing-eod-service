@@ -393,6 +393,7 @@
         spot_rate="2.41"
         matching_status="CONFIRMED"
         clearing_status="NOVATED"
+        clearing_ref="NOVATED"
         trade_date="2019-02-02"
         value_date="2019-03-06"
         execution_time="2019-03-06 22:00:00"

@@ -71,7 +71,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
     }
 
     private Predicate<TradeEntity> offsettedByTransactionPredicate() {
-        return tradeEntity -> offsettedTradeMatchIdProvider.getOffsettingMatchIds().contains(tradeEntity.getMatchingRef());
+        return tradeEntity -> offsettedTradeMatchIdProvider.hasOffsettingMatchId(tradeEntity.getMatchingRef());
     }
 
     private static DailyMarkedDataAggregated finisher(final TradeHolder tradeHolder) {

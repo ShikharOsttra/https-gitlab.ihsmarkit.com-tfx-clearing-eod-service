@@ -115,6 +115,6 @@ public class NettingTasklet implements Tasklet {
     }
 
     private boolean isCancelledByOboTransaction(final TradeEntity tradeEntity) {
-        return offsettedTradeMatchIdProvider.getOffsettingMatchIds().contains(tradeEntity.getMatchingRef());
+        return offsettedTradeMatchIdProvider.hasOffsettingMatchId(tradeEntity.getMatchingRef());
     }
 }

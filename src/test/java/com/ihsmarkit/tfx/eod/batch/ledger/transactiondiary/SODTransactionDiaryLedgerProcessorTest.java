@@ -100,7 +100,6 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .outstandingPositionAmount("0")
                 .settlementDate("2019/01/02")
                 .tradeId(EMPTY)
-                .tradeType(EMPTY)
                 .reference(EMPTY)
                 .userReference(EMPTY)
                 .build());

@@ -158,7 +158,6 @@ CREATE TABLE IF NOT EXISTS eod_ledger_transaction_diary
     outstanding_position_amount varchar(30)  not null,
     settlement_date             varchar(10)  not null,
     trade_id                    varchar(40)  not null,
-    trade_type                  varchar(2)   not null,
     reference                   varchar(40)  not null,
     user_reference              varchar(255) not null
 );
