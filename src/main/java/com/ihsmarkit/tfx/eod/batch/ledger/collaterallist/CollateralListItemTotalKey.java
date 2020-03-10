@@ -7,5 +7,4 @@ public class CollateralListItemTotalKey {
 
     private final String participantCode;
     private final String collateralPurposeType;
-    private final String collateralTypeNo;
 }
