@@ -39,4 +39,5 @@ public class TransactionDiary {
     private final String tradeId;
     private final String reference;
     private final String userReference;
+    private final long orderId;
 }

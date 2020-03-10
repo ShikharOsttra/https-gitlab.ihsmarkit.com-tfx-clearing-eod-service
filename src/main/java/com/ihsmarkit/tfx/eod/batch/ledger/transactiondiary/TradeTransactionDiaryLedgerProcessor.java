@@ -54,6 +54,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     private final ClockService clockService;
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
+    private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
@@ -85,6 +86,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         @Nullable
         final LocalDateTime clearingTsp = utcTimeToServerTime(trade.getClearingTsp());
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(trade.getCurrencyPair());
+        final String productNumber = fxSpotProductService.getFxSpotProduct(trade.getCurrencyPair()).getProductNumber();
 
         final String participantCode = originatorParticipant.getCode();
         return TransactionDiary.builder()
@@ -94,7 +96,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .participantCode(participantCode)
             .participantName(originatorParticipant.getName())
             .participantType(formatEnum(originatorParticipant.getType()))
-            .currencyNo(fxSpotProductService.getFxSpotProduct(trade.getCurrencyPair()).getProductNumber())
+            .currencyNo(productNumber)
             .currencyPair(trade.getCurrencyPair().getCode())
             .matchDate(matchingTsp == null ? EMPTY : formatDate(matchingTsp.toLocalDate()))
             .matchTime(matchingTsp == null ? EMPTY : formatTime(matchingTsp))
@@ -115,6 +117,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .tradeId(trade.getTradeReference())
             .reference(trade.getTransactionType().getValue().toString())
             .userReference(getUserReference(trade, participantCode))
+            .orderId(transactionDiaryOrderIdProvider.getOrderId(originatorParticipant.getCode(), productNumber, clearingTsp))
             .build();
     }
 

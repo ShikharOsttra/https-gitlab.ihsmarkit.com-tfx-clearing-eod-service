@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
 
     private static final String DEFAULT_TIME = "07:00:00";
+    private static final char ORDER_ID_SUFFIX = '0';
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -44,6 +45,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final JPYRateService jpyRateService;
     private final DailySettlementPriceService dailySettlementPriceService;
     private final FXSpotProductService fxSpotProductService;
+    private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -57,6 +59,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final String tradePrice = formatBigDecimal(participantPosition.getPrice(), priceScale);
         final String tradeDate = formatDate(participantPosition.getTradeDate());
         final BigDecimal positionAmount = participantPosition.getAmount().getValue();
+        final String productNumber = fxSpotProductService.getFxSpotProduct(participantPosition.getCurrencyPair()).getProductNumber();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -65,7 +68,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .currencyNo(fxSpotProductService.getFxSpotProduct(participantPosition.getCurrencyPair()).getProductNumber())
+            .currencyNo(productNumber)
             .currencyPair(participantPosition.getCurrencyPair().getCode())
             .matchDate(tradeDate)
             .matchTime(DEFAULT_TIME)
@@ -86,6 +89,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .tradeId(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
+            .orderId(transactionDiaryOrderIdProvider.getOrderId(participant.getCode(), productNumber, ORDER_ID_SUFFIX))
             .build();
     }
 

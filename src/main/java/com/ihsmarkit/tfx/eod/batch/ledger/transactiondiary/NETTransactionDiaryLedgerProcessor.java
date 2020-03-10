@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
 
     private static final String DEFAULT_TIME = "07:00:00";
+    private static final char ORDER_ID_SUFFIX = '9';
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -45,6 +46,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final FXSpotProductService fxSpotProductService;
 
     private final ParticipantPositionRepository participantPositionRepository;
+    private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @Override
     public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
@@ -52,6 +54,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final ParticipantEntity participant = participantPosition.getParticipant();
         final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPair);
+        final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -60,7 +63,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantCode(participant.getCode())
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
-            .currencyNo(fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber())
+            .currencyNo(productNumber)
             .currencyPair(currencyPair.getCode())
             .matchDate(formatDate(businessDate))
             .matchTime(DEFAULT_TIME)
@@ -81,6 +84,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .tradeId(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
+            .orderId(transactionDiaryOrderIdProvider.getOrderId(participant.getCode(), productNumber, ORDER_ID_SUFFIX))
             .build();
     }
 
