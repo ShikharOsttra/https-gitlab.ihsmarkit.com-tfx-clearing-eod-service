@@ -93,7 +93,6 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .outstandingPositionAmount("12")
                 .settlementDate(EMPTY)
                 .tradeId(EMPTY)
-                .tradeType(EMPTY)
                 .reference(EMPTY)
                 .userReference(EMPTY)
                 .build());

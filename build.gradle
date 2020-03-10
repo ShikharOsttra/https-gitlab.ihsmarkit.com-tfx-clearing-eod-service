@@ -44,9 +44,9 @@ dependencies {
 
     implementation(
             [group: 'com.ihsmarkit.tfx', name: 'common', version: tfxCommonVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreDomainVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreConfigVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreDlVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'collateral-calculator', version: collateralCalculatorVersion],
             [group: 'com.ihsmarkit.tfx', name: 'mailing-client', version: mailingClientVersion],
             [group: 'com.ihsmarkit.tfx', name: 'alert-client', version: alertClientVersion],
@@ -81,9 +81,9 @@ dependencies {
     )
     testImplementation(
             [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreDlVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-domain', classifier: 'tests', version: coreDomainVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'core-config', classifier: 'tests', version: coreConfigVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-dl', classifier: 'tests', version: coreVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-domain', classifier: 'tests', version: coreVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-config', classifier: 'tests', version: coreVersion],
             [group: 'org.apache.activemq', name: 'activemq-pool'],
             [group: 'org.apache.activemq.tooling', name: 'activemq-junit'],
             [group: 'org.dbunit', name: 'dbunit'],

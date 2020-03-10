@@ -23,7 +23,6 @@ INSERT INTO eod_ledger_transaction_diary(business_date,
                                          outstanding_position_amount,
                                          settlement_date,
                                          trade_id,
-                                         trade_type,
                                          reference,
                                          user_reference)
 
@@ -52,6 +51,5 @@ VALUES (:businessDate,
 		:outstandingPositionAmount,
 		:settlementDate,
 		:tradeId,
-		:tradeType,
 		:reference,
 		:userReference)

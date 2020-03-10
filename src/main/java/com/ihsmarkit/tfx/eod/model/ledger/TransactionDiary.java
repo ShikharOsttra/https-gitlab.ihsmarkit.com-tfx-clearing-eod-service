@@ -37,7 +37,6 @@ public class TransactionDiary {
     private final String outstandingPositionAmount;
     private final String settlementDate;
     private final String tradeId;
-    private final String tradeType;
     private final String reference;
     private final String userReference;
 }

@@ -28,6 +28,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.OffsettedTradeMatchIdProvider;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
@@ -67,12 +68,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private ClockService clockService;
     @Mock
     private CurrencyPairSwapPointService currencyPairSwapPointService;
+    @Mock
+    private OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
 
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService,
-            currencyPairSwapPointService);
+            currencyPairSwapPointService, offsettedTradeMatchIdProvider);
     }
 
     @Test
@@ -120,8 +123,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .outstandingPositionAmount("0")
                 .settlementDate("2019/01/02")
                 .tradeId("tradeRef")
-                .tradeType("1")
-                .reference(EMPTY)
+                .reference("1")
                 .userReference(EMPTY)
                 .build());
     }

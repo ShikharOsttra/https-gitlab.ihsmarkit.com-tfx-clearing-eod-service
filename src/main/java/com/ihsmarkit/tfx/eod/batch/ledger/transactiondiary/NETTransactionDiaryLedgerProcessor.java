@@ -79,7 +79,6 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .outstandingPositionAmount(formatBigDecimal(getSODNextDayAmount(participant, currencyPair)))
             .settlementDate(EMPTY)
             .tradeId(EMPTY)
-            .tradeType(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
             .build();
