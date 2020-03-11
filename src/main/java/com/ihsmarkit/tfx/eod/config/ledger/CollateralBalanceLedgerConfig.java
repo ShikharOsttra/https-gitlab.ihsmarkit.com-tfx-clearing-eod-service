@@ -37,8 +37,7 @@ public class CollateralBalanceLedgerConfig {
 
     @Bean(COLLATERAL_BALANCE_LEDGER_STEP_NAME)
     Step collateralBalanceLedger() {
-        return ledgerStepFactory.<ParticipantEntity, List<CollateralBalanceItem>>stepBuilder(COLLATERAL_BALANCE_LEDGER_STEP_NAME,
-            collateralBalanceChunkSize)
+        return ledgerStepFactory.<ParticipantEntity, List<CollateralBalanceItem>>stepBuilder(COLLATERAL_BALANCE_LEDGER_STEP_NAME, collateralBalanceChunkSize)
             .reader(collateralBalanceReader())
             .processor(collateralBalanceLedgerProcessor)
             .writer(collateralBalanceListWriter())
