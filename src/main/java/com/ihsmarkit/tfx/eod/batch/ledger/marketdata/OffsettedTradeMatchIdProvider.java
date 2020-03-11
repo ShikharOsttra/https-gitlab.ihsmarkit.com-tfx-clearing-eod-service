@@ -37,7 +37,7 @@ public class OffsettedTradeMatchIdProvider {
     public String getCancelledTradeClearingId(final String matchingRef, final String participantCode) {
         return Optional.ofNullable(cancelledTrades.get().get(matchingRef, participantCode))
             .orElseThrow(
-                () -> new IllegalStateException("CancelledTrade can't be found by matchingRef: " + matchingRef + ", and particpantCode: " + participantCode)
+                () -> new IllegalStateException("CancelledTrade can't be found by matchingRef: " + matchingRef + " and participantCode: " + participantCode)
             );
     }
 
