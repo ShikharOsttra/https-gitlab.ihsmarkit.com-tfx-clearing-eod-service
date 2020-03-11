@@ -42,7 +42,7 @@ public class OffsettedTradeMatchIdProvider {
     }
 
     private Table<String, String, String> loadOffsettingMatchIds() {
-        return tradeRepository.findAllOffsettingMatchIdsByTradeDate(businessDate).stream()
+        return tradeRepository.findAllOffsettingMatchIdsByTradeDate(businessDate)
             .collect(Tables.toTable(
                 TradeRepository.BustedTradeProjection::getMatchingRef,
                 TradeRepository.BustedTradeProjection::getParticipantCode,

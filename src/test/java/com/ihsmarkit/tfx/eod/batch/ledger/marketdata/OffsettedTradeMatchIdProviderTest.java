@@ -6,7 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,9 +34,11 @@ class OffsettedTradeMatchIdProviderTest {
 
     @BeforeEach
     void init() {
-        when(tradeRepository.findAllOffsettingMatchIdsByTradeDate(any())).thenReturn(Set.of(
-            BustedTradeProjectionImpl.of(MATCHING_REF, PARTICIPANT_CODE, CLEARED_REF)
-        ));
+        when(tradeRepository.findAllOffsettingMatchIdsByTradeDate(any())).thenReturn(
+            Stream.of(
+                BustedTradeProjectionImpl.of(MATCHING_REF, PARTICIPANT_CODE, CLEARED_REF)
+            )
+        );
     }
 
     @Test
