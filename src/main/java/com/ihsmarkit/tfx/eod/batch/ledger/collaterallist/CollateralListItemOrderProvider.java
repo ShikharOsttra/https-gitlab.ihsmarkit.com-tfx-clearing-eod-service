@@ -21,7 +21,8 @@ public class CollateralListItemOrderProvider {
         return getOrderId(
             balance.getParticipant().getCode(),
             balance.getPurpose().getValue(),
-            recordType
+            recordType,
+            balance.getProduct().getType().getValue()
         );
     }
 
@@ -29,15 +30,17 @@ public class CollateralListItemOrderProvider {
         return getOrderId(
             collateralListItemTotalKey.getParticipantCode(),
             collateralListItemTotalKey.getCollateralPurposeType(),
-            recordType
+            recordType,
+            0
         );
     }
 
-    private Long getOrderId(final String participantCode, final Object collateralPurposeType, final int recordType) {
+    private Long getOrderId(final String participantCode, final Object collateralPurposeType, final int recordType, final int collateralType) {
         return buildOrderId(
             participantCodeOrderIdProvider.get(participantCode),
             collateralPurposeType,
-            recordType
+            recordType,
+            collateralType
         );
     }
 }

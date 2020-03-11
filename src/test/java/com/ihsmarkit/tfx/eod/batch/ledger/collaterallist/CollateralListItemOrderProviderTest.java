@@ -32,12 +32,12 @@ class CollateralListItemOrderProviderTest {
     @Test
     void shouldProvideOrderIdForOrdinaryRow() {
         final CollateralBalanceEntity collateralBalanceEntity = aCollateralBalanceEntityBuilder().build();
-        assertThat(collateralListItemOrderProvider.getOrderId(collateralBalanceEntity, LedgerConstants.ITEM_RECORD_TYPE)).isEqualTo(511L);
+        assertThat(collateralListItemOrderProvider.getOrderId(collateralBalanceEntity, LedgerConstants.ITEM_RECORD_TYPE)).isEqualTo(5113L);
     }
 
     @Test
     void shouldProvideOrderIdForTotalRow() {
         final CollateralListItemTotalKey collateralListItemTotalKey = CollateralListItemTotalKey.of("BNP", "8");
-        assertThat(collateralListItemOrderProvider.getOrderId(collateralListItemTotalKey, LedgerConstants.SUBTOTAL_RECORD_TYPE)).isEqualTo(584L);
+        assertThat(collateralListItemOrderProvider.getOrderId(collateralListItemTotalKey, LedgerConstants.SUBTOTAL_RECORD_TYPE)).isEqualTo(5840L);
     }
 }
