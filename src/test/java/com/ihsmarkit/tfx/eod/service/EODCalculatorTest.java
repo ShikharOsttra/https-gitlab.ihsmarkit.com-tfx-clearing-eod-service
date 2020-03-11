@@ -21,6 +21,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.google.common.collect.ImmutableMap;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
@@ -231,13 +232,13 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_SELLS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
-                .extracting(
-                    ParticipantCurrencyPairAmount::getParticipant,
-                    ParticipantCurrencyPairAmount::getCurrencyPair,
-                    ParticipantCurrencyPairAmount::getAmount
-                ).containsExactly(
-                        tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
-                );
+            .extracting(
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
+            ).containsExactly(
+            tuple(PARTICIPANT_A, USDJPY, BigDecimal.ZERO)
+        );
 
     }
 
@@ -246,13 +247,13 @@ class EODCalculatorTest {
 
         final Stream<TradeEntity> trades = Stream.of(A_BUYS_1_USD_AT_991);
         assertThat(eodCalculator.calculateAndAggregateInitialMtm(trades, PRICE_MAP::get, JPY_PRICE_MAP::get))
-                .extracting(
-                    ParticipantCurrencyPairAmount::getParticipant,
-                    ParticipantCurrencyPairAmount::getCurrencyPair,
-                    ParticipantCurrencyPairAmount::getAmount
-                ).containsExactly(
-                        tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
-                );
+            .extracting(
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                ParticipantCurrencyPairAmount::getAmount
+            ).containsExactly(
+            tuple(PARTICIPANT_A, USDJPY, BigDecimal.valueOf(-1))
+        );
 
     }
 
@@ -312,11 +313,11 @@ class EODCalculatorTest {
         assertThat(
             eodCalculator.aggregatePositions(Stream.of(A_POS_EUR_L_100K, A_POS_EUR_L_212M, A_POS_USD_L_100K, B_POS_EUR_L_30M))
         )
-        .extracting(
-            ParticipantCurrencyPairAmount::getParticipant,
-            ParticipantCurrencyPairAmount::getCurrencyPair,
-            participantCcyAmount -> participantCcyAmount.getAmount().intValue()
-        ).containsExactlyInAnyOrder(
+            .extracting(
+                ParticipantCurrencyPairAmount::getParticipant,
+                ParticipantCurrencyPairAmount::getCurrencyPair,
+                participantCcyAmount -> participantCcyAmount.getAmount().intValue()
+            ).containsExactlyInAnyOrder(
             tuple(PARTICIPANT_A, EURUSD, 212100000),
             tuple(PARTICIPANT_A, USDJPY, 100000),
             tuple(PARTICIPANT_B, EURUSD, 30000000)
@@ -326,15 +327,70 @@ class EODCalculatorTest {
 
     @Test
     void shouldCalculateRequiredInitialMargin() {
-        final Stream<ParticipantPositionEntity> positions = Stream.of(A_POS_EUR_L_212M, A_POS_EUR_L_100K, A_POS_USD_L_100K);
-        final Map<CurrencyPairEntity, BigDecimal> marginRatios = Map.of(EURUSD, BigDecimal.valueOf(0.0501), USDJPY, BigDecimal.valueOf(0.1701));
+        final Stream<ParticipantPositionEntity> positions = Stream.of(
+            position("USD", "JPY", 761000L),
+            position("EUR", "JPY", 442000L),
+            position("GBP", "JPY", 669000L),
+            position("AUD", "JPY", 1940000L),
+            position("CAD", "JPY", 421000L),
+            position("NZD", "JPY", -300000L),
+            position("TRY", "JPY", 915000L),
+            position("NOK", "JPY", -44000L),
+            position("HKD", "JPY", 1563000L),
+            position("SEK", "JPY", 766000L),
+            position("MXN", "JPY", 817000L),
+            position("EUR", "USD", 1532000L),
+            position("EUR", "CHF", 315000L),
+            position("EUR", "GBP", 1478000L),
+            position("NZD", "USD", 728000L),
+            position("EUR", "AUD", 237000L),
+            position("GBP", "AUD", -462000L),
+            position("AUD", "NZD", 673000L),
+            position("NZD", "CHF", 456000L)
+        );
+        final Map<CurrencyPairEntity, BigDecimal> marginRatios = ImmutableMap.<CurrencyPairEntity, BigDecimal>builder()
+            .put(CurrencyPairEntity.of(1L, "USD", "JPY"), BigDecimal.valueOf(7))
+            .put(CurrencyPairEntity.of(1L, "EUR", "JPY"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "GBP", "JPY"), BigDecimal.valueOf(4))
+            .put(CurrencyPairEntity.of(1L, "AUD", "JPY"), BigDecimal.valueOf(5))
+            .put(CurrencyPairEntity.of(1L, "CAD", "JPY"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "NZD", "JPY"), BigDecimal.valueOf(5))
+            .put(CurrencyPairEntity.of(1L, "TRY", "JPY"), BigDecimal.valueOf(7))
+            .put(CurrencyPairEntity.of(1L, "NOK", "JPY"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "HKD", "JPY"), BigDecimal.valueOf(7))
+            .put(CurrencyPairEntity.of(1L, "SEK", "JPY"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "MXN", "JPY"), BigDecimal.valueOf(5))
+            .put(CurrencyPairEntity.of(1L, "EUR", "USD"), BigDecimal.valueOf(5))
+            .put(CurrencyPairEntity.of(1L, "EUR", "CHF"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "EUR", "GBP"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "NZD", "USD"), BigDecimal.valueOf(4))
+            .put(CurrencyPairEntity.of(1L, "EUR", "AUD"), BigDecimal.valueOf(7))
+            .put(CurrencyPairEntity.of(1L, "GBP", "AUD"), BigDecimal.valueOf(6))
+            .put(CurrencyPairEntity.of(1L, "AUD", "NZD"), BigDecimal.valueOf(5))
+            .put(CurrencyPairEntity.of(1L, "NZD", "CHF"), BigDecimal.valueOf(7))
+            .build();
         final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver =
             (pairEntity, participantEntity) -> marginRatios.get(pairEntity);
-        final Map<String, BigDecimal> jpyRates = Map.of("EUR", BigDecimal.valueOf(122.081), "USD", BigDecimal.valueOf(109.511));
-        final Map<ParticipantEntity, BigDecimal> initialMargin = eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver,
-            jpyRates::get);
-        assertThat(initialMargin.size()).isOne();
-        assertThat(initialMargin.get(PARTICIPANT_A)).isEqualByComparingTo(BigDecimal.valueOf(12991212));
+
+        final Map<String, BigDecimal> jpyRates = ImmutableMap.<String, BigDecimal>builder()
+            .put("EUR", BigDecimal.valueOf(124.05))
+            .put("USD", BigDecimal.valueOf(110.74))
+            .put("GBP", BigDecimal.valueOf(146.5))
+            .put("AUD", BigDecimal.valueOf(73.55))
+            .put("CAD", BigDecimal.valueOf(84.19))
+            .put("NZD", BigDecimal.valueOf(76.51))
+            .put("TRY", BigDecimal.valueOf(17.339))
+            .put("NOK", BigDecimal.valueOf(12.219))
+            .put("HKD", BigDecimal.valueOf(15.637))
+            .put("SEK", BigDecimal.valueOf(11.63))
+            .put("MXN", BigDecimal.valueOf(7.09))
+            .put("CHF", BigDecimal.valueOf(108.22))
+            .build();
+
+        final Map<ParticipantEntity, BigDecimal> initialMargin = eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver, jpyRates::get);
+        assertThat(initialMargin)
+            .hasSize(1)
+            .containsValue(BigDecimal.valueOf(63307344L));
     }
 
     @Test
@@ -396,6 +452,21 @@ class EODCalculatorTest {
                 map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.FOLLOWING),
                 map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.TOTAL))
             .containsExactly(BigDecimal.valueOf(100), BigDecimal.valueOf(320), BigDecimal.valueOf(620));
+    }
+
+    private static ParticipantPositionEntity position(final String baseCurrency, final String valueCurrency, final long amount) {
+        return ParticipantPositionEntity.builder()
+            .currencyPair(
+                CurrencyPairEntity.builder()
+                    .id(1L)
+                    .baseCurrency(baseCurrency)
+                    .valueCurrency(valueCurrency)
+                    .build()
+            )
+            .amount(AmountEntity.of(BigDecimal.valueOf(amount), baseCurrency))
+            .participant(PARTICIPANT_A)
+            .price(BigDecimal.ZERO)
+            .build();
     }
 
     @TestConfiguration

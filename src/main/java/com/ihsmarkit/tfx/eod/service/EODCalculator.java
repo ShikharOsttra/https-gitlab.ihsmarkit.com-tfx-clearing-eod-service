@@ -196,10 +196,10 @@ public class EODCalculator {
                 toMap(
                     ParticipantCurrencyPairAmount::getParticipant,
                     position -> jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
-                        .multiply(position.getAmount())
+                        .multiply(position.getAmount().abs())
                         .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
                             .multiply(MARGIN_RATIO_FACTOR))
-                        .setScale(0, RoundingMode.CEILING).abs(),
+                        .setScale(0, RoundingMode.CEILING),
                     BigDecimal::add
                 )
             );
