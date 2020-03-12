@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,8 @@ public class CollateralCalculator {
     }
 
     public BigDecimal calculateEvaluatedAmount(final CollateralBalanceEntity balance) {
-        return evaluatedAmountCalculator.calculate(balance.getAmount(), ProductDetailsAdapterFactory.fromEntity(balance.getProduct()));
+        return evaluatedAmountCalculator.calculate(balance.getAmount(), ProductDetailsAdapterFactory.fromEntity(balance.getProduct()))
+            .setScale(0, RoundingMode.DOWN);
     }
 
     public BigDecimal calculateEvaluatedPrice(final SecurityCollateralProductEntity securityProduct) {
