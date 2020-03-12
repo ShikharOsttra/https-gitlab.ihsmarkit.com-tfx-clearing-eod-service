@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -105,8 +104,7 @@ public class NettingTasklet implements Tasklet {
     private ParticipantPositionEntity mapParticipantPositionEntity(final ParticipantPosition participantPosition) {
         final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
         final LocalDate settlementDate = tradeAndSettlementDateService.getValueDate(businessDate, currencyPair);
-        final BigDecimal dspPrice = dailySettlementPriceService.getPrice(businessDate, currencyPair);
-        return participantCurrencyPairAmountMapper.toParticipantPosition(participantPosition, businessDate, settlementDate, dspPrice);
+        return participantCurrencyPairAmountMapper.toParticipantPosition(participantPosition, businessDate, settlementDate);
     }
 
     private boolean isInScopeOfMonthlyVolumeReport(final TradeEntity tradeEntity) {

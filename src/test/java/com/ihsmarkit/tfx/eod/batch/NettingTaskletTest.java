@@ -136,8 +136,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(eodCalculator.netAllByBuySell(any(), any()))
             .thenReturn(
                 Stream.of(
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, BigDecimal.ONE, NET),
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), BigDecimal.ONE, NET)
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, BigDecimal.valueOf(22), NET),
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), BigDecimal.valueOf(33), NET)
                 )
             );
 
@@ -208,7 +208,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     CURRENCY_PAIR_USD,
                     NET,
                     AmountEntity.of(BigDecimal.ONE, USD),
-                    BigDecimal.valueOf(2),
+                    BigDecimal.valueOf(22),
                     BUSINESS_DATE,
                     VALUE_DATE
                 ),
@@ -218,7 +218,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     CURRENCY_PAIR_JPY,
                     NET,
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
-                    BigDecimal.valueOf(3),
+                    BigDecimal.valueOf(33),
                     BUSINESS_DATE,
                     VALUE_DATE
                 )

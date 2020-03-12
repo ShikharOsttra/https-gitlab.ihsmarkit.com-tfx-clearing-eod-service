@@ -65,7 +65,7 @@ public interface ParticipantCurrencyPairAmountMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "timestamp", ignore = true)
-    @Mapping(target = "price", source = "price")
+    @Mapping(target = "price", source = "position.rate")
     @Mapping(target = "participant", source = "position.participant")
     @Mapping(target = "participantType", source = "position.participant.type")
     @Mapping(target = "currencyPair", source = "position.currencyPair")
@@ -76,8 +76,7 @@ public interface ParticipantCurrencyPairAmountMapper {
     ParticipantPositionEntity toParticipantPosition(
         ParticipantPosition position,
         LocalDate businessDate,
-        LocalDate settlementDate,
-        BigDecimal price
+        LocalDate settlementDate
     );
 
     @Named(PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
