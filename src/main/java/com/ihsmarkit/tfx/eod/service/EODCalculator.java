@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -84,6 +85,7 @@ public class EODCalculator {
     private static final Tuple3<Optional<BigDecimal>, Optional<BigDecimal>, Optional<BigDecimal>> EMPTY_TUPLE3 =
         Tuple.of(Optional.empty(), Optional.empty(), Optional.empty());
     private static final int DEFAULT_ROUNDING = 5;
+    private static final int RATE_PRECISION = 8;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
     private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
 
@@ -348,91 +350,60 @@ public class EODCalculator {
                     GuavaCollectors.toTable(
                         TradeOrPositionEssentials::getParticipant,
                         TradeOrPositionEssentials::getCurrencyPair,
-//                        collectingAndThen(
-                            reducing(new NettingAccumulator(), NettingAccumulator::of, NettingAccumulator::merge)
-//                            partitioningBy(
-//                                isGreaterThanZero(TradeOrPositionEssentials::getAmount),
-//                                mapping(
-//                                    trade -> Pair.of(trade.getAmount(), trade.getAmount().multiply(trade.getSpotRate())),
-//                                    reducing(Pair.of(ZERO, ZERO), (a, b) -> Pair.of(a.getLeft().add(b.getLeft()), a.getRight().add(b.getRight()))))
-//
-//                                ),
-//                                map -> BuySellAmounts.of(
-//                                    map.getOrDefault(Boolean.TRUE, Pair.of(ZERO, ZERO)),
-//                                    map.getOrDefault(Boolean.FALSE, Pair.of(ZERO, ZERO))
-//                                )
-                            )
-//                        )
+                        reducing(new NettingAccumulator(), NettingAccumulator::of, NettingAccumulator::merge)
+                    )
                 ),
             (participant, currencyPair, sod, buySell) ->
                 Stream.of(
                     fromNettingAccumulator(
-                        NettingAccumulator::getBuy,
-                        acc -> acc.getBuyValue().map(val -> val.divide(acc.getBuy().get())).get(),
+                        () -> buySell.flatMap(NettingAccumulator::getBuy),
+                        () -> buySell
+                            .flatMap(NettingAccumulator::getBuyValue)
+                            .map(val -> val.divide(buySell.flatMap(NettingAccumulator::getBuy).get(), RATE_PRECISION, RoundingMode.HALF_DOWN))
+                            .get(),
                         (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, BUY)
                     ),
                     fromNettingAccumulator(
-                        NettingAccumulator::getSell,
-                        acc -> acc.getSellValue().map(val -> val.divide(acc.getSell().get())).get(),
+                        () -> buySell.flatMap(NettingAccumulator::getSell),
+                        () -> buySell
+                            .flatMap(NettingAccumulator::getSellValue)
+                            .map(val -> val.divide(buySell.flatMap(NettingAccumulator::getSell).get(), RATE_PRECISION, RoundingMode.HALF_DOWN))
+                            .get(),
                         (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, SELL)
                     ),
                     fromNettingAccumulator(
-                        acc -> sumAll(acc.getNet(), sod.map(Pair::getLeft)),
-                        acc ->
+                        () -> sumAll(buySell.flatMap(NettingAccumulator::getNet), sod.map(Pair::getLeft)),
+                        () ->
                             sumAll(
-                                acc.getBuy(),
-                                acc.getSell().map(BigDecimal::abs),
+                                buySell.flatMap(NettingAccumulator::getBuy),
+                                buySell.flatMap(NettingAccumulator::getSell).map(BigDecimal::abs),
                                 sod.map(Pair::getLeft).map(BigDecimal::abs)
                             ).map(
-                            sumAll(
-                                acc.getBuyValue(),
-                                acc.getSellValue().map(BigDecimal::abs),
-                                sod.map(pair -> pair.getLeft().multiply(pair.getRight()).abs())
-                            ).get()::divide)
-                        .get(),
+                                valueAmnt ->
+                                    valueAmnt.divide(
+                                        sumAll(
+                                            buySell.flatMap(NettingAccumulator::getBuyValue),
+                                            buySell.flatMap(NettingAccumulator::getSellValue).map(BigDecimal::abs),
+                                            sod.map(pair -> pair.getLeft().multiply(pair.getRight()).abs())
+                                        ).get(),
+                                        RATE_PRECISION,
+                                        RoundingMode.HALF_DOWN
+                                    )
+                            ).get(),
                         (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, NET)
                     )
-//                    buySell
-//                        .flatMap(NettingAccumulator::getBuy)
-////                        .map(BuySellAmounts::getBuy)
-////                        .filter(amounts -> amounts.getLeft().compareTo(ZERO) != 0)
-//                        .map(buy -> ParticipantPosition.of(participant, currencyPair, buy, buySell.flatMap(NettingAccumulator::getBuyValue).map(val -> val.divide(buy)).get()/*.getRight().divide(buy.getLeft())*/, BUY))//,
-////                    buySell
-////                        .map(BuySellAmounts::getSell)
-////                        .filter(amounts -> amounts.getLeft().compareTo(ZERO) != 0)
-////                        .map(sell -> ParticipantPosition.of(participant, currencyPair, sell.getLeft(), sell.getRight().divide(sell.getLeft()), SELL)),
-//                    sumAll(
-//                        buySell
-//                            .map(BuySellAmounts::getBuy).map(Pair::getLeft),
-//                        buySell
-//                            .map(BuySellAmounts::getSell).map(Pair::getLeft),
-//                        sod.map(Pair::getLeft)
-//                    )
-//                        .map(
-//                            net ->
-//                                ParticipantPosition.of(
-//                                    participant,
-//                                    currencyPair,
-//                                    net,
-//                                    Stream.of(buySell.map(BuySellAmounts::getBuy), buySell.map(BuySellAmounts::getSell), sod)
-//                                        .flatMap(Optional::stream)
-//                                        .reduce((a, b) -> Pair.of(a.getLeft().abs().add(b.getLeft().abs()), a.getRight().abs().add(b.getRight().abs())))
-//                                        .map(pair -> pair.getRight().divide(pair.getLeft()))
-//                                        .get(),
-//                                    NET
-//                                )
-//                        )
-                ).flatMap(f -> f.apply(buySell).stream())
+
+                ).flatMap(Optional::stream)
         );
     }
 
-    private Function<Optional<NettingAccumulator>, Optional<ParticipantPosition>> fromNettingAccumulator(
-        Function<NettingAccumulator, Optional<BigDecimal>> baseAmnt,
-        Function<NettingAccumulator, BigDecimal> valAmnt,
-        BiFunction<BigDecimal, BigDecimal, ParticipantPosition> mapper
+    private Optional<ParticipantPosition> fromNettingAccumulator(
+        final Supplier<Optional<BigDecimal>> baseAmnt,
+        final Supplier<BigDecimal> valAmnt,
+        final BiFunction<BigDecimal, BigDecimal, ParticipantPosition> mapper
 
     ) {
-        return accumulator -> accumulator.flatMap(baseAmnt).map(base -> mapper.apply(base, accumulator.map(valAmnt).get()));
+        return baseAmnt.get().map(base -> mapper.apply(base, valAmnt.get()));
     }
 
     public Stream<ParticipantPosition> netByBuySellForMonthlyVolumeReport(final Stream<TradeOrPositionEssentials> tradesToNet) {
@@ -630,11 +601,11 @@ public class EODCalculator {
         private Optional<BigDecimal> buyValue = Optional.empty();
         private Optional<BigDecimal> sellValue = Optional.empty();
 
-        public static NettingAccumulator of(TradeOrPositionEssentials trade) {
+        public static NettingAccumulator of(final TradeOrPositionEssentials trade) {
             return of(Optional.of(trade));
         }
 
-        public static NettingAccumulator of(Optional<TradeOrPositionEssentials> trade) {
+        public static NettingAccumulator of(final Optional<TradeOrPositionEssentials> trade) {
             return new NettingAccumulator(
                 trade.map(TradeOrPositionEssentials::getAmount),
                 trade.filter(NettingAccumulator::isBuyTrade).map(TradeOrPositionEssentials::getAmount),
@@ -644,11 +615,11 @@ public class EODCalculator {
             );
         }
 
-        private static boolean isBuyTrade(TradeOrPositionEssentials trade) {
+        private static boolean isBuyTrade(final TradeOrPositionEssentials trade) {
             return trade.getAmount().compareTo(ZERO) > 0;
         }
 
-        public NettingAccumulator merge(NettingAccumulator other) {
+        public NettingAccumulator merge(final NettingAccumulator other) {
             return new NettingAccumulator(
                 sum(NettingAccumulator::getNet, this, other),
                 sum(NettingAccumulator::getBuy, this, other),
@@ -658,7 +629,7 @@ public class EODCalculator {
             );
         }
 
-        private Optional<BigDecimal> sum(Function<NettingAccumulator, Optional<BigDecimal>> getter, NettingAccumulator...accumulators) {
+        private Optional<BigDecimal> sum(final Function<NettingAccumulator, Optional<BigDecimal>> getter, final NettingAccumulator...accumulators) {
             return Arrays.stream(accumulators).map(getter).flatMap(Optional::stream).reduce(BigDecimal::add);
         }
     }

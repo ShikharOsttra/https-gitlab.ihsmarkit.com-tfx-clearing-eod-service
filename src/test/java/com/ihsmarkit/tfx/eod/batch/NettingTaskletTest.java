@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
@@ -115,7 +114,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private ArgumentCaptor<Stream<TradeOrPositionEssentials>> tradeCaptor;
 
     @Captor
-    private ArgumentCaptor<Stream<CcyParticipantAmount>> sodPositionCaptor;
+    private ArgumentCaptor<Stream<TradeOrPositionEssentials>> sodPositionCaptor;
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
@@ -137,8 +136,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(eodCalculator.netAllByBuySell(any(), any()))
             .thenReturn(
                 Stream.of(
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, NET),
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), NET)
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, BigDecimal.ONE, NET),
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), BigDecimal.ONE, NET)
                 )
             );
 
