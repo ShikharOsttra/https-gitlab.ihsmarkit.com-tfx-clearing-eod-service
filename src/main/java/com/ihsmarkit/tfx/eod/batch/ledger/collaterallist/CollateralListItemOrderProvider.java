@@ -36,12 +36,12 @@ public class CollateralListItemOrderProvider {
     }
 
     private long getProductSpecificCode(final CollateralProductEntity product) {
-        if(product instanceof SecurityCollateralProductEntity) {
+        if (product instanceof SecurityCollateralProductEntity) {
             return Long.parseLong(((SecurityCollateralProductEntity) product).getSecurityCode());
         }
 
-        if(product.getType() == CollateralProductType.LOG) {
-            return ((LogCollateralProductEntity)product).getIssuer().getSubType();
+        if (product.getType() == CollateralProductType.LOG) {
+            return ((LogCollateralProductEntity) product).getIssuer().getSubType();
         }
 
         return 0;
