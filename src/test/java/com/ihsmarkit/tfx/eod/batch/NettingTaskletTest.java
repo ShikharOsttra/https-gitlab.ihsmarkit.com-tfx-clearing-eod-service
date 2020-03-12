@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.batch;
 
-import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
@@ -115,7 +114,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
     private ArgumentCaptor<Stream<TradeOrPositionEssentials>> tradeCaptor;
 
     @Captor
-    private ArgumentCaptor<Stream<CcyParticipantAmount>> sodPositionCaptor;
+    private ArgumentCaptor<Stream<TradeOrPositionEssentials>> sodPositionCaptor;
 
     @Test
     void shouldCalculateAndStoreNetPosition() {
@@ -137,8 +136,8 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
         when(eodCalculator.netAllByBuySell(any(), any()))
             .thenReturn(
                 Stream.of(
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, NET),
-                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), NET)
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_USD, BigDecimal.ONE, BigDecimal.valueOf(22), NET),
+                    ParticipantPosition.of(PARTICIPANT, CURRENCY_PAIR_JPY, BigDecimal.valueOf(2), BigDecimal.valueOf(33), NET)
                 )
             );
 
@@ -209,7 +208,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     CURRENCY_PAIR_USD,
                     NET,
                     AmountEntity.of(BigDecimal.ONE, USD),
-                    BigDecimal.valueOf(2),
+                    BigDecimal.valueOf(22),
                     BUSINESS_DATE,
                     VALUE_DATE
                 ),
@@ -219,7 +218,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                     CURRENCY_PAIR_JPY,
                     NET,
                     AmountEntity.of(BigDecimal.valueOf(2), JPY),
-                    BigDecimal.valueOf(3),
+                    BigDecimal.valueOf(33),
                     BUSINESS_DATE,
                     VALUE_DATE
                 )

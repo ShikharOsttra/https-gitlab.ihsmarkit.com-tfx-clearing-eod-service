@@ -34,9 +34,11 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.HashBasedTable;
@@ -66,6 +68,9 @@ import io.vavr.Function3;
 import io.vavr.Function4;
 import io.vavr.Tuple;
 import io.vavr.Tuple3;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
@@ -78,6 +83,7 @@ public class EODCalculator {
     private static final Tuple3<Optional<BigDecimal>, Optional<BigDecimal>, Optional<BigDecimal>> EMPTY_TUPLE3 =
         Tuple.of(Optional.empty(), Optional.empty(), Optional.empty());
     private static final int DEFAULT_ROUNDING = 5;
+    private static final int RATE_PRECISION = 8;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
     private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
 
@@ -324,52 +330,74 @@ public class EODCalculator {
 
     public Stream<ParticipantPosition> netAllByBuySell(
         final Stream<TradeOrPositionEssentials> tradesToNet,
-        final Stream<? extends CcyParticipantAmount> sodPositions
+        final Stream<TradeOrPositionEssentials> sodPositions
     ) {
 
         return mergeAndFlatten(
             StreamEx.of(sodPositions)
                 .collect(
                     Tables.toTable(
-                        CcyParticipantAmount::getParticipant,
-                        CcyParticipantAmount::getCurrencyPair,
-                        CcyParticipantAmount::getAmount,
+                        TradeOrPositionEssentials::getParticipant,
+                        TradeOrPositionEssentials::getCurrencyPair,
+                        trade -> Pair.of(trade.getAmount(), trade.getAmount().multiply(trade.getSpotRate())),
                         HashBasedTable::create
                     )
                 ),
             StreamEx.of(tradesToNet)
                 .collect(
                     GuavaCollectors.toTable(
-                        CcyParticipantAmount::getParticipant,
-                        CcyParticipantAmount::getCurrencyPair,
-                        twoWayCollector(
-                            isGreaterThanZero(TradeOrPositionEssentials::getAmount),
-                            CcyParticipantAmount::getAmount,
-                            BuySellAmounts::of
-                        )
+                        TradeOrPositionEssentials::getParticipant,
+                        TradeOrPositionEssentials::getCurrencyPair,
+                        reducing(new NettingAccumulator(), NettingAccumulator::of, NettingAccumulator::merge)
                     )
                 ),
             (participant, currencyPair, sod, buySell) ->
                 Stream.of(
-                    buySell
-                        .map(BuySellAmounts::getBuy)
-                        .filter(not(isEqualToZero()))
-                        .map(buy -> ParticipantPosition.of(participant, currencyPair, buy, BUY)),
-                    buySell
-                        .map(BuySellAmounts::getSell)
-                        .filter(not(isEqualToZero()))
-                        .map(sell -> ParticipantPosition.of(participant, currencyPair, sell, SELL)),
-                    sumAll(
-                        buySell
-                            .map(BuySellAmounts::getBuy),
-                        buySell
-                            .map(BuySellAmounts::getSell),
-                        sod
+                    fromNettingAccumulator(
+                        () -> buySell.flatMap(NettingAccumulator::getBuy),
+                        () -> buySell
+                            .flatMap(NettingAccumulator::getBuyValue)
+                            .map(val -> val.divide(buySell.flatMap(NettingAccumulator::getBuy).get(), RATE_PRECISION, RoundingMode.HALF_DOWN))
+                            .get(),
+                        (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, BUY)
+                    ),
+                    fromNettingAccumulator(
+                        () -> buySell.flatMap(NettingAccumulator::getSell),
+                        () -> buySell
+                            .flatMap(NettingAccumulator::getSellValue)
+                            .map(val -> val.divide(buySell.flatMap(NettingAccumulator::getSell).get(), RATE_PRECISION, RoundingMode.HALF_DOWN))
+                            .get(),
+                        (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, SELL)
+                    ),
+                    fromNettingAccumulator(
+                        () -> sumAll(buySell.flatMap(NettingAccumulator::getNet), sod.map(Pair::getLeft)),
+                        () ->
+                            sumAll(
+                                buySell.flatMap(NettingAccumulator::getBuy),
+                                buySell.flatMap(NettingAccumulator::getSell).map(BigDecimal::abs),
+                                sod.map(Pair::getLeft).map(BigDecimal::abs)
+                            ).map(
+                                baseAmnt ->
+                                    sumAll(
+                                        buySell.flatMap(NettingAccumulator::getBuyValue),
+                                        buySell.flatMap(NettingAccumulator::getSellValue).map(BigDecimal::abs),
+                                        sod.map(Pair::getRight).map(BigDecimal::abs)
+                                    ).get().divide(baseAmnt, RATE_PRECISION, RoundingMode.HALF_DOWN)
+                            ).get(),
+                        (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, NET)
                     )
-                        .map(net -> ParticipantPosition.of(participant, currencyPair, net, NET))
-                )
-                    .flatMap(Optional::stream)
+
+                ).flatMap(Optional::stream)
         );
+    }
+
+    private Optional<ParticipantPosition> fromNettingAccumulator(
+        final Supplier<Optional<BigDecimal>> baseAmnt,
+        final Supplier<BigDecimal> valAmnt,
+        final BiFunction<BigDecimal, BigDecimal, ParticipantPosition> mapper
+
+    ) {
+        return baseAmnt.get().map(base -> mapper.apply(base, valAmnt.get()));
     }
 
     public Stream<ParticipantPosition> netByBuySellForMonthlyVolumeReport(final Stream<TradeOrPositionEssentials> tradesToNet) {
@@ -395,10 +423,10 @@ public class EODCalculator {
                 return Stream.concat(
                     isEqualToZero(buyAmount)
                         ? Stream.empty()
-                        : Stream.of(ParticipantPosition.of(participant, currencyPair, buyAmount, MONTHLY_VOLUME_NET_BUY)),
+                        : Stream.of(ParticipantPosition.of(participant, currencyPair, buyAmount, ZERO, MONTHLY_VOLUME_NET_BUY)),
                     isEqualToZero(sellAmount)
                         ? Stream.empty()
-                        : Stream.of(ParticipantPosition.of(participant, currencyPair, sellAmount, MONTHLY_VOLUME_NET_SELL))
+                        : Stream.of(ParticipantPosition.of(participant, currencyPair, sellAmount, ZERO, MONTHLY_VOLUME_NET_SELL))
                 );
             });
     }
@@ -544,5 +572,48 @@ public class EODCalculator {
         return Arrays.stream(values)
             .flatMap(Optional::stream)
             .reduce(BigDecimal::add);
+    }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    private static class NettingAccumulator {
+        private Optional<BigDecimal> net = Optional.empty();
+        private Optional<BigDecimal> buy = Optional.empty();
+        private Optional<BigDecimal> sell = Optional.empty();
+        private Optional<BigDecimal> buyValue = Optional.empty();
+        private Optional<BigDecimal> sellValue = Optional.empty();
+
+        public static NettingAccumulator of(final TradeOrPositionEssentials trade) {
+            return of(Optional.of(trade));
+        }
+
+        public static NettingAccumulator of(final Optional<TradeOrPositionEssentials> trade) {
+            return new NettingAccumulator(
+                trade.map(TradeOrPositionEssentials::getAmount),
+                trade.filter(NettingAccumulator::isBuyTrade).map(TradeOrPositionEssentials::getAmount),
+                trade.filter(not(NettingAccumulator::isBuyTrade)).map(TradeOrPositionEssentials::getAmount),
+                trade.filter(NettingAccumulator::isBuyTrade).map(t -> t.getAmount().multiply(t.getSpotRate())),
+                trade.filter(not(NettingAccumulator::isBuyTrade)).map(t -> t.getAmount().multiply(t.getSpotRate()))
+            );
+        }
+
+        private static boolean isBuyTrade(final TradeOrPositionEssentials trade) {
+            return trade.getAmount().compareTo(ZERO) > 0;
+        }
+
+        public NettingAccumulator merge(final NettingAccumulator other) {
+            return new NettingAccumulator(
+                sum(NettingAccumulator::getNet, this, other),
+                sum(NettingAccumulator::getBuy, this, other),
+                sum(NettingAccumulator::getSell, this, other),
+                sum(NettingAccumulator::getBuyValue, this, other),
+                sum(NettingAccumulator::getSellValue, this, other)
+            );
+        }
+
+        private Optional<BigDecimal> sum(final Function<NettingAccumulator, Optional<BigDecimal>> getter, final NettingAccumulator...accumulators) {
+            return Arrays.stream(accumulators).map(getter).flatMap(Optional::stream).reduce(BigDecimal::add);
+        }
     }
 }

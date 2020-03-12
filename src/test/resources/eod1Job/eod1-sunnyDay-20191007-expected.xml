@@ -259,7 +259,7 @@
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="3.11"
         amount="1.17"
         currency="EUR"
     />
@@ -271,7 +271,7 @@
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="3.11"
         amount="-1.11"
         currency="EUR"
     />
@@ -283,7 +283,7 @@
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="3.11999998"
         amount="-999999.94"
         currency="EUR"
     />
@@ -294,7 +294,7 @@
         participant_id="103"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="3.12"
         amount="-1000000.00"
         currency="EUR"
         type="NET"
@@ -306,7 +306,7 @@
             participant_id="104"
             trade_date="2019-10-07"
             value_date="2019-10-10"
-            price="1.1"
+            price="1.09"
             amount="777"
             currency="EUR"
             type="NET"
@@ -319,7 +319,7 @@
         participant_id="102"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="1.11"
         amount="330000"
         currency="EUR"
     />
@@ -331,7 +331,7 @@
         participant_id="102"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="1.11"
         amount="330000"
         currency="EUR"
     />
@@ -343,7 +343,7 @@
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="0"
         amount="1.17"
         currency="EUR"
     />
@@ -355,7 +355,7 @@
         participant_id="101"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="0"
         amount="-1.11"
         currency="EUR"
     />
@@ -367,7 +367,7 @@
         participant_id="102"
         trade_date="2019-10-07"
         value_date="2019-10-10"
-        price="1.1"
+        price="0"
         amount="330000.00"
         currency="EUR"
     />
