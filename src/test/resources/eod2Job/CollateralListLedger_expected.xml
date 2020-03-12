@@ -24,7 +24,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="111"
+        order_id="1110000000000"
     />
 
     <eod_ledger_collateral_list
@@ -52,7 +52,7 @@
         interest_payment_day2="12/10"
         maturity_date="2022/10/10"
         record_type="1"
-        order_id="213"
+        order_id="2130000005678"
     />
 
     <eod_ledger_collateral_list
@@ -80,7 +80,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="1314"
+        order_id="13140000001234"
     />
 
     <eod_ledger_collateral_list
@@ -108,7 +108,7 @@
         interest_payment_day2=""
         maturity_date="2020/02/02"
         record_type="1"
-        order_id="1412"
+        order_id="14120000000001"
     />
 
     <eod_ledger_collateral_list
@@ -136,7 +136,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="4"
-        order_id="140"
+        order_id="1400000000000"
     />
 
     <eod_ledger_collateral_list
@@ -164,7 +164,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="4"
-        order_id="1440"
+        order_id="14400000000000"
     />
 
     <eod_ledger_collateral_list
@@ -192,7 +192,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="4"
-        order_id="240"
+        order_id="2400000000000"
     />
 
     <eod_ledger_collateral_list
@@ -220,6 +220,6 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="4"
-        order_id="1340"
+        order_id="13400000000000"
     />
 </dataset>
