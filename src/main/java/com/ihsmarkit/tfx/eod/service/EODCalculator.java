@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,6 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import com.ihsmarkit.tfx.common.collectors.GuavaCollectors;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
@@ -432,7 +430,7 @@ public class EODCalculator {
         final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
         final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
         final Map<ParticipantEntity, BalanceContribution> deposits,
-        final Map<Long, List<MarginAlertConfigurationEntity>> marginAlertConfigurationsProvider
+        final Map<Long, Function<BigDecimal, Optional<MarginAlertLevel>>> marginAlertLevelCalculators
     ) {
         return Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
             .map(Map::keySet)
@@ -441,7 +439,7 @@ public class EODCalculator {
             .map(
                 participant -> createEodParticipantMargin(
                     participant,
-                    Optional.ofNullable(marginAlertConfigurationsProvider.get(participant.getId()))
+                    Optional.ofNullable(marginAlertLevelCalculators.get(participant.getId()))
                         .orElseThrow(() -> new IllegalStateException("Unable to resolve margin alert configuration for participant: " + participant.getCode())),
                     Optional.ofNullable(requiredInitialMargin.get(participant)),
                     Optional.ofNullable(dayCashSettlement.get(participant)),
@@ -469,7 +467,7 @@ public class EODCalculator {
 
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
-        final List<MarginAlertConfigurationEntity> marginAlertConfigurations,
+        final Function<BigDecimal, Optional<MarginAlertLevel>> marginAlertLevelCalculator,
         final Optional<BigDecimal> requiredInitialMargin,
         final Optional<EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
         final Optional<BalanceContribution> balance) {
@@ -485,7 +483,7 @@ public class EODCalculator {
             .participant(participant)
             .initialMargin(requiredInitialMargin)
             .marginRatio(effectiveMargin)
-            .marginAlertLevel(toMarginAlertLevel(marginAlertConfigurations, effectiveMargin))
+            .marginAlertLevel(effectiveMargin.flatMap(marginAlertLevelCalculator))
             .pnl(pnl)
             .cashCollateralAmount(cashCollateral)
             .logCollateralAmount(logCollateral)
@@ -510,17 +508,6 @@ public class EODCalculator {
                 .filter(not(isEqualToZero()))
                 .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
             );
-    }
-
-    private static Optional<MarginAlertLevel> toMarginAlertLevel(
-        final List<MarginAlertConfigurationEntity> marginAlertConfigurations,
-        final Optional<BigDecimal> effectiveMargin
-    ) {
-        return effectiveMargin.flatMap(value -> marginAlertConfigurations.stream()
-            .filter(configuration -> configuration.getTriggerLevel().compareTo(value) <= 0)
-            .max(Comparator.comparing(MarginAlertConfigurationEntity::getTriggerLevel))
-            .map(MarginAlertConfigurationEntity::getLevel)
-        );
     }
 
     private static <R, C, LEFT, RIGHT, T> Stream<T> mergeAndFlatten(final Table<R, C, LEFT> left, final Table<R, C, RIGHT> right,
