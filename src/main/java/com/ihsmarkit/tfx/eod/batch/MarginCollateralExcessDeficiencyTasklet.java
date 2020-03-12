@@ -21,6 +21,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
@@ -32,6 +33,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
+import com.ihsmarkit.tfx.core.domain.type.MarginAlertLevel;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralCalculator;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
@@ -121,8 +123,17 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             );
 
         final var deposits = calculateDeposits(uniqueParticipantIds(requiredInitialMargin, variationMargins));
-        final var marginAlertConfigurationPerParticipant = marginAlertConfigurationRepository.findAll().stream()
-            .collect(Collectors.groupingBy(entity -> entity.getParticipant().getId()));
+        final var marginAlertCalculatorsPerParticipant = marginAlertConfigurationRepository.findAll().stream()
+            .collect(Collectors.groupingBy(
+                entity -> entity.getParticipant().getId(),
+                Collectors.collectingAndThen(
+                    Collectors.toMap(
+                        MarginAlertConfigurationEntity::getLevel,
+                        MarginAlertConfigurationEntity::getTriggerLevel
+                    ),
+                    MarginAlertLevel::associatedLevelCalculator
+                )
+            ));
 
         final var participantMargin =
             eodCalculator
@@ -130,7 +141,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                     requiredInitialMargin,
                     variationMargins,
                     deposits,
-                    marginAlertConfigurationPerParticipant
+                    marginAlertCalculatorsPerParticipant
                 )
                 .map(marginEntry -> participantMarginMapper.toEntity(marginEntry, businessDate, clockService.getCurrentDateTimeUTC()));
 
