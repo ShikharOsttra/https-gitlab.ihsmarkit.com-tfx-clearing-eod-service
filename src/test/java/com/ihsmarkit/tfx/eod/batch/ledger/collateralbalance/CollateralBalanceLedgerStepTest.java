@@ -42,7 +42,7 @@ class CollateralBalanceLedgerStepTest extends AbstractSpringBatchTest {
         "/eod2Job/CollateralBalanceLedger_setup.xml"
     })
     @ExpectedDatabase(value = "/eod2Job/CollateralBalanceLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
-    void testCollateralListLedgerStep() {
+    void testCollateralBalanceLedgerStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 1, 2, 11, 30, 0, 0));
 
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20190101")
