@@ -75,7 +75,11 @@ class StateMachineIntegrationTest {
     private EodStatusRepository eodStatusRepository;
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_1.xml"
+    })
     void shouldWaitDSP() throws Exception {
 
         resetToReady();
@@ -87,7 +91,11 @@ class StateMachineIntegrationTest {
     }
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_1.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_1.xml"
+    })
     void shouldWaitDSPAndProceedToSwpPnt() throws InterruptedException {
 
         resetToReady();
@@ -107,7 +115,11 @@ class StateMachineIntegrationTest {
     }
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_2.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_2.xml"
+    })
     void shouldWaitTradesAndDSP() throws Exception {
 
         resetToReady();
@@ -119,7 +131,11 @@ class StateMachineIntegrationTest {
     }
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_3.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_3.xml"
+    })
     void shouldWaitTrades() throws Exception {
 
         resetToReady();
@@ -131,7 +147,11 @@ class StateMachineIntegrationTest {
     }
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_4.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_4.xml"
+    })
     void shouldWaitSwapPoints() throws Exception {
 
         resetToReady();
@@ -143,7 +163,12 @@ class StateMachineIntegrationTest {
     }
 
     @Test
-    @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/statemachine/business_date_2019_1_5.xml"})
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/fx_spot_product.xml",
+        "/common/participants.xml",
+        "/statemachine/business_date_2019_1_5.xml"
+    })
     @ExpectedDatabase(value = "/statemachine/business_date_2019_1_5-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunFullCycle() throws Exception {
         resetToReady();
