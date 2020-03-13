@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.common.math.BigDecimals.isGreaterThanZero;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
@@ -21,6 +22,7 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 
 @Mapper(config = DefaultMapperConfig.class)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public interface BalanceTradeMapper {
 
     String BASE_AMOUNT_MAPPER = "baseAmountMapper";
@@ -34,21 +36,21 @@ public interface BalanceTradeMapper {
     @Mapping(target = "sequenceId", ignore = true)
     @Mapping(target = "matchingStatus", constant = "CONFIRMED")
     @Mapping(target = "errorCode", ignore = true)
-    @Mapping(target = "executionTime", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
-    @Mapping(target = "submissionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
+    @Mapping(target = "executionTime", source = "submissionTsp")
+    @Mapping(target = "submissionTsp", source = "submissionTsp")
     @Mapping(target = "accountInfo", ignore = true)
     @Mapping(target = "comments", ignore = true)
-    @Mapping(target = "versionTsp", constant = "201911121010", dateFormat = "yyyyMMddHHmm")//FIXME proper value!!!
+    @Mapping(target = "versionTsp", source = "submissionTsp")
     @Mapping(target = "sourceSystem", constant = "GUI")
     @Mapping(target = "utiPrefix", ignore = true)
     @Mapping(target = "utiTradeId", ignore = true)
     @Mapping(target = "userName", ignore = true)
-    @Mapping(target = "clearingTsp", ignore = true)
+    @Mapping(target = "clearingTsp", source = "submissionTsp")
     @Mapping(target = "matchedTradeRef", ignore = true)
     @Mapping(target = "nextVersion", ignore = true)
     @Mapping(target = "oldVersion", ignore = true)
     @Mapping(target = "matchingRef", ignore = true)
-    @Mapping(target = "matchingTsp", ignore = true)
+    @Mapping(target = "matchingTsp", source = "submissionTsp")
     @Mapping(target = "clearingRef", ignore = true)
     @Mapping(target = "clearingStatus", constant = "NOVATED")
     @Mapping(target = "id", ignore = true)
@@ -66,7 +68,8 @@ public interface BalanceTradeMapper {
     @Mapping(target = "matchingOwnHash", ignore = true)
     @Mapping(target = "matchingSearchHash", ignore = true)
     @Mapping(target = "oboComment", ignore = true)
-    TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate,  @Context CurrencyPairEntity currencyPair, @Context BigDecimal spotRate);
+    TradeEntity toTrade(BalanceTrade trade, LocalDate tradeDate, LocalDate valueDate, LocalDateTime submissionTsp, @Context CurrencyPairEntity currencyPair,
+        @Context BigDecimal spotRate);
 
     default Side tradeDirection(BigDecimal amount) {
         return isGreaterThanZero(amount) ? Side.BUY : Side.SELL;
