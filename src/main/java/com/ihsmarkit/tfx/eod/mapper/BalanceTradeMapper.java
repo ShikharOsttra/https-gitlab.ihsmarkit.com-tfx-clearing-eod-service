@@ -22,6 +22,7 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 
 @Mapper(config = DefaultMapperConfig.class)
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public interface BalanceTradeMapper {
 
     String BASE_AMOUNT_MAPPER = "baseAmountMapper";
