@@ -20,6 +20,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.action.Action;
@@ -42,6 +43,9 @@ import lombok.SneakyThrows;
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
+
+    @Value("${eod.collateral.price-upload-check.enabled:true}")
+    private final boolean collateralPriceUploadCheckEnabled;
 
     private final EodStatusRepository eodStatusRepository;
 
@@ -101,13 +105,9 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodGuard dspApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date));
-    }
-
-    @Bean
-    public EodGuard collateralPriceUploadedGuard() {
-        return businessDate -> isCollateralPriceUploadCompleted(businessDate, SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
-                            && isCollateralPriceUploadCompleted(businessDate, SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date))
+            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
+            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
     }
 
     @Bean
@@ -133,6 +133,7 @@ public class StateMachineActionsConfig {
     }
 
     private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final SystemParameter<LocalDateTime> collateralUpdateParameter) {
-        return systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
+        return collateralPriceUploadCheckEnabled &&
+            systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
     }
 }

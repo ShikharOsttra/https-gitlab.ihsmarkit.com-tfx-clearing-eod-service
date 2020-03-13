@@ -48,9 +48,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
 
     private static final int WAIT_TIME = 1000;
 
-    @Qualifier("collateralPriceUploadedGuard")
-    private final Guard<States, Events> collateralPriceUploadedGuard;
-
     @Qualifier("dspApprovedGuard")
     private final Guard<States, Events> dspApprovedGuard;
 

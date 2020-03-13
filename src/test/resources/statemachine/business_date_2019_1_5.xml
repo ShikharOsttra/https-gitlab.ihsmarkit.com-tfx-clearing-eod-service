@@ -1,5 +1,7 @@
 <dataset>
     <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-05"/>
+    <system_parameter id="2" name="LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME" value="2019-01-05 07:30:00"/>
+    <system_parameter id="3" name="LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME" value="2019-01-05 07:35:00"/>
 
     <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-01-05" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-06"/>
     <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-01-06" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-07"/>
