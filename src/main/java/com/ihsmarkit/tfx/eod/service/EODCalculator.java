@@ -382,7 +382,8 @@ public class EODCalculator {
                                         buySell.flatMap(NettingAccumulator::getBuyValue),
                                         buySell.flatMap(NettingAccumulator::getSellValue).map(BigDecimal::abs),
                                         sod.map(Pair::getRight).map(BigDecimal::abs)
-                                    ).get().divide(baseAmnt, RATE_PRECISION, RoundingMode.HALF_DOWN)
+                                    ).get().divide(isEqualToZero(baseAmnt) ? BigDecimal.ONE : baseAmnt,
+                                        RATE_PRECISION, RoundingMode.HALF_DOWN)
                             ).get(),
                         (amnt, rate) -> ParticipantPosition.of(participant, currencyPair, amnt, rate, NET)
                     )
