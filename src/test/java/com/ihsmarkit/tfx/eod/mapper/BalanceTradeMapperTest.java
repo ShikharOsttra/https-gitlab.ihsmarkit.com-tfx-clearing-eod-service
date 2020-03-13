@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 @ExtendWith(SpringExtension.class)
 class BalanceTradeMapperTest {
 
+    private static final LocalDateTime CURRENT_TSP = LocalDateTime.of(2019, 1, 1, 1, 1);
     private static final CurrencyPairEntity CURRENCY_PAIR = EntityTestDataFactory.aCurrencyPairEntityBuilder().build();
     private static final LegalEntity ORIGINATOR_A = EntityTestDataFactory.aLegalEntityBuilder().name("A-LE").build();
     private static final LegalEntity ORIGINATOR_B = EntityTestDataFactory.aLegalEntityBuilder().name("B-LE").build();
@@ -54,6 +56,7 @@ class BalanceTradeMapperTest {
             new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.valueOf(200000)),
             NOVEMBER_13,
             NOVEMBER_15,
+            CURRENT_TSP,
             CURRENCY_PAIR,
             BigDecimal.valueOf(2)
         );
@@ -71,6 +74,11 @@ class BalanceTradeMapperTest {
         assertThat(tradeEntity.getClearingStatus()).isEqualTo(ClearingStatus.NOVATED);
         assertThat(tradeEntity.getActivity()).isEqualTo(TradeActivity.NEW);
         assertThat(tradeEntity.getMatchingStatus()).isEqualTo(MatchingStatus.CONFIRMED);
+        assertThat(tradeEntity.getSubmissionTsp()).isEqualTo(CURRENT_TSP);
+        assertThat(tradeEntity.getExecutionTime()).isEqualTo(CURRENT_TSP);
+        assertThat(tradeEntity.getVersionTsp()).isEqualTo(CURRENT_TSP);
+        assertThat(tradeEntity.getClearingTsp()).isEqualTo(CURRENT_TSP);
+        assertThat(tradeEntity.getMatchingTsp()).isEqualTo(CURRENT_TSP);
 
     }
 
@@ -80,6 +88,7 @@ class BalanceTradeMapperTest {
             new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.TEN.negate()),
             NOVEMBER_13,
             NOVEMBER_15,
+            CURRENT_TSP,
             CURRENCY_PAIR,
             BigDecimal.valueOf(2)
         );
@@ -96,6 +105,7 @@ class BalanceTradeMapperTest {
             new BalanceTrade(PARTICIPANT_A, PARTICIPANT_B, BigDecimal.valueOf(200000)),
             NOVEMBER_13,
             NOVEMBER_15,
+            CURRENT_TSP,
             CURRENCY_PAIR,
             BigDecimal.valueOf(1.69)
         );

@@ -23,6 +23,7 @@ import com.ihsmarkit.tfx.core.dl.repository.EODThresholdFutureValueRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -57,6 +58,8 @@ public class RebalancingTasklet implements Tasklet {
     private final PositionRebalancePublishingService publishingService;
 
     private final EODThresholdFutureValueRepository eodThresholdFutureValueRepository;
+
+    private final ClockService clockService;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -100,6 +103,7 @@ public class RebalancingTasklet implements Tasklet {
                             trade,
                             businessDate,
                             tradeAndSettlementDateService.getValueDate(businessDate, currencyPair),
+                            clockService.getCurrentDateTimeUTC(),
                             currencyPair,
                             dailySettlementPriceService.getPrice(businessDate, currencyPair)
                         )
