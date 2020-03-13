@@ -89,7 +89,6 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             .highPrice(tradeHolder.getHighTrade().getSpotRate())
 
             .shortPositionsAmount(tradeHolder.getTotalShortPositionsAmountSum())
-            .currencyPairCode(tradeHolder.getCurrencyPairCode())
 
             .build();
     }
@@ -109,14 +108,12 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
         private TradeEntity highTrade;
         private TradeEntity lowTrade;
         private BigDecimal totalShortPositionsAmountSum = BigDecimal.ZERO;
-        private String currencyPairCode;
 
         void acceptTrade(final TradeEntity candidate) {
             openTrade = findMinBy(Stream.of(openTrade, candidate), OPEN_TRADE_COMPARATOR);
             closeTrade = findMinBy(Stream.of(closeTrade, candidate), CLOSE_TRADE_COMPARATOR);
             lowTrade = findMinBy(Stream.of(lowTrade, candidate), LOW_TRADE_COMPARATOR);
             highTrade = findMinBy(Stream.of(highTrade, candidate), HIGH_TRADE_COMPARATOR);
-            currencyPairCode = candidate.getCurrencyPair().getCode();
             // this should be total for “ShortPosition” only.
             if (candidate.getDirection() == Side.SELL) {
                 totalShortPositionsAmountSum = totalShortPositionsAmountSum.add(candidate.getBaseAmount().getValue());
@@ -129,8 +126,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
                 findMinBy(concatTrades(a, b), CLOSE_TRADE_COMPARATOR),
                 findMinBy(concatTrades(a, b), HIGH_TRADE_COMPARATOR),
                 findMinBy(concatTrades(a, b), LOW_TRADE_COMPARATOR),
-                a.getTotalShortPositionsAmountSum().add(b.getTotalShortPositionsAmountSum()),
-                a.getCurrencyPairCode()
+                a.getTotalShortPositionsAmountSum().add(b.getTotalShortPositionsAmountSum())
             );
         }
 

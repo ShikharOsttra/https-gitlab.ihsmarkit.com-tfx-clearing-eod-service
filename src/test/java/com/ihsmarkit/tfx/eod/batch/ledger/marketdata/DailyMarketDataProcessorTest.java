@@ -190,14 +190,14 @@ class DailyMarketDataProcessorTest {
     private static Map<String, DailyMarkedDataAggregated> getInputData() {
         return Map.of(
             "USD/JPY", DailyMarkedDataAggregated.of(
-                "USD/JPY", new BigDecimal("1011.3"),
+                new BigDecimal("1011.3"),
                 new BigDecimal("1.1"), DATE_TIME_2019_1_1_1_1,
                 new BigDecimal("1000.1"), DATE_TIME_2019_1_1_1_2,
                 new BigDecimal("1.1"), DATE_TIME_2019_1_1_1_1,
                 new BigDecimal("10.1"), DATE_TIME_2019_1_1_1_3
             ),
             "EUR/JPY", DailyMarkedDataAggregated.of(
-                "EUR/JPY", new BigDecimal("117.2"),
+                new BigDecimal("117.2"),
                 new BigDecimal("17.1"), DATE_TIME_2019_1_1_1_3,
                 new BigDecimal("100.1"), DATE_TIME_2019_1_1_1_3,
                 new BigDecimal("17.1"), DATE_TIME_2019_1_1_1_3,

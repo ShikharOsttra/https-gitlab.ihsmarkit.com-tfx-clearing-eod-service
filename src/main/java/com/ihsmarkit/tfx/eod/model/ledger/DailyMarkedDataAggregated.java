@@ -11,7 +11,6 @@ import lombok.Value;
 @Builder(builderClassName = "Builder")
 @AllArgsConstructor(staticName = "of")
 public class DailyMarkedDataAggregated {
-    private final String currencyPairCode;
     private final BigDecimal shortPositionsAmount;
     private final BigDecimal openPrice;
     private final LocalDateTime openPriceTime;
