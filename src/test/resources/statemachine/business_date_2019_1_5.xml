@@ -1,5 +1,7 @@
 <dataset>
     <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-05"/>
+    <system_parameter id="2" name="LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME" value="2019-01-05 07:30:00"/>
+    <system_parameter id="3" name="LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME" value="2019-01-05 07:35:00"/>
 
     <fx_spot_tick_size product_id="2" value="0.00000100" applicable_date="2019-02-02" business_date="2019-01-05"/>
     <fx_spot_tick_size product_id="13" value="0.00000100" applicable_date="2019-02-02" business_date="2019-01-05"/>

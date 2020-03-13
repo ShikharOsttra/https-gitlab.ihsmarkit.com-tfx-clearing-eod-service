@@ -13,12 +13,14 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.action.Action;
@@ -29,6 +31,8 @@ import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.domain.eod.EodStage;
+import com.ihsmarkit.tfx.core.domain.type.SystemParameter;
+import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.core.time.ClockService;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +43,9 @@ import lombok.SneakyThrows;
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
+
+    @Value("${eod.collateral.price-upload-check.enabled:true}")
+    private final boolean collateralPriceUploadCheckEnabled;
 
     private final EodStatusRepository eodStatusRepository;
 
@@ -98,7 +105,9 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodGuard dspApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date));
+        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date))
+            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
+            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
     }
 
     @Bean
@@ -121,5 +130,10 @@ public class StateMachineActionsConfig {
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
             .addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
             .toJobParameters();
+    }
+
+    private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final SystemParameter<LocalDateTime> collateralUpdateParameter) {
+        return collateralPriceUploadCheckEnabled &&
+            systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
     }
 }

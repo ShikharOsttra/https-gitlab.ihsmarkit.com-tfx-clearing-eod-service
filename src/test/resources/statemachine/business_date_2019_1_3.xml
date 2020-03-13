@@ -1,5 +1,7 @@
 <dataset>
     <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-03"/>
+    <system_parameter id="2" name="LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME" value="2019-01-04 07:30:00"/>
+    <system_parameter id="3" name="LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME" value="2019-01-04 07:35:00"/>
     <eod_status stage="DSP_APPROVED" business_date="2019-01-03" timestamp="2019-01-03 22:00:00" />
 
     <trade
