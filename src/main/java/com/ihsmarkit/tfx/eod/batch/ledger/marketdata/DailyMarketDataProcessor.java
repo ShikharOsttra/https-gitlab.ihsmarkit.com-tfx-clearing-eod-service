@@ -76,7 +76,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final Map<String, DailySettlementPriceEntity> dspMap = getDspMap();
         final Map<String, BigDecimal> currencyPairOpenPosition = getOpenPositionAmount();
 
-        final Set<String> allCcyPairs = currencyPairRepository.findAllSortedByFxSpotProductNumber().stream()
+        final Set<String> allCcyPairs = currencyPairRepository.findAll().stream()
             .map(CurrencyPairEntity::getCode)
             .collect(Collectors.toSet());
         final Set<String> ccyPairsNotTradedToday = Sets.difference(allCcyPairs, aggregatedMap.keySet());
