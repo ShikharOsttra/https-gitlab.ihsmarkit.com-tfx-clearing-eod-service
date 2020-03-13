@@ -31,6 +31,7 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
+import com.ihsmarkit.tfx.core.dl.repository.CurrencyPairRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.time.ClockService;
@@ -59,6 +60,8 @@ class DailyMarketDataProcessorTest {
     @Mock
     private ParticipantPositionRepository participantPositionRepository;
     @Mock
+    private CurrencyPairRepository currencyPairRepository;
+    @Mock
     private ClockService clockService;
 
     private DailyMarketDataProcessor aggregator;
@@ -67,7 +70,7 @@ class DailyMarketDataProcessorTest {
     void beforeEach() {
         aggregator = new DailyMarketDataProcessor(
             currencyPairSwapPointService, dailySettlementPriceRepository, fxSpotProductService,
-            participantPositionRepository, clockService, BUSINESS_DATE, DATE_TIME_2019_1_1_1_1
+            participantPositionRepository, currencyPairRepository, clockService, BUSINESS_DATE, DATE_TIME_2019_1_1_1_1
         );
     }
 

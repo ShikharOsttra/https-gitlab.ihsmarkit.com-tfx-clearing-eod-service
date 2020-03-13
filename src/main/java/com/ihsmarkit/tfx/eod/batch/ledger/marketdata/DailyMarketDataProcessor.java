@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,10 +31,13 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Sets;
 import com.ihsmarkit.tfx.common.streams.Streams;
+import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
+import com.ihsmarkit.tfx.core.dl.repository.CurrencyPairRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -57,6 +61,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
     private final FXSpotProductService fxSpotProductService;
     private final ParticipantPositionRepository participantPositionRepository;
+    private final CurrencyPairRepository currencyPairRepository;
     private final ClockService clockService;
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -71,24 +76,39 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final Map<String, DailySettlementPriceEntity> dspMap = getDspMap();
         final Map<String, BigDecimal> currencyPairOpenPosition = getOpenPositionAmount();
 
-        return Stream.concat(
+        final Set<String> allCcyPairs = currencyPairRepository.findAllSortedByFxSpotProductNumber().stream()
+            .map(CurrencyPairEntity::getCode)
+            .collect(Collectors.toSet());
+        final Set<String> ccyPairsNotTradedToday = Sets.difference(allCcyPairs, aggregatedMap.keySet());
+        final Stream<DailyMarketDataEnriched> notTradedCcyPairsItems;
+        if (ccyPairsNotTradedToday.isEmpty()) {
+            notTradedCcyPairsItems = Stream.empty();
+        } else {
+            final Map<String, BigDecimal> notTradedCcyPairsPosition = getSodPositionAmount(ccyPairsNotTradedToday);
+            final DailyMarkedDataAggregated sodEmptyDailyMarkedDataAggregated = sodEmptyDailyMarkedDataAggregated(recordDate);
+            notTradedCcyPairsItems = ccyPairsNotTradedToday.stream()
+                .map(currencyPairCode ->
+                    mapToEnrichedItem(currencyPairCode, sodEmptyDailyMarkedDataAggregated, swapPointsMapper, dspMap, notTradedCcyPairsPosition)
+                );
+        }
 
-            EntryStream.of(aggregatedMap)
-                .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
-                    mapToEnrichedItem(currencyPairCode, aggregatedDailyMarketData, swapPointsMapper, dspMap, currencyPairOpenPosition)
-                ),
-
-            Stream.of(
-                EntryStream.of(aggregatedMap)
-                    .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
-                        mapToTotal(currencyPairCode, aggregatedDailyMarketData, currencyPairOpenPosition)
-                    )
-                    .reduce(Total::add)
-                    .map(this::mapToEnrichedItem)
-                    .orElseGet(() -> mapToEnrichedItem(Total.of(ZERO, ZERO)))
+        return EntryStream.of(aggregatedMap)
+            .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
+                mapToEnrichedItem(currencyPairCode, aggregatedDailyMarketData, swapPointsMapper, dspMap, currencyPairOpenPosition)
             )
-
-        ).collect(Collectors.toUnmodifiableList());
+            .append(notTradedCcyPairsItems)
+            .append(
+                Stream.of(
+                    EntryStream.of(aggregatedMap)
+                        .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
+                            mapToTotal(currencyPairCode, aggregatedDailyMarketData, currencyPairOpenPosition)
+                        )
+                        .reduce(Total::add)
+                        .orElseGet(() -> Total.of(ZERO, ZERO))
+                )
+                        .map(this::mapToEnrichedItem)
+            )
+            .collect(Collectors.toUnmodifiableList());
     }
 
     private Total mapToTotal(final String currencyPairCode, final DailyMarkedDataAggregated aggregatedDailyMarketData,
@@ -188,12 +208,41 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                 .toMap();
     }
 
+    private Map<String, BigDecimal> getSodPositionAmount(final Set<String> ccyPairs) {
+        return participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
+            .filter(item -> ccyPairs.contains(item.getCurrencyPair().getCode()))
+            .collect(
+                Collectors.groupingBy(
+                    item -> item.getCurrencyPair().getCode(),
+                    Streams.summingBigDecimal(item -> item.getAmount().getValue().abs())
+                )
+            );
+    }
+
     private static BigDecimal getDspValue(@Nullable final DailySettlementPriceEntity dsp, final Function<DailySettlementPriceEntity, BigDecimal> extractor) {
         return Optional.ofNullable(dsp)
             .map(extractor)
             .orElse(ZERO);
     }
 
+    private static DailyMarkedDataAggregated sodEmptyDailyMarkedDataAggregated(final LocalDateTime recordDate) {
+        return DailyMarkedDataAggregated.builder()
+            .openPriceTime(recordDate)
+            .openPrice(ZERO)
+
+            .closePriceTime(recordDate)
+            .closePrice(ZERO)
+
+            .lowPriceTime(recordDate)
+            .lowPrice(ZERO)
+
+            .highPriceTime(recordDate)
+            .highPrice(ZERO)
+
+            .shortPositionsAmount(ZERO)
+
+            .build();
+    }
 
     @lombok.Value(staticConstructor = "of")
     private static class Total {

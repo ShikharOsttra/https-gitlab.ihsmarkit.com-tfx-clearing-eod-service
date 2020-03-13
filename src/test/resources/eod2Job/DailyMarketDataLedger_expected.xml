@@ -79,6 +79,32 @@
 
     <eod_ledger_market_data
         business_date="2019-02-02"
+        trade_date="2019/02/02"
+        record_date="2019/02/02 11:30:00"
+        currency_no="104"
+        currency_pair="CHF/JPY"
+        open_price="0.0000"
+        open_price_time="16:30:00"
+        high_price="0.0000"
+        high_price_time="16:30:00"
+        low_price="0.0000"
+        low_price_time="16:30:00"
+        close_price="0.0000"
+        close_price_time="16:30:00"
+        dsp="1.1300"
+        previous_day_dsp="1.1100"
+        dsp_change="0.0200"
+        swap_point="2.130"
+        trading_volume_amount="0"
+        trading_volume_in_unit="0"
+        open_position_amount="0"
+        open_position_in_unit="0"
+        record_type="1"
+        order_id="104"
+    />
+
+    <eod_ledger_market_data
+        business_date="2019-02-02"
         trade_date=""
         record_date=""
         currency_no=""
