@@ -520,7 +520,7 @@ public class EODCalculator {
             .nextDaySettlement(nextDaySettlement)
             .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
             .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
-            .cashDeficit(sumAll(cashCollateral, todaySettlement, requiredInitialMargin.map(BigDecimal::negate)))
+            .cashDeficit(sumAll(cashCollateral, todaySettlement))
             .build();
     }
 
