@@ -2,8 +2,6 @@ package com.ihsmarkit.tfx.eod.integration;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.batch.core.BatchStatus;
@@ -18,9 +16,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.github.database.rider.core.api.dataset.DataSetFormat;
-import com.github.database.rider.core.api.exporter.DataSetExportConfig;
-import com.github.database.rider.core.exporter.DataSetExporter;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.DbUnitConfiguration;
@@ -48,8 +43,8 @@ class Eod2JobIntegrationTest {
     @Autowired
     private JobLauncher jobLauncher;
 
-    @Autowired
-    DataSource ds;
+//    @Autowired
+//    DataSource ds;
 
     @Test
     @DatabaseSetup({
@@ -66,9 +61,9 @@ class Eod2JobIntegrationTest {
     void testEodJob() throws Exception {
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(eodJob, jobParams);
-        DataSetExporter.getInstance().export(ds.getConnection(), new DataSetExportConfig()
-            .dataSetFormat(DataSetFormat.XML)
-            .outputFileName("target/eod2-expected.xml"));
+//        DataSetExporter.getInstance().export(ds.getConnection(), new DataSetExportConfig()
+//            .dataSetFormat(DataSetFormat.XML)
+//            .outputFileName("target/eod2-expected.xml"));
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
     }
 
