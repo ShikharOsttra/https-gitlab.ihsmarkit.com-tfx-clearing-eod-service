@@ -24,6 +24,9 @@ public class LastTradingDateInMonthDecider implements JobExecutionDecider {
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
+    @Value("#{jobParameters['generateMonthlyLedger'] ?: false}")
+    private final boolean generateMonthlyLedger;
+
     private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     @Override
@@ -31,8 +34,9 @@ public class LastTradingDateInMonthDecider implements JobExecutionDecider {
         final LocalDate nextTradingDate = calendarTradingSwapPointRepository.findNextTradingDate(businessDate)
             .orElseThrow(() -> new IllegalStateException("Missing Trading/Swap calendar for given business date: " + businessDate));
 
-        final boolean isLastTradingDateInMonth = businessDate.getMonth() != nextTradingDate.getMonth();
-        log.info("business date: {}, next trading date: {}, is last trading date in month: {}", businessDate, nextTradingDate, isLastTradingDateInMonth);
+        final boolean isLastTradingDateInMonth = generateMonthlyLedger || businessDate.getMonth() != nextTradingDate.getMonth();
+        log.info("business date: {}, next trading date: {}, generateMonthlyLedger: {}, is last trading date in month: {}",
+            businessDate, nextTradingDate, generateMonthlyLedger, isLastTradingDateInMonth);
 
         return new FlowExecutionStatus(Boolean.toString(isLastTradingDateInMonth));
     }

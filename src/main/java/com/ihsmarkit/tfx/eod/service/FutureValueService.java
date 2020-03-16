@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
@@ -29,85 +30,97 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.haircut.LogHaircutRateEntity;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @AllArgsConstructor
 @Service
 @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
 public class FutureValueService {
 
+    private static final List<FutureValueClassWrapper<?>> FUTURE_VALUE_CLASS_WRAPPERS = List.of(
+        FutureValueClassWrapper.of(MarginRatioEntity.class, entity -> entity.getCurrencyPair().getId()),
+        FutureValueClassWrapper.of(MarginRatioMultiplierEntity.class, entity -> entity.getCurrencyPair().getId(), entity -> entity.getParticipant().getId()),
+        FutureValueClassWrapper.of(ParticipantCollateralRequirementEntity.class, ParticipantCollateralRequirementEntity::getPurpose,
+            entity -> entity.getParticipant().getId()),
+        FutureValueClassWrapper.of(FxSpotTickSizeEntity.class, entity -> entity.getFxSpotProduct().getId()),
+        FutureValueClassWrapper.of(EODThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId()),
+        FutureValueClassWrapper.of(ForcedAllocationThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId()),
+        FutureValueClassWrapper.of(LogHaircutRateEntity.class, entity -> entity.getIssuer().getId()),
+        FutureValueClassWrapper.of(BondHaircutRateEntity.class, BondHaircutRateEntity::getBondSubType, BondHaircutRateEntity::getRemainingDuration),
+        FutureValueClassWrapper.of(EquityHaircutRateEntity.class, EquityHaircutRateEntity::getType)
+    );
+
     private final EntityManager entityManager;
 
-    public void rollFutureValues(final LocalDate currentBusinessDate, final LocalDate nextBusinessDate) {
-        rollFutureValue(currentBusinessDate, nextBusinessDate, MarginRatioEntity.class, entity -> entity.getCurrencyPair().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, MarginRatioMultiplierEntity.class, entity -> entity.getCurrencyPair().getId(),
-            entity -> entity.getParticipant().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, ParticipantCollateralRequirementEntity.class, ParticipantCollateralRequirementEntity::getPurpose,
-            entity -> entity.getParticipant().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, FxSpotTickSizeEntity.class, entity -> entity.getFxSpotProduct().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, EODThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, ForcedAllocationThresholdFutureValueEntity.class, entity -> entity.getFxSpotProduct().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, LogHaircutRateEntity.class, entity -> entity.getIssuer().getId());
-        rollFutureValue(currentBusinessDate, nextBusinessDate, BondHaircutRateEntity.class, BondHaircutRateEntity::getBondSubType,
-            BondHaircutRateEntity::getRemainingDuration);
-        rollFutureValue(currentBusinessDate, nextBusinessDate, EquityHaircutRateEntity.class, EquityHaircutRateEntity::getType);
+    public void rollFutureValues(final LocalDate businessDate, final LocalDate nextBusinessDate) {
+        FUTURE_VALUE_CLASS_WRAPPERS.forEach(
+            futureValueClassWrapper -> copyFutureValues(businessDate, nextBusinessDate, BinaryOperator::maxBy, nextBusinessDate, futureValueClassWrapper)
+        );
     }
 
-    public void unrollFutureValues(final LocalDate businessDate) {
-        unrollFutureValue(businessDate, MarginRatioEntity.class);
-        unrollFutureValue(businessDate, MarginRatioMultiplierEntity.class);
-        unrollFutureValue(businessDate, ParticipantCollateralRequirementEntity.class);
-        unrollFutureValue(businessDate, FxSpotTickSizeEntity.class);
-        unrollFutureValue(businessDate, EODThresholdFutureValueEntity.class);
-        unrollFutureValue(businessDate, ForcedAllocationThresholdFutureValueEntity.class);
-        unrollFutureValue(businessDate, LogHaircutRateEntity.class);
-        unrollFutureValue(businessDate, BondHaircutRateEntity.class);
-        unrollFutureValue(businessDate, EquityHaircutRateEntity.class);
+    public void unrollFutureValues(final LocalDate businessDate, final LocalDate prevBusinessDate) {
+        FUTURE_VALUE_CLASS_WRAPPERS.forEach(
+            futureValueClassWrapper -> {
+                copyFutureValues(prevBusinessDate, businessDate, BinaryOperator::minBy, prevBusinessDate, futureValueClassWrapper);
+                deleteFutureValue(businessDate, futureValueClassWrapper.getClazz());
+            }
+        );
     }
 
-    @SafeVarargs
-    private <T extends FutureValueEntity> void rollFutureValue(
-        final LocalDate currentBusinessDate,
-        final LocalDate nextBusinessDate,
-        final Class<T> clazz,
-        final Function<T, ?>... keyExtractors
+    private <T extends FutureValueEntity> void copyFutureValues(
+        final LocalDate from,
+        final LocalDate to,
+        final Function<Comparator<T>, BinaryOperator<T>> mergeFunction,
+        final LocalDate newDate,
+        final FutureValueClassWrapper<T> futureValueClassWrapper
     ) {
         final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        final CriteriaQuery<T> query = cb.createQuery(clazz);
-        final Root<T> root = query.from(clazz);
-        query.where(cb.between(root.get(FutureValueEntity_.businessDate), currentBusinessDate, nextBusinessDate));
+        final CriteriaQuery<T> query = cb.createQuery(futureValueClassWrapper.getClazz());
+        final Root<T> root = query.from(futureValueClassWrapper.getClazz());
+        query.where(cb.between(root.get(FutureValueEntity_.businessDate), from, to));
 
         entityManager.createQuery(query)
             .getResultList()
             .stream()
             .collect(Collectors.toMap(
-                entity -> toFutureValueKey(entity, keyExtractors),
+                futureValueClassWrapper::extractKey,
                 Function.identity(),
-                BinaryOperator.maxBy(Comparator.comparing(FutureValueEntity::getBusinessDate))
+                mergeFunction.apply(Comparator.comparing(FutureValueEntity::getBusinessDate))
             )).values().stream()
-            .filter(entity -> !entity.getBusinessDate().isEqual(nextBusinessDate))
+            .filter(entity -> !entity.getBusinessDate().isEqual(newDate))
             .peek(entity -> {
                 entityManager.detach(entity);
                 entity.setId(null);
-                entity.setBusinessDate(nextBusinessDate);
+                entity.setBusinessDate(newDate);
             })
             .forEach(entityManager::persist);
     }
 
-    private <T extends FutureValueEntity> void unrollFutureValue(final LocalDate businessDate, final Class<T> clazz) {
+    private <T extends FutureValueEntity> void deleteFutureValue(final LocalDate businessDate, final Class<T> clazz) {
         final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        final CriteriaQuery<T> query = cb.createQuery(clazz);
+        final CriteriaDelete<T> query = cb.createCriteriaDelete(clazz);
         final Root<T> root = query.from(clazz);
         query.where(cb.greaterThanOrEqualTo(root.get(FutureValueEntity_.businessDate), businessDate));
-
-        entityManager.createQuery(query)
-            .getResultList()
-            .forEach(entityManager::remove);
+        entityManager.createQuery(query).executeUpdate();
     }
 
-    @SafeVarargs
-    private <T extends FutureValueEntity> List<?> toFutureValueKey(final T entity, final Function<T, ?>... keyExtractors) {
-        return Stream.of(keyExtractors)
-            .map(keyExtractor -> keyExtractor.apply(entity))
-            .collect(Collectors.toList());
+    @RequiredArgsConstructor
+    @Getter
+    private static class FutureValueClassWrapper<T extends FutureValueEntity> {
+
+        private final Class<T> clazz;
+        private final Function<T, ?>[] keyExtractors;
+
+        List<?> extractKey(final T futureValue) {
+            return Stream.of(keyExtractors)
+                .map(keyExtractor -> keyExtractor.apply(futureValue))
+                .collect(Collectors.toList());
+        }
+
+        @SafeVarargs
+        private static <T extends FutureValueEntity> FutureValueClassWrapper<T> of(final Class<T> clazz, final Function<T, ?>... keyExtractors) {
+            return new FutureValueClassWrapper<>(clazz, keyExtractors);
+        }
     }
 }

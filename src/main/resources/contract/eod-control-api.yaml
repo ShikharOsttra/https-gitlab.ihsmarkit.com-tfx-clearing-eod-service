@@ -86,6 +86,13 @@ paths:
         - eod-service-controller
       summary: run EOD2 for the current business day (no business day roll)
       operationId: runEOD2
+      parameters:
+        - in: query
+          name: generateMonthlyLedger
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: status
@@ -143,6 +150,13 @@ paths:
         - eod-service-controller
       summary: run EOD1, EOD2 and roll business day forward
       operationId: runAll
+      parameters:
+        - in: query
+          name: generateMonthlyLedger
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         200:
           description: current business date
