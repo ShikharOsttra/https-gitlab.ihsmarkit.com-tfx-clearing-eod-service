@@ -86,6 +86,7 @@ public class EODCalculator {
     private static final int RATE_PRECISION = 8;
     private static final BigDecimal SWAP_POINT_UNIT = BigDecimal.ONE.scaleByPowerOfTen(-3);
     private static final BigDecimal MARGIN_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(-2);
+    private static final BigDecimal EFFECTIVE_RATIO_FACTOR = BigDecimal.ONE.scaleByPowerOfTen(2);
 
     private final TradeOrPositionEssentialsMapper tradeOrPositionMapper;
 
@@ -536,7 +537,7 @@ public class EODCalculator {
             .flatMap(value -> initialMargin
                 .filter(not(isEqualToZero()))
                 .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
-            );
+            ).map(EFFECTIVE_RATIO_FACTOR::multiply);
     }
 
     private static <R, C, LEFT, RIGHT, T> Stream<T> mergeAndFlatten(final Table<R, C, LEFT> left, final Table<R, C, RIGHT> right,
