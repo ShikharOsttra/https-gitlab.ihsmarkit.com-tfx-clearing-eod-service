@@ -81,14 +81,20 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .collect(Collectors.toSet());
         final Set<String> ccyPairsNotTradedToday = Sets.difference(allCcyPairs, aggregatedMap.keySet());
         final Stream<DailyMarketDataEnriched> notTradedCcyPairsItems;
+        final Stream<Total> notTradedCcyPairsTotalItems;
         if (ccyPairsNotTradedToday.isEmpty()) {
             notTradedCcyPairsItems = Stream.empty();
+            notTradedCcyPairsTotalItems = Stream.empty();
         } else {
             final Map<String, BigDecimal> notTradedCcyPairsPosition = getSodPositionAmount(ccyPairsNotTradedToday);
             final DailyMarkedDataAggregated sodEmptyDailyMarkedDataAggregated = sodEmptyDailyMarkedDataAggregated(recordDate);
             notTradedCcyPairsItems = ccyPairsNotTradedToday.stream()
                 .map(currencyPairCode ->
                     mapToEnrichedItem(currencyPairCode, sodEmptyDailyMarkedDataAggregated, swapPointsMapper, dspMap, notTradedCcyPairsPosition)
+                );
+            notTradedCcyPairsTotalItems = ccyPairsNotTradedToday.stream()
+                .map(currencyPairCode ->
+                    mapToTotal(currencyPairCode, sodEmptyDailyMarkedDataAggregated, notTradedCcyPairsPosition)
                 );
         }
 
@@ -103,6 +109,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                         .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
                             mapToTotal(currencyPairCode, aggregatedDailyMarketData, currencyPairOpenPosition)
                         )
+                        .append(notTradedCcyPairsTotalItems)
                         .reduce(Total::add)
                         .orElseGet(() -> Total.of(ZERO, ZERO))
                 )
