@@ -39,6 +39,7 @@ import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.exception.LockException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 public class EODControlService {
 
     private final SystemParameterRepository systemParameterRepository;
@@ -182,6 +184,7 @@ public class EODControlService {
     }
 
     @SneakyThrows
+    @SuppressFBWarnings({ "EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS", "MDM_THREAD_FAIRNESS" })
     private <T> T executeWithLock(final Callable<T> callable) {
         if (lock.tryLock()) {
             try {

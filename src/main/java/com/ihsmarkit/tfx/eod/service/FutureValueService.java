@@ -119,7 +119,7 @@ public class FutureValueService {
         }
 
         @SafeVarargs
-        private static <T extends FutureValueEntity> FutureValueClassWrapper<T> of(final Class<T> clazz, final Function<T, ?>... keyExtractors) {
+        static <T extends FutureValueEntity> FutureValueClassWrapper<T> of(final Class<T> clazz, final Function<T, ?>... keyExtractors) {
             return new FutureValueClassWrapper<>(clazz, keyExtractors);
         }
     }
