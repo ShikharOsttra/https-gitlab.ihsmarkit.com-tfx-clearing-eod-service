@@ -114,7 +114,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             closeTrade = findMinBy(Stream.of(closeTrade, candidate), CLOSE_TRADE_COMPARATOR);
             lowTrade = findMinBy(Stream.of(lowTrade, candidate), LOW_TRADE_COMPARATOR);
             highTrade = findMinBy(Stream.of(highTrade, candidate), HIGH_TRADE_COMPARATOR);
-            // this should be total for “ShortPosition” only.
+            // this should be total for "ShortPosition" only.
             if (candidate.getDirection() == Side.SELL) {
                 totalShortPositionsAmountSum = totalShortPositionsAmountSum.add(candidate.getBaseAmount().getValue());
             }
