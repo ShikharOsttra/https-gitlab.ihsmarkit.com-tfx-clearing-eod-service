@@ -33,11 +33,14 @@ import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceReposito
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashBalanceAdjustmentRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
+import com.ihsmarkit.tfx.core.domain.notification.system.CollateralBalanceChangeEventNotification;
+import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Service
 @AllArgsConstructor
@@ -65,6 +68,8 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     private final Lazy<CollateralProductEntity> cashProduct =
         Lazy.of(() -> getCollateralProductRepository().findAllCashProducts().get(0));
 
+    private final SystemEventNotificationSender systemEventNotificationSender;
+
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
@@ -88,7 +93,19 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
         eodCashBalanceAdjustmentRepository.saveAll(margins.stream().map(this::mapToAdjustment)::iterator);
 
+        margins.stream()
+            .map(entity -> entity.getParticipant().getCode())
+            .forEach(this::publishCollateralUpdateNotification);
+
         return RepeatStatus.FINISHED;
+    }
+
+    private void publishCollateralUpdateNotification(final @NonNull String code) {
+        systemEventNotificationSender.send(CollateralBalanceChangeEventNotification.builder()
+            .participantCode(code)
+            .purpose(MARGIN)
+            .productType(CASH)
+            .build());
     }
 
     private EodCashBalanceAdjustmentEntity mapToAdjustment(final EodCashSettlementEntity margin) {
