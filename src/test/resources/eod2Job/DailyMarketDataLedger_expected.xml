@@ -97,8 +97,8 @@
         swap_point="2.130"
         trading_volume_amount="0"
         trading_volume_in_unit="0"
-        open_position_amount="0"
-        open_position_in_unit="0"
+        open_position_amount="123000"
+        open_position_in_unit="123"
         record_type="1"
         order_id="104"
     />
@@ -124,7 +124,7 @@
         trading_volume_amount=""
         trading_volume_in_unit="36"
         open_position_amount=""
-        open_position_in_unit="2"
+        open_position_in_unit="125"
         record_type="3"
         order_id="9223372036854775807"
     />
