@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
+import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,8 +54,9 @@ public class MonthlyTradingVolumeTotalProcessor
         return EntryStream.of(totals)
             .mapKeyValue((participantCode, buySellAmounts) ->
                 MonthlyTradingVolumeItem.<String>builder()
-                    .businessDate(businessDate)
+                    .businessDate(businessDate.with(firstDayOfMonth()))
                     .participantCode(participantCode)
+                    .currencyPairCode(TOTAL)
 
                     .sellTradingVolumeInUnit(buySellAmounts.getSell().toString())
                     .buyTradingVolumeInUnit(buySellAmounts.getBuy().toString())
@@ -65,8 +67,8 @@ public class MonthlyTradingVolumeTotalProcessor
             )
             .append(
                 MonthlyTradingVolumeItem.<String>builder()
-                    .businessDate(businessDate)
-                    .participantName(TOTAL)
+                    .businessDate(businessDate.with(firstDayOfMonth()))
+                    .currencyPairCode(TOTAL)
 
                     .sellTradingVolumeInUnit(totalOfTotals.getSell().toString())
                     .buyTradingVolumeInUnit(totalOfTotals.getBuy().toString())
