@@ -1,14 +1,20 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static java.math.BigDecimal.ZERO;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.function.Function;
+
+import javax.annotation.Nullable;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,19 +23,23 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @StepScope
-public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
+public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantAndCurrencyPair> {
 
     private static final String DEFAULT_TIME = "07:00:00";
     private static final char ORDER_ID_SUFFIX = '0';
@@ -46,20 +56,23 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final DailySettlementPriceService dailySettlementPriceService;
     private final FXSpotProductService fxSpotProductService;
     private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    private final ParticipantPositionRepository participantPositionRepository;
+    private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @Override
-    public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
-        final ParticipantEntity participant = participantPosition.getParticipant();
-        final String dailyMtMAmount =
-            eodCalculator.calculateDailyMtmValue(participantPosition, this::getDailySettlementPrice, this::getJpyRate).getAmount().toString();
-        final String swapPoint = eodCalculator.calculateSwapPoint(participantPosition, this::getSwapPoint, this::getJpyRate).getAmount().toString();
-        final String settlementDate = formatDate(participantPosition.getValueDate());
-        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(participantPosition.getCurrencyPair());
-        final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, participantPosition.getCurrencyPair()), priceScale);
-        final String tradePrice = formatBigDecimal(participantPosition.getPrice(), priceScale);
-        final String tradeDate = formatDate(participantPosition.getTradeDate());
-        final BigDecimal positionAmount = participantPosition.getAmount().getValue();
-        final String productNumber = fxSpotProductService.getFxSpotProduct(participantPosition.getCurrencyPair()).getProductNumber();
+    public TransactionDiary process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
+        final ParticipantEntity participant = participantAndCurrencyPair.getParticipant();
+        final CurrencyPairEntity currencyPair = participantAndCurrencyPair.getCurrencyPair();
+
+        final Optional<ParticipantPositionEntity> participantPosition = participantPositionRepository
+            .findByPositionTypeAndTradeDateAndCurrencyPairAndParticipantFetchAll(SOD, businessDate, currencyPair, participant);
+
+        final String dailyMtMAmount = getValueOrZero(participantPosition, this::getDailyMtMAmount);
+        final String swapPoint = getValueOrZero(participantPosition, this::getSwapPoint);
+        final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPair);
+        final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale);
+        final BigDecimal positionAmount = participantPosition.map(position -> position.getAmount().getValue()).orElse(ZERO);
+        final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -69,14 +82,14 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantName(participant.getName())
             .participantType(formatEnum(participant.getType()))
             .currencyNo(productNumber)
-            .currencyPair(participantPosition.getCurrencyPair().getCode())
-            .matchDate(tradeDate)
+            .currencyPair(currencyPair.getCode())
+            .matchDate(formatDate(businessDate))
             .matchTime(DEFAULT_TIME)
             .matchId(EMPTY)
-            .clearDate(tradeDate)
+            .clearDate(formatDate(businessDate))
             .clearTime(DEFAULT_TIME)
             .clearingId(EMPTY)
-            .tradePrice(tradePrice)
+            .tradePrice(getTradePrice(currencyPair, participantPosition, priceScale))
             .sellAmount(positionAmount.signum() < 0 ? formatBigDecimal(positionAmount.abs()) : EMPTY)
             .buyAmount(positionAmount.signum() > 0 ? formatBigDecimal(positionAmount) : EMPTY)
             .counterpartyCode(EMPTY)
@@ -84,8 +97,8 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .dsp(dsp)
             .dailyMtMAmount(dailyMtMAmount)
             .swapPoint(swapPoint)
-            .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
-            .settlementDate(settlementDate)
+            .outstandingPositionAmount(formatBigDecimal(ZERO))
+            .settlementDate(getSettlementDate(currencyPair, participantPosition))
             .tradeId(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
@@ -93,15 +106,49 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .build();
     }
 
-    private BigDecimal getDailySettlementPrice(final CurrencyPairEntity ccy) {
-        return dailySettlementPriceService.getPrice(businessDate, ccy);
+    private String getTradePrice(final CurrencyPairEntity currencyPair, final Optional<ParticipantPositionEntity> participantPosition, final int priceScale) {
+        return formatBigDecimal(participantPosition
+                .map(ParticipantPositionEntity::getPrice)
+                .orElseGet(() -> getPreviousDateTradePrice(currencyPair)),
+            priceScale);
     }
 
-    private BigDecimal getSwapPoint(final CurrencyPairEntity ccy) {
-        return currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
+    @Nullable
+    private BigDecimal getPreviousDateTradePrice(final CurrencyPairEntity currencyPair) {
+        return tradeAndSettlementDateService.getPreviousTradeDate(businessDate, currencyPair)
+            .map(date -> dailySettlementPriceService.getPrice(date, currencyPair))
+            .orElse(null);
+    }
+
+    private BigDecimal getDailyMtMAmount(final ParticipantPositionEntity participantPosition) {
+        return eodCalculator.calculateDailyMtmValue(
+            participantPosition,
+            ccy -> dailySettlementPriceService.getPrice(businessDate, ccy),
+            this::getJpyRate
+        ).getAmount();
+    }
+
+    private BigDecimal getSwapPoint(final ParticipantPositionEntity participantPosition) {
+        return eodCalculator.calculateSwapPoint(
+            participantPosition,
+            ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy),
+            this::getJpyRate
+        ).getAmount();
+    }
+
+    private String getSettlementDate(final CurrencyPairEntity currencyPair, final Optional<ParticipantPositionEntity> participantPosition) {
+        final boolean isTradabaleCurrency = tradeAndSettlementDateService.isTradable(businessDate, currencyPair);
+        return participantPosition
+            .map(ParticipantPositionEntity::getValueDate)
+            .map(LedgerFormattingUtils::formatDate)
+            .orElseGet(() -> isTradabaleCurrency ? formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)) : EMPTY);
     }
 
     private BigDecimal getJpyRate(final String ccy) {
         return jpyRateService.getJpyRate(businessDate, ccy);
+    }
+
+    private static String getValueOrZero(final Optional<ParticipantPositionEntity> position, final Function<ParticipantPositionEntity, BigDecimal> mapper) {
+        return position.map(mapper).orElse(ZERO).toString();
     }
 }

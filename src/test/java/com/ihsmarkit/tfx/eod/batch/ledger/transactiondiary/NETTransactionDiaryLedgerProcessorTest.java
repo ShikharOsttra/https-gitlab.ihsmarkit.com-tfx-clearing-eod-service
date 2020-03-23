@@ -25,6 +25,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -36,7 +37,6 @@ class NETTransactionDiaryLedgerProcessorTest {
     private static final LocalDateTime RECORD_DATE = LocalDateTime.of(2019, 1, 2, 11, 30);
     private static final CurrencyPairEntity CURRENCY = CurrencyPairEntity.of(1L, "USD", "JPY");
     private static final ParticipantEntity PARTICIPANT = aParticipantEntityBuilder().build();
-    private static final AmountEntity AMOUNT = AmountEntity.builder().value(BigDecimal.TEN).currency("USD").build();
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().build();
     private static final long ORDER_ID = 1101999999999L;
 
@@ -70,7 +70,7 @@ class NETTransactionDiaryLedgerProcessorTest {
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
         when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), '9')).thenReturn(ORDER_ID);
 
-        assertThat(processor.process(aParticipantPosition()))
+        assertThat(processor.process(new ParticipantAndCurrencyPair(PARTICIPANT, CURRENCY)))
             .isEqualTo(TransactionDiary.builder()
                 .businessDate(BUSINESS_DATE)
                 .tradeDate("2019/01/01")
@@ -103,11 +103,4 @@ class NETTransactionDiaryLedgerProcessorTest {
                 .build());
     }
 
-    private ParticipantPositionEntity aParticipantPosition() {
-        return ParticipantPositionEntity.builder()
-            .participant(PARTICIPANT)
-            .currencyPair(CURRENCY)
-            .amount(AMOUNT)
-            .build();
-    }
 }

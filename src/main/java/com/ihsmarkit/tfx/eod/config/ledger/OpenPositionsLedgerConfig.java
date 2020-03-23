@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsLedgerProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsTotalProcessor;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 public class OpenPositionsLedgerConfig {
 
     private final OpenPositionsLedgerProcessor openPositionsLedgerProcessor;
-    private final OpenPositionsQueryProvider openPositionsQueryProvider;
+    private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
     private final OpenPositionsTotalProcessor openPositionsTotalProcessor;
     private final LedgerStepFactory ledgerStepFactory;
 
@@ -46,7 +46,7 @@ public class OpenPositionsLedgerConfig {
 
     @Bean
     JpaPagingItemReader<ParticipantAndCurrencyPair> openPositionsLedgerReader() {
-        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(openPositionsQueryProvider, openPositionsChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(participantAndCurrencyPairQueryProvider, openPositionsChunkSize)
             .transacted(true)
             .build();
     }

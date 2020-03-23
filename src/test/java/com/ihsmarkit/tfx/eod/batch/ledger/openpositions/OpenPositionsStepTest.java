@@ -16,8 +16,10 @@ import org.springframework.test.context.ContextConfiguration;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
+import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.github.springtestdbunit.dataset.ReplacementDataSetLoader;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
@@ -29,6 +31,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
     CacheConfig.class
 })
 @DbUnitTestListeners
+@DbUnitConfiguration(dataSetLoader = ReplacementDataSetLoader.class)
 @DatabaseTearDown("/common/tearDown.xml")
 class OpenPositionsStepTest extends AbstractSpringBatchTest {
     @MockBean
