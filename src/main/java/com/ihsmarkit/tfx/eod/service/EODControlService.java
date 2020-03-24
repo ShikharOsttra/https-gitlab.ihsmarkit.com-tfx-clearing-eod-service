@@ -75,7 +75,7 @@ public class EODControlService {
     @Transactional
     public LocalDate undoPreviousDayEOD(final boolean keepMarketData) {
         return executeWithLock(() -> {
-            LocalDate currentBusinessDate = getCurrentBusinessDate();
+            final LocalDate currentBusinessDate = getCurrentBusinessDate();
             log.info("[control-service] undo previous day EOD called for business date: {}", currentBusinessDate);
             cleanupService.undoEODByDate(currentBusinessDate, keepMarketData);
 
@@ -87,10 +87,9 @@ public class EODControlService {
                 futureValueService.unrollFutureValues(currentBusinessDate, previousBusinessDate);
                 log.info("[cleanup] setting current business date to : {}", previousBusinessDate);
                 systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, previousBusinessDate);
-                currentBusinessDate = previousBusinessDate;
             }
-            log.info("[control-service] undo previous day EOD completed for business date: {}", currentBusinessDate);
-            return currentBusinessDate;
+            log.info("[control-service] undo previous day EOD completed for business date: {}", previousBusinessDate);
+            return previousBusinessDate;
         });
     }
 
@@ -109,7 +108,7 @@ public class EODControlService {
         return executeWithLock(() -> {
             final BatchStatus status = runJob(EOD1_BATCH_JOB_NAME);
             if (BatchStatus.COMPLETED == status) {
-                this.saveEodStatus(EodStage.EOD1_COMPLETE, getCurrentBusinessDate());
+                saveEodStatus(EodStage.EOD1_COMPLETE, getCurrentBusinessDate());
             }
             return status;
         });
@@ -119,7 +118,7 @@ public class EODControlService {
         return executeWithLock(() -> {
             final BatchStatus status = runJob(EOD2_BATCH_JOB_NAME, Map.of(GENERATE_MONTHLY_LEDGER_JOB_PARAM_NAME, generateMonthlyLedger.toString()));
             if (BatchStatus.COMPLETED == status) {
-                this.saveEodStatus(EodStage.EOD2_COMPLETE, getCurrentBusinessDate());
+                saveEodStatus(EodStage.EOD2_COMPLETE, getCurrentBusinessDate());
             }
             return status;
         });
