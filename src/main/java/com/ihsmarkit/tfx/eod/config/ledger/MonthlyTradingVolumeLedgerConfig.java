@@ -18,9 +18,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeTotalProcessor;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
@@ -36,7 +36,7 @@ public class MonthlyTradingVolumeLedgerConfig {
     private final Resource monthlyTradingVolumeLedgerSql;
     @Value("${eod.ledger.monthly.trading.volume.chunk.size:1000}")
     private final int monthlyTradingVolumeChunkSize;
-    private final MonthlyTradingVolumeQueryProvider monthlyTradingVolumeQueryProvider;
+    private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
     private final MonthlyTradingVolumeProcessor monthlyTradingVolumeProcessor;
     private final MonthlyTradingVolumeTotalProcessor monthlyTradingVolumeTotalProcessor;
     private final LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
@@ -61,7 +61,7 @@ public class MonthlyTradingVolumeLedgerConfig {
 
     @Bean
     JpaPagingItemReader<ParticipantAndCurrencyPair> monthlyTradingVolumeReader() {
-        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(monthlyTradingVolumeQueryProvider, monthlyTradingVolumeChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair>listReaderBuilder(participantAndCurrencyPairQueryProvider, monthlyTradingVolumeChunkSize)
             .transacted(true)
             .build();
     }

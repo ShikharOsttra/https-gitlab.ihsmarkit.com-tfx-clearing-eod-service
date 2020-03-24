@@ -18,9 +18,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETQueryProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETTransactionDiaryLedgerProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODTransactionDiaryLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeListQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeTransactionDiaryLedgerProcessor;
@@ -43,8 +42,7 @@ public class TransactionDiaryLedgerConfig {
     private final NETTransactionDiaryLedgerProcessor netTransactionDiaryLedgerProcessor;
 
     private final TradeListQueryProvider tradeListQueryProvider;
-    private final SODQueryProvider sodQueryProvider;
-    private final NETQueryProvider netQueryProvider;
+    private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
 
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
     Flow transactionDiaryLedger() {
@@ -59,7 +57,7 @@ public class TransactionDiaryLedgerConfig {
     Step tradeTransactionDiaryLedger() {
         return getStep(
             TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME,
-            transactionDiaryReader(tradeListQueryProvider),
+            transactionDiaryReader(tradeListQueryProvider, false),
             tradeTransactionDiaryLedgerProcessor,
             transactionDiaryWriter()
         );
@@ -69,7 +67,7 @@ public class TransactionDiaryLedgerConfig {
     Step sodTransactionDiaryLedger() {
         return getStep(
             SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME,
-            transactionDiaryReader(sodQueryProvider),
+            transactionDiaryReader(participantAndCurrencyPairQueryProvider, true),
             sodTransactionDiaryLedgerProcessor,
             transactionDiaryWriter()
         );
@@ -79,7 +77,7 @@ public class TransactionDiaryLedgerConfig {
     Step netTransactionDiaryLedger() {
         return getStep(
             NET_TRANSACTION_DIARY_LEDGER_STEP_NAME,
-            transactionDiaryReader(netQueryProvider),
+            transactionDiaryReader(participantAndCurrencyPairQueryProvider, true),
             netTransactionDiaryLedgerProcessor,
             transactionDiaryWriter()
         );
@@ -103,7 +101,9 @@ public class TransactionDiaryLedgerConfig {
             .build();
     }
 
-    private <T> ItemReader<T> transactionDiaryReader(final JpaQueryProvider queryProvider) {
-        return ledgerStepFactory.listReader(queryProvider, transactionDiaryChunkSize);
+    private <T> ItemReader<T> transactionDiaryReader(final JpaQueryProvider queryProvider, final boolean transacted) {
+        return ledgerStepFactory.<T>listReaderBuilder(queryProvider, transactionDiaryChunkSize)
+            .transacted(transacted)
+            .build();
     }
 }

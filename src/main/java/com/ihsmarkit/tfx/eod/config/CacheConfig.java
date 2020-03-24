@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CacheConfig extends CachingConfigurerSupport {
 
-    public static final String TRADE_DATES_CACHE = "tradeDates";
+    public static final String NEXT_TRADE_DATES_CACHE = "nextTradeDates";
+    public static final String PREVIOUS_TRADE_DATES_CACHE = "previousTradeDates";
+    public static final String IS_TRADABLE = "isTradable";
     public static final String VALUE_DATES_CACHE = "valueDates";
     public static final String VM_SETTLEMENT_DATES_CACHE = "vmSettlementDates";
     public static final String JPY_RATES_CACHE = "joyRatesCache";
@@ -22,7 +24,14 @@ public class CacheConfig extends CachingConfigurerSupport {
     @Bean
     @JobScope
     public CacheManager jobCacheManager() {
-        return new ConcurrentMapCacheManager(TRADE_DATES_CACHE, VALUE_DATES_CACHE, VM_SETTLEMENT_DATES_CACHE, JPY_RATES_CACHE);
+        return new ConcurrentMapCacheManager(
+            NEXT_TRADE_DATES_CACHE,
+            PREVIOUS_TRADE_DATES_CACHE,
+            IS_TRADABLE,
+            VALUE_DATES_CACHE,
+            VM_SETTLEMENT_DATES_CACHE,
+            JPY_RATES_CACHE
+        );
     }
 
     @Bean

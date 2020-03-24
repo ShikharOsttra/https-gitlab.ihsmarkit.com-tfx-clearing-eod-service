@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aFxSpotProductEntity;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +25,8 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
@@ -30,6 +34,7 @@ import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
+import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 @ExtendWith(MockitoExtension.class)
 class SODTransactionDiaryLedgerProcessorTest {
@@ -58,12 +63,16 @@ class SODTransactionDiaryLedgerProcessorTest {
     private JPYRateService jpyRateService;
     @Mock
     private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    @Mock
+    private ParticipantPositionRepository participantPositionRepository;
+    @Mock
+    private TradeAndSettlementDateService tradeAndSettlementDateService;
 
     @BeforeEach
     void init() {
         this.processor = new SODTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, currencyPairSwapPointService, jpyRateService, dailySettlementPriceService, fxSpotProductService,
-            transactionDiaryOrderIdProvider);
+            transactionDiaryOrderIdProvider, participantPositionRepository, tradeAndSettlementDateService);
     }
 
     @Test
@@ -77,8 +86,14 @@ class SODTransactionDiaryLedgerProcessorTest {
             .thenReturn(PARTICIPANT_CURRENCY_PAIR_AMOUNT);
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
         when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), '0')).thenReturn(ORDER_ID);
+        when(participantPositionRepository.findByPositionTypeAndTradeDateAndCurrencyPairAndParticipantFetchAll(
+            SOD,
+            BUSINESS_DATE,
+            CURRENCY_PAIR,
+            PARTICIPANT
+        )).thenReturn(Optional.of(aParticipantPosition()));
 
-        assertThat(processor.process(aParticipantPosition()))
+        assertThat(processor.process(new ParticipantAndCurrencyPair(PARTICIPANT, CURRENCY_PAIR)))
             .isEqualTo(TransactionDiary.builder()
                 .businessDate(BUSINESS_DATE)
                 .tradeDate("2019/01/01")

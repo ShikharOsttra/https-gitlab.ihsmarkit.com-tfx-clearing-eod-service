@@ -26,8 +26,15 @@
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
 
-    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
-    <calendar_trading_swap_point id="2" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-11-11"/>
+    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="14" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
+    <calendar_trading_swap_point id="3" currency_pair_id="2" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
+
+    <calendar_trading_swap_point id="5" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
+    <calendar_trading_swap_point id="6" currency_pair_id="14" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
+    <calendar_trading_swap_point id="7" currency_pair_id="2" trade_date="2019-10-07" is_relevant_currency_trade="false" value_date="[null]" is_exchange_business_date="false" is_bank_business_date="false" variation_margin_settlement_date="[null]"/>
+
+    <calendar_trading_swap_point id="8" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-11-11"/>
 
     <trade
         id="111"

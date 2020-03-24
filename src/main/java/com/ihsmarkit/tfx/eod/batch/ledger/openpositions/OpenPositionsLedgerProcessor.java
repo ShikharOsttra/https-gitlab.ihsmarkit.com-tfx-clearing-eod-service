@@ -16,6 +16,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -84,7 +85,6 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
 
         final Optional<BigDecimal> eodPositionAmount = getPositionsSummed(positions, NET, REBALANCING);
 
-        final LocalDate settlementDate = tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
         final String participantCode = participant.getCode();
 
@@ -110,7 +110,7 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .dailyMtmAmount(getMarginOrZero(cashSettlements, DAILY_MTM))
             .swapPoint(getMarginOrZero(cashSettlements, SWAP_PNL))
             .totalVariationMargin(getMarginOrZero(cashSettlements, TOTAL_VM))
-            .settlementDate(formatDate(settlementDate))
+            .settlementDate(getSettlementDate(currencyPair))
             .recordDate(formatDateTime(recordDate))
             .recordType(ITEM_RECORD_TYPE)
             .orderId(getOrderId(participantCode, productNumber))
@@ -122,6 +122,12 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             participantCodeOrderIdProvider.get(participantCode),
             productNumber
         );
+    }
+
+    private String getSettlementDate(final CurrencyPairEntity currencyPair) {
+        return tradeAndSettlementDateService.isTradable(businessDate, currencyPair)
+               ? formatDate(tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair))
+               : EMPTY;
     }
 
     private static Optional<BigDecimal> longPosition(final Optional<BigDecimal> amount) {

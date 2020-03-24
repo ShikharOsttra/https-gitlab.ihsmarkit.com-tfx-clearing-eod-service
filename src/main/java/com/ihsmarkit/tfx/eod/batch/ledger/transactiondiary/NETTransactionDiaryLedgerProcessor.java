@@ -20,6 +20,7 @@ import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
+import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.FXSpotProductService;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @StepScope
 @Slf4j
-public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantPositionEntity> {
+public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantAndCurrencyPair> {
 
     private static final String DEFAULT_TIME = "07:00:00";
     private static final char ORDER_ID_SUFFIX = '9';
@@ -49,10 +50,10 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
 
     @Override
-    public TransactionDiary process(final ParticipantPositionEntity participantPosition) {
+    public TransactionDiary process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
 
-        final ParticipantEntity participant = participantPosition.getParticipant();
-        final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
+        final ParticipantEntity participant = participantAndCurrencyPair.getParticipant();
+        final CurrencyPairEntity currencyPair = participantAndCurrencyPair.getCurrencyPair();
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPair);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
 
@@ -91,10 +92,6 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private BigDecimal getSODNextDayAmount(final ParticipantEntity participant, final CurrencyPairEntity currencyPair) {
         final Optional<ParticipantPositionEntity> nextDayPosition = participantPositionRepository.findNextDayPosition(participant, currencyPair,
             ParticipantPositionType.SOD, businessDate);
-        return nextDayPosition.map(entity -> entity.getAmount().getValue()).orElseGet(() -> {
-            log.warn("[transactionDiaryLedger] next day SOD not found for participant: {} and currencyPair: {} and businessDate: {}",
-                participant.getCode(), currencyPair.getCode(), businessDate);
-            return BigDecimal.ZERO;
-        });
+        return nextDayPosition.map(entity -> entity.getAmount().getValue()).orElse(BigDecimal.ZERO);
     }
 }

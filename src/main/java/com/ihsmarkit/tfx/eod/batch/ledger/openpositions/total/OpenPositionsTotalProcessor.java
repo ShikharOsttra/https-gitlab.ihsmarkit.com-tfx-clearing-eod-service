@@ -70,6 +70,7 @@ public class OpenPositionsTotalProcessor extends AbstractTotalProcessor<OpenPosi
     @Override
     protected List<OpenPositionsListItem<String>> extractTotals(final Map<OpenPositionsListItemTotalKey, OpenPositionsListItemTotal> totals) {
         final var totalsPerParticipant = EntryStream.of(totals)
+            .filterKeys(key -> !key.getSettlementDate().isEmpty())
             .collect(
                 Tables.toTable(
                     entry -> entry.getKey().getParticipantCode(),
