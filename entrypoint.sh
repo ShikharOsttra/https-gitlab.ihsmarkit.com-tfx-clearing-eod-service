@@ -3,6 +3,8 @@
 CREDENTIALS_TPL=/opt/app/credentials.tpl
 CREDENTIALS_FILE=/etc/.creds/credentials.properties
 export LOG_PATH=/logs/${KUBERNETES_NAMESPACE}
+export STOP=0
+trap "export STOP=1" SIGINT SIGTERM
 
 if [[ -f "${CREDENTIALS_TPL}" ]]; then
         echo "Processing ${CREDENTIALS_TPL} file..."
@@ -28,4 +30,11 @@ fi
 
 [[ -d ${LOG_PATH} ]] || mkdir -p ${LOG_PATH}
 
-java ${JAVA_OPTS} -jar /opt/app/${JAVA_APP_JAR} --spring.config.location=classpath:/application.properties,classpath:/application-env.properties,file:${CREDENTIALS_FILE},file:/opt/app/config/application.properties
+java ${JAVA_OPTS} -jar /opt/app/${JAVA_APP_JAR} --spring.config.location=classpath:/application.properties,classpath:/application-env.properties,file:${CREDENTIALS_FILE},file:/opt/app/config/application.properties &
+pid=$!
+while [[ ${STOP} -eq 0 ]]; do
+    sleep 5
+done
+
+echo "`date +"%d-%m-%Y %H:%M:%S.%3N"` [SIGTERM] Caught signal. Shutting down ..." | tee -a `ls -t ${LOG_PATH}/${HOSTNAME}* | head -1`
+kill -SIGTERM ${pid}
