@@ -20,9 +20,9 @@ public final class EodJobConstants {
     public static final String CASH_BALANCE_UPDATE_BATCH_JOB_NAME = "cashBalanceUpdateJob";
     public static final String ROLL_BUSINESS_DATE_JOB_NAME = "rollBusinessDateJob";
 
-    public static final String JOB_NAME_PARAM_NAME = "jobName";
     public static final String BUSINESS_DATE_JOB_PARAM_NAME = "businessDate";
     public static final String CURRENT_TSP_JOB_PARAM_NAME = "currentTimestamp";
+    public static final String GENERATE_MONTHLY_LEDGER_JOB_PARAM_NAME = "generateMonthlyLedger";
     public static final String MTM_TRADES_STEP_NAME = "mtmTrades";
     public static final String NET_TRADES_STEP_NAME = "netTrades";
     public static final String REBALANCE_POSITIONS_STEP_NAME = "rebalancePositions";
