@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBig
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
 import static java.math.BigDecimal.ZERO;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 
@@ -41,7 +42,6 @@ import lombok.RequiredArgsConstructor;
 @StepScope
 public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantAndCurrencyPair> {
 
-    private static final String DEFAULT_TIME = "07:00:00";
     private static final char ORDER_ID_SUFFIX = '0';
 
     @Value("#{jobParameters['businessDate']}")
@@ -58,6 +58,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
     private final ParticipantPositionRepository participantPositionRepository;
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
+    private final PositionDateProvider positionDateProvider;
 
     @Override
     public TransactionDiary process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
@@ -73,6 +74,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final String dsp = formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale);
         final BigDecimal positionAmount = participantPosition.map(position -> position.getAmount().getValue()).orElse(ZERO);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
+        final LocalDateTime positionDateTime = positionDateProvider.getSodDate();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -83,11 +85,11 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantType(formatEnum(participant.getType()))
             .currencyNo(productNumber)
             .currencyPair(currencyPair.getCode())
-            .matchDate(formatDate(businessDate))
-            .matchTime(DEFAULT_TIME)
+            .matchDate(formatDate(positionDateTime.toLocalDate()))
+            .matchTime(formatTime(positionDateTime))
             .matchId(EMPTY)
-            .clearDate(formatDate(businessDate))
-            .clearTime(DEFAULT_TIME)
+            .clearDate(formatDate(positionDateTime.toLocalDate()))
+            .clearTime(formatTime(positionDateTime))
             .clearingId(EMPTY)
             .tradePrice(getTradePrice(currencyPair, participantPosition, priceScale))
             .sellAmount(positionAmount.signum() < 0 ? formatBigDecimal(positionAmount.abs()) : EMPTY)

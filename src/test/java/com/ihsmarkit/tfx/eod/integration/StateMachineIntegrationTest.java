@@ -66,7 +66,7 @@ class StateMachineIntegrationTest {
     private static final LocalDate JAN_2 = JAN_1.plusDays(1);
     private static final LocalDate JAN_3 = JAN_1.plusDays(2);
     private static final LocalDate JAN_4 = JAN_1.plusDays(3);
-    private static final LocalDate JAN_5 = JAN_1.plusDays(4);
+    private static final LocalDate JAN_7 = JAN_1.plusDays(6);
 
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
@@ -167,15 +167,16 @@ class StateMachineIntegrationTest {
         "/common/currency.xml",
         "/common/fx_spot_product.xml",
         "/common/participants.xml",
-        "/statemachine/business_date_2019_1_5.xml"
+        "/common/tradingHours.xml",
+        "/statemachine/business_date_2019_1_7.xml"
     })
-    @ExpectedDatabase(value = "/statemachine/business_date_2019_1_5-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @ExpectedDatabase(value = "/statemachine/business_date_2019_1_7-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunFullCycle() throws Exception {
         resetToReady();
         waitFor(INIT, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
         waitFor(READY, WAITING_TIME);
 
-        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_5);
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_7);
         assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
     }

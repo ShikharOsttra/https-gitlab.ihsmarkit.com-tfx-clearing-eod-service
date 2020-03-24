@@ -67,12 +67,14 @@ class SODTransactionDiaryLedgerProcessorTest {
     private ParticipantPositionRepository participantPositionRepository;
     @Mock
     private TradeAndSettlementDateService tradeAndSettlementDateService;
+    @Mock
+    private PositionDateProvider positionDateProvider;
 
     @BeforeEach
     void init() {
         this.processor = new SODTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, currencyPairSwapPointService, jpyRateService, dailySettlementPriceService, fxSpotProductService,
-            transactionDiaryOrderIdProvider, participantPositionRepository, tradeAndSettlementDateService);
+            transactionDiaryOrderIdProvider, participantPositionRepository, tradeAndSettlementDateService, positionDateProvider);
     }
 
     @Test
@@ -92,6 +94,7 @@ class SODTransactionDiaryLedgerProcessorTest {
             CURRENCY_PAIR,
             PARTICIPANT
         )).thenReturn(Optional.of(aParticipantPosition()));
+        when(positionDateProvider.getSodDate()).thenReturn(LocalDateTime.of(2019, 1, 1, 7, 0));
 
         assertThat(processor.process(new ParticipantAndCurrencyPair(PARTICIPANT, CURRENCY_PAIR)))
             .isEqualTo(TransactionDiary.builder()

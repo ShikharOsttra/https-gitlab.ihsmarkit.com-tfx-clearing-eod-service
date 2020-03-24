@@ -50,12 +50,14 @@ class NETTransactionDiaryLedgerProcessorTest {
     private ParticipantPositionRepository participantPositionRepository;
     @Mock
     private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    @Mock
+    private PositionDateProvider positionDateProvider;
 
     @BeforeEach
     void init() {
         this.processor =
             new NETTransactionDiaryLedgerProcessor(BUSINESS_DATE, RECORD_DATE, dailySettlementPriceService, fxSpotProductService,
-                participantPositionRepository, transactionDiaryOrderIdProvider);
+                participantPositionRepository, transactionDiaryOrderIdProvider, positionDateProvider);
     }
 
     @Test
@@ -69,6 +71,7 @@ class NETTransactionDiaryLedgerProcessorTest {
             .build()));
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(5);
         when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), '9')).thenReturn(ORDER_ID);
+        when(positionDateProvider.getNetDate()).thenReturn(LocalDateTime.of(2019, 1, 1, 7, 0));
 
         assertThat(processor.process(new ParticipantAndCurrencyPair(PARTICIPANT, CURRENCY)))
             .isEqualTo(TransactionDiary.builder()
