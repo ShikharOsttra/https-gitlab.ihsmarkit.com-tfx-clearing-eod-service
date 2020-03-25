@@ -54,6 +54,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.MarginAlertLevel;
+import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -495,6 +496,13 @@ public class EODCalculator {
 
     }
 
+    private static Optional<BigDecimal> calculateCashDeficit(final ParticipantType type, final Optional<BigDecimal> cashCollateral,
+                                                   Optional<BigDecimal> todaySettlement, Optional<BigDecimal> nextDaySettlement){
+        return sumAll(cashCollateral, todaySettlement,
+            ParticipantType.LIQUIDITY_PROVIDER.equals(type) && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
+                nextDaySettlement : Optional.of(ZERO));
+    }
+
     private ParticipantMargin createEodParticipantMargin(
         final ParticipantEntity participant,
         final Function<BigDecimal, Optional<MarginAlertLevel>> marginAlertLevelCalculator,
@@ -509,6 +517,8 @@ public class EODCalculator {
         final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
         final Optional<BigDecimal> effectiveMargin = calculateEffectiveMarginRatio(cashCollateral, logCollateral, pnl, requiredInitialMargin);
 
+        participant.getType();
+
         return ParticipantMargin.builder()
             .participant(participant)
             .initialMargin(requiredInitialMargin)
@@ -521,7 +531,7 @@ public class EODCalculator {
             .nextDaySettlement(nextDaySettlement)
             .requiredAmount(sumAll(requiredInitialMargin, pnl.map(BigDecimal::negate)))
             .totalDeficit(sumAll(cashCollateral, logCollateral, pnl, requiredInitialMargin.map(BigDecimal::negate)))
-            .cashDeficit(sumAll(cashCollateral, todaySettlement))
+            .cashDeficit(calculateCashDeficit(participant.getType(), cashCollateral, todaySettlement, nextDaySettlement))
             .build();
     }
 
