@@ -180,7 +180,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .totalInitialMargin(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getInitialMargin)))
             .totalVariationMargin(formatBigDecimal(cashSettlement.get(TOTAL_VM, TOTAL)))
             .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
-            .deficitInCashSettlement(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getCashDeficit)))
+            .deficitInCashSettlement(formatBigDecimalForceTwoDecimals(getCashDeficit(margin)))
             .cashSettlement(formatBigDecimal(cashSettlement.get(TOTAL_VM, DAY)))
             .cashSettlementFollowingDay(formatBigDecimal(cashSettlement.get(TOTAL_VM, FOLLOWING)))
             .initialMtmTotal(formatBigDecimal(cashSettlement.get(INITIAL_MTM, TOTAL)))
@@ -193,6 +193,13 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .swapPointDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, DAY)))
             .swapPointFollowingDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, FOLLOWING)))
             .build();
+    }
+
+    private Optional<BigDecimal> getCashDeficit(final Optional<EodParticipantMarginEntity> margin) {
+        return margin.map(eodParticipantMarginEntity -> {
+            final BigDecimal cashDeficit = eodParticipantMarginEntity.getCashDeficit();
+            return cashDeficit.signum() < 0 ? ZERO : cashDeficit;
+        });
     }
 
     private CollateralBalanceItem.CollateralBalanceItemBuilder itemBuilder(final ParticipantEntity participant) {
