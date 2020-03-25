@@ -1,17 +1,18 @@
 package com.ihsmarkit.tfx.eod.controller;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CASH_BALANCE_UPDATE_BATCH_JOB_NAME;
-
 import java.time.LocalDate;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import org.springframework.batch.core.BatchStatus;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.ihsmarkit.tfx.eod.api.EodServiceControllerApi;
+import com.ihsmarkit.tfx.eod.exception.LockException;
 import com.ihsmarkit.tfx.eod.service.EODControlService;
 
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,8 @@ public class EODServiceController implements EodServiceControllerApi {
     }
 
     @Override
-    public ResponseEntity<String> runEOD2() {
-        return ResponseEntity.ok(eodControlService.runEOD2Job().name());
+    public ResponseEntity<String> runEOD2(@Valid final Boolean generateMonthlyLedger) {
+        return ResponseEntity.ok(eodControlService.runEOD2Job(generateMonthlyLedger).name());
     }
 
     @Override
@@ -56,17 +57,18 @@ public class EODServiceController implements EodServiceControllerApi {
     }
 
     @Override
-    public ResponseEntity<LocalDate> runAll() {
-        if (eodControlService.runEOD1Job() == BatchStatus.COMPLETED
-            && eodControlService.runEOD2Job() == BatchStatus.COMPLETED
-            && eodControlService.rollBusinessDateJob() == BatchStatus.COMPLETED) {
-            return getCurrentBusinessDay();
-        }
-        return ResponseEntity.ok(LocalDate.MIN);
+    public ResponseEntity<LocalDate> runAll(@Valid final Boolean generateMonthlyLedger) {
+        return ResponseEntity.ok(eodControlService.runAll(generateMonthlyLedger));
     }
 
     @Override
     public ResponseEntity<String> updateCashBalances() {
-        return ResponseEntity.ok(eodControlService.runJob(CASH_BALANCE_UPDATE_BATCH_JOB_NAME).name());
+        return ResponseEntity.ok(eodControlService.runCashBalanceUpdateJob().name());
+    }
+
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "EOD service is busy with another task, please try again later")
+    @ExceptionHandler(LockException.class)
+    public void lockException() {
+
     }
 }

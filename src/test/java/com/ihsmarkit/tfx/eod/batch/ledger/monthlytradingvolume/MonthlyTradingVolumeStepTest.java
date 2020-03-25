@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.GENERATE_MONTHLY_LEDGER_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -75,6 +76,23 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
         assertThat(jobExecution.getStepExecutions())
             .extracting(StepExecution::getStepName)
             .doesNotContain(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME);
+    }
+
+    @Test
+    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    void shouldRunMonthlyTradingVolumeStep_OnNotLastTradingDayInMonth_AndGenerateMonthlyLedgerIsTrue() throws Exception {
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
+
+        final JobParameters jobParams = new JobParametersBuilder()
+            .addString("businessDate", "20190129")
+            .addString(GENERATE_MONTHLY_LEDGER_JOB_PARAM_NAME, Boolean.TRUE.toString())
+            .toJobParameters();
+        final JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParams);
+        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        assertThat(jobExecution.getStepExecutions())
+            .extracting(StepExecution::getStepName)
+            .contains(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME);
     }
 
 }
