@@ -499,7 +499,7 @@ public class EODCalculator {
     private static Optional<BigDecimal> calculateCashDeficit(final ParticipantType type, final Optional<BigDecimal> cashCollateral,
                                                    final Optional<BigDecimal> todaySettlement, final Optional<BigDecimal> nextDaySettlement) {
         return sumAll(cashCollateral, todaySettlement,
-            ParticipantType.LIQUIDITY_PROVIDER.equals(type) && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
+            ParticipantType.LIQUIDITY_PROVIDER == type && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
                 nextDaySettlement : Optional.of(ZERO));
     }
 
@@ -516,8 +516,6 @@ public class EODCalculator {
         final Optional<BigDecimal> cashCollateral = balance.map(BalanceContribution::getCashBalanceContribution);
         final Optional<BigDecimal> logCollateral = balance.map(BalanceContribution::getLogBalanceContribution);
         final Optional<BigDecimal> effectiveMargin = calculateEffectiveMarginRatio(cashCollateral, logCollateral, pnl, requiredInitialMargin);
-
-        participant.getType();
 
         return ParticipantMargin.builder()
             .participant(participant)
