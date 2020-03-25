@@ -497,7 +497,7 @@ public class EODCalculator {
     }
 
     private static Optional<BigDecimal> calculateCashDeficit(final ParticipantType type, final Optional<BigDecimal> cashCollateral,
-                                                   Optional<BigDecimal> todaySettlement, Optional<BigDecimal> nextDaySettlement){
+                                                   Optional<BigDecimal> todaySettlement, Optional<BigDecimal> nextDaySettlement) {
         return sumAll(cashCollateral, todaySettlement,
             ParticipantType.LIQUIDITY_PROVIDER.equals(type) && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
                 nextDaySettlement : Optional.of(ZERO));
