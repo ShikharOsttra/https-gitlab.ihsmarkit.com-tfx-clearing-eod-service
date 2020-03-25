@@ -93,7 +93,7 @@ public class PositionDateProvider {
     }
 
     private static TemporalAdjuster saturdayIfMonday() {
-        return temporal -> DayOfWeek.from(temporal) == MONDAY ? temporal.with(TemporalAdjusters.previous(SATURDAY)) : temporal;
+        return temporal -> isMonday(temporal) ? temporal.with(TemporalAdjusters.previous(SATURDAY)) : temporal;
     }
 
     private static TemporalAdjuster prevBusinessDay() {
