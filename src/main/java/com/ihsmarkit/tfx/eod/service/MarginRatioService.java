@@ -50,7 +50,10 @@ public class MarginRatioService {
             participant,
             p -> marginRatioMultiplierRepository.findAllByBusinessDateAndParticipantCode(businessDate, participant.getCode()).stream()
                                 .collect(Collectors.toMap(MarginRatioMultiplierEntity::getCurrencyPair, MarginRatioMultiplierEntity::getValue))
-        ).get(currencyPair)
+        ).computeIfAbsent(currencyPair, pairEntity -> {
+            throw new IllegalStateException(String.format("unable to find margin multiplier for currency pair: %s, participant: %s and businessDate: %s",
+                currencyPair.getCode(), pairEntity.getCode(), businessDate));
+        })
             .multiply(marginRatio.get().get(currencyPair))
             .setScale(MARGIN_RATIO_SCALE, MARGIN_RATIO_ROUNDING);
     }

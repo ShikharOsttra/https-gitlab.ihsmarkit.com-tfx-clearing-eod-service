@@ -40,10 +40,12 @@ import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
 @JobScope
+@Slf4j
 public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     @Value("#{jobParameters['businessDate']}")
@@ -73,8 +75,10 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
         final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
+        log.info("[var-cash-settlement] starting for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
+        log.info("[var-cash-settlement] found: {} actionable cash settlements for trade date: {}", margins.size(), previousTradingDate);
 
         final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
             collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(
@@ -95,6 +99,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         margins.stream()
             .map(entity -> entity.getParticipant().getCode())
             .forEach(this::publishCollateralUpdateNotification);
+        log.info("[var-cash-settlement] completed for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         return RepeatStatus.FINISHED;
     }

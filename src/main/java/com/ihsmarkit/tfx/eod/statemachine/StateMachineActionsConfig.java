@@ -37,9 +37,12 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
+@SuppressWarnings("PMD.TooManyMethods")
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
@@ -100,19 +103,19 @@ public class StateMachineActionsConfig {
 
     @Bean
     public EodGuard swpPointApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(SWAP_POINTS_APPROVED, date));
-    }
-
-    @Bean
-    public EodGuard dspApprovedGuard() {
-        return date -> eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, date))
+        return date -> hasSwapPointsApproved(date)
             && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
             && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
     }
 
     @Bean
+    public EodGuard dspApprovedGuard() {
+        return this::hasDSPApproved;
+    }
+
+    @Bean
     public EodGuard tradesInFlightGuard() {
-        return date -> !tradeRepository.existsTradeInFlightForDate(date);
+        return this::hasTradesInFlight;
     }
 
     private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {
@@ -133,7 +136,27 @@ public class StateMachineActionsConfig {
     }
 
     private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final SystemParameter<LocalDateTime> collateralUpdateParameter) {
-        return collateralPriceUploadCheckEnabled &&
-            systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
+        final boolean result = collateralPriceUploadCheckEnabled &&
+                                systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
+        log.info("[EOD2 trigger] collateral price upload check for: {} and businessDay: {} returns: {}", collateralUpdateParameter, businessDate, result);
+        return result;
+    }
+
+    private boolean hasSwapPointsApproved(final LocalDate businessDate) {
+        final boolean result = eodStatusRepository.existsById(new EodStatusCompositeId(SWAP_POINTS_APPROVED, businessDate));
+        log.info("[EOD2 trigger] swap points approval check for businessDay: {} returns: {}", businessDate, result);
+        return result;
+    }
+
+    private boolean hasDSPApproved(final LocalDate businessDate) {
+        final boolean result = eodStatusRepository.existsById(new EodStatusCompositeId(DSP_APPROVED, businessDate));
+        log.info("[EOD1 trigger] DSP approval check for businessDay: {} returns: {}", businessDate, result);
+        return result;
+    }
+
+    private boolean hasTradesInFlight(final LocalDate businessDate) {
+        final boolean result = !tradeRepository.existsTradeInFlightForDate(businessDate);
+        log.info("[EOD1 trigger] trades in flight check for businessDay: {} returns: {}", businessDate, result);
+        return result;
     }
 }
