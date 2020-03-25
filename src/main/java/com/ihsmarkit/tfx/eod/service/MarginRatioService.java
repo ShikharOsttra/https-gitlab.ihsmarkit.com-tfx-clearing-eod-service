@@ -52,7 +52,7 @@ public class MarginRatioService {
                                 .collect(Collectors.toMap(MarginRatioMultiplierEntity::getCurrencyPair, MarginRatioMultiplierEntity::getValue))
         ).computeIfAbsent(currencyPair, pairEntity -> {
             throw new IllegalStateException(String.format("unable to find margin multiplier for currency pair: %s, participant: %s and businessDate: %s",
-                currencyPair.getCode(), pairEntity.getCode(), businessDate));
+                currencyPair.getCode(), participant.getCode(), businessDate));
         })
             .multiply(marginRatio.get().get(currencyPair))
             .setScale(MARGIN_RATIO_SCALE, MARGIN_RATIO_ROUNDING);
