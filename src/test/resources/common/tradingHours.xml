@@ -1,0 +1,27 @@
+<dataset>
+    <summer_time_setting currency_pair_family="NZD" start_date="2019-03-20" end_date="2019-10-21" source="SYSTEM"/>
+    <summer_time_setting currency_pair_family="NON_NZD" start_date="2019-03-21" end_date="2019-10-22" source="SYSTEM"/>
+
+    <trading_hours id="1" type="REGULAR" currency_pair_family="NZD" day_of_week="MONDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="2" type="REGULAR" currency_pair_family="NZD" day_of_week="TUESDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="3" type="REGULAR" currency_pair_family="NZD" day_of_week="WEDNESDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="4" type="REGULAR" currency_pair_family="NZD" day_of_week="THURSDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="5" type="REGULAR" currency_pair_family="NZD" day_of_week="FRIDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="6" type="REGULAR" currency_pair_family="NON_NZD" day_of_week="MONDAY" start_time="08:00:00" close_time="08:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="7" type="REGULAR" currency_pair_family="NON_NZD" day_of_week="TUESDAY" start_time="08:00:00" close_time="08:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="8" type="REGULAR" currency_pair_family="NON_NZD" day_of_week="WEDNESDAY" start_time="08:00:00" close_time="08:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="9" type="REGULAR" currency_pair_family="NON_NZD" day_of_week="THURSDAY" start_time="08:00:00" close_time="08:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="10" type="REGULAR" currency_pair_family="NON_NZD" day_of_week="FRIDAY" start_time="08:00:00" close_time="08:00:00" acceptance_limit_time="09:00:00"/>
+
+    <trading_hours id="11" type="SUMMER" currency_pair_family="NZD" day_of_week="MONDAY" start_time="06:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="12" type="SUMMER" currency_pair_family="NZD" day_of_week="TUESDAY" start_time="06:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="13" type="SUMMER" currency_pair_family="NZD" day_of_week="WEDNESDAY" start_time="06:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="14" type="SUMMER" currency_pair_family="NZD" day_of_week="THURSDAY" start_time="06:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="15" type="SUMMER" currency_pair_family="NZD" day_of_week="FRIDAY" start_time="06:00:00" close_time="07:00:00" acceptance_limit_time="08:00:00"/>
+    <trading_hours id="16" type="SUMMER" currency_pair_family="NON_NZD" day_of_week="MONDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="17" type="SUMMER" currency_pair_family="NON_NZD" day_of_week="TUESDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="18" type="SUMMER" currency_pair_family="NON_NZD" day_of_week="WEDNESDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="19" type="SUMMER" currency_pair_family="NON_NZD" day_of_week="THURSDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="09:00:00"/>
+    <trading_hours id="20" type="SUMMER" currency_pair_family="NON_NZD" day_of_week="FRIDAY" start_time="07:00:00" close_time="07:00:00" acceptance_limit_time="09:00:00"/>
+
+</dataset>

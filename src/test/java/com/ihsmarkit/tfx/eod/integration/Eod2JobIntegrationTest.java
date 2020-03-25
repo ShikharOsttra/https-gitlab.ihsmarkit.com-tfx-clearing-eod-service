@@ -55,6 +55,7 @@ class Eod2JobIntegrationTest {
         "/common/haircuts.xml",
         "/common/fx_spot_product.xml",
         "/common/marginAlertConfiguration.xml",
+        "/common/tradingHours.xml",
         "/eod1Job/eod2-sunnyDay-20191007.xml"
     })
     @ExpectedDatabase(value = "/eod1Job/eod2-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)

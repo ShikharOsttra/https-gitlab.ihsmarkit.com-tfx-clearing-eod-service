@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBig
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTime;
 import static org.apache.logging.log4j.util.Strings.EMPTY;
 
 import java.math.BigDecimal;
@@ -34,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedgerProcessor<ParticipantAndCurrencyPair> {
 
-    private static final String DEFAULT_TIME = "07:00:00";
     private static final char ORDER_ID_SUFFIX = '9';
 
     @Value("#{jobParameters['businessDate']}")
@@ -48,6 +48,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
 
     private final ParticipantPositionRepository participantPositionRepository;
     private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    private final PositionDateProvider positionDateProvider;
 
     @Override
     public TransactionDiary process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
@@ -56,6 +57,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
         final CurrencyPairEntity currencyPair = participantAndCurrencyPair.getCurrencyPair();
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPair);
         final String productNumber = fxSpotProductService.getFxSpotProduct(currencyPair).getProductNumber();
+        final LocalDateTime positionDateTime = positionDateProvider.getNetDate();
 
         return TransactionDiary.builder()
             .businessDate(businessDate)
@@ -66,11 +68,11 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .participantType(formatEnum(participant.getType()))
             .currencyNo(productNumber)
             .currencyPair(currencyPair.getCode())
-            .matchDate(formatDate(businessDate))
-            .matchTime(DEFAULT_TIME)
+            .matchDate(formatDate(positionDateTime.toLocalDate()))
+            .matchTime(formatTime(positionDateTime))
             .matchId(EMPTY)
-            .clearDate(formatDate(businessDate))
-            .clearTime(DEFAULT_TIME)
+            .clearDate(formatDate(positionDateTime.toLocalDate()))
+            .clearTime(formatTime(positionDateTime))
             .clearingId(EMPTY)
             .tradePrice(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale))
             .sellAmount(EMPTY)

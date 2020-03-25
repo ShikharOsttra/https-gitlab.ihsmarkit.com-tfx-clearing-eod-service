@@ -1,0 +1,9 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-08"/>
+    <system_parameter id="2" name="LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME" value="2019-01-07 07:30:00"/>
+    <system_parameter id="3" name="LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME" value="2019-01-07 07:35:00"/>
+    <eod_status stage="DSP_APPROVED" business_date="2019-01-07"/>
+    <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-07"/>
+    <eod_status stage="EOD1_COMPLETE" business_date="2019-01-07"/>
+    <eod_status stage="EOD2_COMPLETE" business_date="2019-01-07"/>
+</dataset>
