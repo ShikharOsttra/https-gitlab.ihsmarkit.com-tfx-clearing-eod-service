@@ -26,11 +26,11 @@ import lombok.AllArgsConstructor;
 public class QuartzConfig {
     private static final String EOD1_JOB_IS_ENABLED_PROPERTY = "eod1.job.enabled";
     private static final String EOD1_JOB_DETAIL_NAME = "eod1JobDetail";
-    private static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
-    private static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
+    public static final String EOD1_JOB_TRIGGER1_NAME = "eod1JobTrigger1";
+    public static final String EOD1_JOB_TRIGGER2_NAME = "eod1JobTrigger2";
     private static final String BALANCE_UPDATE_JOB_IS_ENABLED_PROPERTY = "cashCollateralBalanceUpdate.job.enabled";
     private static final String BALANCE_UPDATE_JOB_DETAIL_NAME = "cashCollateralBalanceUpdateJobDetail";
-    private static final String BALANCE_UPDATE_JOB_TRIGGER_NAME = "cashCollateralBalanceUpdateJobTrigger";
+    public static final String BALANCE_UPDATE_JOB_TRIGGER_NAME = "cashCollateralBalanceUpdateJobTrigger";
 
     private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(JST);
 
@@ -93,8 +93,8 @@ public class QuartzConfig {
             .build();
     }
 
-    @Bean
-    @ConditionalOnBean(name = BALANCE_UPDATE_JOB_TRIGGER_NAME)
+    @Bean(BALANCE_UPDATE_JOB_TRIGGER_NAME)
+    @ConditionalOnBean(name = BALANCE_UPDATE_JOB_DETAIL_NAME)
     public Trigger cashCollateralBalanceUpdateJobTrigger() {
         final ScheduleBuilder<CronTrigger> scheduleBuilder = CronScheduleBuilder
             .cronSchedule(cashCollateralBalanceUpdateJobTriggerCron)

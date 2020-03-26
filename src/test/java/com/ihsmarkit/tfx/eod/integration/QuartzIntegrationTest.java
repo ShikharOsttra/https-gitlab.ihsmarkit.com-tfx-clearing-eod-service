@@ -2,6 +2,9 @@ package com.ihsmarkit.tfx.eod.integration;
 
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CASH_BALANCE_UPDATE_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.QuartzConfig.BALANCE_UPDATE_JOB_TRIGGER_NAME;
+import static com.ihsmarkit.tfx.eod.config.QuartzConfig.EOD1_JOB_TRIGGER1_NAME;
+import static com.ihsmarkit.tfx.eod.config.QuartzConfig.EOD1_JOB_TRIGGER2_NAME;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.EOD1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,10 +18,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.quartz.CronTrigger;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -52,7 +57,10 @@ import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
     locations = "classpath:/application.properties",
     properties = {
         "eod1.job.enabled=true",
-        "cashCollateralBalanceUpdate.job.enabled=true"
+        "cashCollateralBalanceUpdate.job.enabled=true",
+        "eod1.job.trigger1.cron=0 0 1 1 1 ? 2099",
+        "eod1.job.trigger2.cron=0 0 1 2 1 ? 2099",
+        "cashCollateralBalanceUpdate.job.trigger.cron=0 0 1 3 1 ? 2099"
     }
 )
 public class QuartzIntegrationTest {
@@ -101,6 +109,18 @@ public class QuartzIntegrationTest {
     @Autowired
     private Scheduler scheduler;
 
+    @Autowired//(required = false)
+    @Qualifier(EOD1_JOB_TRIGGER1_NAME)
+    private CronTrigger eod1JobTrigger1;
+
+    @Autowired//(required = false)
+    @Qualifier(EOD1_JOB_TRIGGER2_NAME)
+    private CronTrigger eod1JobTrigger2;
+
+    @Autowired(required = false)
+    @Qualifier(BALANCE_UPDATE_JOB_TRIGGER_NAME)
+    private CronTrigger cashCollateralBalanceUpdateJobTrigger;
+
     @Test
     void shouldTriggerExecution() throws SchedulerException, InterruptedException {
         final StateWaitingListener listener = new StateWaitingListener(EOD1);
@@ -127,5 +147,27 @@ public class QuartzIntegrationTest {
         scheduler.triggerJob(new JobKey(CASH_BALANCE_UPDATE_BATCH_JOB_NAME, null));
 
         assertThat(finished.await(5, TimeUnit.SECONDS)).isTrue();
+    }
+
+    @Test
+    void cashCollateralBalanceUpdateJobTrigger1ShouldBeConfigured() {
+        assertTriggerFireTime(cashCollateralBalanceUpdateJobTrigger, LocalDate.ofYearDay(2099, 3));
+    }
+
+    @Test
+    void eodTrigger2ShouldBeConfigured() {
+        assertTriggerFireTime(eod1JobTrigger2, LocalDate.ofYearDay(2099, 2));
+    }
+
+    @Test
+    void eodTrigger1ShouldBeConfigured() {
+        assertTriggerFireTime(eod1JobTrigger1, LocalDate.ofYearDay(2099, 1));
+    }
+
+    void assertTriggerFireTime(CronTrigger cronTrigger, LocalDate expected) {
+        assertThat(cronTrigger)
+            .isNotNull()
+            .extracting(trigger -> LocalDate.ofInstant(trigger.getNextFireTime().toInstant(), trigger.getTimeZone().toZoneId()))
+            .isEqualTo(expected);
     }
 }
