@@ -74,6 +74,10 @@ public class LedgerFormattingUtils {
         return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString());
     }
 
+    public static String formatBigDecimalRoundTo1Jpy(final Optional<BigDecimal> bigDecimal) {
+        return bigDecimal.map(LedgerFormattingUtils::formatBigDecimalRoundTo1Jpy).orElse(EMPTY);
+    }
+
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
         return Optional.ofNullable(value).map(mappingFunction).orElse(EMPTY);
     }

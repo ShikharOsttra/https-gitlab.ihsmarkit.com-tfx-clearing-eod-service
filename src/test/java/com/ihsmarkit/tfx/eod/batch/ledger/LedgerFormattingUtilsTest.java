@@ -71,7 +71,8 @@ class LedgerFormattingUtilsTest {
             Arguments.of((Function<LocalDateTime, String>) LedgerFormattingUtils::formatTime),
             Arguments.of((Function<MonthDay, String>) LedgerFormattingUtils::formatMonthDay),
             Arguments.of((Function<Enum<?>, String>) LedgerFormattingUtils::formatEnum),
-            Arguments.of((Function<BigDecimal, String>) LedgerFormattingUtils::formatBigDecimal)
+            Arguments.of((Function<BigDecimal, String>) LedgerFormattingUtils::formatBigDecimal),
+            Arguments.of((Function<BigDecimal, String>) LedgerFormattingUtils::formatBigDecimalRoundTo1Jpy)
         );
     }
 
@@ -83,6 +84,18 @@ class LedgerFormattingUtilsTest {
     })
     void shouldFormatBigDecimalWithSpecifiedNumberOfDecimalPlaces(final BigDecimal passed, final int decimalPlaces, final String expected) {
         assertThat(LedgerFormattingUtils.formatBigDecimal(passed, decimalPlaces)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "123.00, 123",
+        "123.11, 123",
+        "123.56, 123",
+        "-123.56, -124",
+        "-123.11, -124"
+    })
+    void shouldFormatBigDecimalWith1JpyRule(final BigDecimal passed, final String expected) {
+        assertThat(LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy(passed)).isEqualTo(expected);
     }
 
 }
