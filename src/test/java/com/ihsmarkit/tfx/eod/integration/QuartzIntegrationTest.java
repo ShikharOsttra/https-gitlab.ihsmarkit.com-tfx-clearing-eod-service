@@ -109,11 +109,11 @@ public class QuartzIntegrationTest {
     @Autowired
     private Scheduler scheduler;
 
-    @Autowired//(required = false)
+    @Autowired
     @Qualifier(EOD1_JOB_TRIGGER1_NAME)
     private CronTrigger eod1JobTrigger1;
 
-    @Autowired//(required = false)
+    @Autowired
     @Qualifier(EOD1_JOB_TRIGGER2_NAME)
     private CronTrigger eod1JobTrigger2;
 
