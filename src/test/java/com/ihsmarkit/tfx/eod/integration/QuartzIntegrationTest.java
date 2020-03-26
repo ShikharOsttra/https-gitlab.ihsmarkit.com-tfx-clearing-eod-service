@@ -34,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.eod.batch.CashCollateralBalanceUpdateTasklet;
@@ -69,6 +70,9 @@ public class QuartzIntegrationTest {
 
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
+
+    @MockBean
+    private AlertSender alertSender;
 
     @MockBean(name = "dspApprovedGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> dspApprovedGuard;

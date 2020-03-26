@@ -12,7 +12,6 @@ import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.Import;
 import org.springframework.jmx.support.RegistrationPolicy;
 
-import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.collateral.calculator.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
@@ -50,9 +49,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
 @ComponentScan(basePackages = { "com.ihsmarkit.tfx.eod.batch", "com.ihsmarkit.tfx.eod.service", "com.ihsmarkit.tfx.eod.mapper"})
 class IntegrationTestConfig {
-
-    @MockBean
-    private AlertSender alertSender;
 
     @MockBean
     private SystemEventNotificationSender systemEventNotificationSender;
