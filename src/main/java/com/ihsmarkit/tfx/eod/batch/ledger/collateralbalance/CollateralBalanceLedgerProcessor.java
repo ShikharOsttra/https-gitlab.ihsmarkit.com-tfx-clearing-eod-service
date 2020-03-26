@@ -12,8 +12,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.IN
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalForceTwoDecimals;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -144,8 +143,8 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     ) {
         return itemBuilder(participant)
             .collateralPurpose(FOLLOWING_CLEARING_DEPOSIT_PURPOSE)
-            .requiredAmount(formatBigDecimalForceTwoDecimals(nextClearingDepositRequiredAmount.getSecond()))
-            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(balance.getTotal().subtract(nextClearingDepositRequiredAmount.getSecond())))
+            .requiredAmount(formatBigDecimalRoundTo1Jpy(nextClearingDepositRequiredAmount.getSecond()))
+            .totalExcessDeficit(formatBigDecimalRoundTo1Jpy(balance.getTotal().subtract(nextClearingDepositRequiredAmount.getSecond())))
             .followingApplicableDayForClearingDeposit(formatDate(nextClearingDepositRequiredAmount.getFirst()))
             .orderId(getOrderId(participant, FOLLOWING_CLEARING_DEPOSIT_PURPOSE))
             .build();
@@ -160,8 +159,8 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         final BigDecimal totalExcessDeficit = balance.getTotal().subtract(requiredAmount);
 
         return purposeItemBuilder(purpose, participant, balance)
-            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
-            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
+            .requiredAmount(formatBigDecimalRoundTo1Jpy(requiredAmount))
+            .totalExcessDeficit(formatBigDecimalRoundTo1Jpy(totalExcessDeficit))
             .orderId(getOrderId(participant, purpose.name()))
             .build();
     }
@@ -176,22 +175,22 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         final BigDecimal totalExcessDeficit = balance.getTotal().subtract(requiredAmount);
 
         return purposeItemBuilder(MARGIN, participant, balance)
-            .requiredAmount(formatBigDecimalForceTwoDecimals(requiredAmount))
-            .totalInitialMargin(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getInitialMargin)))
-            .totalVariationMargin(formatBigDecimal(cashSettlement.get(TOTAL_VM, TOTAL)))
-            .totalExcessDeficit(formatBigDecimalForceTwoDecimals(totalExcessDeficit))
-            .deficitInCashSettlement(formatBigDecimalForceTwoDecimals(margin.map(EodParticipantMarginEntity::getCashDeficit)))
-            .cashSettlement(formatBigDecimal(cashSettlement.get(TOTAL_VM, DAY)))
-            .cashSettlementFollowingDay(formatBigDecimal(cashSettlement.get(TOTAL_VM, FOLLOWING)))
-            .initialMtmTotal(formatBigDecimal(cashSettlement.get(INITIAL_MTM, TOTAL)))
-            .initialMtmDay(formatBigDecimal(cashSettlement.get(INITIAL_MTM, DAY)))
-            .initialMtmFollowingDay(formatBigDecimal(cashSettlement.get(INITIAL_MTM, FOLLOWING)))
-            .dailyMtmTotal(formatBigDecimal(cashSettlement.get(DAILY_MTM, TOTAL)))
-            .dailyMtmDay(formatBigDecimal(cashSettlement.get(DAILY_MTM, DAY)))
-            .dailyMtmFollowingDay(formatBigDecimal(cashSettlement.get(DAILY_MTM, FOLLOWING)))
-            .swapPointTotal(formatBigDecimal(cashSettlement.get(SWAP_PNL, TOTAL)))
-            .swapPointDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, DAY)))
-            .swapPointFollowingDay(formatBigDecimal(cashSettlement.get(SWAP_PNL, FOLLOWING)))
+            .requiredAmount(formatBigDecimalRoundTo1Jpy(requiredAmount))
+            .totalInitialMargin(formatBigDecimalRoundTo1Jpy(margin.map(EodParticipantMarginEntity::getInitialMargin)))
+            .totalVariationMargin(formatBigDecimalRoundTo1Jpy(cashSettlement.get(TOTAL_VM, TOTAL)))
+            .totalExcessDeficit(formatBigDecimalRoundTo1Jpy(totalExcessDeficit))
+            .deficitInCashSettlement(formatBigDecimalRoundTo1Jpy(margin.map(EodParticipantMarginEntity::getCashDeficit)))
+            .cashSettlement(formatBigDecimalRoundTo1Jpy(cashSettlement.get(TOTAL_VM, DAY)))
+            .cashSettlementFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(TOTAL_VM, FOLLOWING)))
+            .initialMtmTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, TOTAL)))
+            .initialMtmDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, DAY)))
+            .initialMtmFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, FOLLOWING)))
+            .dailyMtmTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, TOTAL)))
+            .dailyMtmDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, DAY)))
+            .dailyMtmFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, FOLLOWING)))
+            .swapPointTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, TOTAL)))
+            .swapPointDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, DAY)))
+            .swapPointFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, FOLLOWING)))
             .build();
     }
 
@@ -215,10 +214,10 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         return itemBuilder(participant)
             .collateralPurposeType(purpose.getValue().toString())
             .collateralPurpose(formatEnum(purpose))
-            .totalDeposit(balance.getTotal().toString())
-            .cash(balance.getCash().toString())
-            .lg(balance.getLg().toString())
-            .securities(balance.getSecurities().toString())
+            .totalDeposit(formatBigDecimalRoundTo1Jpy(balance.getTotal()))
+            .cash(formatBigDecimalRoundTo1Jpy(balance.getCash()))
+            .lg(formatBigDecimalRoundTo1Jpy(balance.getLg()))
+            .securities(formatBigDecimalRoundTo1Jpy(balance.getSecurities()))
             .orderId(getOrderId(participant, purpose.name()));
     }
 
