@@ -15,6 +15,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -23,6 +24,7 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.eod.config.CashCollateralBalanceUpdateJobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -44,6 +46,9 @@ public class CashBalanceUpdateJobIntegrationTest {
 
     @Autowired
     private JobLauncher jobLauncher;
+
+    @MockBean
+    private AlertSender alertSender;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/common/issuerBanks.xml", "/cash-balance-update/cash-balance-update-20191007.xml"})

@@ -1,12 +1,17 @@
 package com.ihsmarkit.tfx.eod.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -24,6 +29,10 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
+import com.ihsmarkit.tfx.alert.client.domain.Eod1CompletedAlert;
+import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
+import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
+import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
@@ -52,15 +61,25 @@ class Eod1JobIntegrationTest {
     @MockBean
     private ClockService clockService;
 
+    @MockBean
+    private AlertSender alertSender;
+
     @Test
     @DatabaseSetup({ "/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml" })
     @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
     void testEodJob() throws Exception {
-        when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(2019, 11, 12, 10, 10));
+        final LocalDateTime currentDateTime = LocalDateTime.of(2019, 11, 12, 10, 10);
+        final LocalDate businessDate = LocalDate.of(2019, 10, 7);
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(currentDateTime);
 
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(eodJob, jobParams);
 
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        final InOrder inOrder = inOrder(alertSender);
+        inOrder.verify(alertSender).sendAlert(Eod1StartAlert.of(currentDateTime, businessDate));
+        inOrder.verify(alertSender, times(4)).sendAlert(any(EodStepCompleteAlert.class));
+        inOrder.verify(alertSender).sendAlert(Eod1CompletedAlert.of(currentDateTime, businessDate));
     }
 }
