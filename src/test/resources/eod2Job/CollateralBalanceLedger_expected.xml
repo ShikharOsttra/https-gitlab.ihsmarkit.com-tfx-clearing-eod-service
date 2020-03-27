@@ -16,7 +16,7 @@
         total_initial_margin="78753600"
         total_variation_margin="900"
         total_excess_deficit="10485"
-        deficit_in_cash_settlement="501"
+        deficit_in_cash_settlement="0"
         cash_settlement="700"
         cash_settlement_following_day="800"
         initial_mtm_total="1200"
