@@ -205,7 +205,7 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
     private Optional<BigDecimal> getCashDeficit(final Optional<EodParticipantMarginEntity> margin) {
         return margin.map(eodParticipantMarginEntity -> {
             final BigDecimal cashDeficit = eodParticipantMarginEntity.getCashDeficit();
-            return cashDeficit.signum() < 0 ? ZERO : cashDeficit;
+            return cashDeficit.signum() >= 0 ? ZERO : cashDeficit.abs();
         });
     }
 
