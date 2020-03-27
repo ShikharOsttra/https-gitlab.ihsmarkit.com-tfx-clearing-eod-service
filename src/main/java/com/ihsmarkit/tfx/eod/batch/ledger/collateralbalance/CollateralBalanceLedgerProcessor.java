@@ -13,6 +13,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SW
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1JpyDefaultZero;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
@@ -182,15 +184,15 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .deficitInCashSettlement(formatBigDecimalRoundTo1Jpy(getCashDeficit(margin)))
             .cashSettlement(formatBigDecimalRoundTo1Jpy(cashSettlement.get(TOTAL_VM, DAY)))
             .cashSettlementFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(TOTAL_VM, FOLLOWING)))
-            .initialMtmTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, TOTAL)))
-            .initialMtmDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, DAY)))
-            .initialMtmFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(INITIAL_MTM, FOLLOWING)))
-            .dailyMtmTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, TOTAL)))
-            .dailyMtmDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, DAY)))
-            .dailyMtmFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(DAILY_MTM, FOLLOWING)))
-            .swapPointTotal(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, TOTAL)))
-            .swapPointDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, DAY)))
-            .swapPointFollowingDay(formatBigDecimalRoundTo1Jpy(cashSettlement.get(SWAP_PNL, FOLLOWING)))
+            .initialMtmTotal(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(INITIAL_MTM, TOTAL)))
+            .initialMtmDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(INITIAL_MTM, DAY)))
+            .initialMtmFollowingDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(INITIAL_MTM, FOLLOWING)))
+            .dailyMtmTotal(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(DAILY_MTM, TOTAL)))
+            .dailyMtmDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(DAILY_MTM, DAY)))
+            .dailyMtmFollowingDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(DAILY_MTM, FOLLOWING)))
+            .swapPointTotal(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(SWAP_PNL, TOTAL)))
+            .swapPointDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(SWAP_PNL, DAY)))
+            .swapPointFollowingDay(formatBigDecimalRoundTo1JpyDefaultZero(cashSettlement.get(SWAP_PNL, FOLLOWING)))
             .build();
     }
 

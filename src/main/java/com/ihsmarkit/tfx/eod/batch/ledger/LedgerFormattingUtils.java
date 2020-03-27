@@ -15,10 +15,12 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods"})
+@SuppressWarnings({ "checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods" })
 public class LedgerFormattingUtils {
 
     public static final int SWAP_POINTS_DECIMAL_PLACES = 3;
@@ -72,6 +74,13 @@ public class LedgerFormattingUtils {
 
     public static String formatBigDecimalRoundTo1Jpy(@Nullable final BigDecimal bigDecimal) {
         return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString());
+    }
+
+    public static String formatBigDecimalRoundTo1JpyDefaultZero(@Nullable final BigDecimal bigDecimal) {
+        return StringUtils.defaultIfEmpty(
+            safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString()),
+            "0"
+        );
     }
 
     public static String formatBigDecimalRoundTo1Jpy(final Optional<BigDecimal> bigDecimal) {

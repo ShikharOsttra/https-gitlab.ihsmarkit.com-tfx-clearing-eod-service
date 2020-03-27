@@ -29,7 +29,7 @@ public class EodJobListenerFactory {
 
     public JobExecutionListener listener(
         final BiFunction<LocalDateTime, LocalDate, EodAlert> eodStartAlert,
-        final BiFunction<LocalDateTime, LocalDate, EodAlert> oedCompleteAlert
+        final BiFunction<LocalDateTime, LocalDate, EodAlert> eodCompleteAlert
     ) {
         return new JobExecutionListener() {
             @Override
@@ -42,10 +42,10 @@ public class EodJobListenerFactory {
 
             @Override
             public void afterJob(final JobExecution jobExecution) {
-                final EodAlert eodAlert = oedCompleteAlert.apply(clockService.getCurrentDateTimeUTC(), getBusinessDateFromContext(jobExecution));
+                final EodAlert eodAlert = eodCompleteAlert.apply(clockService.getCurrentDateTimeUTC(), getBusinessDateFromContext(jobExecution));
                 alertSender.sendAlert(eodAlert);
 
-                log.info("Sent EOD competed alert: {}", eodAlert);
+                log.info("Sent EOD completed alert: {}", eodAlert);
             }
 
             private LocalDate getBusinessDateFromContext(final JobExecution jobExecution) {

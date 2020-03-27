@@ -53,23 +53,23 @@ public class CollateralBalanceItem {
     @Builder.Default
     private final String cashSettlementFollowingDay = EMPTY;
     @Builder.Default
-    private final String initialMtmTotal = EMPTY;
+    private final String initialMtmTotal = "0";
     @Builder.Default
-    private final String initialMtmDay = EMPTY;
+    private final String initialMtmDay = "0";
     @Builder.Default
-    private final String initialMtmFollowingDay = EMPTY;
+    private final String initialMtmFollowingDay = "0";
     @Builder.Default
-    private final String dailyMtmTotal = EMPTY;
+    private final String dailyMtmTotal = "0";
     @Builder.Default
-    private final String dailyMtmDay = EMPTY;
+    private final String dailyMtmDay = "0";
     @Builder.Default
-    private final String dailyMtmFollowingDay = EMPTY;
+    private final String dailyMtmFollowingDay = "0";
     @Builder.Default
-    private final String swapPointTotal = EMPTY;
+    private final String swapPointTotal = "0";
     @Builder.Default
-    private final String swapPointDay = EMPTY;
+    private final String swapPointDay = "0";
     @Builder.Default
-    private final String swapPointFollowingDay = EMPTY;
+    private final String swapPointFollowingDay = "0";
     @Builder.Default
     private final String followingApplicableDayForClearingDeposit = EMPTY;
     private final long orderId;
