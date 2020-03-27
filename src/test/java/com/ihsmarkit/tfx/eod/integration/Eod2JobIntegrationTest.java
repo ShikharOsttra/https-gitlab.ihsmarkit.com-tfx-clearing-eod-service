@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -26,6 +28,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.database.rider.core.api.dataset.DataSetFormat;
+import com.github.database.rider.core.api.exporter.DataSetExportConfig;
+import com.github.database.rider.core.exporter.DataSetExporter;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.github.springtestdbunit.annotation.DbUnitConfiguration;
@@ -64,8 +69,8 @@ class Eod2JobIntegrationTest {
     @SpyBean
     private ClockService clockService;
 
-//    @Autowired
-//    DataSource ds;
+    @Autowired
+    DataSource ds;
 
     @Test
     @DatabaseSetup({
@@ -86,14 +91,14 @@ class Eod2JobIntegrationTest {
         when(clockService.getCurrentDateTimeUTC()).thenReturn(currentDateTime);
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(eodJob, jobParams);
-//        DataSetExporter.getInstance().export(ds.getConnection(), new DataSetExportConfig()
-//            .dataSetFormat(DataSetFormat.XML)
-//            .outputFileName("target/eod2-expected.xml"));
+        DataSetExporter.getInstance().export(ds.getConnection(), new DataSetExportConfig()
+            .dataSetFormat(DataSetFormat.XML)
+            .outputFileName("target/eod2-expected.xml"));
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(11)).sendAlert(any(EodStepCompleteAlert.class));
+        inOrder.verify(alertSender, times(10)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
     }
 

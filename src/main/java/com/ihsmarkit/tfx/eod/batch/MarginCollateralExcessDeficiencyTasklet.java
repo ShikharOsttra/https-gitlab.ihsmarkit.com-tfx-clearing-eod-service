@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,6 +41,7 @@ import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantMarginMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceContribution;
 import com.ihsmarkit.tfx.eod.model.CashSettlement;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.MarginRatioService;
@@ -80,6 +82,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     private final CashSettlementMapper cashSettlementMapper;
 
+    private final CalendarDatesProvider calendarDatesProvider;
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -89,7 +93,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final List<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThanEqual(businessDate).collect(Collectors.toList());
 
-        final var aggregated = eodCalculator.aggregateRequiredMargin(margin, businessDate);
+        final Optional<LocalDate> theDay = calendarDatesProvider.getNextTradingDate(businessDate);
+        final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextTradingDate);
+        final var aggregated = eodCalculator.aggregateRequiredMargin(margin, theDay, followingDay);
 
         final Stream<EodCashSettlementEntity> cashSettlement = EntryStream.of(aggregated)
             .flatMapKeyValue((participant, participantSettlements) ->

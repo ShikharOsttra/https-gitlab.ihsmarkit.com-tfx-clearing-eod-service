@@ -258,12 +258,8 @@ public class EODCalculator {
     }
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
-        aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final LocalDate businessDate) {
-
-        final Optional<LocalDate> followingDate = margins.stream()
-            .map(EodProductCashSettlementEntity::getSettlementDate)
-            .filter(settlementDate -> settlementDate.isAfter(businessDate))
-            .min(LocalDate::compareTo);
+        aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins,
+                                final Optional<LocalDate> theDay, final Optional<LocalDate> followingDate) {
 
         return margins.stream()
             .collect(
@@ -273,7 +269,9 @@ public class EODCalculator {
                         EodProductCashSettlementEntity::getType,
                         () -> new EnumMap<>(EodProductCashSettlementType.class),
                         dateTypeCollector(
-                            margin -> businessDate.isEqual(margin.getSettlementDate()),
+                            margin -> theDay
+                                .map(date -> date.equals(margin.getSettlementDate()))
+                                .orElse(Boolean.FALSE),
                             margin -> followingDate
                                 .map(date -> date.equals(margin.getSettlementDate()))
                                 .orElse(Boolean.FALSE),

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -444,7 +445,8 @@ class EODCalculatorTest {
             .build();
 
         final Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>> participantEntityMapMap =
-            eodCalculator.aggregateRequiredMargin(List.of(dailyMtmTB, initialMtmT, dailyMtmT, dailyMtmT11, dailyMtmT12, dailyMtmT2), today);
+            eodCalculator.aggregateRequiredMargin(List.of(dailyMtmTB, initialMtmT, dailyMtmT, dailyMtmT11, dailyMtmT12, dailyMtmT2),
+                Optional.of(tomorrow), Optional.of(dayAfterTomorrow));
 
         assertThat(participantEntityMapMap)
             .extracting(
