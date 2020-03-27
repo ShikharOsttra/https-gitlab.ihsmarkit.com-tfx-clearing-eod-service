@@ -11,6 +11,7 @@ import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.DA
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.INITIAL_MTM;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.SWAP_PNL;
 import static com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType.TOTAL_VM;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantType.FX_BROKER;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalRoundTo1JpyDefaultZero;
@@ -23,6 +24,7 @@ import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -64,6 +67,8 @@ import lombok.RequiredArgsConstructor;
 public class CollateralBalanceLedgerProcessor implements ItemProcessor<ParticipantEntity, List<CollateralBalanceItem>> {
 
     private static final String FOLLOWING_CLEARING_DEPOSIT_PURPOSE = "(The Following Applicable Amount)";
+
+    private static final Set<CollateralPurpose> SECURITIES_BALANCE_PURPOSES = Set.of(MARKET_ENTRY_DEPOSIT, CLEARING_DEPOSIT);
 
     private static final TotalBalance ZERO_BALANCE = TotalBalance.of(ZERO, ZERO, ZERO, ZERO);
 
@@ -226,9 +231,13 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
             .collateralPurpose(formatEnum(purpose))
             .totalDeposit(formatBigDecimalRoundTo1Jpy(balance.getTotal()))
             .cash(formatBigDecimalRoundTo1Jpy(balance.getCash()))
-            .lg(formatBigDecimalRoundTo1Jpy(balance.getLg()))
-            .securities(formatBigDecimalRoundTo1Jpy(balance.getSecurities()))
+            .lg(isLgBalanceApplicable(purpose, participant) ? formatBigDecimalRoundTo1Jpy(balance.getLg()) : EMPTY)
+            .securities(SECURITIES_BALANCE_PURPOSES.contains(purpose) ? formatBigDecimalRoundTo1Jpy(balance.getSecurities()) : EMPTY)
             .orderId(getOrderId(participant, purpose.name()));
+    }
+
+    private static boolean isLgBalanceApplicable(final CollateralPurpose purpose, final ParticipantEntity participant) {
+        return purpose == MARGIN && participant.getType() == FX_BROKER;
     }
 
     private Map<CollateralPurpose, TotalBalance> calculateTotalBalances(final ParticipantEntity participant) {
