@@ -1,6 +1,6 @@
 <dataset>
-    <participant id="1" code="P11" name="TEST_PARTY1" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
-    <participant id="2" code="P12" name="TEST_PARTY2" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="1" code="P11" name="TEST_PARTY1" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="2" code="P12" name="TEST_PARTY2" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
     <participant id="3" code="CLHS" name="CLHS" type="CLEARING_HOUSE" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
 
     <collateral_product id="1" enabled="true" deleted="false" type="1"/>
@@ -47,8 +47,7 @@
     <participant_collateral_requirement id="3" participant_id="1" purpose="CLEARING_DEPOSIT" value="30000" applicable_date="2019-01-05" business_date="2019-01-05"/>
     <participant_collateral_requirement id="4" participant_id="1" purpose="SPECIAL_PURPOSE_COLLATERAL" value="4000" applicable_date="2019-01-01" business_date="2019-01-01"/>
 
-    <collateral_balance id="7" purpose="1" participant_id="2" product_id="1" amount="220000" version="1"/>
-    <collateral_balance id="8" purpose="1" participant_id="2" product_id="4" amount="1500" version="1"/>
+    <collateral_balance id="7" purpose="1" participant_id="2" product_id="1" amount="221500" version="1"/>
 
     <participant_collateral_requirement id="5" participant_id="2" purpose="MARKET_ENTRY_DEPOSIT" value="5000" applicable_date="2019-01-01" business_date="2019-01-01"/>
     <participant_collateral_requirement id="6" participant_id="2" purpose="CLEARING_DEPOSIT" value="6000" applicable_date="2019-01-01" business_date="2019-01-01"/>
