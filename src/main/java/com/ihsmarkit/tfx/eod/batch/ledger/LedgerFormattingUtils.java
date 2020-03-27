@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods"})
+@SuppressWarnings({ "checkstyle:HideUtilityClassConstructor", "PMD.TooManyMethods" })
 public class LedgerFormattingUtils {
 
     public static final int SWAP_POINTS_DECIMAL_PLACES = 3;
@@ -78,7 +78,17 @@ public class LedgerFormattingUtils {
         return bigDecimal.map(LedgerFormattingUtils::formatBigDecimalRoundTo1Jpy).orElse(EMPTY);
     }
 
+    public static String formatBigDecimalRoundTo1JpyDefaultZero(@Nullable final BigDecimal bigDecimal) {
+        return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString(), "0");
+    }
+
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
-        return Optional.ofNullable(value).map(mappingFunction).orElse(EMPTY);
+        return safeFormat(value, mappingFunction, EMPTY);
+    }
+
+    private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction, final String defaultValue) {
+        return Optional.ofNullable(value)
+            .map(mappingFunction)
+            .orElse(defaultValue);
     }
 }
