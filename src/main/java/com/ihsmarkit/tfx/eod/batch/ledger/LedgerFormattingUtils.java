@@ -15,8 +15,6 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.StringUtils;
-
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -76,18 +74,21 @@ public class LedgerFormattingUtils {
         return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString());
     }
 
-    public static String formatBigDecimalRoundTo1JpyDefaultZero(@Nullable final BigDecimal bigDecimal) {
-        return StringUtils.defaultIfEmpty(
-            safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString()),
-            "0"
-        );
-    }
-
     public static String formatBigDecimalRoundTo1Jpy(final Optional<BigDecimal> bigDecimal) {
         return bigDecimal.map(LedgerFormattingUtils::formatBigDecimalRoundTo1Jpy).orElse(EMPTY);
     }
 
+    public static String formatBigDecimalRoundTo1JpyDefaultZero(@Nullable final BigDecimal bigDecimal) {
+        return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString(), "0");
+    }
+
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
-        return Optional.ofNullable(value).map(mappingFunction).orElse(EMPTY);
+        return safeFormat(value, mappingFunction, EMPTY);
+    }
+
+    private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction, final String defaultValue) {
+        return Optional.ofNullable(value)
+            .map(mappingFunction)
+            .orElse(defaultValue);
     }
 }
