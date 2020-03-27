@@ -129,26 +129,28 @@ public class CollateralBalanceLedgerProcessor implements ItemProcessor<Participa
         final Optional<Pair<LocalDate, BigDecimal>> nextClearingDepositRequiredAmount = collateralRequirementProvider.getNextClearingDepositRequiredAmount(
             participant.getId());
 
-        final CollateralBalanceItem clearingDepositItem = mapToPurposeItem(CLEARING_DEPOSIT, participant, balance);
-
-        return nextClearingDepositRequiredAmount
-            .map(nextRequiredAmount -> mapToNextClearingDepositItem(nextRequiredAmount, participant, balance))
-            .map(nextClearingDepositItem -> Stream.of(clearingDepositItem, nextClearingDepositItem))
-            .orElseGet(() -> Stream.of(clearingDepositItem));
+        return Stream.of(
+            mapToPurposeItem(CLEARING_DEPOSIT, participant, balance),
+            mapToNextClearingDepositItem(nextClearingDepositRequiredAmount, participant, balance)
+        );
     }
 
     private CollateralBalanceItem mapToNextClearingDepositItem(
-        final Pair<LocalDate, BigDecimal> nextClearingDepositRequiredAmount,
+        final Optional<Pair<LocalDate, BigDecimal>> nextClearingDepositRequiredAmount,
         final ParticipantEntity participant,
         final TotalBalance balance
     ) {
-        return itemBuilder(participant)
+        final CollateralBalanceItem.CollateralBalanceItemBuilder itemBuilder = itemBuilder(participant)
             .collateralPurpose(FOLLOWING_CLEARING_DEPOSIT_PURPOSE)
-            .requiredAmount(formatBigDecimalRoundTo1Jpy(nextClearingDepositRequiredAmount.getSecond()))
-            .totalExcessDeficit(formatBigDecimalRoundTo1Jpy(balance.getTotal().subtract(nextClearingDepositRequiredAmount.getSecond())))
-            .followingApplicableDayForClearingDeposit(formatDate(nextClearingDepositRequiredAmount.getFirst()))
-            .orderId(getOrderId(participant, FOLLOWING_CLEARING_DEPOSIT_PURPOSE))
-            .build();
+            .orderId(getOrderId(participant, FOLLOWING_CLEARING_DEPOSIT_PURPOSE));
+
+        nextClearingDepositRequiredAmount.ifPresent(requiredAmount ->
+            itemBuilder.requiredAmount(formatBigDecimalRoundTo1Jpy(requiredAmount.getSecond()))
+                .totalExcessDeficit(formatBigDecimalRoundTo1Jpy(balance.getTotal().subtract(requiredAmount.getSecond())))
+                .followingApplicableDayForClearingDeposit(formatDate(requiredAmount.getFirst()))
+        );
+
+        return itemBuilder.build();
     }
 
     private CollateralBalanceItem mapToPurposeItem(

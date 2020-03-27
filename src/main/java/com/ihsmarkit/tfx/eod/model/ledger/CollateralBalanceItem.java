@@ -39,13 +39,14 @@ public class CollateralBalanceItem {
     private final String lg = EMPTY;
     @Builder.Default
     private final String securities = EMPTY;
-    private final String requiredAmount;
+    @Builder.Default
+    private final String requiredAmount = EMPTY;
     @Builder.Default
     private final String totalInitialMargin = EMPTY;
     @Builder.Default
     private final String totalVariationMargin = EMPTY;
-    @NonNull
-    private final String totalExcessDeficit;
+    @Builder.Default
+    private final String totalExcessDeficit = EMPTY;
     @Builder.Default
     private final String deficitInCashSettlement = EMPTY;
     @Builder.Default
