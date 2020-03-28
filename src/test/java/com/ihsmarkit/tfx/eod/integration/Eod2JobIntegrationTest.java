@@ -98,7 +98,7 @@ class Eod2JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(10)).sendAlert(any(EodStepCompleteAlert.class));
+        inOrder.verify(alertSender, times(11)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
     }
 

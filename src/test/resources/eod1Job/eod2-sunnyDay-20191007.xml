@@ -26,15 +26,22 @@
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="12000" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="20000" version="1"/>
 
-    <calendar_trading_swap_point id="1" currency_pair_id="13" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
-    <calendar_trading_swap_point id="2" currency_pair_id="14" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
-    <calendar_trading_swap_point id="3" currency_pair_id="2" trade_date="2019-10-06" is_relevant_currency_trade="true" value_date="2019-10-09" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-09"/>
+    <calendar_trading_swap_point id="1" currency_pair_id="13" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-06" value_date="2019-10-08" variation_margin_settlement_date="2019-10-08"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="14" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-06" value_date="2019-10-08" variation_margin_settlement_date="2019-10-08"/>
+    <calendar_trading_swap_point id="3" currency_pair_id="2" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-06" value_date="2019-10-08" variation_margin_settlement_date="2019-10-08"/>
 
-    <calendar_trading_swap_point id="5" currency_pair_id="13" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
-    <calendar_trading_swap_point id="6" currency_pair_id="14" trade_date="2019-10-07" is_relevant_currency_trade="true" value_date="2019-10-10" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-10-10"/>
-    <calendar_trading_swap_point id="7" currency_pair_id="2" trade_date="2019-10-07" is_relevant_currency_trade="false" value_date="[null]" is_exchange_business_date="false" is_bank_business_date="false" variation_margin_settlement_date="[null]"/>
+    <calendar_trading_swap_point id="5" currency_pair_id="13" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-07" value_date="2019-10-09" variation_margin_settlement_date="2019-10-09"/>
+    <calendar_trading_swap_point id="6" currency_pair_id="14" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-07" value_date="2019-10-09" variation_margin_settlement_date="2019-10-09"/>
+    <calendar_trading_swap_point id="7" currency_pair_id="2"  is_relevant_currency_trade="false" is_exchange_business_date="false" is_bank_business_date="false"
+        trade_date="2019-10-07" value_date="[null]" variation_margin_settlement_date="[null]"/>
 
-    <calendar_trading_swap_point id="8" currency_pair_id="13" trade_date="2019-11-08" is_relevant_currency_trade="true" value_date="2019-11-11" is_exchange_business_date="true" is_bank_business_date="true" variation_margin_settlement_date="2019-11-11"/>
+    <calendar_trading_swap_point id="8" currency_pair_id="13" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true"
+        trade_date="2019-10-08" value_date="2019-10-11" variation_margin_settlement_date="2019-10-11"/>
 
     <trade
         id="111"
@@ -281,80 +288,45 @@
         type="MONTHLY_VOLUME_NET_SELL"
     />
 
-    <eod_product_cash_settlement
-        id="1"
-        participant_id="101"
-        currency_pair_id="13"
-        amount="5500"
-        currency="JPY"
-        settlement_date="2019-10-10"
-        date="2019-10-07"
+    <eod_product_cash_settlement id="1"
+        participant_id="101" currency_pair_id="13" amount="5500" currency="JPY"
+        settlement_date="2019-10-10" date="2019-10-07"
         type="DAILY_MTM"
     />
 
-    <eod_product_cash_settlement
-        id="2"
-        participant_id="102"
-        currency_pair_id="13"
-        amount="7500"
-        currency="JPY"
-        settlement_date="2019-10-10"
-        date="2019-10-07"
+    <eod_product_cash_settlement id="2"
+        participant_id="102" currency_pair_id="13" amount="7500" currency="JPY"
+        settlement_date="2019-10-10" date="2019-10-07"
         type="INITIAL_MTM"
     />
 
-    <eod_product_cash_settlement
-        id="3"
-        participant_id="101"
-        currency_pair_id="13"
-        amount="9500"
-        currency="JPY"
-        settlement_date="2019-10-07"
-        date="2019-10-06"
+    <eod_product_cash_settlement id="3"
+        participant_id="101" currency_pair_id="13" amount="9500" currency="JPY"
+        settlement_date="2019-10-07" date="2019-10-06"
         type="DAILY_MTM"
     />
 
-    <eod_product_cash_settlement
-        id="4"
-        participant_id="102"
-        currency_pair_id="13"
-        amount="9700"
-        currency="JPY"
-        settlement_date="2019-10-07"
-        date="2019-10-06"
+    <eod_product_cash_settlement id="4"
+        participant_id="102" currency_pair_id="13" amount="9700" currency="JPY"
+        settlement_date="2019-10-07" date="2019-10-06"
         type="DAILY_MTM"
     />
 
-    <eod_product_cash_settlement
-        id="5"
-        participant_id="101"
-        currency_pair_id="13"
-        amount="9500"
-        currency="JPY"
-        settlement_date="2019-10-07"
-        date="2019-10-06"
+    <eod_product_cash_settlement id="5"
+        participant_id="101" currency_pair_id="13" amount="9500" currency="JPY"
+        settlement_date="2019-10-07" date="2019-10-06"
         type="TOTAL_VM"
     />
 
-    <eod_product_cash_settlement
-        id="6"
-        participant_id="102"
-        currency_pair_id="13"
-        amount="9700"
-        currency="JPY"
-        settlement_date="2019-10-07"
-        date="2019-10-06"
+    <eod_product_cash_settlement id="6"
+        participant_id="102" currency_pair_id="13" amount="9700" currency="JPY"
+        settlement_date="2019-10-07" date="2019-10-06"
         type="TOTAL_VM"
     />
 
-    <eod_product_cash_settlement
-        id="7"
-        participant_id="103"
-        currency_pair_id="13"
-        amount="1500"
-        currency="JPY"
-        settlement_date="2019-10-10"
-        date="2019-10-07"
+    <eod_product_cash_settlement id="7"
+        participant_id="103" currency_pair_id="13" amount="1500" currency="JPY"
+        settlement_date="2019-10-10" date="2019-10-07"
         type="INITIAL_MTM"
     />
 
