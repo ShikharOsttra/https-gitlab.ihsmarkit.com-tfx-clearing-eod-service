@@ -401,18 +401,11 @@ class EODCalculatorTest {
         final LocalDate tomorrow = LocalDate.of(2020, 10, 11);
         final LocalDate dayAfterTomorrow = LocalDate.of(2020, 10, 12);
 
-        final EodProductCashSettlementEntity dailyMtmT = EodProductCashSettlementEntity.builder()
-            .amount(AmountEntity.builder().value(BigDecimal.valueOf(100)).currency("JPY").build())
-            .currencyPair(EURUSD)
-            .participant(PARTICIPANT_A)
-            .settlementDate(today)
-            .type(EodProductCashSettlementType.DAILY_MTM)
-            .build();
         final EodProductCashSettlementEntity dailyMtmTB = EodProductCashSettlementEntity.builder()
             .amount(AmountEntity.builder().value(BigDecimal.valueOf(100)).currency("JPY").build())
             .currencyPair(EURUSD)
             .participant(PARTICIPANT_B)
-            .settlementDate(today)
+            .settlementDate(tomorrow)
             .type(EodProductCashSettlementType.DAILY_MTM)
             .build();
         final EodProductCashSettlementEntity initialMtmT = EodProductCashSettlementEntity.builder()
@@ -443,9 +436,16 @@ class EODCalculatorTest {
             .settlementDate(dayAfterTomorrow)
             .type(EodProductCashSettlementType.DAILY_MTM)
             .build();
+        final EodProductCashSettlementEntity dailyMtmT3 = EodProductCashSettlementEntity.builder()
+            .amount(AmountEntity.builder().value(BigDecimal.valueOf(50)).currency("JPY").build())
+            .currencyPair(EURUSD)
+            .participant(PARTICIPANT_A)
+            .settlementDate(dayAfterTomorrow.plusDays(1))
+            .type(EodProductCashSettlementType.DAILY_MTM)
+            .build();
 
         final Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>> participantEntityMapMap =
-            eodCalculator.aggregateRequiredMargin(List.of(dailyMtmTB, initialMtmT, dailyMtmT, dailyMtmT11, dailyMtmT12, dailyMtmT2),
+            eodCalculator.aggregateRequiredMargin(List.of(dailyMtmTB, initialMtmT, dailyMtmT11, dailyMtmT12, dailyMtmT2, dailyMtmT3),
                 Optional.of(tomorrow), Optional.of(dayAfterTomorrow));
 
         assertThat(participantEntityMapMap)
@@ -453,7 +453,7 @@ class EODCalculatorTest {
                 map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.DAY),
                 map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.FOLLOWING),
                 map -> map.get(PARTICIPANT_A).get(EodProductCashSettlementType.DAILY_MTM).get(EodCashSettlementDateType.TOTAL))
-            .containsExactly(BigDecimal.valueOf(100), BigDecimal.valueOf(320), BigDecimal.valueOf(620));
+            .containsExactly(BigDecimal.valueOf(320), BigDecimal.valueOf(200), BigDecimal.valueOf(570));
     }
 
     private static ParticipantPositionEntity position(final String baseCurrency, final String valueCurrency, final long amount) {

@@ -91,7 +91,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final List<EodProductCashSettlementEntity> margin =
-            eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThanEqual(businessDate).collect(Collectors.toList());
+            eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThan(businessDate).collect(Collectors.toList());
 
         final Optional<LocalDate> theDay = calendarDatesProvider.getNextTradingDate(businessDate);
         final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextTradingDate);

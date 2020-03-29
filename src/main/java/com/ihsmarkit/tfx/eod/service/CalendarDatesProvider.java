@@ -15,7 +15,7 @@ public class CalendarDatesProvider {
 
     private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
-    public Optional<LocalDate> getNextTradingDate(LocalDate currentDate) {
+    public Optional<LocalDate> getNextTradingDate(final LocalDate currentDate) {
         return calendarTradingSwapPointRepository.findNextTradingDate(currentDate);
     }
 }
