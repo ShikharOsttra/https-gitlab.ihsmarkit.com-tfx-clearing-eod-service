@@ -17,6 +17,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,6 +38,7 @@ import com.ihsmarkit.tfx.alert.client.domain.Eod2StartAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -61,6 +63,9 @@ class Eod2JobIntegrationTest {
     @MockBean
     private AlertSender alertSender;
 
+    @MockBean
+    private LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
+
     @SpyBean
     private ClockService clockService;
 
@@ -84,6 +89,7 @@ class Eod2JobIntegrationTest {
         final LocalDateTime currentDateTime = LocalDateTime.of(2019, 11, 12, 10, 10);
         final LocalDate businessDate = LocalDate.of(2019, 10, 7);
         when(clockService.getCurrentDateTimeUTC()).thenReturn(currentDateTime);
+        when(lastTradingDateInMonthDecider.decide(any(), any())).thenReturn(new FlowExecutionStatus(Boolean.TRUE.toString()));
         final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007").toJobParameters();
         final JobExecution jobExecution = jobLauncher.run(eodJob, jobParams);
 //        DataSetExporter.getInstance().export(ds.getConnection(), new DataSetExportConfig()
