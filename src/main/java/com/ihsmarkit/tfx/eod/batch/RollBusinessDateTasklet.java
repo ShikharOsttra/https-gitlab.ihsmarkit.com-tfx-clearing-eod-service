@@ -16,6 +16,7 @@ import com.ihsmarkit.tfx.core.domain.eod.EodStage;
 import com.ihsmarkit.tfx.core.domain.notification.system.EodEventNotification;
 import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.FutureValueService;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -40,9 +41,11 @@ public class RollBusinessDateTasklet implements Tasklet {
 
     private final SystemEventNotificationSender systemEventNotificationSender;
 
+    private final CalendarDatesProvider calendarDatesProvider;
+
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        final LocalDate nextBusinessDate = calendarTradingSwapPointRepository.findNextTradingDate(businessDate)
+        final LocalDate nextBusinessDate = calendarDatesProvider.getNextTradingDate(businessDate)
             .orElseThrow(() -> new IllegalStateException("Missing Trading/Swap calendar for given business date: " + businessDate));
 
         futureValueService.rollFutureValues(this.businessDate, nextBusinessDate);
