@@ -53,7 +53,7 @@ public class RollBusinessDateTasklet implements Tasklet {
         systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, nextBusinessDate);
 
         systemEventNotificationSender.send(EodEventNotification.builder()
-            .businessDate(businessDate)
+            .businessDate(nextBusinessDate)
             .eodStage(EodStage.ROLL_BUSINESS_DATE_COMPLETED)
             .build());
 
