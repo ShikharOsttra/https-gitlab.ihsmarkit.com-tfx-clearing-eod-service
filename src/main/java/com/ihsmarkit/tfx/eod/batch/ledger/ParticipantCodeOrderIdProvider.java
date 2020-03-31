@@ -19,7 +19,6 @@ public class ParticipantCodeOrderIdProvider extends OrderIdProvider {
 
     @Override
     public Stream<String> loadDataStream() {
-        return participantRepository.findAll().stream()
-            .map(ParticipantEntity::getCode);
+        return participantRepository.findAllCodes().stream();
     }
 }

@@ -19,7 +19,6 @@ public class SecurityCodeOrderIdProvider extends OrderIdProvider {
 
     @Override
     public Stream<String> loadDataStream() {
-        return securityCollateralProductRepository.findAll().stream()
-            .map(SecurityCollateralProductEntity::getSecurityCode);
+        return securityCollateralProductRepository.findAllCodes().stream();
     }
 }
