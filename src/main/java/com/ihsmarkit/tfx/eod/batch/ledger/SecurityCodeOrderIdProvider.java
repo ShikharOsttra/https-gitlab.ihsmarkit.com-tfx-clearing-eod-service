@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.SecurityCollateralProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ public class SecurityCodeOrderIdProvider extends OrderIdProvider {
 
     @Override
     public Stream<String> loadDataStream() {
-        return securityCollateralProductRepository.findAll().stream()
-            .map(SecurityCollateralProductEntity::getSecurityCode);
+        return securityCollateralProductRepository.findAllSecurityCodes().stream();
     }
 }

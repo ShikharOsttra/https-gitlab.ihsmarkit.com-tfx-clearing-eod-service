@@ -1,5 +1,5 @@
 <dataset>
-    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
-    <issuer_bank id="2" sub_type="2" name="MUFG Bank, Ltd."/>
-    <issuer_bank id="3" sub_type="3" name="SMBC"/>
+    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd." deleted="false"/>
+    <issuer_bank id="2" sub_type="2" name="MUFG Bank, Ltd." deleted="false"/>
+    <issuer_bank id="3" sub_type="3" name="SMBC" deleted="false"/>
 </dataset>

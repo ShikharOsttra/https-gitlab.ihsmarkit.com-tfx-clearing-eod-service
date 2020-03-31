@@ -10,7 +10,7 @@
     <calendar_trading_swap_point id="1" currency_pair_id="1" trade_date="2019-01-01" is_relevant_currency_trade="true" value_date="2019-01-03" is_exchange_business_date="true"/>
     <calendar_trading_swap_point id="2" currency_pair_id="1" trade_date="2019-01-02" is_relevant_currency_trade="true" value_date="2019-01-04" is_exchange_business_date="true" />
 
-    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
+    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd." deleted="false"/>
     <haircut_rate id="1" value="99.00" applicable_date="2019-01-01" business_date="2019-01-01"/>
     <log_haircut_rate id="1" issuer_bank_id="1"/>
 

@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ public class ParticipantCodeOrderIdProvider extends OrderIdProvider {
 
     @Override
     public Stream<String> loadDataStream() {
-        return participantRepository.findAll().stream()
-            .map(ParticipantEntity::getCode);
+        return participantRepository.findAllCodes().stream();
     }
 }
