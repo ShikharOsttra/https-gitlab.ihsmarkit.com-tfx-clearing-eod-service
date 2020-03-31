@@ -52,7 +52,7 @@
         interest_payment_day2="12/10"
         maturity_date="2022/10/10"
         record_type="1"
-        order_id="2130000005678"
+        order_id="2130000000001"
     />
 
     <eod_ledger_collateral_list
@@ -80,7 +80,7 @@
         interest_payment_day2=""
         maturity_date=""
         record_type="1"
-        order_id="13140000001234"
+        order_id="13140000000000"
     />
 
     <eod_ledger_collateral_list

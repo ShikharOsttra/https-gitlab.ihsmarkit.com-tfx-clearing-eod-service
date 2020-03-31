@@ -7,6 +7,8 @@ import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateral
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.anEquityCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.anIssuerBankEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
@@ -24,12 +26,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.SecurityCodeOrderIdProvider;
 
 @ExtendWith(MockitoExtension.class)
 class CollateralListItemOrderProviderTest {
 
     @Mock
     private ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+    @Mock
+    private SecurityCodeOrderIdProvider securityCodeOrderIdProvider;
 
     @InjectMocks
     private CollateralListItemOrderProvider collateralListItemOrderProvider;
@@ -41,7 +46,9 @@ class CollateralListItemOrderProviderTest {
 
     @ParameterizedTest
     @MethodSource("orderIdForOrdinaryRowDataProvider")
-    void shouldProvideOrderIdForOrdinaryRow(final CollateralBalanceEntity balance, final long expectedOrderId) {
+    void shouldProvideOrderIdForOrdinaryRow(final CollateralBalanceEntity balance, final long expectedOrderId, final Integer mockOrderId) {
+        lenient().when(securityCodeOrderIdProvider.get(anyString())).thenReturn(mockOrderId);
+
         assertThat(collateralListItemOrderProvider.getOrderId(balance, LedgerConstants.ITEM_RECORD_TYPE)).isEqualTo(expectedOrderId);
     }
 
@@ -53,20 +60,20 @@ class CollateralListItemOrderProviderTest {
                         .subType(10)
                         .build())
                     .build()
-                ).build(), 51120000000010L),
+                ).build(), 51120000000010L, 0),
             Arguments.of(aCollateralBalanceEntityBuilder()
                 .product(aBondCollateralProductEntityBuilder()
                     .securityCode("123456789")
                     .build())
-                .build(), 51130123456789L),
+                .build(), 51130123456789L, 123456789),
             Arguments.of(aCollateralBalanceEntityBuilder()
                 .product(anEquityCollateralProductEntityBuilder()
                     .securityCode("000000789")
                     .build())
-                .build(), 51140000000789L),
+                .build(), 51140000000789L, 789),
             Arguments.of(aCollateralBalanceEntityBuilder()
                 .product(aCashCollateralProductEntityBuilder().build())
-                .build(), 51110000000000L)
+                .build(), 51110000000000L, 0)
         );
     }
 
