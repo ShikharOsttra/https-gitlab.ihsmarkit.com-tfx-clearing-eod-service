@@ -12,6 +12,7 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.SecurityCodeOrderIdProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,7 @@ public class CollateralListItemOrderProvider {
     private static final int PRODUCT_SPECIFIC_CODE_SIZE = 10;
 
     private final ParticipantCodeOrderIdProvider participantCodeOrderIdProvider;
+    private final SecurityCodeOrderIdProvider securityCodeOrderIdProvider;
 
     public Long getOrderId(final CollateralBalanceEntity balance, final int recordType) {
         return getOrderId(
@@ -37,7 +39,7 @@ public class CollateralListItemOrderProvider {
 
     private long getProductSpecificCode(final CollateralProductEntity product) {
         if (product instanceof SecurityCollateralProductEntity) {
-            return Long.parseLong(((SecurityCollateralProductEntity) product).getSecurityCode());
+            return securityCodeOrderIdProvider.get(((SecurityCollateralProductEntity) product).getSecurityCode());
         }
 
         if (product.getType() == CollateralProductType.LOG) {
