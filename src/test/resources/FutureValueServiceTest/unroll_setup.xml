@@ -6,7 +6,7 @@
     <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
 
 
-    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd."/>
+    <issuer_bank id="1" sub_type="1" name="Mizuho Bank,Ltd." deleted="false"/>
     <haircut_rate id="1" value="99.00" applicable_date="2019-01-01" business_date="2019-01-02"/>
     <log_haircut_rate id="1" issuer_bank_id="1"/>
 
