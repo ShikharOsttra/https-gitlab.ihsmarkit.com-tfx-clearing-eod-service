@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.BOND;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.EQUITY;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalForceTwoDecimals;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -75,8 +76,10 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .securityCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityCode))
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
             .amount(balance.getAmount().toString())
-            .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toString()))
-            .evaluatedPrice(getFromSecurityProduct(balance.getProduct(), product -> collateralCalculator.calculateEvaluatedPrice(product).toString()))
+            .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toPlainString()))
+            .evaluatedPrice(getFromSecurityProduct(balance.getProduct(),
+                product -> formatBigDecimalForceTwoDecimals(collateralCalculator.calculateEvaluatedPrice(product))
+            ))
             .evaluatedAmount(evaluatedAmount)
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))

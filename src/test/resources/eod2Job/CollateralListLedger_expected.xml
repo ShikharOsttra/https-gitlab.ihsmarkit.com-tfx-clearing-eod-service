@@ -72,7 +72,7 @@
         isin_code="JP22222222"
         amount="10003"
         market_price="123.43"
-        evaluated_price="97"
+        evaluated_price="97.00"
         evaluated_amount="970291"
         boj_code=""
         jasdec_code="1234512"
