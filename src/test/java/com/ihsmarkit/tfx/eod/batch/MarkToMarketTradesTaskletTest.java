@@ -13,8 +13,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -43,6 +45,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementReposito
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -94,6 +97,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private EodCashSettlementMappingService eodCashSettlementMappingService;
+
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
@@ -174,5 +180,21 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
             jpyRateService,
             dailySettlementPriceService
         );
+
+        verifyZeroInteractions(eodFailedStepAlertSender);
+    }
+
+    @Test
+    void shouldSendAlert_whenExceptionOccur() {
+        final Exception cause = new RuntimeException("mtm step failed message");
+        doThrow(cause).when(eodCalculator).calculateAndAggregateInitialMtm(any(), any(), any());
+
+        final JobExecution execution = jobLauncherTestUtils.launchStep(MTM_TRADES_STEP_NAME,
+            new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
+                .toJobParameters());
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+        verify(eodFailedStepAlertSender).mtmFailed(cause);
     }
 }

@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_BALANCE_LE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_GENERATION_COMPLETED_ALERT_STEP;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
@@ -27,6 +28,7 @@ import com.ihsmarkit.tfx.alert.client.domain.Eod2StartAlert;
 import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
+import com.ihsmarkit.tfx.eod.batch.LedgerGenerationCompleterTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
@@ -35,7 +37,6 @@ import com.ihsmarkit.tfx.eod.config.ledger.MonthlyTradingVolumeLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
-import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 
 import lombok.AllArgsConstructor;
 
@@ -62,7 +63,7 @@ public class EOD2JobConfig {
 
     private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
 
-    private final EodAlertStepListener eodAlertStepListener;
+    private final LedgerGenerationCompleterTasklet ledgerGenerationCompleterTasklet;
 
     private final EodJobListenerFactory eodJobListenerFactory;
 
@@ -94,28 +95,32 @@ public class EOD2JobConfig {
             .next(collateralListLedger)
             .next(collateralBalanceLedger)
             .next(monthlyTradingVolumeLedger)
+            .next(ledgerGenerationCompletedAlertStep())
             .end()
             .build();
     }
 
     private Step swapPnL() {
         return steps.get(SWAP_PNL_STEP_NAME)
-            .listener(eodAlertStepListener)
             .tasklet(swapPnLTasklet)
             .build();
     }
 
     private Step totalVM() {
         return steps.get(TOTAL_VM_STEP_NAME)
-            .listener(eodAlertStepListener)
             .tasklet(totalVariationMarginTasklet)
             .build();
     }
 
     private Step marginCollateralExcessOrDeficiency() {
         return steps.get(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY)
-            .listener(eodAlertStepListener)
             .tasklet(marginCollateralExcessDeficiencyTasklet)
+            .build();
+    }
+
+    private Step ledgerGenerationCompletedAlertStep() {
+        return steps.get(LEDGER_GENERATION_COMPLETED_ALERT_STEP)
+            .tasklet(ledgerGenerationCompleterTasklet)
             .build();
     }
 

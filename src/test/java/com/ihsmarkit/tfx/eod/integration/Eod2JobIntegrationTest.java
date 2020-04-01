@@ -3,7 +3,6 @@ package com.ihsmarkit.tfx.eod.integration;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -35,7 +34,7 @@ import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.github.springtestdbunit.dataset.ReplacementDataSetLoader;
 import com.ihsmarkit.tfx.alert.client.domain.Eod2CompletedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.Eod2StartAlert;
-import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
+import com.ihsmarkit.tfx.alert.client.domain.EodLedgerGenerationCompletedAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
@@ -99,7 +98,7 @@ class Eod2JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(11)).sendAlert(any(EodStepCompleteAlert.class));
+        inOrder.verify(alertSender).sendAlert(EodLedgerGenerationCompletedAlert.of(currentDateTime));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
     }
 

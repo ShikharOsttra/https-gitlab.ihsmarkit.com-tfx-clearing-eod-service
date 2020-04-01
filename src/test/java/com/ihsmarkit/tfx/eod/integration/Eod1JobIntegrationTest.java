@@ -1,9 +1,7 @@
 package com.ihsmarkit.tfx.eod.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -31,10 +29,10 @@ import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.alert.client.domain.Eod1CompletedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
-import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -64,6 +62,9 @@ class Eod1JobIntegrationTest {
     @MockBean
     private AlertSender alertSender;
 
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
+
     @Test
     @DatabaseSetup({ "/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml" })
     @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
@@ -79,7 +80,6 @@ class Eod1JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod1StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(4)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod1CompletedAlert.of(currentDateTime, businessDate));
     }
 }

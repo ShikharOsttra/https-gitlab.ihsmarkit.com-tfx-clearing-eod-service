@@ -12,8 +12,10 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.USD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -44,6 +46,7 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
@@ -103,6 +106,9 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private TradeAndSettlementDateService tradeAndSettlementDateService;
+
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Mock
     private Stream<TradeEntity> trades;
@@ -225,7 +231,21 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
+        verifyZeroInteractions(eodFailedStepAlertSender);
+    }
 
+    @Test
+    void shouldSendAlert_whenExceptionOccur() {
+        final Exception cause = new RuntimeException("step failed message");
+        doThrow(cause).when(eodCalculator).netAllByBuySell(any(), any());
+
+        final JobExecution execution = jobLauncherTestUtils.launchStep(NET_TRADES_STEP_NAME,
+            new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
+                .toJobParameters());
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+        verify(eodFailedStepAlertSender).nettingFailed(cause);
     }
 
 }

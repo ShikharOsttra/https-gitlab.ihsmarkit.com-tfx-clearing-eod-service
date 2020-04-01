@@ -20,7 +20,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
-import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ public class LedgerStepFactory {
     private final EntityManagerFactory entityManagerFactory;
     private final RecordDateSetter recordDateSetter;
     private final StepBuilderFactory steps;
-    private final EodAlertStepListener eodAlertStepListener;
 
     <I> JpaPagingItemReaderBuilder<I> listReaderBuilder(final JpaQueryProvider jpaQueryProvider, final int pageSize) {
         return new JpaPagingItemReaderBuilder<I>()
@@ -53,7 +51,6 @@ public class LedgerStepFactory {
     <I, O> SimpleStepBuilder<I, O> stepBuilder(final String stepName, final int chunkSize) {
         return steps.get(stepName)
             .listener(recordDateSetter)
-            .listener(eodAlertStepListener)
             .chunk(chunkSize);
     }
 

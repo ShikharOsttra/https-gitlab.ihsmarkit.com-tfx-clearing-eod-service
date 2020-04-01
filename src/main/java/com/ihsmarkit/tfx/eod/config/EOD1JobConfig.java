@@ -20,7 +20,6 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
-import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
 import lombok.AllArgsConstructor;
@@ -42,8 +41,6 @@ public class EOD1JobConfig {
     private final PositionRollTasklet positionRollTasklet;
 
     private final EodJobListenerFactory eodJobListenerFactory;
-
-    private final EodAlertStepListener eodAlertStepListener;
 
     @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
@@ -74,7 +71,6 @@ public class EOD1JobConfig {
 
     private Step createStep(final String stepName, final Tasklet stepTasklet) {
         return steps.get(stepName)
-            .listener(eodAlertStepListener)
             .tasklet(stepTasklet)
             .build();
     }
