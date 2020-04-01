@@ -16,18 +16,25 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
 
+import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import one.util.streamex.EntryStream;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class PositionRebalancePublishingService {
+
+    private static final String POSITIONS_REBALANCE_CSV_FILENAME = "positions-rebalance.csv";
+    private static final String TEXT_CSV_TYPE = "text/csv";
 
     private final AwsSesMailClient mailClient;
 
@@ -35,28 +42,54 @@ public class PositionRebalancePublishingService {
 
     private final ParticipantRepository participantRepository;
 
+    private final EodFailedStepAlertSender eodFailedStepAlertSender;
+
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
-        try {
-            final Map<String, List<TradeEntity>> participantTradesMap = trades.stream().collect(
-                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()));
-            getAllActiveLPs()
-                .forEach(participant -> {
-                    mailClient.sendEmailWithAttachments(
-                        String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()),
-                        StringUtils.EMPTY,
-                        Arrays.asList(participant.getNotificationEmail().split(",")),
-                        List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))));
-                });
-        } catch (final Exception ex) {
-            log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
-        }
+        final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
+            .onFailure(failure -> {
+                eodFailedStepAlertSender.rebalancingCsvFailed(failure);
+            })
+            .get();
+
+        Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
+            .onFailure(failure -> {
+                eodFailedStepAlertSender.rebalancingEmailSendFailed(failure);
+            })
+            .get();
     }
 
-    private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
+    private void sendCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
+        final String businessDateString = businessDate.toString();
+
+        getAllActiveLPs()
+            // todo: should we send empty CSV to participants without rebalancing trade?
+            .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
+            .forEach(participant -> mailClient.sendEmailWithAttachments(
+                String.format("%s rebalance results for %s", businessDateString, participant.getCode()),
+                StringUtils.EMPTY,
+                Arrays.asList(participant.getNotificationEmail().split(",")),
+                csvEmailAttachment(participantCsvFiles.get(participant.getCode()))
+            ));
+    }
+
+    private List<EmailAttachment> csvEmailAttachment(final byte[] csvFile) {
+        return List.of(EmailAttachment.of(POSITIONS_REBALANCE_CSV_FILENAME, TEXT_CSV_TYPE, csvFile));
+    }
+
+    private Map<String, byte[]> prepareCsvFiles(final List<TradeEntity> trades) {
+        return trades.stream()
+            .collect(Collectors.collectingAndThen(
+                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()),
+                participantTradesMap -> EntryStream.of(participantTradesMap)
+                    .mapValues(this::getPositionRebalanceCsv)
+                    .toImmutableMap()
+            ));
+    }
+
+    private static List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
         return trades.stream().map(tradeEntity -> PositionRebalanceRecord.builder()
             .tradeDate(tradeEntity.getTradeDate())
-            .tradeType(2)
+            .tradeType(TransactionType.BALANCE.getValue())
             .participantCodeSource(tradeEntity.getOriginator().getCode())
             .participantCodeTarget(tradeEntity.getCounterparty().getCode())
             .currencyPair(tradeEntity.getCurrencyPair().getCode())
