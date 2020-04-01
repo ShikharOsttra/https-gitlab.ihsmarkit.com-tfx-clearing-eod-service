@@ -7,8 +7,10 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_S
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -180,7 +182,22 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             );
 
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
+        verifyZeroInteractions(eodFailedStepAlertSender);
+    }
 
+    @Test
+    void shouldSendAlert_whenRebalancingProcessFails() {
+        final Exception cause = new RuntimeException("rebalancing step failed");
+        doThrow(cause).when(eodCalculator).rebalanceLPPositions(any(), any());
+
+        final JobExecution execution = jobLauncherTestUtils.launchStep(REBALANCE_POSITIONS_STEP_NAME,
+            new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
+                .toJobParameters());
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+
+        verify(eodFailedStepAlertSender).rebalancingProcessFailed(cause);
     }
 
 }

@@ -46,15 +46,11 @@ public class PositionRebalancePublishingService {
 
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
-            .onFailure(failure -> {
-                eodFailedStepAlertSender.rebalancingCsvFailed(failure);
-            })
+            .onFailure(eodFailedStepAlertSender::rebalancingCsvFailed)
             .get();
 
         Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
-            .onFailure(failure -> {
-                eodFailedStepAlertSender.rebalancingEmailSendFailed(failure);
-            })
+            .onFailure(eodFailedStepAlertSender::rebalancingEmailSendFailed)
             .get();
     }
 

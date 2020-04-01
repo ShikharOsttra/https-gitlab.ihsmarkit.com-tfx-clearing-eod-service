@@ -21,6 +21,7 @@ import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.collateral.calculator.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.time.ClockService;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.mailing.config.MailingAutoConfiguration;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
@@ -57,5 +58,8 @@ public abstract class AbstractSpringBatchTest {
 
     @MockBean
     protected AlertSender alertSender;
+
+    @MockBean
+    protected EodFailedStepAlertSender eodFailedStepAlertSender;
 
 }

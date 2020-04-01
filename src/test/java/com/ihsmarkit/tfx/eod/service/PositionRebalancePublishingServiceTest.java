@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aLegalEntityBuilde
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -85,6 +86,7 @@ class PositionRebalancePublishingServiceTest {
             eq(List.of("email1@email.com", "email2@email.com")),
             Matchers.argThat(list -> assertThat(list).hasSize(1))
         );
+        verifyZeroInteractions(eodFailedStepAlertSender);
     }
 
     @Test
@@ -96,10 +98,32 @@ class PositionRebalancePublishingServiceTest {
         doThrow(cause).when(positionRebalanceCSVWriter).getRecordsAsCsv(anyList());
 
         assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
-            .isInstanceOf(RuntimeException.class);
+            .isInstanceOf(RuntimeException.class)
+            .isSameAs(cause);
 
         verify(eodFailedStepAlertSender).rebalancingCsvFailed(cause);
         verifyZeroInteractions(mailClient);
+    }
+
+    @Test
+    void shouldSendAlert_whenEmailSendFails() {
+        final List<TradeEntity> tradeEntities = List.of(aTradeBuilder());
+        final LocalDate businessDate = LocalDate.of(2019, 1, 1);
+        final Exception cause = new RuntimeException("can't generate csv exception");
+
+        when(participantRepository.findAllNotDeletedParticipantListItems()).thenReturn(List.of(
+            aParticipantEntityBuilder().type(ParticipantType.FX_BROKER).build(),
+            aParticipantEntityBuilder().type(ParticipantType.CLEARING_HOUSE).build(),
+            RECIPIENT,
+            aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build()
+        ));
+        doThrow(cause).when(mailClient).sendEmailWithAttachments(any(), any(), any(), any());
+
+        assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
+            .isInstanceOf(RuntimeException.class)
+            .isSameAs(cause);
+
+        verify(eodFailedStepAlertSender).rebalancingEmailSendFailed(cause);
     }
 
     private TradeEntity aTradeBuilder() {

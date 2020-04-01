@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import com.ihsmarkit.tfx.alert.client.domain.EodMtmFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodNettingFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceCsvGenerationFailedAlert;
+import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceSendingEmailFailedAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
@@ -28,6 +29,11 @@ public class EodFailedStepAlertSender {
     public void nettingFailed(final Throwable cause) {
         log.info("Send Netting failed alert", cause);
         alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+    }
+
+    public void rebalancingProcessFailed(final Throwable cause) {
+        log.info("Send Rebalancing process failed alert", cause);
+        alertSender.sendAlert(EodPositionRebalanceFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
     }
 
     public void rebalancingCsvFailed(final Throwable cause) {

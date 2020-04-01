@@ -26,6 +26,7 @@ import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.eod.config.CashCollateralBalanceUpdateJobConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -49,6 +50,9 @@ public class CashBalanceUpdateJobIntegrationTest {
 
     @MockBean
     private AlertSender alertSender;
+
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Test
     @DatabaseSetup({"/common/currency.xml", "/common/participants.xml", "/common/issuerBanks.xml", "/cash-balance-update/cash-balance-update-20191007.xml"})

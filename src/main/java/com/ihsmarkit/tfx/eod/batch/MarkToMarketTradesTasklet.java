@@ -27,6 +27,7 @@ import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
+import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -55,7 +56,7 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        try {
+        Try.run(() -> {
             final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
             final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
@@ -73,12 +74,11 @@ public class MarkToMarketTradesTasklet implements Tasklet {
                     .map(eodCashSettlementMappingService::mapDailyMtm);
 
             eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
+        })
+            .onFailure(eodFailedStepAlertSender::mtmFailed)
+            .get();
 
-            return RepeatStatus.FINISHED;
-        } catch (final Exception ex) {
-            eodFailedStepAlertSender.mtmFailed(ex);
-            throw ex;
-        }
+        return RepeatStatus.FINISHED;
     }
 
 }

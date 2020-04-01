@@ -40,6 +40,7 @@ import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRep
 import com.ihsmarkit.tfx.eod.batch.CashCollateralBalanceUpdateTasklet;
 import com.ihsmarkit.tfx.eod.config.CashCollateralBalanceUpdateJobConfig;
 import com.ihsmarkit.tfx.eod.config.QuartzConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
 
@@ -109,6 +110,9 @@ public class QuartzIntegrationTest {
 
     @MockBean
     private CashCollateralBalanceUpdateTasklet cashCollateralBalanceUpdateTasklet;
+
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Autowired
     private Scheduler scheduler;

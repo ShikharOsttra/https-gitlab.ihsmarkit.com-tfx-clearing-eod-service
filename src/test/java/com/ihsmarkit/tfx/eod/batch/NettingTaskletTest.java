@@ -46,7 +46,6 @@ import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.model.CcyParticipantAmount;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
@@ -106,9 +105,6 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private TradeAndSettlementDateService tradeAndSettlementDateService;
-
-    @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Mock
     private Stream<TradeEntity> trades;

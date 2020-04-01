@@ -39,6 +39,7 @@ import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -64,6 +65,9 @@ class Eod2JobIntegrationTest {
 
     @MockBean
     private LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
+
+    @MockBean
+    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @SpyBean
     private ClockService clockService;
