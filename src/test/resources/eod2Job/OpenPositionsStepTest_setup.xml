@@ -8,21 +8,23 @@
     <eod_swap_point id="2" currency_pair_id="14" bid="1.34" offer="5.24" swap_point="0.34" position_type="SHORT" date="2019-01-31" swap_point_days="1" remarks="[]" />
 
     <participant_position id="11" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="50000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER"  value_date="2019-02-02"/>
-    <participant_position id="12" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="10000" currency="USD" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="12" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="-10000" currency="USD" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
     <participant_position id="13" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="20000" currency="USD" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
     <participant_position id="14" currency_pair_id="13" participant_id="101" trade_date="2019-01-31" price="1.11" amount="60000" currency="USD" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
 
     <participant_position id="24" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="590000" currency="JPY" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
-    <participant_position id="25" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="600000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="25" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="-600000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
     <participant_position id="26" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="-10000" currency="JPY" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="27" currency_pair_id="14" participant_id="101" trade_date="2019-01-31" price="98.1" amount="10000" currency="JPY" type="REBALANCING" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
 
     <participant_position id="36" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="-70000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
     <participant_position id="37" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="200000" currency="USD" type="BUY" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02" />
     <participant_position id="38" currency_pair_id="13" participant_id="102" trade_date="2019-01-31" price="98.1" amount="130000" currency="USD" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
 
     <participant_position id="46" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="700000" currency="JPY" type="SOD" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
-    <participant_position id="47" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="200000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02" />
+    <participant_position id="47" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="-200000" currency="JPY" type="SELL" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
     <participant_position id="48" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="500000" currency="JPY" type="NET" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
+    <participant_position id="49" currency_pair_id="14" participant_id="102" trade_date="2019-01-31" price="98.1" amount="-500000" currency="JPY" type="REBALANCING" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-02"/>
 
     <participant_position id="51" currency_pair_id="13" participant_id="101" trade_date="2019-02-01" price="1.11" amount="60000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER"  value_date="2019-02-03"/>
     <participant_position id="52" currency_pair_id="13" participant_id="102" trade_date="2019-02-01" price="98.1" amount="130000" currency="USD" type="SOD" participant_type="LIQUIDITY_PROVIDER" value_date="2019-02-03"/>

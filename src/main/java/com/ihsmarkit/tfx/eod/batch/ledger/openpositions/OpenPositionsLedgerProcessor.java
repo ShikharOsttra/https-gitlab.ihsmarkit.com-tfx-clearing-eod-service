@@ -98,12 +98,8 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .tradeDate(formatDate(businessDate))
             .shortPositionPreviousDay(formatBigDecimal(shortPosition(getPosition(positions, SOD))))
             .longPositionPreviousDay(formatBigDecimal(longPosition(getPosition(positions, SOD))))
-            .buyTradingAmount(formatBigDecimal(getPosition(positions, BUY)
-                .map(BigDecimal::abs)
-                .orElse(ZERO)))
-            .sellTradingAmount(formatBigDecimal(getPosition(positions, SELL)
-                .map(BigDecimal::abs)
-                .orElse(ZERO)))
+            .buyTradingAmount(formatBigDecimal(getBuyOrSellPosition(positions, BUY)))
+            .sellTradingAmount(formatBigDecimal(getBuyOrSellPosition(positions, SELL)))
             .shortPosition(formatBigDecimal(shortPosition(eodPositionAmount)))
             .longPosition(formatBigDecimal(longPosition(eodPositionAmount)))
             .initialMtmAmount(getMarginOrZero(cashSettlements, INITIAL_MTM))
@@ -115,6 +111,17 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
             .recordType(ITEM_RECORD_TYPE)
             .orderId(getOrderId(participantCode, productNumber))
             .build();
+    }
+
+    private static BigDecimal getBuyOrSellPosition(
+        final Map<ParticipantPositionType, ParticipantPositionEntity> positions,
+        final ParticipantPositionType positionType
+    ) {
+        final BigDecimal position = getPosition(positions, positionType).orElse(ZERO);
+        final BigDecimal rebalancingPosition = getPosition(positions, REBALANCING).orElse(ZERO);
+        final ParticipantPositionType rebalancingType = rebalancingPosition.signum() >= 0 ? BUY : SELL;
+
+        return (positionType == rebalancingType ? position.add(rebalancingPosition) : position).abs();
     }
 
     private long getOrderId(final String participantCode, final String productNumber) {
@@ -170,7 +177,7 @@ public class OpenPositionsLedgerProcessor implements ItemProcessor<ParticipantAn
 
     private static Optional<BigDecimal> getPositionsSummed(
         final Map<ParticipantPositionType, ParticipantPositionEntity> positions,
-        final ParticipantPositionType...type
+        final ParticipantPositionType... type
     ) {
         return Arrays.stream(type)
             .map(positions::get)
