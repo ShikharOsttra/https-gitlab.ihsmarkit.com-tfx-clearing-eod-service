@@ -12,6 +12,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTim
 import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
+import static java.util.function.Predicate.not;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
+import com.ihsmarkit.tfx.common.math.BigDecimals;
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
@@ -56,6 +58,8 @@ import one.util.streamex.EntryStream;
 @StepScope
 @RequiredArgsConstructor
 public class DailyMarketDataProcessor implements ItemProcessor<Map<String, DailyMarkedDataAggregated>, List<DailyMarketDataEnriched>> {
+
+    private static final String HYPHENS_LABEL = "-----";
 
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
@@ -113,7 +117,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                         .reduce(Total::add)
                         .orElseGet(() -> Total.of(ZERO, ZERO))
                 )
-                        .map(this::mapToEnrichedItem)
+                    .map(this::mapToEnrichedItem)
             )
             .collect(Collectors.toUnmodifiableList());
     }
@@ -155,13 +159,13 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .recordDate(formatDateTime(recordDate))
             .currencyNumber(fxSpotProduct.getProductNumber())
             .currencyPairCode(currencyPairCode)
-            .openPrice(formatBigDecimal(aggregatedDailyMarketData.getOpenPrice(), priceScale))
+            .openPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getOpenPrice(), priceScale))
             .openPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getOpenPriceTime())))
-            .highPrice(formatBigDecimal(aggregatedDailyMarketData.getHighPrice(), priceScale))
+            .highPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getHighPrice(), priceScale))
             .highPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getHighPriceTime())))
-            .lowPrice(formatBigDecimal(aggregatedDailyMarketData.getLowPrice(), priceScale))
+            .lowPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getLowPrice(), priceScale))
             .lowPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getLowPriceTime())))
-            .closePrice(formatBigDecimal(aggregatedDailyMarketData.getClosePrice(), priceScale))
+            .closePrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getClosePrice(), priceScale))
             .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode), SWAP_POINTS_DECIMAL_PLACES))
             .previousDsp(formatBigDecimal(previousDsp, priceScale))
@@ -174,6 +178,14 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .recordType(ITEM_RECORD_TYPE)
             .orderId(buildOrderId(fxSpotProduct.getProductNumber()))
             .build();
+    }
+
+    private String getFormattedBigDecimalOrHyphens(@Nullable final BigDecimal bigDecimal, final int decimalPlaces) {
+        return Optional.ofNullable(bigDecimal)
+            .filter(not(BigDecimals::isEqualToZero))
+            .map($ -> formatBigDecimal(bigDecimal, decimalPlaces))
+            .orElse(HYPHENS_LABEL);
+
     }
 
     private BigDecimal convertToTradingUnit(final BigDecimal amount, final String currencyPairCode) {
