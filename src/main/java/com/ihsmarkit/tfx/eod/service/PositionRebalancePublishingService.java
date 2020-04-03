@@ -63,7 +63,7 @@ public class PositionRebalancePublishingService {
             .forEach(participant -> mailClient.sendEmailWithAttachments(
                 String.format("%s rebalance results for %s", businessDateString, participant.getCode()),
                 StringUtils.EMPTY,
-                Arrays.asList(participant.getNotificationEmail().split(",")),
+                parseRecipients(participant.getNotificationEmail()),
                 csvEmailAttachment(participantCsvFiles.get(participant.getCode()))
             ));
     }
@@ -80,6 +80,12 @@ public class PositionRebalancePublishingService {
                     .mapValues(this::getPositionRebalanceCsv)
                     .toImmutableMap()
             ));
+    }
+
+    private static List<String> parseRecipients(final String notificationEmails) {
+        return Arrays.stream(notificationEmails.split(","))
+            .map(String::strip)
+            .collect(Collectors.toUnmodifiableList());
     }
 
     private static List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {

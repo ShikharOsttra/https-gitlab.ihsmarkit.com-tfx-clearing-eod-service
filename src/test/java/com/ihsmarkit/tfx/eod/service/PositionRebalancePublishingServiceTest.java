@@ -48,7 +48,7 @@ class PositionRebalancePublishingServiceTest {
     private static final ParticipantEntity RECIPIENT = aParticipantEntityBuilder()
         .type(ParticipantType.LIQUIDITY_PROVIDER)
         .code("LP99")
-        .notificationEmail("email1@email.com,email2@email.com")
+        .notificationEmail("email1@email.com,email2@email.com, email3@email.com,            email4@email.com")
         .build();
 
     @Autowired
@@ -83,7 +83,7 @@ class PositionRebalancePublishingServiceTest {
         verify(mailClient, times(1)).sendEmailWithAttachments(
             eq("2019-01-01 rebalance results for LP99"),
             eq(StringUtils.EMPTY),
-            eq(List.of("email1@email.com", "email2@email.com")),
+            eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             Matchers.argThat(list -> assertThat(list).hasSize(1))
         );
         verifyZeroInteractions(eodFailedStepAlertSender);
