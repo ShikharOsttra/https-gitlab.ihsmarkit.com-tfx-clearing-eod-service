@@ -49,7 +49,11 @@ class PositionRebalancePublishingServiceTest {
         when(participantRepository.findAllNotDeletedParticipantListItems()).thenReturn(List.of(
             aParticipantEntityBuilder().type(ParticipantType.FX_BROKER).build(),
             aParticipantEntityBuilder().type(ParticipantType.CLEARING_HOUSE).build(),
-            aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).code("LP99").build(),
+            aParticipantEntityBuilder()
+                .type(ParticipantType.LIQUIDITY_PROVIDER)
+                .notificationEmail("email1@email.com,email2@email.com, email3@email.com,            email4@email.com")
+                .code("LP99")
+                .build(),
             aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build()
         ));
 
@@ -58,7 +62,7 @@ class PositionRebalancePublishingServiceTest {
         verify(mailClient, times(1)).sendEmailWithAttachments(
             anyString(),
             eq(StringUtils.EMPTY),
-            (List) argThat(IsCollectionWithSize.hasSize(1)),
+            eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             (List) argThat(IsCollectionWithSize.hasSize(1))
         );
     }

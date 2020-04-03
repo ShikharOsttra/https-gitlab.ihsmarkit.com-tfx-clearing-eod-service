@@ -44,13 +44,19 @@ public class PositionRebalancePublishingService {
                     mailClient.sendEmailWithAttachments(
                         String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()),
                         StringUtils.EMPTY,
-                        Arrays.asList(participant.getNotificationEmail().split(",")),
+                        parseRecipients(participant.getNotificationEmail()),
                         List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
                             getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))));
                 });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
         }
+    }
+
+    private static List<String> parseRecipients(final String notificationEmails) {
+        return Arrays.stream(notificationEmails.split(","))
+            .map(String::strip)
+            .collect(Collectors.toUnmodifiableList());
     }
 
     private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
