@@ -30,7 +30,7 @@
         swap_point_following_day="500"
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="10"
+        order_id="0"
     />
 
     <eod_ledger_collateral_balance
@@ -64,7 +64,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="11"
+        order_id="1"
     />
 
     <eod_ledger_collateral_balance
@@ -98,7 +98,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="12"
+        order_id="2"
     />
 
     <eod_ledger_collateral_balance
@@ -132,7 +132,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit="2019/01/05"
         record_type="1"
-        order_id="13"
+        order_id="3"
     />
 
     <eod_ledger_collateral_balance
@@ -166,7 +166,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="14"
+        order_id="4"
     />
 
     <eod_ledger_collateral_balance
@@ -200,7 +200,7 @@
         swap_point_following_day="0"
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="20"
+        order_id="10"
     />
 
     <eod_ledger_collateral_balance
@@ -234,7 +234,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="21"
+        order_id="11"
     />
 
     <eod_ledger_collateral_balance
@@ -268,7 +268,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="22"
+        order_id="12"
     />
 
     <eod_ledger_collateral_balance
@@ -302,7 +302,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="23"
+        order_id="13"
     />
 
     <eod_ledger_collateral_balance
@@ -336,7 +336,7 @@
         swap_point_following_day=""
         following_applicable_day_for_clearing_deposit=""
         record_type="1"
-        order_id="24"
+        order_id="14"
     />
 
 </dataset>
