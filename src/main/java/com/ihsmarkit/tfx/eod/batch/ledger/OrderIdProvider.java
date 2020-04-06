@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.springframework.data.util.Lazy;
@@ -14,12 +15,12 @@ public abstract class OrderIdProvider {
     private final Lazy<Map<String, Integer>> orderIdMap = Lazy.of(this::loadOrderIdMap);
 
     public int get(final String key) {
-        return orderIdMap.get().getOrDefault(key, 0);
+        return Optional.ofNullable(orderIdMap.get().get(key))
+            .orElseThrow(() -> new IllegalStateException(String.format("Cannot final order id for key [%s]", key)));
     }
 
     private Map<String, Integer> loadOrderIdMap() {
         final List<String> sortedCodes = loadDataStream()
-            .sorted()
             .collect(toList());
 
         return buildIndexBasedOrder(sortedCodes);
