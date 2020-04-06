@@ -32,10 +32,9 @@ import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.LedgerStepFactory;
 import com.ihsmarkit.tfx.eod.config.ledger.MonthlyTradingVolumeLedgerConfig;
-import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
+import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
 import lombok.AllArgsConstructor;
 
@@ -45,7 +44,7 @@ import lombok.AllArgsConstructor;
     CollateralListLedgerConfig.class,
     CollateralBalanceLedgerConfig.class,
     TransactionDiaryLedgerConfig.class,
-    OpenPositionsLedgerConfig.class,
+//    OpenPositionsLedgerConfig.class,
     DailyMarketDataLedgerConfig.class,
     MonthlyTradingVolumeLedgerConfig.class
 })

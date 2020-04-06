@@ -25,18 +25,18 @@ public class TotalWriterListener<O> extends StepExecutionListenerSupport impleme
     private final ItemWriter<O> itemWriter;
 
     public <I> TotalWriterListener(
-        final Supplier<I> totalSupplier, final Function<I, List<O>> totalMapper,
+        final TotalHolder<I> totalHolder, final Function<I, List<O>> totalMapper,
         final ItemWriter<O> itemWriter
     ) {
-        this(List.of(() -> totalMapper.apply(totalSupplier.get())), itemWriter);
+        this(List.of(() -> totalMapper.apply(totalHolder.get())), itemWriter);
     }
 
     public <I1, I2> TotalWriterListener(
-        final Supplier<I1> totalSupplier1, final Function<I1, List<O>> totalMapper1,
-        final Supplier<I2> totalSupplier2, final Function<I2, List<O>> totalMapper2,
+        final TotalHolder<I1> totalHolder1, final Function<I1, List<O>> totalMapper1,
+        final TotalHolder<I2> totalHolder2, final Function<I2, List<O>> totalMapper2,
         final ItemWriter<O> itemWriter
     ) {
-        this(List.of(() -> totalMapper1.apply(totalSupplier1.get()), () -> totalMapper2.apply(totalSupplier2.get())), itemWriter);
+        this(List.of(() -> totalMapper1.apply(totalHolder1.get()), () -> totalMapper2.apply(totalHolder2.get())), itemWriter);
     }
 
     private TotalWriterListener(final List<Supplier<List<O>>> suppliers, final ItemWriter<O> itemWriter) {

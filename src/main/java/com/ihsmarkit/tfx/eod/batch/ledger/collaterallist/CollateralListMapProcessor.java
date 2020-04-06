@@ -3,6 +3,9 @@ package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.BOND;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.EQUITY;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.SUBTOTAL_RECORD_TYPE;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TFX_TOTAL;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalForceTwoDecimals;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
@@ -10,9 +13,10 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnu
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMonthDay;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -27,17 +31,23 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
+import com.ihsmarkit.tfx.core.domain.Participant;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.eod.batch.ledger.EvaluationDateProvider;
-import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListTfxTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListWriteItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.BigDecimalTotalValue;
 
 import lombok.RequiredArgsConstructor;
+import one.util.streamex.EntryStream;
 
 @Service
 @RequiredArgsConstructor
 @StepScope
-public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBalanceEntity, CollateralListItem<BigDecimal>> {
+public class CollateralListMapProcessor implements ItemProcessor<CollateralListItem, CollateralListWriteItem> {
 
     private static final String CASH_COLLATERAL_NAME = "Yen Cash";
 
@@ -51,16 +61,14 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
 
     private final JasdecCodeProvider jasdecCodeProvider;
 
-    private final CollateralCalculator collateralCalculator;
-
     private final CollateralListItemOrderProvider collateralListItemOrderProvider;
 
     private final EvaluationDateProvider evaluationDateProvider;
 
     @Override
-    public CollateralListItem<BigDecimal> process(final CollateralBalanceEntity balance) {
-        final BigDecimal evaluatedAmount = collateralCalculator.calculateEvaluatedAmount(balance);
-        return CollateralListItem.<BigDecimal>builder()
+    public CollateralListWriteItem process(final CollateralListItem item) {
+        final CollateralBalanceEntity balance = item.getBalance();
+        return CollateralListWriteItem.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .evaluationDate(formatDate(evaluationDateProvider.get()))
@@ -72,15 +80,13 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             .collateralPurpose(formatEnum(balance.getPurpose()))
             .collateralName(getCollateralName(balance))
             .collateralTypeNo(balance.getProduct().getType().getValue().toString())
-            .collateralType(formatEnum(balance.getProduct().getType()))
+            .collateralType(formatEnum(item.getBalance().getProduct().getType()))
             .securityCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getSecurityCode))
             .isinCode(getFromSecurityProduct(balance.getProduct(), SecurityCollateralProductEntity::getIsin))
             .amount(balance.getAmount().toString())
             .marketPrice(getFromSecurityProduct(balance.getProduct(), product -> product.getEodPrice().toPlainString()))
-            .evaluatedPrice(getFromSecurityProduct(balance.getProduct(),
-                product -> formatBigDecimalForceTwoDecimals(collateralCalculator.calculateEvaluatedPrice(product))
-            ))
-            .evaluatedAmount(evaluatedAmount)
+            .evaluatedPrice(formatBigDecimalForceTwoDecimals(item.getEvaluatedPrice()))
+            .evaluatedAmount(item.getEvaluatedAmount().toPlainString())
             .bojCode(getBojCode(balance))
             .jasdecCode(getJasdecCode(balance))
             .interestPaymentDay(getFromBondProduct(balance.getProduct(), product -> formatMonthDay(product.getCouponPaymentDate1())))
@@ -146,5 +152,40 @@ public class CollateralListLedgerProcessor implements ItemProcessor<CollateralBa
             default:
                 throw new IllegalArgumentException(String.format("Unsupported product type, %s", balance.getProduct().getType()));
         }
+    }
+
+    public List<CollateralListWriteItem> mapToParticipantTotal(final Map<CollateralListParticipantTotalKey, BigDecimalTotalValue> totals) {
+        return EntryStream.of(totals)
+            .mapKeyValue((collateralListParticipantTotalKey, amount) ->
+                CollateralListWriteItem.builder()
+                    .businessDate(businessDate)
+                    .participantCode(collateralListParticipantTotalKey.getParticipantCode())
+                    .collateralPurpose(TOTAL)
+                    .evaluatedAmount(amount.getValue().toPlainString())
+                    .orderId(collateralListItemOrderProvider.getOrderId(collateralListParticipantTotalKey, SUBTOTAL_RECORD_TYPE))
+                    .recordType(SUBTOTAL_RECORD_TYPE)
+                    .build()
+            )
+            .toList();
+    }
+
+    public List<CollateralListWriteItem> mapToTfxTotal(final Map<CollateralListTfxTotalKey, BigDecimalTotalValue> tfxTotals) {
+        return EntryStream.of(tfxTotals).mapKeyValue((key, total) ->
+            CollateralListWriteItem.builder()
+                .businessDate(businessDate)
+                .tradeDate(formatDate(businessDate))
+                .evaluationDate(formatDate(evaluationDateProvider.get()))
+                .recordDate(formatDateTime(recordDate))
+                .participantCode(Participant.CLEARING_HOUSE_CODE)
+                .participantName(TFX_TOTAL)
+                .collateralPurposeType(key.getPurpose().getValue().toString())
+                .collateralPurpose(formatEnum(key.getPurpose()))
+                .collateralTypeNo(key.getProductType().getValue().toString())
+                .collateralType(formatEnum(key.getProductType()))
+                .evaluatedAmount(total.getValue().toPlainString())
+                .recordType(ITEM_RECORD_TYPE)
+                .orderId(collateralListItemOrderProvider.getOrderId(key, ITEM_RECORD_TYPE))
+                .build()
+        ).toList();
     }
 }

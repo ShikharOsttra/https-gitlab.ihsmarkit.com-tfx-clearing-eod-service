@@ -25,10 +25,12 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Table;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Tables;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsItem;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotal;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotalKey;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsTfxTotal;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsWriteItem;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
@@ -118,8 +120,8 @@ public class OpenPositionsMapProcessor implements ItemProcessor<OpenPositionsIte
         ).collect(Collectors.toList());
     }
 
-    public List<OpenPositionsWriteItem> mapToParticipantTotal(final Table<String, LocalDate, OpenPositionsParticipantTotal> participantTotals) {
-        return EntryStream.of(participantTotals.rowMap()).flatMapKeyValue((participantCode, totals) -> {
+    public List<OpenPositionsWriteItem> mapToParticipantTotal(final Map<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotals) {
+        return groupParticipantTotalsByCode(participantTotals).flatMapKeyValue((participantCode, totals) -> {
 
             final OpenPositionsParticipantTotal totalOfSettlementDates = totals.values().stream()
                 .reduce(OpenPositionsParticipantTotal.ZERO, OpenPositionsParticipantTotal::add);
@@ -165,6 +167,22 @@ public class OpenPositionsMapProcessor implements ItemProcessor<OpenPositionsIte
             .recordType(PARTICIPANT_TOTAL_RECORD_TYPE)
             .orderId(Long.MAX_VALUE - orderOffset)
             .build();
+    }
+
+    private static EntryStream<String, Map<LocalDate, OpenPositionsParticipantTotal>> groupParticipantTotalsByCode(
+        final Map<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotals
+    ) {
+        return EntryStream.of(
+            EntryStream.of(participantTotals)
+                .collect(
+                    Tables.toTable(
+                        entry -> entry.getKey().getParticipantCode(),
+                        entry -> entry.getKey().getSettlementDate(),
+                        Map.Entry::getValue,
+                        HashBasedTable::create
+                    )
+                ).rowMap()
+        );
     }
 
 }

@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.common.total;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -10,7 +12,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
-public class MapTotalHolder<K, V extends TotalValue<V>> extends ItemStreamSupport {
+public class MapTotalHolder<K extends Serializable, V extends TotalValue<V>> extends ItemStreamSupport implements TotalHolder<Map<K, V>> {
 
     private static final String KEY = "total";
 
@@ -40,4 +42,8 @@ public class MapTotalHolder<K, V extends TotalValue<V>> extends ItemStreamSuppor
         executionContext.put(getExecutionContextKey(KEY), total);
     }
 
+    @Override
+    public Map<K, V> get() {
+        return total;
+    }
 }
