@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.config.listeners;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.listener.StepExecutionListenerSupport;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EodAlertStepListener extends StepExecutionListenerSupport {
+public class EodAlertStepListener extends StepExecutionListenerSupport implements Ordered {
 
     private final AlertSender alertSender;
     private final ClockService clockService;
@@ -29,5 +30,10 @@ public class EodAlertStepListener extends StepExecutionListenerSupport {
         log.debug("Sent alert about step complete: {}", alert);
 
         return null;
+    }
+
+    @Override
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE;
     }
 }

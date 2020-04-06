@@ -1,4 +1,4 @@
-package com.ihsmarkit.tfx.eod.model.ledger;
+package com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -11,7 +11,7 @@ import lombok.NonNull;
 @Getter
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
-public class OpenPositionsListItem<T> {
+public class OpenPositionsWriteItem {
 
     @NonNull
     private final LocalDate businessDate;
@@ -21,8 +21,8 @@ public class OpenPositionsListItem<T> {
     private final String recordDate = EMPTY;
     @NonNull
     private final String participantCode;
-    @NonNull
-    private final String participantName;
+    @Builder.Default
+    private final String participantName = EMPTY;
     @Builder.Default
     private final String participantType = EMPTY;
     @Builder.Default
@@ -42,13 +42,13 @@ public class OpenPositionsListItem<T> {
     @Builder.Default
     private final String longPosition = EMPTY;
     @NonNull
-    private final T initialMtmAmount;
+    private final String initialMtmAmount;
     @NonNull
-    private final T dailyMtmAmount;
+    private final String dailyMtmAmount;
     @NonNull
-    private final T swapPoint;
+    private final String swapPoint;
     @NonNull
-    private final T totalVariationMargin;
+    private final String totalVariationMargin;
     @NonNull
     private final String settlementDate;
     private final long orderId;

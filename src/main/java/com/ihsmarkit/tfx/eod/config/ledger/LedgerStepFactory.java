@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -9,11 +10,13 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.batch.item.database.orm.JpaQueryProvider;
+import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -78,4 +81,11 @@ public class LedgerStepFactory {
         taskExecutor.setConcurrencyLimit(concurrencyLimit);
         return taskExecutor;
     }
+
+    static <I, O> ItemProcessor<I, O> compositeProcessor(final ItemProcessor<?, ?>... processors) {
+        final CompositeItemProcessor<I, O> processor = new CompositeItemProcessor<>();
+        processor.setDelegates(List.of(processors));
+        return processor;
+    }
+
 }

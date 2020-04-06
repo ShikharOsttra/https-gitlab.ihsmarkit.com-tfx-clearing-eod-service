@@ -12,22 +12,30 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
-import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
-import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsLedgerProcessor;
-import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.total.OpenPositionsTotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TotalWriterListener;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsInputProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsMapProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.OpenPositionsTotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotal;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsTfxTotal;
+import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsWriteItem;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
-import com.ihsmarkit.tfx.eod.model.ledger.OpenPositionsListItem;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 
 @Configuration
 @AllArgsConstructor
 public class OpenPositionsLedgerConfig {
 
-    private final OpenPositionsLedgerProcessor openPositionsLedgerProcessor;
+    private final OpenPositionsInputProcessor inputProcessor;
+    private final OpenPositionsMapProcessor mapProcessor;
+
     private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
-    private final OpenPositionsTotalProcessor openPositionsTotalProcessor;
+
     private final LedgerStepFactory ledgerStepFactory;
 
     @Value("${eod.ledger.open.positions.chunk.size:1000}")
@@ -37,10 +45,13 @@ public class OpenPositionsLedgerConfig {
 
     @Bean(OPEN_POSITIONS_LEDGER_STEP_NAME)
     Step openPositionsLedger() {
-        return ledgerStepFactory.<ParticipantAndCurrencyPair, OpenPositionsListItem<String>>stepBuilder(OPEN_POSITIONS_LEDGER_STEP_NAME, openPositionsChunkSize)
+        return ledgerStepFactory.<ParticipantAndCurrencyPair, OpenPositionsWriteItem>stepBuilder(OPEN_POSITIONS_LEDGER_STEP_NAME, openPositionsChunkSize)
             .reader(openPositionsLedgerReader())
             .processor(openPositionsLedgerItemProcessor())
             .writer(openPositionsLedgerWriter())
+            .stream(tfxTotalHolder())
+            .stream(participantTotalHolder())
+            .listener(totalWriterListener())
             .build();
     }
 
@@ -53,45 +64,47 @@ public class OpenPositionsLedgerConfig {
 
     @Bean
     @StepScope
-    ItemProcessor<ParticipantAndCurrencyPair, OpenPositionsListItem<String>> openPositionsLedgerItemProcessor() {
-        return openPositionsTotalProcessor.wrapItemProcessor(
-            openPositionsLedgerProcessor,
-            openPositionsListItem ->
-                OpenPositionsListItem.<String>builder()
-                    .businessDate(openPositionsListItem.getBusinessDate())
-                    .tradeDate(openPositionsListItem.getTradeDate())
-                    .recordDate(openPositionsListItem.getRecordDate())
-                    .participantCode(openPositionsListItem.getParticipantCode())
-                    .participantName(openPositionsListItem.getParticipantName())
-                    .participantType(openPositionsListItem.getParticipantType())
-                    .currencyNo(openPositionsListItem.getCurrencyNo())
-                    .currencyCode(openPositionsListItem.getCurrencyCode())
-                    .shortPositionPreviousDay(openPositionsListItem.getShortPositionPreviousDay())
-                    .longPositionPreviousDay(openPositionsListItem.getLongPositionPreviousDay())
-                    .sellTradingAmount(openPositionsListItem.getSellTradingAmount())
-                    .buyTradingAmount(openPositionsListItem.getBuyTradingAmount())
-                    .shortPosition(openPositionsListItem.getShortPosition())
-                    .longPosition(openPositionsListItem.getLongPosition())
-                    .settlementDate(openPositionsListItem.getSettlementDate())
-                    .orderId(openPositionsListItem.getOrderId())
-                    .recordType(openPositionsListItem.getRecordType())
-
-                    .initialMtmAmount(LedgerFormattingUtils.formatBigDecimal(openPositionsListItem.getInitialMtmAmount()))
-                    .dailyMtmAmount(LedgerFormattingUtils.formatBigDecimal(openPositionsListItem.getDailyMtmAmount()))
-                    .swapPoint(LedgerFormattingUtils.formatBigDecimal(openPositionsListItem.getSwapPoint()))
-                    .totalVariationMargin(LedgerFormattingUtils.formatBigDecimal(openPositionsListItem.getTotalVariationMargin()))
-                    .build()
+    ItemProcessor<ParticipantAndCurrencyPair, OpenPositionsWriteItem> openPositionsLedgerItemProcessor() {
+        return LedgerStepFactory.compositeProcessor(
+            inputProcessor,
+            openPositionsTotalProcessor(),
+            mapProcessor
         );
     }
 
     @Bean
     @StepScope
-    ItemWriter<OpenPositionsListItem<String>> openPositionsLedgerWriter() {
-        return openPositionsTotalProcessor.wrapItemWriter(openPositionsJdbcLedgerWriter());
+    OpenPositionsTotalProcessor openPositionsTotalProcessor() {
+        return new OpenPositionsTotalProcessor(
+            tfxTotalHolder(),
+            participantTotalHolder()
+        );
     }
 
     @Bean
-    ItemWriter<OpenPositionsListItem<String>> openPositionsJdbcLedgerWriter() {
+    @StepScope
+    MapTotalHolder<String, OpenPositionsTfxTotal> tfxTotalHolder() {
+        return new MapTotalHolder<>("tfxTotal");
+    }
+
+    @Bean
+    @StepScope
+    MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotalHolder() {
+        return new MapTotalHolder<>("participantTotal");
+    }
+
+    @Bean
+    @SuppressFBWarnings("PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS")
+    TotalWriterListener<OpenPositionsWriteItem> totalWriterListener() {
+        return new TotalWriterListener<>(
+            openPositionsTotalProcessor()::getParticipantTotal, mapProcessor::mapToParticipantTotal,
+            openPositionsTotalProcessor()::getTfxTotal, mapProcessor::mapToTfxTotal,
+            openPositionsLedgerWriter()
+        );
+    }
+
+    @Bean
+    ItemWriter<OpenPositionsWriteItem> openPositionsLedgerWriter() {
         return ledgerStepFactory.listWriter(openPositionsLedgerSql);
     }
 

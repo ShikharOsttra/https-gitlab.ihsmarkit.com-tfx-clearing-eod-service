@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 public class LedgerConstants {
 
     public static final String TOTAL = "Total";
+    public static final String TFX_TOTAL = "TFX Total";
 
     public static final int ITEM_RECORD_TYPE = 1;
     public static final int PARTICIPANT_TOTAL_RECORD_TYPE = 2;
