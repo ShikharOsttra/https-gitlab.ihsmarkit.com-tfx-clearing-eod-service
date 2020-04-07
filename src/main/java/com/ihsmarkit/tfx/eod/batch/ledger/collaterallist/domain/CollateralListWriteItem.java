@@ -1,4 +1,4 @@
-package com.ihsmarkit.tfx.eod.model.ledger;
+package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -11,7 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
-public class CollateralListItem<T> {
+public class CollateralListWriteItem {
 
     @NonNull
     private final LocalDate businessDate;
@@ -47,7 +47,8 @@ public class CollateralListItem<T> {
     private final String marketPrice = EMPTY;
     @Builder.Default
     private final String evaluatedPrice = EMPTY;
-    private final T evaluatedAmount;
+    @Builder.Default
+    private final String evaluatedAmount = EMPTY;
     @Builder.Default
     private final String bojCode = EMPTY;
     @Builder.Default

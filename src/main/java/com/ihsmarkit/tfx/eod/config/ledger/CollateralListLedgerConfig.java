@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_CONTEXT_KEY;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TFX_TOTAL_CONTEXT_KEY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGER_STEP_NAME;
 
 import org.springframework.batch.core.Step;
@@ -14,10 +16,16 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
-import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListLedgerProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListInputProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListMapProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.CollateralListTotalProcessor;
-import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListTfxTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListWriteItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.BigDecimalTotalValue;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TotalWriterListener;
 
 import lombok.AllArgsConstructor;
 
@@ -32,17 +40,20 @@ public class CollateralListLedgerConfig {
     @Value("classpath:/ledger/sql/eod_ledger_collateral_list_insert.sql")
     private final Resource collateralListLedgerSql;
 
-    private final CollateralListTotalProcessor collateralListTotalProcessor;
-    private final CollateralListLedgerProcessor collateralListProcessor;
+    private final CollateralListInputProcessor inputProcessor;
+    private final CollateralListMapProcessor mapProcessor;
     private final LedgerStepFactory ledgerStepFactory;
 
     @Bean(COLLATERAL_LIST_LEDGER_STEP_NAME)
     Step collateralListLedger() {
-        return ledgerStepFactory.<CollateralBalanceEntity, CollateralListItem<String>>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize)
+        return ledgerStepFactory.<CollateralBalanceEntity, CollateralListWriteItem>stepBuilder(COLLATERAL_LIST_LEDGER_STEP_NAME, collateralListChunkSize)
             .reader(collateralListReader())
             .processor(collateralListItemProcessor())
             .writer(collateralListWriter())
             .taskExecutor(collateralListTaskExecutor())
+            .stream(collateralListParticipantTotalHolder())
+            .stream(collateralListTfxTotalHolder())
+            .listener(collateralListTotalWriterListener())
             .build();
     }
 
@@ -58,49 +69,46 @@ public class CollateralListLedgerConfig {
 
     @Bean
     @StepScope
-    ItemProcessor<CollateralBalanceEntity, CollateralListItem<String>> collateralListItemProcessor() {
-        return collateralListTotalProcessor.wrapItemProcessor(
-            collateralListProcessor,
-            collateralListItem ->
-                CollateralListItem.<String>builder()
-                    .businessDate(collateralListItem.getBusinessDate())
-                    .tradeDate(collateralListItem.getTradeDate())
-                    .evaluationDate(collateralListItem.getEvaluationDate())
-                    .recordDate(collateralListItem.getRecordDate())
-                    .participantCode(collateralListItem.getParticipantCode())
-                    .participantName(collateralListItem.getParticipantName())
-                    .participantType(collateralListItem.getParticipantType())
-                    .collateralPurposeType(collateralListItem.getCollateralPurposeType())
-                    .collateralPurpose(collateralListItem.getCollateralPurpose())
-                    .collateralName(collateralListItem.getCollateralName())
-                    .collateralType(collateralListItem.getCollateralType())
-                    .collateralTypeNo(collateralListItem.getCollateralTypeNo())
-                    .securityCode(collateralListItem.getSecurityCode())
-                    .isinCode(collateralListItem.getIsinCode())
-                    .amount(collateralListItem.getAmount())
-                    .marketPrice(collateralListItem.getMarketPrice())
-                    .evaluatedPrice(collateralListItem.getEvaluatedPrice())
-                    .bojCode(collateralListItem.getBojCode())
-                    .jasdecCode(collateralListItem.getJasdecCode())
-                    .interestPaymentDay(collateralListItem.getInterestPaymentDay())
-                    .interestPaymentDay2(collateralListItem.getInterestPaymentDay2())
-                    .maturityDate(collateralListItem.getMaturityDate())
-                    .orderId(collateralListItem.getOrderId())
-                    .recordType(collateralListItem.getRecordType())
-
-                    .evaluatedAmount(collateralListItem.getEvaluatedAmount().toString())
-                    .build()
+    ItemProcessor<CollateralBalanceEntity, CollateralListWriteItem> collateralListItemProcessor() {
+        return LedgerStepFactory.compositeProcessor(
+            inputProcessor,
+            collateralListTotalProcessor(),
+            mapProcessor
         );
     }
 
     @Bean
     @StepScope
-    ItemWriter<CollateralListItem<String>> collateralListWriter() {
-        return collateralListTotalProcessor.wrapItemWriter(collateralListJdbcWriter());
+    CollateralListTotalProcessor collateralListTotalProcessor() {
+        return new CollateralListTotalProcessor(
+            collateralListTfxTotalHolder(),
+            collateralListParticipantTotalHolder()
+        );
     }
 
     @Bean
-    ItemWriter<CollateralListItem<String>> collateralListJdbcWriter() {
+    @StepScope
+    MapTotalHolder<CollateralListTfxTotalKey, BigDecimalTotalValue> collateralListTfxTotalHolder() {
+        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY);
+    }
+
+    @Bean
+    @StepScope
+    MapTotalHolder<CollateralListParticipantTotalKey, BigDecimalTotalValue> collateralListParticipantTotalHolder() {
+        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY);
+    }
+
+    @Bean
+    TotalWriterListener<CollateralListWriteItem> collateralListTotalWriterListener() {
+        return new TotalWriterListener<>(
+            collateralListParticipantTotalHolder(), mapProcessor::mapToParticipantTotal,
+            collateralListTfxTotalHolder(), mapProcessor::mapToTfxTotal,
+            collateralListWriter()
+        );
+    }
+
+    @Bean
+    ItemWriter<CollateralListWriteItem> collateralListWriter() {
         return ledgerStepFactory.listWriter(collateralListLedgerSql);
     }
 }

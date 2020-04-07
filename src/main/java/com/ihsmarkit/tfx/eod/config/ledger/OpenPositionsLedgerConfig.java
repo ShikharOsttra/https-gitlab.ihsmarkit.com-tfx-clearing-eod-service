@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_CONTEXT_KEY;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TFX_TOTAL_CONTEXT_KEY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 
 import org.springframework.batch.core.Step;
@@ -24,7 +26,6 @@ import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsTfxT
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsWriteItem;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 
 @Configuration
@@ -49,9 +50,9 @@ public class OpenPositionsLedgerConfig {
             .reader(openPositionsLedgerReader())
             .processor(openPositionsLedgerItemProcessor())
             .writer(openPositionsLedgerWriter())
-            .stream(tfxTotalHolder())
-            .stream(participantTotalHolder())
-            .listener(totalWriterListener())
+            .stream(openPositionTfxTotalHolder())
+            .stream(openPositionParticipantTotalHolder())
+            .listener(openPositionTotalWriterListener())
             .build();
     }
 
@@ -76,29 +77,28 @@ public class OpenPositionsLedgerConfig {
     @StepScope
     OpenPositionsTotalProcessor openPositionsTotalProcessor() {
         return new OpenPositionsTotalProcessor(
-            tfxTotalHolder(),
-            participantTotalHolder()
+            openPositionTfxTotalHolder(),
+            openPositionParticipantTotalHolder()
         );
     }
 
     @Bean
     @StepScope
-    MapTotalHolder<String, OpenPositionsTfxTotal> tfxTotalHolder() {
-        return new MapTotalHolder<>("tfxTotal");
+    MapTotalHolder<String, OpenPositionsTfxTotal> openPositionTfxTotalHolder() {
+        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY);
     }
 
     @Bean
     @StepScope
-    MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotalHolder() {
-        return new MapTotalHolder<>("participantTotal");
+    MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> openPositionParticipantTotalHolder() {
+        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY);
     }
 
     @Bean
-    @SuppressFBWarnings("PRMC_POSSIBLY_REDUNDANT_METHOD_CALLS")
-    TotalWriterListener<OpenPositionsWriteItem> totalWriterListener() {
+    TotalWriterListener<OpenPositionsWriteItem> openPositionTotalWriterListener() {
         return new TotalWriterListener<>(
-            openPositionsTotalProcessor()::getParticipantTotal, mapProcessor::mapToParticipantTotal,
-            openPositionsTotalProcessor()::getTfxTotal, mapProcessor::mapToTfxTotal,
+            openPositionParticipantTotalHolder(), mapProcessor::mapToParticipantTotal,
+            openPositionTfxTotalHolder(), mapProcessor::mapToTfxTotal,
             openPositionsLedgerWriter()
         );
     }

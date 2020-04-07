@@ -34,8 +34,8 @@ import com.ihsmarkit.tfx.eod.config.ledger.LedgerStepFactory;
 import com.ihsmarkit.tfx.eod.config.ledger.MonthlyTradingVolumeLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.OpenPositionsLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.TransactionDiaryLedgerConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
+import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
 import lombok.AllArgsConstructor;
 
