@@ -22,7 +22,7 @@ public abstract class AbstractTotalHolder<V> extends ItemStreamSupport implement
     @Override
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     public void open(final ExecutionContext executionContext) {
-        if (saveState && executionContext.containsKey(getExecutionContextKey(KEY))) {
+        if (saveState) {
             initValue((V) executionContext.get(getExecutionContextKey(KEY)));
         } else {
             initValue(null);
