@@ -98,4 +98,13 @@ class LedgerFormattingUtilsTest {
         assertThat(LedgerFormattingUtils.formatBigDecimalRoundTo1Jpy(passed)).isEqualTo(expected);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "123.00, 123",
+        "123.01, 123.01",
+        "123.10, 123.10"
+    })
+    void shouldFormatBigDecimalStripZero(final BigDecimal passed, final String expected) {
+        assertThat(LedgerFormattingUtils.formatBigDecimalStripZero(passed)).isEqualTo(expected);
+    }
 }
