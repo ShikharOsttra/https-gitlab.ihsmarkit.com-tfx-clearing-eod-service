@@ -82,6 +82,10 @@ public class LedgerFormattingUtils {
         return safeFormat(bigDecimal, value -> value.setScale(0, RoundingMode.FLOOR).toPlainString(), "0");
     }
 
+    public static String formatBigDecimalStripZero(@Nullable final BigDecimal bigDecimal) {
+        return safeFormat(bigDecimal, value -> value.stripTrailingZeros().scale() > 0 ? formatBigDecimalForceTwoDecimals(value) : formatBigDecimal(value, 0));
+    }
+
     private static <T> String safeFormat(@Nullable final T value, final Function<T, String> mappingFunction) {
         return safeFormat(value, mappingFunction, EMPTY);
     }

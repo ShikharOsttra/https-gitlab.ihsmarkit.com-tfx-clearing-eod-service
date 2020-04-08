@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalStripZero;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -92,8 +93,8 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .clearTime(formatTime(positionDateTime))
             .clearingId(EMPTY)
             .tradePrice(getTradePrice(currencyPair, participantPosition, priceScale))
-            .sellAmount(positionAmount.signum() < 0 ? formatBigDecimal(positionAmount.abs()) : EMPTY)
-            .buyAmount(positionAmount.signum() > 0 ? formatBigDecimal(positionAmount) : EMPTY)
+            .sellAmount(positionAmount.signum() < 0 ? formatBigDecimalStripZero(positionAmount.abs()) : EMPTY)
+            .buyAmount(positionAmount.signum() > 0 ? formatBigDecimalStripZero(positionAmount) : EMPTY)
             .counterpartyCode(EMPTY)
             .counterpartyType(EMPTY)
             .dsp(dsp)
