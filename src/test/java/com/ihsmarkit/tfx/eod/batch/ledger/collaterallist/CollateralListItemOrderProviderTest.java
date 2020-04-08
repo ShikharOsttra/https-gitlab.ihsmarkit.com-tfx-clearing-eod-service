@@ -6,6 +6,11 @@ import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCollateralBal
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.anEquityCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.anIssuerBankEntityBuilder;
+import static com.ihsmarkit.tfx.core.domain.Participant.CLEARING_HOUSE_CODE;
+import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.BOND;
+import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.CLEARING_DEPOSIT;
+import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARKET_ENTRY_DEPOSIT;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -27,6 +32,8 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.SecurityCodeOrderIdProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListTfxTotalKey;
 
 @ExtendWith(MockitoExtension.class)
 class CollateralListItemOrderProviderTest {
@@ -41,7 +48,7 @@ class CollateralListItemOrderProviderTest {
 
     @BeforeEach
     void init() {
-        when(participantCodeOrderIdProvider.get("BNP")).thenReturn(5);
+        lenient().when(participantCodeOrderIdProvider.get("BNP")).thenReturn(5);
     }
 
     @ParameterizedTest
@@ -49,7 +56,7 @@ class CollateralListItemOrderProviderTest {
     void shouldProvideOrderIdForOrdinaryRow(final CollateralBalanceEntity balance, final long expectedOrderId, final Integer mockOrderId) {
         lenient().when(securityCodeOrderIdProvider.get(anyString())).thenReturn(mockOrderId);
 
-        assertThat(collateralListItemOrderProvider.getOrderId(balance, LedgerConstants.ITEM_RECORD_TYPE)).isEqualTo(expectedOrderId);
+        assertThat(collateralListItemOrderProvider.getOrderId(balance, ITEM_RECORD_TYPE)).isEqualTo(expectedOrderId);
     }
 
     private static Stream<Arguments> orderIdForOrdinaryRowDataProvider() {
@@ -78,8 +85,15 @@ class CollateralListItemOrderProviderTest {
     }
 
     @Test
-    void shouldProvideOrderIdForTotalRow() {
-        final CollateralListItemTotalKey collateralListItemTotalKey = CollateralListItemTotalKey.of("BNP", "8");
-        assertThat(collateralListItemOrderProvider.getOrderId(collateralListItemTotalKey, LedgerConstants.SUBTOTAL_RECORD_TYPE)).isEqualTo(58400000000000L);
+    void shouldProvideOrderIdForParticipantTotalRow() {
+        final CollateralListParticipantTotalKey participantTotalKey = CollateralListParticipantTotalKey.of("BNP", MARKET_ENTRY_DEPOSIT);
+        assertThat(collateralListItemOrderProvider.getOrderId(participantTotalKey, LedgerConstants.SUBTOTAL_RECORD_TYPE)).isEqualTo(52400000000000L);
+    }
+
+    @Test
+    void shouldProvideOrderIdForTfxTotalRow() {
+        when(participantCodeOrderIdProvider.get(CLEARING_HOUSE_CODE)).thenReturn(8);
+        final CollateralListTfxTotalKey tfxTotalKey = CollateralListTfxTotalKey.of(CLEARING_DEPOSIT, BOND);
+        assertThat(collateralListItemOrderProvider.getOrderId(tfxTotalKey, ITEM_RECORD_TYPE)).isEqualTo(83130000000000L);
     }
 }

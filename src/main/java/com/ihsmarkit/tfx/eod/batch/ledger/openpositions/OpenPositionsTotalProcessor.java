@@ -1,50 +1,46 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.openpositions;
 
-import static com.ihsmarkit.tfx.core.domain.Participant.CLEARING_HOUSE_CODE;
+import javax.annotation.Nullable;
 
-import java.time.LocalDate;
-import java.util.Map;
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-import com.google.common.collect.Tables;
 import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
-import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TfxAndParticipantTotalProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsItem;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotal;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsParticipantTotalKey;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsTfxTotal;
 
-import lombok.RequiredArgsConstructor;
-import one.util.streamex.EntryStream;
+public class OpenPositionsTotalProcessor extends TfxAndParticipantTotalProcessor<OpenPositionsItem,
+    String, OpenPositionsTfxTotal,
+    OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> {
 
-@RequiredArgsConstructor
-public class OpenPositionsTotalProcessor implements TotalProcessor<OpenPositionsItem> {
-
-    private final MapTotalHolder<String, OpenPositionsTfxTotal> tfxTotal;
-
-    private final MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotal;
-
-    @Override
-    public OpenPositionsItem process(final OpenPositionsItem item) {
-        tfxTotal.contributeToTotals(item.getParticipantAndCurrencyPair().getCurrencyPair().getCode(), toTfxTotalValue(item));
-        if (item.getSettlementDate() != null) {
-            final OpenPositionsParticipantTotalKey participantTotalKey = toParticipantTotalKey(item);
-            final OpenPositionsParticipantTotal participantTotalValue = toParticipantTotalValue(item);
-            participantTotal.contributeToTotals(participantTotalKey, participantTotalValue);
-            participantTotal.contributeToTotals(participantTotalKey.withParticipantCode(CLEARING_HOUSE_CODE), participantTotalValue);
-        }
-        return item;
+    public OpenPositionsTotalProcessor(
+        final MapTotalHolder<String, OpenPositionsTfxTotal> tfxTotal,
+        final MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> participantTotal
+    ) {
+        super(tfxTotal, participantTotal);
     }
 
-    protected OpenPositionsParticipantTotalKey toParticipantTotalKey(final OpenPositionsItem openPositionsItem) {
+    @Nullable
+    @Override
+    protected String toTfxKey(final OpenPositionsItem item) {
+        return item.getParticipantAndCurrencyPair().getCurrencyPair().getCode();
+    }
+
+    @Nullable
+    @Override
+    protected OpenPositionsParticipantTotalKey toParticipantKey(final OpenPositionsItem openPositionsItem) {
+        if (openPositionsItem.getSettlementDate() == null) {
+            return null;
+        }
+
         return OpenPositionsParticipantTotalKey.of(
             openPositionsItem.getParticipantAndCurrencyPair().getParticipant().getCode(),
             openPositionsItem.getSettlementDate()
         );
     }
 
-    protected OpenPositionsTfxTotal toTfxTotalValue(final OpenPositionsItem openPositionsItem) {
+    @Override
+    protected OpenPositionsTfxTotal toTfxValue(final OpenPositionsItem openPositionsItem) {
         return OpenPositionsTfxTotal.builder()
             .shortPositionPreviousDay(openPositionsItem.getShortPositionPreviousDay())
             .longPositionPreviousDay(openPositionsItem.getLongPositionPreviousDay())
@@ -60,7 +56,8 @@ public class OpenPositionsTotalProcessor implements TotalProcessor<OpenPositions
             .build();
     }
 
-    protected OpenPositionsParticipantTotal toParticipantTotalValue(final OpenPositionsItem openPositionsItem) {
+    @Override
+    protected OpenPositionsParticipantTotal toParticipantValue(final OpenPositionsItem openPositionsItem) {
         return OpenPositionsParticipantTotal.builder()
             .initialMtmAmount(openPositionsItem.getInitialMtmAmount())
             .dailyMtmAmount(openPositionsItem.getDailyMtmAmount())
@@ -69,19 +66,4 @@ public class OpenPositionsTotalProcessor implements TotalProcessor<OpenPositions
             .build();
     }
 
-    public Map<String, OpenPositionsTfxTotal> getTfxTotal() {
-        return tfxTotal.getTotal();
-    }
-
-    public Table<String, LocalDate, OpenPositionsParticipantTotal> getParticipantTotal() {
-        return EntryStream.of(participantTotal.getTotal())
-            .collect(
-                Tables.toTable(
-                    entry -> entry.getKey().getParticipantCode(),
-                    entry -> entry.getKey().getSettlementDate(),
-                    Map.Entry::getValue,
-                    HashBasedTable::create
-                )
-            );
-    }
 }

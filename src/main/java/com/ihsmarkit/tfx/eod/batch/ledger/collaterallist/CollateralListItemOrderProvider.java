@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
+import static com.ihsmarkit.tfx.core.domain.Participant.CLEARING_HOUSE_CODE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +14,8 @@ import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEnti
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantCodeOrderIdProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.SecurityCodeOrderIdProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListTfxTotalKey;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,17 +52,27 @@ public class CollateralListItemOrderProvider {
         return 0;
     }
 
-    public Long getOrderId(final CollateralListItemTotalKey collateralListItemTotalKey, final int recordType) {
+    public Long getOrderId(final CollateralListTfxTotalKey totalKey, final int recordType) {
         return getOrderId(
-            collateralListItemTotalKey.getParticipantCode(),
-            collateralListItemTotalKey.getCollateralPurposeType(),
+            CLEARING_HOUSE_CODE,
+            totalKey.getPurpose().getValue(),
+            recordType,
+            totalKey.getProductType().getValue(),
+            0
+        );
+    }
+
+    public Long getOrderId(final CollateralListParticipantTotalKey totalKey, final int recordType) {
+        return getOrderId(
+            totalKey.getParticipantCode(),
+            totalKey.getPurpose().getValue(),
             recordType,
             0,
             0
         );
     }
 
-    private Long getOrderId(final String participantCode, final Object collateralPurposeType, final int recordType, final int collateralType,
+    private Long getOrderId(final String participantCode, final int collateralPurposeType, final int recordType, final int collateralType,
         final long productSpecificCode) {
         return buildOrderId(
             participantCodeOrderIdProvider.get(participantCode),

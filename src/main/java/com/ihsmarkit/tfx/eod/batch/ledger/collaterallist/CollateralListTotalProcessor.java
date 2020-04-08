@@ -1,66 +1,42 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.collaterallist;
 
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.SUBTOTAL_RECORD_TYPE;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.collaterallist.domain.CollateralListTfxTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.BigDecimalTotalValue;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TfxAndParticipantTotalProcessor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+public class CollateralListTotalProcessor extends TfxAndParticipantTotalProcessor<CollateralListItem,
+    CollateralListTfxTotalKey, BigDecimalTotalValue,
+    CollateralListParticipantTotalKey, BigDecimalTotalValue> {
 
-import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
-import com.ihsmarkit.tfx.eod.batch.ledger.AbstractTotalProcessor;
-import com.ihsmarkit.tfx.eod.model.ledger.CollateralListItem;
-
-import lombok.RequiredArgsConstructor;
-import one.util.streamex.EntryStream;
-
-@StepScope
-@Component
-@RequiredArgsConstructor
-public class CollateralListTotalProcessor extends
-    AbstractTotalProcessor<CollateralListItemTotalKey, BigDecimal, CollateralBalanceEntity, CollateralListItem<BigDecimal>, CollateralListItem<String>> {
-
-    @Value("#{jobParameters['businessDate']}")
-    private final LocalDate businessDate;
-
-    private final CollateralListItemOrderProvider collateralListItemOrderProvider;
-
-    @Override
-    protected CollateralListItemTotalKey toTotalKey(final CollateralListItem<BigDecimal> collateralListItem) {
-        return CollateralListItemTotalKey.of(
-            collateralListItem.getParticipantCode(),
-            collateralListItem.getCollateralPurposeType()
-        );
+    public CollateralListTotalProcessor(
+        final MapTotalHolder<CollateralListTfxTotalKey, BigDecimalTotalValue> tfxTotal,
+        final MapTotalHolder<CollateralListParticipantTotalKey, BigDecimalTotalValue> participantTotal
+    ) {
+        super(tfxTotal, participantTotal);
     }
 
     @Override
-    protected BigDecimal toTotalValue(final CollateralListItem<BigDecimal> collateralListItem) {
-        return collateralListItem.getEvaluatedAmount();
+    protected CollateralListTfxTotalKey toTfxKey(final CollateralListItem item) {
+        return CollateralListTfxTotalKey.of(item.getBalance().getPurpose(), item.getBalance().getProduct().getType());
     }
 
     @Override
-    protected BigDecimal merge(final BigDecimal prev, final BigDecimal stepContribution) {
-        return prev.add(stepContribution);
+    protected BigDecimalTotalValue toTfxValue(final CollateralListItem item) {
+        return BigDecimalTotalValue.of(item.getEvaluatedAmount());
     }
 
     @Override
-    protected List<CollateralListItem<String>> extractTotals(final Map<CollateralListItemTotalKey, BigDecimal> totals) {
-        return EntryStream.of(totals)
-            .mapKeyValue((collateralListItemTotalKey, amount) ->
-                CollateralListItem.<String>builder()
-                    .businessDate(businessDate)
-                    .participantCode(collateralListItemTotalKey.getParticipantCode())
-                    .collateralPurpose(TOTAL)
-                    .evaluatedAmount(amount.toString())
-                    .orderId(collateralListItemOrderProvider.getOrderId(collateralListItemTotalKey, SUBTOTAL_RECORD_TYPE))
-                    .recordType(SUBTOTAL_RECORD_TYPE)
-                    .build()
-            )
-            .toList();
+    protected CollateralListParticipantTotalKey toParticipantKey(final CollateralListItem item) {
+        return CollateralListParticipantTotalKey.of(item.getBalance().getParticipant().getCode(), item.getBalance().getPurpose());
     }
+
+    @Override
+    protected BigDecimalTotalValue toParticipantValue(final CollateralListItem item) {
+        return BigDecimalTotalValue.of(item.getEvaluatedAmount());
+    }
+
 }
