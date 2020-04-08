@@ -1,6 +1,7 @@
 <dataset>
     <participant id="101" code="P11" name="Party_123" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
     <participant id="102" code="P22" name="Party_422" type="LIQUIDITY_PROVIDER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <participant id="103" code="CLHS" name="Clearing House" type="CLEARING_HOUSE" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
 
     <currency_pair id="1" base_ccy="USD" value_ccy="JPY"/>
     <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
