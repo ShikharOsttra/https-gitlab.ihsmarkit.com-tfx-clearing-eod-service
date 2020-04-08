@@ -89,13 +89,13 @@ public class CollateralListLedgerConfig {
     @Bean
     @StepScope
     MapTotalHolder<CollateralListTfxTotalKey, BigDecimalTotalValue> collateralListTfxTotalHolder() {
-        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY);
+        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY, false);
     }
 
     @Bean
     @StepScope
     MapTotalHolder<CollateralListParticipantTotalKey, BigDecimalTotalValue> collateralListParticipantTotalHolder() {
-        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY);
+        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY, false);
     }
 
     @Bean

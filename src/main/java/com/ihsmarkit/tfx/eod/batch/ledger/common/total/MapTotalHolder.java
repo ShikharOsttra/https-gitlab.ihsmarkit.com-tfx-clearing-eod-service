@@ -1,26 +1,21 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.common.total;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamSupport;
+import javax.annotation.Nullable;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.Getter;
 
 @SuppressFBWarnings("NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
-public class MapTotalHolder<K extends Serializable, V extends TotalValue<V>> extends ItemStreamSupport implements TotalHolder<Map<K, V>> {
+public class MapTotalHolder<K extends Serializable, V extends TotalValue<V>> extends AbstractTotalHolder<ConcurrentMap<K, V>> {
 
-    private static final String KEY = "total";
-
-    @Getter
     private ConcurrentMap<K, V> total;
 
-    public MapTotalHolder(final String name) {
-        setName(name);
+    public MapTotalHolder(final String name, final boolean saveState) {
+        super(name, saveState);
     }
 
     public void contributeToTotals(final K key, final V totalContribution) {
@@ -28,22 +23,12 @@ public class MapTotalHolder<K extends Serializable, V extends TotalValue<V>> ext
     }
 
     @Override
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
-    public void open(final ExecutionContext executionContext) {
-        if (executionContext.containsKey(getExecutionContextKey(KEY))) {
-            total = (ConcurrentMap<K, V>) executionContext.get(getExecutionContextKey(KEY));
-        } else {
-            total = new ConcurrentHashMap<>();
-        }
+    protected void initValue(@Nullable final ConcurrentMap<K, V> value) {
+        total = Objects.requireNonNullElseGet(value, ConcurrentHashMap::new);
     }
 
     @Override
-    public void update(final ExecutionContext executionContext) {
-        executionContext.put(getExecutionContextKey(KEY), total);
-    }
-
-    @Override
-    public Map<K, V> get() {
+    public ConcurrentMap<K, V> get() {
         return total;
     }
 }
