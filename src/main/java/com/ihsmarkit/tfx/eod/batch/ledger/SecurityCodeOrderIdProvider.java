@@ -18,6 +18,6 @@ public class SecurityCodeOrderIdProvider extends OrderIdProvider {
 
     @Override
     public Stream<String> loadDataStream() {
-        return securityCollateralProductRepository.findAllSecurityCodes().stream();
+        return securityCollateralProductRepository.findAllSecurityCodes().stream().sorted();
     }
 }
