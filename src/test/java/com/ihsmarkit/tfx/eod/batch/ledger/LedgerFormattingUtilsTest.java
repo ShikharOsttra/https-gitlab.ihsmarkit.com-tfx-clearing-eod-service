@@ -107,4 +107,9 @@ class LedgerFormattingUtilsTest {
     void shouldFormatBigDecimalStripZero(final BigDecimal passed, final String expected) {
         assertThat(LedgerFormattingUtils.formatBigDecimalStripZero(passed)).isEqualTo(expected);
     }
+
+    @Test
+    void shouldFormatYearMonth() {
+        assertThat(LedgerFormattingUtils.formatYearMonth(LocalDate.of(2020, 4, 9))).isEqualTo("2020/04");
+    }
 }

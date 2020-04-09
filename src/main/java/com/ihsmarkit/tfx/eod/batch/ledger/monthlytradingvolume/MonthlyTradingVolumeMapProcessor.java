@@ -5,9 +5,9 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.ITEM_RECORD_TYP
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TFX_TOTAL;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatYearMonth;
 import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 
@@ -92,7 +92,7 @@ public class MonthlyTradingVolumeMapProcessor implements ItemProcessor<MonthlyTr
 
         return MonthlyTradingVolumeWriteItem.builder()
             .businessDate(businessDate.with(firstDayOfMonth()))
-            .tradeDate(formatDate(businessDate))
+            .tradeDate(formatYearMonth(businessDate))
             .recordDate(formatDateTime(recordDate))
             .participantCode(participantCode)
             .currencyPairCode(currencyPairCode)
