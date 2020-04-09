@@ -28,6 +28,7 @@ public class LedgerFormattingUtils {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     private static final DateTimeFormatter MONTH_DAY_FORMATTER = DateTimeFormatter.ofPattern("MM/dd");
+    private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public static String formatDate(@Nullable final LocalDate date) {
@@ -44,6 +45,10 @@ public class LedgerFormattingUtils {
 
     public static String formatMonthDay(@Nullable final MonthDay monthDay) {
         return safeFormat(monthDay, MONTH_DAY_FORMATTER::format);
+    }
+
+    public static String formatYearMonth(@Nullable final LocalDate date) {
+        return safeFormat(date, YEAR_MONTH_FORMATTER::format);
     }
 
     public static String formatEnum(@Nullable final Enum<?> enumValue) {
