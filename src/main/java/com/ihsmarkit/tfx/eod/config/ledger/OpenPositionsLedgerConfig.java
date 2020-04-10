@@ -85,13 +85,13 @@ public class OpenPositionsLedgerConfig {
     @Bean
     @StepScope
     MapTotalHolder<String, OpenPositionsTfxTotal> openPositionTfxTotalHolder() {
-        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY);
+        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY, false);
     }
 
     @Bean
     @StepScope
     MapTotalHolder<OpenPositionsParticipantTotalKey, OpenPositionsParticipantTotal> openPositionParticipantTotalHolder() {
-        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY);
+        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY, false);
     }
 
     @Bean

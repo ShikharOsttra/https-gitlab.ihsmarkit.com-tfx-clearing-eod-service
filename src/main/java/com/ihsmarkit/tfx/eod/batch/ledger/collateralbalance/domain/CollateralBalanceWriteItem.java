@@ -1,17 +1,17 @@
-package com.ihsmarkit.tfx.eod.model.ledger;
+package com.ihsmarkit.tfx.eod.batch.ledger.collateralbalance.domain;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
 
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.Value;
 
-@Getter
+@Value
 @Builder
 @SuppressWarnings("PMD.TooManyFields")
-public class CollateralBalanceItem {
+public class CollateralBalanceWriteItem {
 
     @NonNull
     private final LocalDate businessDate;

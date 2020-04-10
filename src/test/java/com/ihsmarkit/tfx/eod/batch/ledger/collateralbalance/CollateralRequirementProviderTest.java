@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +46,11 @@ class CollateralRequirementProviderTest {
                 .build()
             ));
 
-        assertThat(collateralRequirementProvider.getRequiredAmount(11L, MARGIN)).get().isEqualTo(BigDecimal.TEN);
+        assertThat(collateralRequirementProvider.getRequiredAmount(11L)).containsOnly(Map.entry(MARGIN, BigDecimal.TEN));
     }
 
     @Test
-    void shouldReturnNextApplicableDateForClearingDeposit() {
+    void shouldReturnNextClearingDeposit() {
         final BigDecimal nextValue = BigDecimal.TEN;
         final LocalDate applicableDate = LocalDate.of(2019, 10, 10);
 
@@ -67,7 +68,7 @@ class CollateralRequirementProviderTest {
                     .build()
             ));
 
-        assertThat(collateralRequirementProvider.getNextClearingDepositRequiredAmount(11L)).get().isEqualTo(Pair.of(applicableDate, nextValue));
+        assertThat(collateralRequirementProvider.getNextClearingDeposit(11L)).get().isEqualTo(Pair.of(applicableDate, nextValue));
     }
 
 

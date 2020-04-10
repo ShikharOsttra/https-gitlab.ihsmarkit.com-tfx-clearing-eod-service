@@ -1,6 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalStripZero;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -82,7 +83,7 @@ public class NETTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .dsp(formatBigDecimal(dailySettlementPriceService.getPrice(businessDate, currencyPair), priceScale))
             .dailyMtMAmount(EMPTY)
             .swapPoint(EMPTY)
-            .outstandingPositionAmount(formatBigDecimal(getSODNextDayAmount(participant, currencyPair)))
+            .outstandingPositionAmount(formatBigDecimalStripZero(getSODNextDayAmount(participant, currencyPair)))
             .settlementDate(EMPTY)
             .tradeId(EMPTY)
             .reference(EMPTY)
