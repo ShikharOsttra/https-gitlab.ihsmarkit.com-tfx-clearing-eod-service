@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.TaskExecutor;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETTransactionDiaryLedgerProcessor;
@@ -34,6 +35,8 @@ public class TransactionDiaryLedgerConfig {
 
     @Value("${eod.ledger.transaction.diary.chunk.size:1000}")
     private final int transactionDiaryChunkSize;
+    @Value("${eod.ledger.transaction.diary.concurrency.limit:1}")
+    private final int transactionDiaryConcurrencyLimit;
     @Value("classpath:/ledger/sql/eod_ledger_transaction_diary_insert.sql")
     private final Resource transactionDiaryLedgerSql;
 
@@ -43,6 +46,11 @@ public class TransactionDiaryLedgerConfig {
 
     private final TradeListQueryProvider tradeListQueryProvider;
     private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
+
+    @Bean
+    TaskExecutor transactionDiaryTaskExecutor() {
+        return ledgerStepFactory.taskExecutor(transactionDiaryConcurrencyLimit);
+    }
 
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
     Flow transactionDiaryLedger() {
@@ -54,12 +62,13 @@ public class TransactionDiaryLedgerConfig {
     }
 
     @Bean(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    Step tradeTransactionDiaryLedger() {
+    Step tradeTransactionDiaryLedger()  {
         return getStep(
             TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME,
             transactionDiaryReader(tradeListQueryProvider, false),
             tradeTransactionDiaryLedgerProcessor,
-            transactionDiaryWriter()
+            transactionDiaryWriter(),
+            transactionDiaryTaskExecutor()
         );
     }
 
@@ -69,7 +78,8 @@ public class TransactionDiaryLedgerConfig {
             SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME,
             transactionDiaryReader(participantAndCurrencyPairQueryProvider, true),
             sodTransactionDiaryLedgerProcessor,
-            transactionDiaryWriter()
+            transactionDiaryWriter(),
+            transactionDiaryTaskExecutor()
         );
     }
 
@@ -79,7 +89,8 @@ public class TransactionDiaryLedgerConfig {
             NET_TRANSACTION_DIARY_LEDGER_STEP_NAME,
             transactionDiaryReader(participantAndCurrencyPairQueryProvider, true),
             netTransactionDiaryLedgerProcessor,
-            transactionDiaryWriter()
+            transactionDiaryWriter(),
+            transactionDiaryTaskExecutor()
         );
     }
 
@@ -92,12 +103,14 @@ public class TransactionDiaryLedgerConfig {
         final String transactionDiaryLedgerStepName,
         final ItemReader<T> tradeEntityItemReader,
         final ItemProcessor<T, O> transactionDiaryLedgerProcessor,
-        final ItemWriter<O> writer
+        final ItemWriter<O> writer,
+        final TaskExecutor taskExecutor
     ) {
         return ledgerStepFactory.<T, O>stepBuilder(transactionDiaryLedgerStepName, transactionDiaryChunkSize)
             .reader(tradeEntityItemReader)
             .processor(transactionDiaryLedgerProcessor)
             .writer(writer)
+            .taskExecutor(taskExecutor)
             .build();
     }
 
