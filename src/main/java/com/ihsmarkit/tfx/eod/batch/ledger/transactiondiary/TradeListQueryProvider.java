@@ -7,7 +7,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
-@JobScope
+@StepScope
 public class TradeListQueryProvider extends AbstractJpaQueryProvider {
 
     @Value("#{jobParameters['businessDate']}")
