@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,7 +103,7 @@ class Eod2JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender).sendAlert(EodLedgerGenerationCompletedAlert.of(currentDateTime));
+        inOrder.verify(alertSender).sendAlert(EodLedgerGenerationCompletedAlert.of(currentDateTime, Set.of("P11", "P22", "P23", "CLHS")));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
     }
 
