@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.ihsmarkit.tfx.eod.batch.CashCollateralBalanceUpdateTasklet;
+import com.ihsmarkit.tfx.eod.config.listeners.CashSettlementAlertSender;
 
 import lombok.AllArgsConstructor;
 
@@ -24,6 +25,8 @@ public class CashCollateralBalanceUpdateJobConfig {
 
     private final CashCollateralBalanceUpdateTasklet cashCollateralBalanceUpdateTasklet;
 
+    private final CashSettlementAlertSender cashSettlementAlertSender;
+
     @Bean(name = CASH_BALANCE_UPDATE_BATCH_JOB_NAME)
     public Job cashBalanceUpdateJob() {
         return jobs.get(CASH_BALANCE_UPDATE_BATCH_JOB_NAME)
@@ -33,6 +36,7 @@ public class CashCollateralBalanceUpdateJobConfig {
 
     private Step cashBalanceUpdate() {
         return steps.get(CASH_BALANCE_UPDATE_STEP_NAME)
+            .listener(cashSettlementAlertSender.listener())
             .tasklet(cashCollateralBalanceUpdateTasklet)
             .build();
     }

@@ -23,8 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.ihsmarkit.tfx.alert.client.domain.MarginCashSettlementFailedAlert;
-import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
@@ -40,7 +38,6 @@ import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotification
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 
-import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,40 +71,34 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     private final SystemEventNotificationSender systemEventNotificationSender;
 
-    private final AlertSender alertSender;
-
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-        Try.run(() -> {
-            final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
-            log.info("[var-cash-settlement] starting for trade date: {} on business date: {}", previousTradingDate, businessDate);
+        final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
+        log.info("[var-cash-settlement] starting for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
-            final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
-            log.info("[var-cash-settlement] found: {} actionable cash settlements for trade date: {}", margins.size(), previousTradingDate);
+        final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
+        log.info("[var-cash-settlement] found: {} actionable cash settlements for trade date: {}", margins.size(), previousTradingDate);
 
-            final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
-                collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(
-                    margins.stream().map(EodCashSettlementEntity::getParticipant).collect(Collectors.toSet()),
-                    MARGIN,
-                    CASH
-                ).collect(Collectors.toMap(CollateralBalanceEntity::getParticipant, Function.identity()));
+        final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
+            collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(
+                margins.stream().map(EodCashSettlementEntity::getParticipant).collect(Collectors.toSet()),
+                MARGIN,
+                CASH
+            ).collect(Collectors.toMap(CollateralBalanceEntity::getParticipant, Function.identity()));
 
-            final Map<Boolean, List<Pair<EodCashSettlementEntity, CollateralBalanceEntity>>> separated = margins.stream()
-                .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
-                .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
+        final Map<Boolean, List<Pair<EodCashSettlementEntity, CollateralBalanceEntity>>> separated = margins.stream()
+            .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
+            .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
 
-            collateralBalanceRepository.deleteAll(separated.get(Boolean.TRUE).stream().map(Pair::getRight)::iterator);
-            collateralBalanceRepository.saveAll(separated.get(Boolean.FALSE).stream().map(this::adjustAmount)::iterator);
+        collateralBalanceRepository.deleteAll(separated.get(Boolean.TRUE).stream().map(Pair::getRight)::iterator);
+        collateralBalanceRepository.saveAll(separated.get(Boolean.FALSE).stream().map(this::adjustAmount)::iterator);
 
-            eodCashBalanceAdjustmentRepository.saveAll(margins.stream().map(this::mapToAdjustment)::iterator);
+        eodCashBalanceAdjustmentRepository.saveAll(margins.stream().map(this::mapToAdjustment)::iterator);
 
-            margins.stream()
-                .map(entity -> entity.getParticipant().getCode())
-                .forEach(this::publishCollateralUpdateNotification);
-            log.info("[var-cash-settlement] completed for trade date: {} on business date: {}", previousTradingDate, businessDate);
-        })
-            .onFailure(failure -> alertSender.sendAlert(MarginCashSettlementFailedAlert.of(clockService.getCurrentDateTimeUTC(), businessDate)))
-            .get();
+        margins.stream()
+            .map(entity -> entity.getParticipant().getCode())
+            .forEach(this::publishCollateralUpdateNotification);
+        log.info("[var-cash-settlement] completed for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         return RepeatStatus.FINISHED;
     }
