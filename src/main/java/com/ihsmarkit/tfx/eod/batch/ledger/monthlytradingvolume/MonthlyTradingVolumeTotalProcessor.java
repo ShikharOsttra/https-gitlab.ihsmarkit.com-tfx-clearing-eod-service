@@ -1,82 +1,42 @@
 package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume;
 
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_RECORD_TYPE;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL;
-import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TOTAL_RECORD_TYPE;
-import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+import javax.annotation.Nullable;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.ihsmarkit.tfx.eod.batch.ledger.AbstractTotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TfxAndParticipantTotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.domain.MonthlyTradingVolumeItem;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.domain.MonthlyTradingVolumeParticipantTotalKey;
 import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
-import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
-import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
 
-import lombok.RequiredArgsConstructor;
-import one.util.streamex.EntryStream;
+public class MonthlyTradingVolumeTotalProcessor extends TfxAndParticipantTotalProcessor<MonthlyTradingVolumeItem,
+    String, BuySellAmounts,
+    MonthlyTradingVolumeParticipantTotalKey, BuySellAmounts> {
 
-@StepScope
-@Component
-@RequiredArgsConstructor
-public class MonthlyTradingVolumeTotalProcessor
-    extends AbstractTotalProcessor<String, BuySellAmounts, ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<BigDecimal>, MonthlyTradingVolumeItem<String>> {
+    public MonthlyTradingVolumeTotalProcessor(
+        final MapTotalHolder<String, BuySellAmounts> tfxTotal,
+        final MapTotalHolder<MonthlyTradingVolumeParticipantTotalKey, BuySellAmounts> participantTotal) {
+        super(tfxTotal, participantTotal);
+    }
 
-    @Value("#{jobParameters['businessDate']}")
-    private final LocalDate businessDate;
-
+    @Nullable
     @Override
-    protected String toTotalKey(final MonthlyTradingVolumeItem<BigDecimal> monthlyTradingVolumeItem) {
-        return monthlyTradingVolumeItem.getParticipantCode();
+    protected String toTfxKey(final MonthlyTradingVolumeItem item) {
+        return item.getParticipantAndCurrencyPair().getCurrencyPair().getCode();
     }
 
     @Override
-    protected BuySellAmounts toTotalValue(final MonthlyTradingVolumeItem<BigDecimal> monthlyTradingVolumeItem) {
-        return BuySellAmounts.of(monthlyTradingVolumeItem.getBuyTradingVolumeInUnit(), monthlyTradingVolumeItem.getSellTradingVolumeInUnit());
+    protected BuySellAmounts toTfxValue(final MonthlyTradingVolumeItem item) {
+        return item.getBuySellAmounts();
+    }
+
+    @Nullable
+    @Override
+    protected MonthlyTradingVolumeParticipantTotalKey toParticipantKey(final MonthlyTradingVolumeItem item) {
+        return MonthlyTradingVolumeParticipantTotalKey.of(item.getParticipantAndCurrencyPair().getParticipant().getCode());
     }
 
     @Override
-    protected BuySellAmounts merge(final BuySellAmounts prev, final BuySellAmounts stepContribution) {
-        return prev.add(stepContribution);
-    }
-
-    @Override
-    protected List<MonthlyTradingVolumeItem<String>> extractTotals(final Map<String, BuySellAmounts> totals) {
-        final BuySellAmounts totalOfTotals = totals.values().stream()
-            .reduce(BuySellAmounts.empty(), BuySellAmounts::add);
-
-        return EntryStream.of(totals)
-            .mapKeyValue((participantCode, buySellAmounts) ->
-                MonthlyTradingVolumeItem.<String>builder()
-                    .businessDate(businessDate.with(firstDayOfMonth()))
-                    .participantCode(participantCode)
-                    .currencyPairCode(TOTAL)
-
-                    .sellTradingVolumeInUnit(buySellAmounts.getSell().toString())
-                    .buyTradingVolumeInUnit(buySellAmounts.getBuy().toString())
-
-                    .orderId(Long.MAX_VALUE)
-                    .recordType(PARTICIPANT_TOTAL_RECORD_TYPE)
-                    .build()
-            )
-            .append(
-                MonthlyTradingVolumeItem.<String>builder()
-                    .businessDate(businessDate.with(firstDayOfMonth()))
-                    .currencyPairCode(TOTAL)
-
-                    .sellTradingVolumeInUnit(totalOfTotals.getSell().toString())
-                    .buyTradingVolumeInUnit(totalOfTotals.getBuy().toString())
-
-                    .orderId(Long.MAX_VALUE)
-                    .recordType(TOTAL_RECORD_TYPE)
-                    .build()
-            )
-            .toList();
+    protected BuySellAmounts toParticipantValue(final MonthlyTradingVolumeItem item) {
+        return item.getBuySellAmounts();
     }
 }

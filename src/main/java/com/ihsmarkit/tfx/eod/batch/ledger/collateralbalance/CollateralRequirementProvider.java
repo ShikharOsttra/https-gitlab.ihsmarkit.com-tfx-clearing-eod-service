@@ -55,11 +55,11 @@ public class CollateralRequirementProvider {
             ));
     }
 
-    public Optional<BigDecimal> getRequiredAmount(final Long participantId, final CollateralPurpose purpose) {
-        return Optional.ofNullable(requiredAmounts.get().get(participantId, purpose));
+    public Map<CollateralPurpose, BigDecimal> getRequiredAmount(final Long participantId) {
+        return requiredAmounts.get().row(participantId);
     }
 
-    public Optional<Pair<LocalDate, BigDecimal>> getNextClearingDepositRequiredAmount(final Long participantId) {
+    public Optional<Pair<LocalDate, BigDecimal>> getNextClearingDeposit(final Long participantId) {
         return Optional.ofNullable(nextClearingDepositRequiredAmount.get().get(participantId));
     }
 

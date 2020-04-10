@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.config.ledger;
 
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.PARTICIPANT_TOTAL_CONTEXT_KEY;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerConstants.TFX_TOTAL_CONTEXT_KEY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME;
 import static java.lang.Boolean.FALSE;
@@ -19,11 +21,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.ParticipantAndCurrencyPairQueryProvider;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.MapTotalHolder;
+import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TotalWriterListener;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
-import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeInputProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeMapProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.MonthlyTradingVolumeTotalProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.domain.MonthlyTradingVolumeParticipantTotalKey;
+import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.domain.MonthlyTradingVolumeWriteItem;
+import com.ihsmarkit.tfx.eod.model.BuySellAmounts;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
-import com.ihsmarkit.tfx.eod.model.ledger.MonthlyTradingVolumeItem;
 
 import lombok.AllArgsConstructor;
 
@@ -37,8 +44,8 @@ public class MonthlyTradingVolumeLedgerConfig {
     @Value("${eod.ledger.monthly.trading.volume.chunk.size:1000}")
     private final int monthlyTradingVolumeChunkSize;
     private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
-    private final MonthlyTradingVolumeProcessor monthlyTradingVolumeProcessor;
-    private final MonthlyTradingVolumeTotalProcessor monthlyTradingVolumeTotalProcessor;
+    private final MonthlyTradingVolumeMapProcessor mapProcessor;
+    private final MonthlyTradingVolumeInputProcessor inputProcessor;
     private final LastTradingDateInMonthDecider lastTradingDateInMonthDecider;
 
     @Bean(MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME)
@@ -51,11 +58,14 @@ public class MonthlyTradingVolumeLedgerConfig {
 
     @Bean(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME)
     Step monthlyTradingVolumeLedger() {
-        return ledgerStepFactory.<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<String>>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME,
+        return ledgerStepFactory.<ParticipantAndCurrencyPair, MonthlyTradingVolumeWriteItem>stepBuilder(MONTHLY_TRADING_VOLUME_LEDGER_STEP_NAME,
             monthlyTradingVolumeChunkSize)
             .reader(monthlyTradingVolumeReader())
             .processor(monthlyTradingVolumeItemProcessor())
             .writer(monthlyTradingVolumeWriter())
+            .stream(monthlyTradingVolumeTfxTotalHolder())
+            .stream(monthlyTradingVolumeParticipantTotalHolder())
+            .listener(monthlyTradingVolumeTotalWriterListener())
             .build();
     }
 
@@ -68,36 +78,46 @@ public class MonthlyTradingVolumeLedgerConfig {
 
     @Bean
     @StepScope
-    ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeItem<String>> monthlyTradingVolumeItemProcessor() {
-        return monthlyTradingVolumeTotalProcessor.wrapItemProcessor(
-            monthlyTradingVolumeProcessor,
-            monthlyTradingVolumeItem ->
-                MonthlyTradingVolumeItem.<String>builder()
-                    .businessDate(monthlyTradingVolumeItem.getBusinessDate())
-                    .tradeDate(monthlyTradingVolumeItem.getTradeDate())
-                    .recordDate(monthlyTradingVolumeItem.getRecordDate())
-                    .participantCode(monthlyTradingVolumeItem.getParticipantCode())
-                    .participantName(monthlyTradingVolumeItem.getParticipantName())
-                    .participantType(monthlyTradingVolumeItem.getParticipantType())
-                    .currencyPairNumber(monthlyTradingVolumeItem.getCurrencyPairNumber())
-                    .currencyPairCode(monthlyTradingVolumeItem.getCurrencyPairCode())
-                    .recordType(monthlyTradingVolumeItem.getRecordType())
-                    .orderId(monthlyTradingVolumeItem.getOrderId())
-
-                    .buyTradingVolumeInUnit(monthlyTradingVolumeItem.getBuyTradingVolumeInUnit().toString())
-                    .sellTradingVolumeInUnit(monthlyTradingVolumeItem.getSellTradingVolumeInUnit().toString())
-                    .build()
+    ItemProcessor<ParticipantAndCurrencyPair, MonthlyTradingVolumeWriteItem> monthlyTradingVolumeItemProcessor() {
+        return LedgerStepFactory.compositeProcessor(
+            inputProcessor,
+            monthlyTradingVolumeTotalProcessor(),
+            mapProcessor
         );
     }
 
     @Bean
     @StepScope
-    ItemWriter<MonthlyTradingVolumeItem<String>> monthlyTradingVolumeWriter() {
-        return monthlyTradingVolumeTotalProcessor.wrapItemWriter(monthlyTradingVolumeJdbcWriter());
+    MonthlyTradingVolumeTotalProcessor monthlyTradingVolumeTotalProcessor() {
+        return new MonthlyTradingVolumeTotalProcessor(
+            monthlyTradingVolumeTfxTotalHolder(),
+            monthlyTradingVolumeParticipantTotalHolder()
+        );
     }
 
     @Bean
-    ItemWriter<MonthlyTradingVolumeItem<String>> monthlyTradingVolumeJdbcWriter() {
+    @StepScope
+    MapTotalHolder<String, BuySellAmounts> monthlyTradingVolumeTfxTotalHolder() {
+        return new MapTotalHolder<>(TFX_TOTAL_CONTEXT_KEY, false);
+    }
+
+    @Bean
+    @StepScope
+    MapTotalHolder<MonthlyTradingVolumeParticipantTotalKey, BuySellAmounts> monthlyTradingVolumeParticipantTotalHolder() {
+        return new MapTotalHolder<>(PARTICIPANT_TOTAL_CONTEXT_KEY, false);
+    }
+
+    @Bean
+    TotalWriterListener<MonthlyTradingVolumeWriteItem> monthlyTradingVolumeTotalWriterListener() {
+        return new TotalWriterListener<>(
+            monthlyTradingVolumeTfxTotalHolder(), mapProcessor::mapTfxTotal,
+            monthlyTradingVolumeParticipantTotalHolder(), mapProcessor::mapParticipantTotal,
+            monthlyTradingVolumeWriter()
+        );
+    }
+
+    @Bean
+    ItemWriter<MonthlyTradingVolumeWriteItem> monthlyTradingVolumeWriter() {
         return ledgerStepFactory.listWriter(monthlyTradingVolumeLedgerSql);
     }
 }
