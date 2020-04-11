@@ -20,6 +20,7 @@ import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.RecordDateSetter;
@@ -77,8 +78,8 @@ public class LedgerStepFactory {
     }
 
     TaskExecutor taskExecutor(final int concurrencyLimit) {
-        final SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
-        taskExecutor.setConcurrencyLimit(concurrencyLimit);
+        final ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setMaxPoolSize(concurrencyLimit);
         return taskExecutor;
     }
 

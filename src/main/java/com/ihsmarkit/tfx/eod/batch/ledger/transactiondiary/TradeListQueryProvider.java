@@ -9,6 +9,7 @@ import javax.persistence.criteria.Root;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
+import org.springframework.batch.item.database.orm.HibernateQueryProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
