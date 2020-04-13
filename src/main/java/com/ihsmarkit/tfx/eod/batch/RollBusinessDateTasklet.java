@@ -11,10 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
-import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
-import com.ihsmarkit.tfx.core.domain.eod.EodStage;
-import com.ihsmarkit.tfx.core.domain.notification.system.EodEventNotification;
-import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.FutureValueService;
@@ -35,11 +31,7 @@ public class RollBusinessDateTasklet implements Tasklet {
 
     private final SystemParameterRepository systemParameterRepository;
 
-    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
-
     private final FutureValueService futureValueService;
-
-    private final SystemEventNotificationSender systemEventNotificationSender;
 
     private final CalendarDatesProvider calendarDatesProvider;
 
@@ -51,11 +43,6 @@ public class RollBusinessDateTasklet implements Tasklet {
         futureValueService.rollFutureValues(this.businessDate, nextBusinessDate);
 
         systemParameterRepository.setParameter(SystemParameters.BUSINESS_DATE, nextBusinessDate);
-
-        systemEventNotificationSender.send(EodEventNotification.builder()
-            .businessDate(nextBusinessDate)
-            .eodStage(EodStage.ROLL_BUSINESS_DATE_COMPLETED)
-            .build());
 
         return RepeatStatus.FINISHED;
     }
