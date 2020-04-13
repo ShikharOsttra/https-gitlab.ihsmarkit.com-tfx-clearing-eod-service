@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.data.util.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@StepScope
+@JobScope
 @RequiredArgsConstructor
 @Getter(AccessLevel.PRIVATE)
 public class FXSpotProductService {

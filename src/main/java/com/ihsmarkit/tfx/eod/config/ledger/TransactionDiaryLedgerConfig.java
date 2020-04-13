@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -60,7 +61,7 @@ public class TransactionDiaryLedgerConfig {
 
     @Bean
     TaskExecutor transactionDiaryTaskExecutor() {
-        return ledgerStepFactory.taskExecutor(transactionDiaryConcurrencyLimit);
+        return new SyncTaskExecutor();
     }
 
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)

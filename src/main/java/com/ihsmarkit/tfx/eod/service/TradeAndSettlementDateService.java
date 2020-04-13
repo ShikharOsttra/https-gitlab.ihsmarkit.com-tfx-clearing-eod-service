@@ -3,7 +3,7 @@ package com.ihsmarkit.tfx.eod.service;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@StepScope
+@JobScope
 @RequiredArgsConstructor
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class TradeAndSettlementDateService {

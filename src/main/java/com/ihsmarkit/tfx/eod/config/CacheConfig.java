@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.config;
 
-import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -22,7 +22,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     public static final String JPY_RATES_CACHE = "joyRatesCache";
 
     @Bean
-    @StepScope
+    @JobScope
     public CacheManager jobCacheManager() {
         return new ConcurrentMapCacheManager(
             NEXT_TRADE_DATES_CACHE,
@@ -35,7 +35,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     }
 
     @Bean
-    @StepScope
+    @JobScope
     @Override
     public CacheResolver cacheResolver() {
         return new SimpleCacheResolver(jobCacheManager());
