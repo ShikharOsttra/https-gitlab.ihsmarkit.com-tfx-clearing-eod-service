@@ -20,6 +20,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +54,7 @@ public class EodFailedStepAlertSender {
         };
     }
 
-    @SuppressWarnings("checkstyle:AnonInnerLength")
+    @SuppressWarnings({ "checkstyle:AnonInnerLength", "PMD.ConfusingTernary" })
     public StepExecutionListener rebalancingProcessFailedListener() {
         return new AlertSenderStepListener() {
             @Override
@@ -81,6 +82,7 @@ public class EodFailedStepAlertSender {
     }
 
     @Nullable
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
     private static Throwable findCauseByType(final List<Throwable> stepExceptions, final Class<? extends Throwable> wantedException) {
         return stepExceptions.stream()
             .filter(wantedException::isInstance)

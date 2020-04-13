@@ -67,6 +67,7 @@ public class NettingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
         final Map<Boolean, List<TradeOrPositionEssentials>> allNovatedTradesGroupedByScope = novatedTrades

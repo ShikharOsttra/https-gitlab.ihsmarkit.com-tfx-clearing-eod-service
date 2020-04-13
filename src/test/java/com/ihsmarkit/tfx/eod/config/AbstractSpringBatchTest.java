@@ -60,7 +60,4 @@ public abstract class AbstractSpringBatchTest {
     @MockBean
     protected AlertSender alertSender;
 
-    @Autowired
-    protected EodFailedStepAlertSender eodFailedStepAlertSender;
-
 }

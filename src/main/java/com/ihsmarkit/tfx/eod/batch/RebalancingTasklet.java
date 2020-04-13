@@ -133,7 +133,6 @@ public class RebalancingTasklet implements Tasklet {
             ));
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
-
         publishingService.publishTrades(businessDate, trades);
 
         return RepeatStatus.FINISHED;
