@@ -32,7 +32,6 @@ import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -62,9 +61,6 @@ class Eod1JobIntegrationTest {
     @MockBean
     private AlertSender alertSender;
 
-    @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
-
     @Test
     @DatabaseSetup({ "/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml" })
     @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
@@ -81,5 +77,6 @@ class Eod1JobIntegrationTest {
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod1StartAlert.of(currentDateTime, businessDate));
         inOrder.verify(alertSender).sendAlert(Eod1CompletedAlert.of(currentDateTime, businessDate));
+        inOrder.verifyNoMoreInteractions();
     }
 }

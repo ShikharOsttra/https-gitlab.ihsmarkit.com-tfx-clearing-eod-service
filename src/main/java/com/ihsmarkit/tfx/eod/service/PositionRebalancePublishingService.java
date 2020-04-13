@@ -1,5 +1,8 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -17,7 +20,8 @@ import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
+import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
+import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
@@ -42,15 +46,14 @@ public class PositionRebalancePublishingService {
 
     private final ParticipantRepository participantRepository;
 
-    private final EodFailedStepAlertSender eodFailedStepAlertSender;
-
+    @SuppressWarnings("unchecked")
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
-            .onFailure(eodFailedStepAlertSender::rebalancingCsvFailed)
+            .mapFailure(Case($(exception -> true), RebalancingCsvGenerationException::new))
             .get();
 
         Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
-            .onFailure(eodFailedStepAlertSender::rebalancingEmailSendFailed)
+            .mapFailure(Case($(exception -> true), RebalancingMailSendingException::new))
             .get();
     }
 

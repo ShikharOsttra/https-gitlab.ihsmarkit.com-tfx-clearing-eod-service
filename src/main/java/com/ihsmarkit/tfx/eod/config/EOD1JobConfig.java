@@ -67,7 +67,7 @@ public class EOD1JobConfig {
     }
 
     private Step rebalancePositions() {
-        return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, new StepExecutionListenerSupport());
+        return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertSender.rebalancingProcessFailedListener());
     }
 
     private Step rollPositions() {

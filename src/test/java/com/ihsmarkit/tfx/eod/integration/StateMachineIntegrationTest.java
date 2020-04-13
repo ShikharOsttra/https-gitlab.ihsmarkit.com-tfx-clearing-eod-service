@@ -39,7 +39,6 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
@@ -79,9 +78,6 @@ class StateMachineIntegrationTest {
 
     @MockBean
     private AlertSender alertSender;
-
-    @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @Test
     @DatabaseSetup({

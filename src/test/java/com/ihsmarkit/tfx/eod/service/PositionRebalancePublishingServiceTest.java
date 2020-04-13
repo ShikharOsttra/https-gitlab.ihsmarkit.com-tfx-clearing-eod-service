@@ -38,7 +38,8 @@ import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
+import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
+import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
@@ -63,9 +64,6 @@ class PositionRebalancePublishingServiceTest {
     @MockBean
     private ParticipantRepository participantRepository;
 
-    @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
-
     @Test
     void onMailServiceCallOnEmptyTrades() {
         final List<TradeEntity> tradeEntities = List.of(aTradeBuilder());
@@ -86,7 +84,6 @@ class PositionRebalancePublishingServiceTest {
             eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             Matchers.argThat(list -> assertThat(list).hasSize(1))
         );
-        verifyZeroInteractions(eodFailedStepAlertSender);
     }
 
     @Test
@@ -98,10 +95,9 @@ class PositionRebalancePublishingServiceTest {
         doThrow(cause).when(positionRebalanceCSVWriter).getRecordsAsCsv(anyList());
 
         assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
-            .isInstanceOf(RuntimeException.class)
-            .isSameAs(cause);
+            .isInstanceOf(RebalancingCsvGenerationException.class)
+            .hasCause(cause);
 
-        verify(eodFailedStepAlertSender).rebalancingCsvFailed(cause);
         verifyZeroInteractions(mailClient);
     }
 
@@ -120,10 +116,8 @@ class PositionRebalancePublishingServiceTest {
         doThrow(cause).when(mailClient).sendEmailWithAttachments(any(), any(), any(), any());
 
         assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
-            .isInstanceOf(RuntimeException.class)
-            .isSameAs(cause);
-
-        verify(eodFailedStepAlertSender).rebalancingEmailSendFailed(cause);
+            .isInstanceOf(RebalancingMailSendingException.class)
+            .hasCause(cause);
     }
 
     private TradeEntity aTradeBuilder() {

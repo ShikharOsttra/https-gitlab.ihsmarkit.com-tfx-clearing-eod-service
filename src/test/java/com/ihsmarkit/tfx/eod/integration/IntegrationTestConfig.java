@@ -19,6 +19,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.mailing.config.MailingAutoConfiguration;
 
@@ -41,6 +42,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     CacheConfig.class,
     SpringBatchConfig.class,
     EodJobListenerFactory.class,
+    EodFailedStepAlertSender.class,
 
     ClockService.class
 })
