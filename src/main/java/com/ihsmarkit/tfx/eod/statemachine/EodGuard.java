@@ -1,9 +1,5 @@
 package com.ihsmarkit.tfx.eod.statemachine;
 
-import static com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig.BUSINESS_DATE_ATTRIBUTE;
-
-import java.time.LocalDate;
-
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.guard.Guard;
 
@@ -12,9 +8,8 @@ public interface EodGuard extends Guard<StateMachineConfig.States, StateMachineC
 
     @Override
     default boolean evaluate(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-        final LocalDate date = (LocalDate) context.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE);
-        return evaluate(date);
+        return evaluate(EodContext.of(context));
     }
 
-    boolean evaluate(LocalDate businessDate);
+    boolean evaluate(EodContext context);
 }

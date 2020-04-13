@@ -45,4 +45,5 @@ public final class EodJobConstants {
 
     public static final String CASH_BALANCE_UPDATE_STEP_NAME = "cashBalanceUpdate";
     public static final String ROLL_BUSINESS_DATE_STEP_NAME = "rollBusinessDate";
+    public static final String EOD_COMPLETE_NOTIFICATION_STEP_NAME = "notifyOnEodCompletion";
 }

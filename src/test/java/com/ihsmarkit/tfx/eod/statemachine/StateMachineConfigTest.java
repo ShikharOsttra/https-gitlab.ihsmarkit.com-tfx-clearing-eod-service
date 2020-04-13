@@ -34,6 +34,9 @@ class StateMachineConfigTest {
     @MockBean(name = "dspApprovedGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> dspApprovedGuard;
 
+    @MockBean(name = "eodDateCheckGuard")
+    private Guard<StateMachineConfig.States, StateMachineConfig.Events> eodDateCheckGuard;
+
     @MockBean(name = "tradesInFlightGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> tradesInFlightGuard;
 
@@ -45,6 +48,9 @@ class StateMachineConfigTest {
 
     @MockBean(name = "initAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> initAction;
+
+    @MockBean(name = "eodPrematureAction")
+    private Action<StateMachineConfig.States, StateMachineConfig.Events> eodPrematureAction;
 
     @MockBean(name = "eod1CompleteAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> eod1CompleteAction;
@@ -75,6 +81,7 @@ class StateMachineConfigTest {
     @Test
     void shouldRunWhenDspApprovedFirst() throws Exception {
 
+        when(eodDateCheckGuard.evaluate(any())).thenReturn(true);
         when(dspApprovedGuard.evaluate(any())).thenReturn(false, false, true);
         when(tradesInFlightGuard.evaluate(any())).thenReturn(false, false, false, true);
         when(swpPointApprovedGuard.evaluate(any())).thenReturn(false, true);
@@ -90,6 +97,7 @@ class StateMachineConfigTest {
         verify(dspApprovedGuard, times(3)).evaluate(any());
         verify(tradesInFlightGuard, times(4)).evaluate(any());
         verify(swpPointApprovedGuard, times(2)).evaluate(any());
+        verify(eodDateCheckGuard).evaluate(any());
 
         verify(eod1runAction).execute(any());
         verify(eod1CompleteAction).execute(any());
@@ -101,6 +109,7 @@ class StateMachineConfigTest {
     @Test
     void shouldReturnToIdleOnError() throws Exception {
 
+        when(eodDateCheckGuard.evaluate(any())).thenReturn(true);
         when(dspApprovedGuard.evaluate(any())).thenReturn(true);
         when(tradesInFlightGuard.evaluate(any())).thenReturn(true);
         when(swpPointApprovedGuard.evaluate(any())).thenReturn(true);
@@ -118,6 +127,7 @@ class StateMachineConfigTest {
                 .expectState(READY)
             .and().build().test();
 
+        verify(eodDateCheckGuard).evaluate(any());
         verify(eod1runAction).execute(any());
         verifyNoMoreInteractions(eod1CompleteAction, eod2CompleteAction, eod2runAction, dateRollRunAction);
         assertThat(stateMachine.getState().getId()).isEqualTo(READY);
@@ -127,6 +137,7 @@ class StateMachineConfigTest {
     @Test
     void shouldRunWhenNoTradesInFlightBeforeDspApproval() throws Exception {
 
+        when(eodDateCheckGuard.evaluate(any())).thenReturn(true);
         when(dspApprovedGuard.evaluate(any())).thenReturn(false, false, true);
         when(tradesInFlightGuard.evaluate(any())).thenReturn(false, true);
         when(swpPointApprovedGuard.evaluate(any())).thenReturn(true);
@@ -143,6 +154,7 @@ class StateMachineConfigTest {
         verify(dspApprovedGuard, times(3)).evaluate(any());
         verify(tradesInFlightGuard, times(2)).evaluate(any());
         verify(swpPointApprovedGuard, times(1)).evaluate(any());
+        verify(eodDateCheckGuard).evaluate(any());
 
         verify(eod1runAction).execute(any());
         verify(eod1CompleteAction).execute(any());
@@ -151,4 +163,29 @@ class StateMachineConfigTest {
         verify(dateRollRunAction).execute(any());
     }
 
+    @Test
+    void shouldSkipExecutionWhenTriggeredTooEarly() throws Exception {
+        when(eodDateCheckGuard.evaluate(any())).thenReturn(false);
+        testPlanBuilder()
+            .stateMachine(stateMachine)
+            .step()
+            .sendEvent(EOD)
+            .expectStateChanged(4)
+            .expectState(READY)
+            .and().build().test();
+
+        verify(eodDateCheckGuard).evaluate(any());
+
+        verifyNoMoreInteractions(
+            dspApprovedGuard,
+            tradesInFlightGuard,
+            swpPointApprovedGuard,
+            eod1runAction,
+            eod1CompleteAction,
+            eod2CompleteAction,
+            eod2runAction,
+            dateRollRunAction
+        );
+
+    }
 }
