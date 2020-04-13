@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
@@ -16,7 +16,7 @@ import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepos
 import lombok.RequiredArgsConstructor;
 
 @Component
-@JobScope
+@StepScope
 @RequiredArgsConstructor
 public class DailySettlementPriceService {
 

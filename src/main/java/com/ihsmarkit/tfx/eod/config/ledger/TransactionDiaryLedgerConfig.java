@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 
@@ -61,7 +62,9 @@ public class TransactionDiaryLedgerConfig {
 
     @Bean
     TaskExecutor transactionDiaryTaskExecutor() {
-        return new SyncTaskExecutor();
+        final SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
+        taskExecutor.setConcurrencyLimit(transactionDiaryConcurrencyLimit);
+        return taskExecutor;
     }
 
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
@@ -74,36 +77,36 @@ public class TransactionDiaryLedgerConfig {
     }
 
     @Bean(TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME)
-    Step tradeTransactionDiaryLedger(final ItemReader<TradeEntity> reader) {
+    Step tradeTransactionDiaryLedger() {
         return getStep(
             TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME,
-            reader,
+            transactionDiaryReader(tradeListQueryProvider, false),
             tradeTransactionDiaryLedgerProcessor,
             transactionDiaryWriter(),
             transactionDiaryTaskExecutor()
         );
     }
 
-    @Bean
-    @StepScope
-    HibernateCursorItemReader<TradeEntity> tradeReader(@Value("#{jobParameters['businessDate']}") LocalDate businessDate,
-        EntityManagerFactory entityManagerFactory) {
-        return new HibernateCursorItemReaderBuilder<TradeEntity>()
-            .entityClass(TradeEntity.class)
-            .useStatelessSession(true)
-            .saveState(false)
-            .queryString(
-                "FROM TradeEntity trade " +
-                    "JOIN FETCH trade.currencyPair " +
-                    "JOIN FETCH trade.originator originator " +
-                    "JOIN FETCH originator.participant " +
-                    "JOIN FETCH trade.counterparty counterparty " +
-                    "JOIN FETCH counterparty.participant " +
-                    "WHERE trade.tradeDate=:date and trade.clearingStatus=com.ihsmarkit.tfx.core.domain.type.ClearingStatus.NOVATED")
-            .parameterValues(Map.of("date", businessDate))
-            .sessionFactory(entityManagerFactory.unwrap(SessionFactory.class))
-            .build();
-    }
+//    @Bean
+//    @StepScope
+//    HibernateCursorItemReader<TradeEntity> tradeReader(@Value("#{jobParameters['businessDate']}") LocalDate businessDate,
+//        EntityManagerFactory entityManagerFactory) {
+//        return new HibernateCursorItemReaderBuilder<TradeEntity>()
+//            .entityClass(TradeEntity.class)
+//            .useStatelessSession(true)
+//            .saveState(false)
+//            .queryString(
+//                "FROM TradeEntity trade " +
+//                    "JOIN FETCH trade.currencyPair " +
+//                    "JOIN FETCH trade.originator originator " +
+//                    "JOIN FETCH originator.participant " +
+//                    "JOIN FETCH trade.counterparty counterparty " +
+//                    "JOIN FETCH counterparty.participant " +
+//                    "WHERE trade.tradeDate=:date and trade.clearingStatus=com.ihsmarkit.tfx.core.domain.type.ClearingStatus.NOVATED")
+//            .parameterValues(Map.of("date", businessDate))
+//            .sessionFactory(entityManagerFactory.unwrap(SessionFactory.class))
+//            .build();
+//    }
 
     @Bean(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME)
     Step sodTransactionDiaryLedger() {
