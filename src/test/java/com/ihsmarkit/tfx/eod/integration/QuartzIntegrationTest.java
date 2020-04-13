@@ -78,6 +78,9 @@ public class QuartzIntegrationTest {
     @MockBean(name = "dspApprovedGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> dspApprovedGuard;
 
+    @MockBean(name = "eodDateCheckGuard")
+    private Guard<StateMachineConfig.States, StateMachineConfig.Events> eodDateCheckGuard;
+
     @MockBean(name = "tradesInFlightGuard")
     private Guard<StateMachineConfig.States, StateMachineConfig.Events> tradesInFlightGuard;
 
@@ -89,6 +92,9 @@ public class QuartzIntegrationTest {
 
     @MockBean(name = "initAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> initAction;
+
+    @MockBean(name = "eodPrematureAction")
+    private Action<StateMachineConfig.States, StateMachineConfig.Events> eodPrematureAction;
 
     @MockBean(name = "eod1CompleteAction")
     private Action<StateMachineConfig.States, StateMachineConfig.Events> eod1CompleteAction;
@@ -133,7 +139,11 @@ public class QuartzIntegrationTest {
     void shouldTriggerExecution() throws SchedulerException, InterruptedException {
         final StateWaitingListener listener = new StateWaitingListener(EOD1);
         stateMachine.addStateListener(listener);
+
+        when(eodDateCheckGuard.evaluate(any())).thenReturn(true);
+
         scheduler.triggerJob(new JobKey(EOD1_BATCH_JOB_NAME, null));
+
         listener.await(stateMachine, 5);
         assertThat(stateMachine.getState().getId()).isEqualTo(EOD1);
     }
