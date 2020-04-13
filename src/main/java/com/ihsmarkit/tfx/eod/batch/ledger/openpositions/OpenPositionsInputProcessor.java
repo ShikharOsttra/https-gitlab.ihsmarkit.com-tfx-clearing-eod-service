@@ -86,15 +86,22 @@ public class OpenPositionsInputProcessor implements ItemProcessor<ParticipantAnd
             .build();
     }
 
+    @Nullable
     private static BigDecimal getBuyOrSellPosition(
         final Map<ParticipantPositionType, ParticipantPositionEntity> positions,
         final ParticipantPositionType positionType
     ) {
-        final BigDecimal position = getPosition(positions, positionType).orElse(ZERO);
-        final BigDecimal rebalancingPosition = getPosition(positions, REBALANCING).orElse(ZERO);
-        final ParticipantPositionType rebalancingType = rebalancingPosition.signum() >= 0 ? BUY : SELL;
+        final Optional<BigDecimal> position = getPosition(positions, positionType);
+        final Optional<BigDecimal> rebalancingPosition = getPosition(positions, REBALANCING)
+            .filter(value -> (value.signum() >= 0 ? BUY : SELL) == positionType);
 
-        return (positionType == rebalancingType ? position.add(rebalancingPosition) : position).abs();
+        if (position.isEmpty() && rebalancingPosition.isEmpty()) {
+            return null;
+        }
+
+        return position.orElse(ZERO)
+            .add(rebalancingPosition.orElse(ZERO))
+            .abs();
     }
 
     @Nullable
