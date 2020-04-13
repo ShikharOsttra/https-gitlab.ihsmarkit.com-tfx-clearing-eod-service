@@ -12,7 +12,6 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatTim
 import static com.ihsmarkit.tfx.eod.batch.ledger.OrderUtils.buildOrderId;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.FLOOR;
-import static java.util.function.Predicate.not;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,7 +32,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
-import com.ihsmarkit.tfx.common.math.BigDecimals;
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.FxSpotProductEntity;
@@ -91,27 +89,26 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             notTradedCcyPairsTotalItems = Stream.empty();
         } else {
             final Map<String, BigDecimal> notTradedCcyPairsPosition = getSodPositionAmount(ccyPairsNotTradedToday);
-            final DailyMarkedDataAggregated sodEmptyDailyMarkedDataAggregated = sodEmptyDailyMarkedDataAggregated(recordDate);
             notTradedCcyPairsItems = ccyPairsNotTradedToday.stream()
                 .map(currencyPairCode ->
-                    mapToEnrichedItem(currencyPairCode, sodEmptyDailyMarkedDataAggregated, swapPointsMapper, dspMap, notTradedCcyPairsPosition)
+                    mapToEnrichedItem(currencyPairCode, Optional.empty(), swapPointsMapper, dspMap, notTradedCcyPairsPosition)
                 );
             notTradedCcyPairsTotalItems = ccyPairsNotTradedToday.stream()
                 .map(currencyPairCode ->
-                    mapToTotal(currencyPairCode, sodEmptyDailyMarkedDataAggregated, notTradedCcyPairsPosition)
+                    mapToTotal(currencyPairCode, ZERO, notTradedCcyPairsPosition)
                 );
         }
 
         return EntryStream.of(aggregatedMap)
             .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
-                mapToEnrichedItem(currencyPairCode, aggregatedDailyMarketData, swapPointsMapper, dspMap, currencyPairOpenPosition)
+                mapToEnrichedItem(currencyPairCode, Optional.of(aggregatedDailyMarketData), swapPointsMapper, dspMap, currencyPairOpenPosition)
             )
             .append(notTradedCcyPairsItems)
             .append(
                 Stream.of(
                     EntryStream.of(aggregatedMap)
                         .mapKeyValue((currencyPairCode, aggregatedDailyMarketData) ->
-                            mapToTotal(currencyPairCode, aggregatedDailyMarketData, currencyPairOpenPosition)
+                            mapToTotal(currencyPairCode, aggregatedDailyMarketData.getShortPositionsAmount(), currencyPairOpenPosition)
                         )
                         .append(notTradedCcyPairsTotalItems)
                         .reduce(Total::add)
@@ -122,10 +119,9 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             .collect(Collectors.toUnmodifiableList());
     }
 
-    private Total mapToTotal(final String currencyPairCode, final DailyMarkedDataAggregated aggregatedDailyMarketData,
-        final Map<String, BigDecimal> currencyPairOpenPosition) {
+    private Total mapToTotal(final String currencyPairCode, final BigDecimal shortPositionAmount, final Map<String, BigDecimal> currencyPairOpenPosition) {
         return Total.of(
-            convertToTradingUnit(aggregatedDailyMarketData.getShortPositionsAmount(), currencyPairCode),
+            convertToTradingUnit(shortPositionAmount, currencyPairCode),
             convertToTradingUnit(currencyPairOpenPosition.getOrDefault(currencyPairCode, ZERO), currencyPairCode)
         );
     }
@@ -142,8 +138,11 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
     }
 
     private DailyMarketDataEnriched mapToEnrichedItem(
-        final String currencyPairCode, final DailyMarkedDataAggregated aggregatedDailyMarketData, final Function<String, BigDecimal> swapPointMapper,
-        final Map<String, DailySettlementPriceEntity> dspMap, final Map<String, BigDecimal> currencyPairOpenPosition
+        final String currencyPairCode,
+        final Optional<DailyMarkedDataAggregated> aggregatedDailyMarketData,
+        final Function<String, BigDecimal> swapPointMapper,
+        final Map<String, DailySettlementPriceEntity> dspMap,
+        final Map<String, BigDecimal> currencyPairOpenPosition
     ) {
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPairCode);
         final DailySettlementPriceEntity dsp = dspMap.get(currencyPairCode);
@@ -153,39 +152,48 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final BigDecimal currentDsp = getDspValue(dsp, DailySettlementPriceEntity::getDailySettlementPrice);
         final BigDecimal previousDsp = getDspValue(dsp, DailySettlementPriceEntity::getPreviousDailySettlementPrice);
 
-        return DailyMarketDataEnriched.builder()
+        final DailyMarketDataEnriched.DailyMarketDataEnrichedBuilder dailyMarketDataEnrichedBuilder = DailyMarketDataEnriched.builder()
             .businessDate(businessDate)
             .tradeDate(formatDate(businessDate))
             .recordDate(formatDateTime(recordDate))
             .currencyNumber(fxSpotProduct.getProductNumber())
             .currencyPairCode(currencyPairCode)
-            .openPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getOpenPrice(), priceScale))
-            .openPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getOpenPriceTime())))
-            .highPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getHighPrice(), priceScale))
-            .highPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getHighPriceTime())))
-            .lowPrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getLowPrice(), priceScale))
-            .lowPriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getLowPriceTime())))
-            .closePrice(getFormattedBigDecimalOrHyphens(aggregatedDailyMarketData.getClosePrice(), priceScale))
-            .closePriceTime(formatTime(clockService.utcTimeToServerTime(aggregatedDailyMarketData.getClosePriceTime())))
             .swapPoint(formatBigDecimal(swapPointMapper.apply(currencyPairCode), SWAP_POINTS_DECIMAL_PLACES))
             .previousDsp(formatBigDecimal(previousDsp, priceScale))
             .currentDsp(formatBigDecimal(currentDsp, priceScale))
             .dspChange(formatBigDecimal(currentDsp.subtract(previousDsp), priceScale))
-            .tradingVolumeAmount(formatBigDecimalRoundTo1Jpy(aggregatedDailyMarketData.getShortPositionsAmount()))
-            .tradingVolumeAmountInUnit(formatBigDecimalRoundTo1Jpy(convertToTradingUnit(aggregatedDailyMarketData.getShortPositionsAmount(), currencyPairCode)))
             .openPositionAmount(formatBigDecimalRoundTo1Jpy(openPositionAmount))
             .openPositionAmountInUnit(formatBigDecimalRoundTo1Jpy(convertToTradingUnit(openPositionAmount, currencyPairCode)))
             .recordType(ITEM_RECORD_TYPE)
-            .orderId(buildOrderId(fxSpotProduct.getProductNumber()))
+            .orderId(buildOrderId(fxSpotProduct.getProductNumber()));
+
+        return aggregatedDailyMarketData.map(dailyMarkedDataAggregated ->
+            dailyMarketDataEnrichedBuilder
+                .openPrice(formatBigDecimal(dailyMarkedDataAggregated.getOpenPrice(), priceScale))
+                .openPriceTime(formatTime(clockService.utcTimeToServerTime(dailyMarkedDataAggregated.getOpenPriceTime())))
+                .highPrice(formatBigDecimal(dailyMarkedDataAggregated.getHighPrice(), priceScale))
+                .highPriceTime(formatTime(clockService.utcTimeToServerTime(dailyMarkedDataAggregated.getHighPriceTime())))
+                .lowPrice(formatBigDecimal(dailyMarkedDataAggregated.getLowPrice(), priceScale))
+                .lowPriceTime(formatTime(clockService.utcTimeToServerTime(dailyMarkedDataAggregated.getLowPriceTime())))
+                .closePrice(formatBigDecimal(dailyMarkedDataAggregated.getClosePrice(), priceScale))
+                .closePriceTime(formatTime(clockService.utcTimeToServerTime(dailyMarkedDataAggregated.getClosePriceTime())))
+                .tradingVolumeAmount(formatBigDecimalRoundTo1Jpy(dailyMarkedDataAggregated.getShortPositionsAmount()))
+                .tradingVolumeAmountInUnit(
+                    formatBigDecimalRoundTo1Jpy(convertToTradingUnit(dailyMarkedDataAggregated.getShortPositionsAmount(), currencyPairCode)))
+        ).orElseGet(() ->
+            dailyMarketDataEnrichedBuilder
+                .openPrice(HYPHENS_LABEL)
+                .openPriceTime(HYPHENS_LABEL)
+                .highPrice(HYPHENS_LABEL)
+                .highPriceTime(HYPHENS_LABEL)
+                .lowPrice(HYPHENS_LABEL)
+                .lowPriceTime(HYPHENS_LABEL)
+                .closePrice(HYPHENS_LABEL)
+                .closePriceTime(HYPHENS_LABEL)
+                .tradingVolumeAmount(formatBigDecimal(ZERO))
+                .tradingVolumeAmountInUnit(formatBigDecimal(ZERO))
+        )
             .build();
-    }
-
-    private String getFormattedBigDecimalOrHyphens(@Nullable final BigDecimal bigDecimal, final int decimalPlaces) {
-        return Optional.ofNullable(bigDecimal)
-            .filter(not(BigDecimals::isEqualToZero))
-            .map($ -> formatBigDecimal(bigDecimal, decimalPlaces))
-            .orElse(HYPHENS_LABEL);
-
     }
 
     private BigDecimal convertToTradingUnit(final BigDecimal amount, final String currencyPairCode) {
@@ -242,25 +250,6 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         return Optional.ofNullable(dsp)
             .map(extractor)
             .orElse(ZERO);
-    }
-
-    private static DailyMarkedDataAggregated sodEmptyDailyMarkedDataAggregated(final LocalDateTime recordDate) {
-        return DailyMarkedDataAggregated.builder()
-            .openPriceTime(recordDate)
-            .openPrice(ZERO)
-
-            .closePriceTime(recordDate)
-            .closePrice(ZERO)
-
-            .lowPriceTime(recordDate)
-            .lowPrice(ZERO)
-
-            .highPriceTime(recordDate)
-            .highPrice(ZERO)
-
-            .shortPositionsAmount(ZERO)
-
-            .build();
     }
 
     @lombok.Value(staticConstructor = "of")
