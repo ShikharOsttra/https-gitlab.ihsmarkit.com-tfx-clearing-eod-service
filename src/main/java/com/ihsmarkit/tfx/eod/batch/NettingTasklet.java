@@ -27,7 +27,6 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.OffsettedTradeMatchIdProvider;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
@@ -63,46 +62,39 @@ public class NettingTasklet implements Tasklet {
 
     private final OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
 
-    private final EodFailedStepAlertSender eodFailedStepAlertSender;
-
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        try {
-            final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
+        final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
-            final Map<Boolean, List<TradeOrPositionEssentials>> allNovatedTradesGroupedByScope = novatedTrades
-                .collect(partitioningBy(this::isInScopeOfMonthlyVolumeReport, mapping(tradeOrPositionMapper::convertTrade, toList())));
+        final Map<Boolean, List<TradeOrPositionEssentials>> allNovatedTradesGroupedByScope = novatedTrades
+            .collect(partitioningBy(this::isInScopeOfMonthlyVolumeReport, mapping(tradeOrPositionMapper::convertTrade, toList())));
 
-            final List<TradeOrPositionEssentials> tradesInScopeOfMonthlyVolumeReport = allNovatedTradesGroupedByScope.getOrDefault(Boolean.TRUE, List.of());
+        final List<TradeOrPositionEssentials> tradesInScopeOfMonthlyVolumeReport = allNovatedTradesGroupedByScope.getOrDefault(Boolean.TRUE, List.of());
 
-            final Stream<ParticipantPositionEntity> sodParticipantPositions =
-                participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
+        final Stream<ParticipantPositionEntity> sodParticipantPositions =
+            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
-            final Stream<TradeOrPositionEssentials> sodPositions = sodParticipantPositions
-                .map(tradeOrPositionMapper::convertPosition);
+        final Stream<TradeOrPositionEssentials> sodPositions = sodParticipantPositions
+            .map(tradeOrPositionMapper::convertPosition);
 
-            final Stream<ParticipantPositionEntity> netted =
-                Stream.concat(
-                    eodCalculator.netAllByBuySell(
-                        allNovatedTradesGroupedByScope.values().stream()
-                            .flatMap(Collection::stream),
-                        sodPositions
-                    ),
-                    eodCalculator.netByBuySellForMonthlyVolumeReport(tradesInScopeOfMonthlyVolumeReport.stream())
-                )
-                    .map(this::mapParticipantPositionEntity);
+        final Stream<ParticipantPositionEntity> netted =
+            Stream.concat(
+                eodCalculator.netAllByBuySell(
+                    allNovatedTradesGroupedByScope.values().stream()
+                        .flatMap(Collection::stream),
+                    sodPositions
+                ),
+                eodCalculator.netByBuySellForMonthlyVolumeReport(tradesInScopeOfMonthlyVolumeReport.stream())
+            )
+                .map(this::mapParticipantPositionEntity);
 
 
-            participantPositionRepository.saveAll(netted::iterator);
+        participantPositionRepository.saveAll(netted::iterator);
 
-            return RepeatStatus.FINISHED;
-        } catch (final Exception ex) {
-            eodFailedStepAlertSender.nettingFailed(ex);
-            throw ex;
-        }
+        return RepeatStatus.FINISHED;
     }
 
     private ParticipantPositionEntity mapParticipantPositionEntity(final ParticipantPosition participantPosition) {

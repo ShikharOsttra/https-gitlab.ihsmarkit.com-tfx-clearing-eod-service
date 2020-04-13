@@ -43,6 +43,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
     DateConfig.class,
     InMemoryJobRepositoryConfiguration.class,
     EodJobListenerFactory.class,
+    EodFailedStepAlertSender.class,
 
     ClockService.class
 })
@@ -59,7 +60,7 @@ public abstract class AbstractSpringBatchTest {
     @MockBean
     protected AlertSender alertSender;
 
-    @MockBean
+    @Autowired
     protected EodFailedStepAlertSender eodFailedStepAlertSender;
 
 }

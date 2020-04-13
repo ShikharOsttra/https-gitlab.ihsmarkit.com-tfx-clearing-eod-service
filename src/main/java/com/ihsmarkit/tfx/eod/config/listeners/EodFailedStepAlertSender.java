@@ -1,5 +1,11 @@
 package com.ihsmarkit.tfx.eod.config.listeners;
 
+import java.util.List;
+
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.alert.client.domain.EodMtmFailedAlert;
@@ -21,14 +27,26 @@ public class EodFailedStepAlertSender {
     private final AlertSender alertSender;
     private final ClockService clockService;
 
-    public void mtmFailed(final Throwable cause) {
-        log.info("Send MtM failed alert", cause);
-        alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+    public StepExecutionListener mtmFailedListener() {
+        return new AlertSenderStepListener() {
+            @Override
+            protected void handleExceptions(final List<Throwable> exceptions) {
+                final Throwable cause = exceptions.get(0);
+                log.info("Send MtM failed alert", cause);
+                alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+            }
+        };
     }
 
-    public void nettingFailed(final Throwable cause) {
-        log.info("Send Netting failed alert", cause);
-        alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+    public StepExecutionListener nettingFailedListener() {
+        return new AlertSenderStepListener() {
+            @Override
+            protected void handleExceptions(final List<Throwable> exceptions) {
+                final Throwable cause = exceptions.get(0);
+                log.info("Send Netting failed alert", cause);
+                alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+            }
+        };
     }
 
     public void rebalancingProcessFailed(final Throwable cause) {
@@ -44,6 +62,21 @@ public class EodFailedStepAlertSender {
     public void rebalancingEmailSendFailed(final Throwable cause) {
         log.info("Send Rebalancing mail sending failed alert", cause);
         alertSender.sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+    }
+
+    private static abstract class AlertSenderStepListener extends StepExecutionListenerSupport {
+
+        @Override
+        public ExitStatus afterStep(final StepExecution stepExecution) {
+            final List<Throwable> exceptions = stepExecution.getFailureExceptions();
+            if (!exceptions.isEmpty()) {
+                log.info("Step {} finished with {} error(s)", stepExecution.getStepName(), exceptions.size());
+                handleExceptions(exceptions);
+            }
+            return null;
+        }
+
+        protected abstract void handleExceptions(List<Throwable> exceptions);
     }
 
 }

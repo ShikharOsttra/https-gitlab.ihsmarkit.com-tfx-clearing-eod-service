@@ -21,13 +21,11 @@ import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
-import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -49,34 +47,28 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     private final EodCashSettlementMappingService eodCashSettlementMappingService;
 
-    private final EodFailedStepAlertSender eodFailedStepAlertSender;
-
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        Try.run(() -> {
-            final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
-            final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
+        final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
+        final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
-            final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
+        final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
-            final Stream<EodProductCashSettlementEntity> initial =
-                eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
-                    .map(eodCashSettlementMappingService::mapInitialMtm);
+        final Stream<EodProductCashSettlementEntity> initial =
+            eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
+                .map(eodCashSettlementMappingService::mapInitialMtm);
 
-            final Stream<ParticipantPositionEntity> positions =
-                participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
+        final Stream<ParticipantPositionEntity> positions =
+            participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
-            final Stream<EodProductCashSettlementEntity> daily =
-                eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
-                    .map(eodCashSettlementMappingService::mapDailyMtm);
+        final Stream<EodProductCashSettlementEntity> daily =
+            eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
+                .map(eodCashSettlementMappingService::mapDailyMtm);
 
-            eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
-        })
-            .onFailure(eodFailedStepAlertSender::mtmFailed)
-            .get();
+        eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 
         return RepeatStatus.FINISHED;
     }
