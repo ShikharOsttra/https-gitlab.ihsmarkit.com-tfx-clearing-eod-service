@@ -55,6 +55,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodParticipantMarginEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
+import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.MarginAlertConfigurationRepository;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceRepository;
@@ -63,6 +64,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
 import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
@@ -70,7 +72,6 @@ import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
 import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
-import com.ihsmarkit.tfx.eod.service.JPYRateService;
 import com.ihsmarkit.tfx.eod.service.MarginRatioService;
 
 @ContextConfiguration(classes = EOD2JobConfig.class)
@@ -112,7 +113,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     private MarginRatioService marginRatioService;
 
     @MockBean
-    private JPYRateService jpyRateService;
+    private DailySettlementPriceRepository dailySettlementPriceRepository;
 
     @MockBean
     private EodParticipantMarginRepository eodParticipantMarginRepository;
@@ -231,9 +232,16 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
         when(marginRatioService.getRequiredMarginRatio(CURRENCY_PAIR_USDJPY, PARTICIPANT2)).thenReturn(valueOf(30));
         when(marginRatioService.getRequiredMarginRatio(CURRENCY_PAIR_NZDJPY, PARTICIPANT2)).thenReturn(valueOf(50));
 
-        when(jpyRateService.getJpyRate(OCT_6, "USD")).thenReturn(valueOf(100));
-        when(jpyRateService.getJpyRate(OCT_6, "NZD")).thenReturn(valueOf(66));
-        when(jpyRateService.getJpyRate(OCT_6, "EUR")).thenReturn(valueOf(110));
+        when(dailySettlementPriceRepository.findAllByBusinessDate(OCT_6)).thenReturn(
+            List.of(
+                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_EURUSD).dailySettlementPrice(valueOf(1.1)).build(),
+                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_USDJPY).dailySettlementPrice(valueOf(100)).build(),
+                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_NZDJPY).dailySettlementPrice(valueOf(66)).build()
+            )
+        );
+//        when(jpyRateService.getJpyRate(OCT_6, "USD")).thenReturn(valueOf(100));
+//        when(jpyRateService.getJpyRate(OCT_6, "NZD")).thenReturn(valueOf(66));
+//        when(jpyRateService.getJpyRate(OCT_6, "EUR")).thenReturn(valueOf(110));
 
         when(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(OCT_6))
             .thenReturn(

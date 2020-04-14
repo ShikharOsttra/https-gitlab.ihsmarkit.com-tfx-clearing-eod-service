@@ -195,13 +195,13 @@ public class EODCalculator {
     public Map<ParticipantEntity, BigDecimal> calculateRequiredInitialMargin(
         final Stream<ParticipantPositionEntity> positions,
         final BiFunction<CurrencyPairEntity, ParticipantEntity, BigDecimal> marginRatioResolver,
-        final Function<String, BigDecimal> jpyRates
+        final BiFunction<String, String, BigDecimal> jpyRates
     ) {
         return aggregatePositions(positions)
             .collect(
                 toMap(
                     ParticipantCurrencyPairAmount::getParticipant,
-                    position -> jpyRates.apply(position.getCurrencyPair().getBaseCurrency())
+                    position -> jpyRates.apply(position.getCurrencyPair().getBaseCurrency(), position.getCurrencyPair().getValueCurrency())
                         .multiply(position.getAmount().abs())
                         .multiply(marginRatioResolver.apply(position.getCurrencyPair(), position.getParticipant())
                             .multiply(MARGIN_RATIO_FACTOR))
