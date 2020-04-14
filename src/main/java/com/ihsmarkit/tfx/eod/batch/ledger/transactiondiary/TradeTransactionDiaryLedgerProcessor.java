@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimal;
+import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatBigDecimalStripZero;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDate;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
@@ -62,7 +63,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
         final ParticipantEntity originator = trade.getOriginator().getParticipant();
 
         final ParticipantEntity counterparty = trade.getCounterparty().getParticipant();
-        final String baseAmount = formatBigDecimal(trade.getBaseAmount().getValue());
+        final String baseAmount = formatBigDecimalStripZero(trade.getBaseAmount().getValue());
         final BigDecimal swapPoint = eodCalculator.calculateSwapPoint(trade, this::getSwapPoint, this::getJpyRate).getAmount();
         final BigDecimal mtm = eodCalculator.calculateInitialMtmValue(trade, this::getDailySettlementPrice, this::getJpyRate).getAmount();
 

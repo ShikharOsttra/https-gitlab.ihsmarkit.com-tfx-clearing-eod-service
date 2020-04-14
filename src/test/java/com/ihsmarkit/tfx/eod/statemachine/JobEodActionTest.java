@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
@@ -17,6 +19,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 class JobEodActionTest {
     private static final LocalDate OCT_1 = LocalDate.of(2019, 10, 10);
+    private static final LocalDateTime OCT_1_NOON = LocalDateTime.of(OCT_1, LocalTime.NOON);
 
     @Test
     void shouldThrowExceptionOnFailure() {
@@ -28,7 +31,7 @@ class JobEodActionTest {
         when(failureInstance.getJobName()).thenReturn("TEST_JOB");
 
         final JobEodAction failing = date -> failureExecution;
-        final Throwable catched = catchThrowable(() -> failing.execute(OCT_1));
+        final Throwable catched = catchThrowable(() -> failing.execute(new EodContext(OCT_1, OCT_1_NOON)));
 
         assertThat(catched)
             .isInstanceOf(JobFailedException.class)
@@ -43,7 +46,7 @@ class JobEodActionTest {
         when(successExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
         final JobEodAction success = date -> successExecution;
 
-        success.execute(OCT_1);
+        success.execute(new EodContext(OCT_1, OCT_1_NOON));
 
         verify(successExecution).getStatus();
 

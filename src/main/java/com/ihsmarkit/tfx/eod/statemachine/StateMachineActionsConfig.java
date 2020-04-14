@@ -14,6 +14,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JO
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -46,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 public class StateMachineActionsConfig {
 
     public static final String BUSINESS_DATE_ATTRIBUTE = "BUSINESS_DATE";
+    public static final String WALLCLOCK_TIMESTAMP_ATTRIBUTE = "WALLCLOCK_TIMESTAMP";
+
 
     @Value("${eod.collateral.price-upload-check.enabled:true}")
     private final boolean collateralPriceUploadCheckEnabled;
@@ -71,51 +74,65 @@ public class StateMachineActionsConfig {
 
     @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> initAction() {
-        return context -> context.getExtendedState().getVariables()
-                    .put(BUSINESS_DATE_ATTRIBUTE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
+        return context -> {
+            final Map<Object, Object> variables = context.getExtendedState().getVariables();
+            variables.put(BUSINESS_DATE_ATTRIBUTE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
+            variables.put(WALLCLOCK_TIMESTAMP_ATTRIBUTE, clockService.getCurrentDateTimeUTC());
+        };
     }
 
     @Bean
     public JobEodAction eod1runAction() {
-        return businessDate -> jobLauncher.run(eod1Job, getJobParameters(businessDate));
+        return context -> jobLauncher.run(eod1Job, getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
     public EodAction eod1CompleteAction() {
-        return businessDate -> saveEodStatus(EOD1_COMPLETE, businessDate);
+        return context -> saveEodStatus(EOD1_COMPLETE, context.getBusinessDate());
+    }
 
+    @Bean
+    public EodAction eodPrematureAction() {
+        return businessDate -> {
+            log.warn("EOD for business date {} triggered to early", businessDate);
+        };
     }
 
     @Bean
     public EodAction eod2CompleteAction() {
-        return businessDate -> saveEodStatus(EOD2_COMPLETE, businessDate);
+        return context -> saveEodStatus(EOD2_COMPLETE, context.getBusinessDate());
     }
 
     @Bean
     public JobEodAction eod2runAction() {
-        return businessDate -> jobLauncher.run(eod2Job, getJobParameters(businessDate));
+        return context -> jobLauncher.run(eod2Job, getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
     public JobEodAction dateRollRunAction() {
-        return businessDate -> jobLauncher.run(rollBusinessDateJob, getJobParameters(businessDate));
+        return context -> jobLauncher.run(rollBusinessDateJob, getJobParameters(context.getBusinessDate()));
+    }
+
+    @Bean
+    public EodGuard eodDateCheckGuard() {
+        return context -> context.getTimestamp().toLocalDate().isAfter(context.getBusinessDate());
     }
 
     @Bean
     public EodGuard swpPointApprovedGuard() {
-        return date -> hasSwapPointsApproved(date)
-            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
-            && isCollateralPriceUploadCompleted(date, SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
+        return context -> hasSwapPointsApproved(context.getBusinessDate())
+            && isCollateralPriceUploadCompleted(context.getBusinessDate(), SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
+            && isCollateralPriceUploadCompleted(context.getBusinessDate(), SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
     }
 
     @Bean
     public EodGuard dspApprovedGuard() {
-        return this::hasDSPApproved;
+        return context -> hasDSPApproved(context.getBusinessDate());
     }
 
     @Bean
     public EodGuard tradesInFlightGuard() {
-        return this::hasTradesInFlight;
+        return context -> hasTradesInFlight(context.getBusinessDate());
     }
 
     private void saveEodStatus(final EodStage stage, final LocalDate businessDate) {

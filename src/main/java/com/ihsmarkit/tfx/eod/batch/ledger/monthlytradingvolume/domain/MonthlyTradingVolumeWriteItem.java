@@ -1,4 +1,4 @@
-package com.ihsmarkit.tfx.eod.model.ledger;
+package com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.domain;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -10,7 +10,7 @@ import lombok.NonNull;
 
 @Getter
 @Builder
-public class MonthlyTradingVolumeItem<T> {
+public class MonthlyTradingVolumeWriteItem {
 
     @NonNull
     private final LocalDate businessDate;
@@ -18,8 +18,8 @@ public class MonthlyTradingVolumeItem<T> {
     private final String tradeDate = EMPTY;
     @Builder.Default
     private final String recordDate = EMPTY;
-    @Builder.Default
-    private final String participantCode = EMPTY;
+    @NonNull
+    private final String participantCode;
     @Builder.Default
     private final String participantName = EMPTY;
     @Builder.Default
@@ -29,9 +29,9 @@ public class MonthlyTradingVolumeItem<T> {
     @Builder.Default
     private final String currencyPairCode = EMPTY;
     @NonNull
-    private final T sellTradingVolumeInUnit;
+    private final String sellTradingVolumeInUnit;
     @NonNull
-    private final T buyTradingVolumeInUnit;
+    private final String buyTradingVolumeInUnit;
 
     private final long orderId;
     private final int recordType;
