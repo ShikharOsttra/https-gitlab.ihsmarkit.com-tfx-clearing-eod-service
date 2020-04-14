@@ -344,6 +344,7 @@ public class EODCalculator {
                     )
                 ),
             StreamEx.of(tradesToNet)
+                .filter(trade -> ZERO.compareTo(trade.getAmount()) != 0)
                 .collect(
                     GuavaCollectors.toTable(
                         TradeOrPositionEssentials::getParticipant,
