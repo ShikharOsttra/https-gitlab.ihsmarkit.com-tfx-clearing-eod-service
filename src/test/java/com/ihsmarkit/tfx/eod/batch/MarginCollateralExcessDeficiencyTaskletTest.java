@@ -239,9 +239,6 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                 DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_NZDJPY).dailySettlementPrice(valueOf(66)).build()
             )
         );
-//        when(jpyRateService.getJpyRate(OCT_6, "USD")).thenReturn(valueOf(100));
-//        when(jpyRateService.getJpyRate(OCT_6, "NZD")).thenReturn(valueOf(66));
-//        when(jpyRateService.getJpyRate(OCT_6, "EUR")).thenReturn(valueOf(110));
 
         when(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(OCT_6))
             .thenReturn(
