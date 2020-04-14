@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCashCollateralProductEntityBuilder;
+import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.core.domain.type.EodCashSettlementDateType.DAY;
@@ -39,7 +41,6 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 
-import com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
@@ -79,8 +80,8 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     private static final CurrencyPairEntity CURRENCY_PAIR_USDJPY = aCurrencyPairEntityBuilder().valueCurrency(JPY).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_NZDJPY = aCurrencyPairEntityBuilder().baseCurrency("NZD").valueCurrency(JPY).build();
 
-    private static final CashCollateralProductEntity CASH_PRODUCT = CollateralTestDataFactory.aCashCollateralProductEntityBuilder().build();
-    private static final LogCollateralProductEntity LOG_PRODUCT = CollateralTestDataFactory.aLogCollateralProductEntityBuilder().build();
+    private static final CashCollateralProductEntity CASH_PRODUCT = aCashCollateralProductEntityBuilder().build();
+    private static final LogCollateralProductEntity LOG_PRODUCT = aLogCollateralProductEntityBuilder().build();
 
     private static final ParticipantEntity PARTICIPANT1 = aParticipantEntityBuilder().id(1L).build();
     private static final ParticipantEntity PARTICIPANT2 = aParticipantEntityBuilder().id(2L).build();
