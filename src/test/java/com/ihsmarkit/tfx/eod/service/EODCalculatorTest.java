@@ -388,7 +388,9 @@ class EODCalculatorTest {
             .put("CHF", BigDecimal.valueOf(108.22))
             .build();
 
-        final Map<ParticipantEntity, BigDecimal> initialMargin = eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver, jpyRates::get);
+        final Map<ParticipantEntity, BigDecimal> initialMargin =
+            eodCalculator.calculateRequiredInitialMargin(positions, marginRatioResolver, (baseCcy, valueCCy) -> jpyRates.get(baseCcy));
+
         assertThat(initialMargin)
             .hasSize(1)
             .containsValue(BigDecimal.valueOf(63307344L));

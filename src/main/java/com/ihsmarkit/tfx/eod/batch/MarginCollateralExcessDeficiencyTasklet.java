@@ -125,7 +125,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .calculateRequiredInitialMargin(
                 participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate),
                 marginRatioService::getRequiredMarginRatio,
-                ccy -> jpyRateService.getJpyRate(businessDate, ccy)
+                (baseCcy, valueCcy) -> jpyRateService.getJpyRate(businessDate, baseCcy, valueCcy)
             );
 
         final var deposits = calculateDeposits(uniqueParticipantIds(requiredInitialMargin, variationMargins));
