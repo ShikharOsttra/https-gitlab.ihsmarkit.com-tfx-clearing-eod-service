@@ -66,7 +66,7 @@ class AbstractTotalHolderTest {
 
     private static class TestTotalHolder extends AbstractTotalHolder {
 
-        public TestTotalHolder(final boolean saveState) {
+        TestTotalHolder(final boolean saveState) {
             super(NAME, saveState);
         }
 
