@@ -1,7 +1,10 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
+import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodDataRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
@@ -38,8 +42,13 @@ public class EODCleanupService {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
+
     @Value("classpath*:/ledger/sql/eod_*_delete.sql")
     private Resource[] ledgersDeleteSQLs;
+
+    @Value("classpath*:/ledger/sql/eod_ledger_monthly_trading_volume_delete.sql")
+    private Resource monthlyLedgerDeleteSQL;
 
     void undoEODByDate(final LocalDate currentBusinessDate, final boolean keepMarketData) {
         log.info("[cleanup] removing all trades of type 2 for business date: {}", currentBusinessDate);
@@ -77,6 +86,10 @@ public class EODCleanupService {
 
     private void deleteAllLedgersByBusinessDate(final LocalDate businessDate) {
         Arrays.asList(ledgersDeleteSQLs).forEach(resource -> safeUpdate(businessDate, resource));
+        calendarTradingSwapPointRepository.findMonthLastBusinessDate(YearMonth.from(businessDate))
+            .filter(businessDate::equals)
+            .map(date -> date.with(firstDayOfMonth()))
+            .ifPresent(date -> safeUpdate(date, monthlyLedgerDeleteSQL));
     }
 
     private void safeUpdate(final LocalDate businessDate, final Resource resource) {
