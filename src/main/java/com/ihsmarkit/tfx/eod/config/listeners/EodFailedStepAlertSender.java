@@ -64,6 +64,8 @@ public class EodFailedStepAlertSender {
                 @Nullable
                 final Throwable mailSendingFailException = findCauseByType(exceptions, RebalancingMailSendingException.class);
 
+                // rebalanced position, csv generation and email sending goes as a tasklet
+                // only way to differ what has been failed is to handle separate exceptions
                 if (csvFailException != null) {
                     log.info("Send Rebalancing CSV generation failed alert", csvFailException);
                     alertSender.sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(clockService.getCurrentDateTimeUTC(), csvFailException.getMessage()));

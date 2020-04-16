@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
 
+import io.vavr.API;
 import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,11 +51,11 @@ public class PositionRebalancePublishingService {
     @SuppressWarnings("unchecked")
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
-            .mapFailure(Case($(exception -> true), RebalancingCsvGenerationException::new))
+            .mapFailure(mapAnyException(RebalancingCsvGenerationException::new))
             .get();
 
         Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
-            .mapFailure(Case($(exception -> true), RebalancingMailSendingException::new))
+            .mapFailure(mapAnyException(RebalancingMailSendingException::new))
             .get();
     }
 
@@ -117,5 +119,9 @@ public class PositionRebalancePublishingService {
         return participantRepository.findAllNotDeletedParticipantListItems().stream()
             .filter(participantEntity -> ParticipantType.LIQUIDITY_PROVIDER == participantEntity.getType())
             .filter(participantEntity -> ParticipantStatus.ACTIVE == participantEntity.getStatus());
+    }
+
+    private static API.Match.Case<Throwable, ? extends Throwable> mapAnyException(final Function<Throwable, ? extends Throwable> remapper) {
+        return Case($(exception -> true), remapper);
     }
 }
