@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 import com.ihsmarkit.tfx.eod.batch.ledger.common.total.TotalValue;
 
@@ -14,28 +15,26 @@ import lombok.Getter;
 @Getter
 public class OpenPositionsTfxTotal implements TotalValue<OpenPositionsTfxTotal> {
 
-    public static final OpenPositionsItem ZERO = OpenPositionsItem.builder().build();
-
-    @Builder.Default
-    private final BigDecimal shortPositionPreviousDay = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal longPositionPreviousDay = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal sellTradingAmount = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal buyTradingAmount = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal shortPosition = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal longPosition = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal initialMtmAmount = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal dailyMtmAmount = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal swapPoint = BigDecimal.ZERO;
-    @Builder.Default
-    private final BigDecimal totalVariationMargin = BigDecimal.ZERO;
+    @NotNull
+    private final BigDecimal shortPositionPreviousDay;
+    @NotNull
+    private final BigDecimal longPositionPreviousDay;
+    @Nullable
+    private final BigDecimal sellTradingAmount;
+    @Nullable
+    private final BigDecimal buyTradingAmount;
+    @NotNull
+    private final BigDecimal shortPosition;
+    @NotNull
+    private final BigDecimal longPosition;
+    @NotNull
+    private final BigDecimal initialMtmAmount;
+    @NotNull
+    private final BigDecimal dailyMtmAmount;
+    @NotNull
+    private final BigDecimal swapPoint;
+    @NotNull
+    private final BigDecimal totalVariationMargin;
     @Nullable
     private final LocalDate settlementDate;
 
