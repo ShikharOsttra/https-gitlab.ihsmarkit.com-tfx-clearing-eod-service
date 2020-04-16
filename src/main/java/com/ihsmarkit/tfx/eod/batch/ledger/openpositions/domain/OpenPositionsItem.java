@@ -21,9 +21,9 @@ public class OpenPositionsItem {
     private final BigDecimal shortPositionPreviousDay;
     @NotNull
     private final BigDecimal longPositionPreviousDay;
-    @NotNull
+    @Nullable
     private final BigDecimal sellTradingAmount;
-    @NotNull
+    @Nullable
     private final BigDecimal buyTradingAmount;
     @NotNull
     private final BigDecimal shortPosition;

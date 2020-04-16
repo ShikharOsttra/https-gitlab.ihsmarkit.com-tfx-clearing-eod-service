@@ -34,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
@@ -43,6 +44,7 @@ import com.ihsmarkit.tfx.eod.config.QuartzConfig;
 import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
+import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
 @ImportAutoConfiguration({
@@ -65,6 +67,8 @@ import com.ihsmarkit.tfx.eod.statemachine.StateWaitingListener;
         "cashCollateralBalanceUpdate.job.trigger.cron=0 0 1 3 1 ? 2099"
     }
 )
+@DbUnitTestListeners
+@DatabaseTearDown("/common/tearDown.xml")
 public class QuartzIntegrationTest {
 
     private static final LocalDate OCT_7 = LocalDate.of(2019, 10, 7);

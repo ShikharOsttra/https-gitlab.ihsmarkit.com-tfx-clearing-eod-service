@@ -20,6 +20,8 @@ public class CacheConfig extends CachingConfigurerSupport {
     public static final String VALUE_DATES_CACHE = "valueDates";
     public static final String VM_SETTLEMENT_DATES_CACHE = "vmSettlementDates";
     public static final String JPY_RATES_CACHE = "joyRatesCache";
+    public static final String JPY_CROSS_RATES_CACHE = "joyCrossRatesCache";
+
 
     @Bean
     @JobScope
@@ -30,7 +32,8 @@ public class CacheConfig extends CachingConfigurerSupport {
             IS_TRADABLE,
             VALUE_DATES_CACHE,
             VM_SETTLEMENT_DATES_CACHE,
-            JPY_RATES_CACHE
+            JPY_RATES_CACHE,
+            JPY_CROSS_RATES_CACHE
         );
     }
 
