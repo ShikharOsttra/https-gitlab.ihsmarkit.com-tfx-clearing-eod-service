@@ -6,7 +6,4 @@
     <participant id="5" code="P25" name="Party_425" type="FX_BROKER" matching_preference="ENTITY" status="DISABLED" notification_email="gio.romano@gmail.com"/>
     <participant id="6" code="P26" name="Party_426" type="FX_BROKER" matching_preference="ENTITY" status="DELETED" notification_email="gio.romano@gmail.com"/>
 
-    <currency_pair id="1" base_ccy="EUR" value_ccy="USD"/>
-    <currency_pair id="2" base_ccy="USD" value_ccy="JPY"/>
-
 </dataset>
