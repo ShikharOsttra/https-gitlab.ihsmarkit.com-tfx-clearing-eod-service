@@ -14,7 +14,6 @@ import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 class ParticipantAndCurrencyPairQueryProviderTest extends AbstractJpaQueryProviderTest<ParticipantAndCurrencyPair> {
 
     @Test
-    @Commit
     @DatabaseSetup({
         "/common/all_participant_types.xml",
         "/common/currency.xml"

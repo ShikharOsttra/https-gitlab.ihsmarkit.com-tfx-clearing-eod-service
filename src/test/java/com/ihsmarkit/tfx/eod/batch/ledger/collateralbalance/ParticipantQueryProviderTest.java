@@ -14,7 +14,6 @@ import com.ihsmarkit.tfx.eod.batch.ledger.AbstractJpaQueryProviderTest;
 class ParticipantQueryProviderTest extends AbstractJpaQueryProviderTest<ParticipantEntity> {
 
     @Test
-    @Commit
     @DatabaseSetup("/common/all_participant_types.xml")
     void shouldCreateQuery() {
         assertThat(getResultList())
