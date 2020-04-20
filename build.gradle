@@ -73,7 +73,9 @@ dependencies {
             [group: 'org.yaml', name: 'snakeyaml'],
             [group: 'org.apache.commons', name: 'commons-csv'],
             [group: 'io.vavr', name: 'vavr'],
-            [group: 'one.util', name: 'streamex']
+            [group: 'one.util', name: 'streamex'],
+            [group: 'org.apache.velocity', name: 'velocity-engine-core'],
+            [group: 'org.apache.velocity.tools', name: 'velocity-tools-generic']
     )
 
     runtimeOnly(
