@@ -12,7 +12,6 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,16 +20,21 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
+import com.ihsmarkit.tfx.eod.config.VelocityConfiguration;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
+
 @ExtendWith(SpringExtension.class)
+@TestPropertySource("classpath:/application.properties")
 class PositionRebalancePublishingServiceTest {
 
     @Autowired
@@ -61,7 +65,7 @@ class PositionRebalancePublishingServiceTest {
 
         verify(mailClient, times(1)).sendEmailWithAttachments(
             anyString(),
-            eq(StringUtils.EMPTY),
+            anyString(),
             eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             (List) argThat(IsCollectionWithSize.hasSize(1))
         );
@@ -80,6 +84,7 @@ class PositionRebalancePublishingServiceTest {
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = { PositionRebalancePublishingService.class, AwsSesMailClient.class, PositionRebalanceCSVWriter.class, ParticipantRepository.class })
     )
+    @Import(VelocityConfiguration.class)
     static class TestConfig {
 
     }
