@@ -92,7 +92,7 @@ public class EOD2JobConfig {
             .next(totalVM())
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
-            .next(ledgerCleanupTasklet())
+            .next(ledgerCleanup())
             .next(dailyMarkedDataLedger)
             .next(transactionDiaryLedger)
             .next(openPositionsLedger)
@@ -124,7 +124,7 @@ public class EOD2JobConfig {
             .build();
     }
 
-    private Step ledgerCleanupTasklet() {
+    private Step ledgerCleanup() {
         return steps.get(LEDGER_CLEANUP_STEP_NAME)
             .listener(eodAlertStepListener)
             .allowStartIfComplete(true)

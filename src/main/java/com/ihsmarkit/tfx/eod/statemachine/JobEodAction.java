@@ -15,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobEodAction implements EodAction {
 
-    private JobLauncher jobLauncher;
-    private Job job;
-    private Function<EodContext, JobParameters> parametersMapper;
+    private final JobLauncher jobLauncher;
+    private final Job job;
+    private final Function<EodContext, JobParameters> parametersMapper;
 
     public JobEodAction(final JobLauncher jobLauncher, final Job job, final Function<EodContext, JobParameters> parametersMapper) {
         this.jobLauncher = jobLauncher;
@@ -27,7 +27,7 @@ public class JobEodAction implements EodAction {
 
     @SneakyThrows
     @Override
-    public void execute(EodContext context) {
+    public void execute(final EodContext context) {
         try {
             final JobExecution execution = jobLauncher.run(job, parametersMapper.apply(context));
 
