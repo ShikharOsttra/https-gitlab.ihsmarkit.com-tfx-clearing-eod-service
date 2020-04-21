@@ -4,8 +4,10 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_FLOW_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME;
 
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.job.flow.support.SimpleFlow;
@@ -23,12 +25,15 @@ import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.NETTransactionDiaryLe
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.SODTransactionDiaryLedgerProcessor;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeListQueryProvider;
 import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TradeTransactionDiaryLedgerProcessor;
+import com.ihsmarkit.tfx.eod.batch.ledger.transactiondiary.TransactionDiaryRecordDateSetter;
 
 import lombok.AllArgsConstructor;
 
 @Configuration
 @AllArgsConstructor
 public class TransactionDiaryLedgerConfig {
+
+    private final StepBuilderFactory steps;
 
     private final LedgerStepFactory ledgerStepFactory;
 
@@ -37,6 +42,7 @@ public class TransactionDiaryLedgerConfig {
     @Value("classpath:/ledger/sql/eod_ledger_transaction_diary_insert.sql")
     private final Resource transactionDiaryLedgerSql;
 
+    private final TransactionDiaryRecordDateSetter transactionDiaryRecordDateSetter;
     private final TradeTransactionDiaryLedgerProcessor tradeTransactionDiaryLedgerProcessor;
     private final SODTransactionDiaryLedgerProcessor sodTransactionDiaryLedgerProcessor;
     private final NETTransactionDiaryLedgerProcessor netTransactionDiaryLedgerProcessor;
@@ -47,9 +53,17 @@ public class TransactionDiaryLedgerConfig {
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
     Flow transactionDiaryLedger() {
         return new FlowBuilder<SimpleFlow>(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
-            .start(sodTransactionDiaryLedger())
+            .start(transactionDiaryRecordDateSetterStep())
+            .next(sodTransactionDiaryLedger())
             .next(tradeTransactionDiaryLedger())
             .next(netTransactionDiaryLedger())
+            .build();
+    }
+
+    @Bean(TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME)
+    Step transactionDiaryRecordDateSetterStep() {
+        return steps.get(TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME)
+            .tasklet(transactionDiaryRecordDateSetter)
             .build();
     }
 
