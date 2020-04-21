@@ -56,7 +56,6 @@ public class PositionRebalancePublishingService {
     private static final String PARTICIPANT_NAME = "participantName";
     private static final String TRADE_DATE_JP = "tradeDateJP";
     private static final String TRADE_DATE_EN = "tradeDateEN";
-
     private static final String POSITIONS_REBALANCE_CSV_FILENAME = "positions-rebalance.csv";
     private static final String TEXT_CSV_TYPE = "text/csv";
 
@@ -81,11 +80,12 @@ public class PositionRebalancePublishingService {
         final String businessDateString = businessDate.toString();
 
         getAllActiveLPs()
+            .sequential()
             // todo: should we send empty CSV to participants without rebalancing trade?
             .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
             .forEach(participant -> mailClient.sendEmailWithAttachments(
                 String.format("%s rebalance results for %s", businessDateString, participant.getCode()),
-                StringUtils.EMPTY,
+                generateEmailText(businessDate, participant.getName()),
                 parseRecipients(participant.getNotificationEmail()),
                 csvEmailAttachment(participantCsvFiles.get(participant.getCode()))
             ));
