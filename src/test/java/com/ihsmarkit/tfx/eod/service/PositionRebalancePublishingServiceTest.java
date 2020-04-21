@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -18,8 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +40,9 @@ import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
+import com.ihsmarkit.tfx.eod.config.VelocityConfiguration;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
-import com.ihsmarkit.tfx.eod.config.VelocityConfiguration;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
@@ -86,7 +85,7 @@ class PositionRebalancePublishingServiceTest {
 
         verify(mailClient, times(1)).sendEmailWithAttachments(
             eq("2019-01-01 rebalance results for LP99"),
-            eq(StringUtils.EMPTY),
+            anyString(),
             eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             Matchers.argThat(list -> assertThat(list).hasSize(1))
         );
