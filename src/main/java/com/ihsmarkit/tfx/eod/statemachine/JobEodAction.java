@@ -35,7 +35,7 @@ public class JobEodAction implements EodAction {
                 throw new JobFailedException(String.format("Job %s failed", execution.getJobInstance().getJobName()));
             }
 
-        } catch (JobInstanceAlreadyCompleteException e) {
+        } catch (final JobInstanceAlreadyCompleteException ex) {
             log.info("Ignored attempt to rerun successfully executed job {}.", job.getName());
         }
     }

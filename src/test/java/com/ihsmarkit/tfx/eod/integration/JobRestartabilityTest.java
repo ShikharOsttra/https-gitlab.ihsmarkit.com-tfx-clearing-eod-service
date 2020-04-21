@@ -118,7 +118,7 @@ public class JobRestartabilityTest {
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
 
     @Autowired
-    DataSource ds;
+    private DataSource ds;
 
     @Value("classpath:common/tradingHours.xml")
     private Resource tradingHours;
