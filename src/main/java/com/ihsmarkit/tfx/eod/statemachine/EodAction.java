@@ -8,7 +8,11 @@ public interface EodAction extends Action<StateMachineConfig.States, StateMachin
 
     @Override
     default void execute(final StateContext<StateMachineConfig.States, StateMachineConfig.Events> context) {
-        execute(EodContext.of(context));
+        try {
+            execute(EodContext.of(context));
+        } catch (RuntimeException e) {
+            context.getStateMachine().setStateMachineError(e);
+        }
     }
 
     void execute(EodContext context);

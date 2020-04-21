@@ -7,7 +7,6 @@ import static com.ihsmarkit.tfx.core.domain.eod.EodStage.SWAP_POINTS_APPROVED;
 import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
@@ -83,7 +82,7 @@ public class StateMachineActionsConfig {
 
     @Bean
     public JobEodAction eod1runAction() {
-        return context -> jobLauncher.run(eod1Job, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, eod1Job, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
@@ -105,12 +104,12 @@ public class StateMachineActionsConfig {
 
     @Bean
     public JobEodAction eod2runAction() {
-        return context -> jobLauncher.run(eod2Job, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, eod2Job, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
     public JobEodAction dateRollRunAction() {
-        return context -> jobLauncher.run(rollBusinessDateJob, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, rollBusinessDateJob, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
@@ -148,7 +147,7 @@ public class StateMachineActionsConfig {
     private JobParameters getJobParameters(final LocalDate businessDate) {
         return new JobParametersBuilder()
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
-            .addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
+            //.addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
             .toJobParameters();
     }
 

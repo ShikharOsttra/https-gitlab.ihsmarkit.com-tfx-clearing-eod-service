@@ -57,6 +57,7 @@ public class LedgerStepFactory {
         return steps.get(stepName)
             .listener(recordDateSetter)
             .listener(eodAlertStepListener)
+            .allowStartIfComplete(true)
             .chunk(chunkSize);
     }
 
