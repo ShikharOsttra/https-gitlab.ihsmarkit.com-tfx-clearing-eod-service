@@ -83,6 +83,8 @@ import com.ihsmarkit.tfx.eod.statemachine.StateMachineActionsConfig;
 import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 @ExtendWith(SpringExtension.class)
 @DbUnitTestListeners
 @DatabaseTearDown("/common/tearDown.xml")
@@ -230,6 +232,7 @@ public class JobRestartabilityTest {
 
     }
 
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     private void sendAndWaitForAlerts(StateMachineConfig.Events event, AlertEventName expectedAlert, long timeout) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
@@ -242,7 +245,7 @@ public class JobRestartabilityTest {
             }
         ).when(alertSender).sendAlert(any());
 
-        stateMachine.sendEvent(EOD);
+        stateMachine.sendEvent(event);
 
         latch.await(timeout, SECONDS);
 
