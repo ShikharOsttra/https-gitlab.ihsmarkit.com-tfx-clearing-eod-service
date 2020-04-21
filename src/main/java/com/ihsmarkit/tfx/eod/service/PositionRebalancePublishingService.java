@@ -3,16 +3,23 @@ package com.ihsmarkit.tfx.eod.service;
 import static io.vavr.API.$;
 import static io.vavr.API.Case;
 
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.chrono.Chronology;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.context.Context;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
@@ -38,6 +45,17 @@ import one.util.streamex.EntryStream;
 @AllArgsConstructor
 @Slf4j
 public class PositionRebalancePublishingService {
+
+    private static final Locale JA_LOCALE = new Locale("ja");
+    private static final DateTimeFormatter DATE_JP_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+        .withLocale(JA_LOCALE)
+        .withChronology(Chronology.ofLocale(JA_LOCALE));
+    private static final DateTimeFormatter DATE_EN_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private static final String REBALANCE_EMAIL_TEMPLATE = "/velocity/templates/rebalance_email.vm";
+    private static final String PARTICIPANT_NAME = "participantName";
+    private static final String TRADE_DATE_JP = "tradeDateJP";
+    private static final String TRADE_DATE_EN = "tradeDateEN";
 
     private static final String POSITIONS_REBALANCE_CSV_FILENAME = "positions-rebalance.csv";
     private static final String TEXT_CSV_TYPE = "text/csv";
@@ -119,6 +137,17 @@ public class PositionRebalancePublishingService {
         return participantRepository.findAllNotDeletedParticipantListItems().stream()
             .filter(participantEntity -> ParticipantType.LIQUIDITY_PROVIDER == participantEntity.getType())
             .filter(participantEntity -> ParticipantStatus.ACTIVE == participantEntity.getStatus());
+    }
+
+    private String generateEmailText(final LocalDate tradeDate, final String participantName) {
+        final Context context = new VelocityContext();
+        context.put(PARTICIPANT_NAME, participantName);
+        context.put(TRADE_DATE_EN, DATE_EN_FORMATTER.format(tradeDate));
+        context.put(TRADE_DATE_JP, DATE_JP_FORMATTER.format(tradeDate));
+
+        final StringWriter writer = new StringWriter();
+        Velocity.mergeTemplate(REBALANCE_EMAIL_TEMPLATE, StandardCharsets.UTF_8.name(), context, writer);
+        return writer.toString();
     }
 
     private static API.Match.Case<Throwable, ? extends Throwable> mapAnyException(final Function<Throwable, ? extends Throwable> remapper) {

@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.ihsmarkit.tfx.common.test.assertion.Matchers;
@@ -40,10 +43,13 @@ import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
+import com.ihsmarkit.tfx.eod.config.VelocityConfiguration;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
+
 @ExtendWith(SpringExtension.class)
+@TestPropertySource("classpath:/application.properties")
 class PositionRebalancePublishingServiceTest {
 
     private static final ParticipantEntity RECIPIENT = aParticipantEntityBuilder()
@@ -142,6 +148,7 @@ class PositionRebalancePublishingServiceTest {
         includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = { PositionRebalancePublishingService.class, AwsSesMailClient.class, PositionRebalanceCSVWriter.class, ParticipantRepository.class })
     )
+    @Import(VelocityConfiguration.class)
     static class TestConfig {
 
     }
