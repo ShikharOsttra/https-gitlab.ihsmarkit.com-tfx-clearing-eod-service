@@ -1,6 +1,5 @@
 stages:
   - build
-  - post-build
   - deliver
   - downstream
 
@@ -8,52 +7,7 @@ branch-job:
   stage: build
   image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
   script:
-    - gradle clean build
-  except:
-    - master
-    - develop
-    - uat-drop
-  artifacts:
-    paths:
-      - build/libs/
-
-check-dependencies:
-  stage: post-build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
-  script:
-    - check_dependencies.sh
-  except:
-    - uat-drop
-
-develop-job:
-  stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
-  script:
-    - gradle clean build publish
-  only:
-    - develop
-  artifacts:
-    paths:
-      - build/libs/
-
-uat-drop-job:
-  stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
-  script:
-    - gradle clean build publish
-  only:
-    - uat-drop
-  artifacts:
-    paths:
-      - build/libs/
-
-master-job:
-  stage: build
-  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.07
-  script:
-    - gradle clean build publish
-  only:
-    - master
+    - gradle clean build -x check
   artifacts:
     paths:
       - build/libs/
@@ -62,17 +16,20 @@ gconf:deliver:
   stage: deliver
   image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
   script:
-    - gconf-deliver --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.3.1
-  only:
-    - master
-    - develop
-    - uat-drop
+    - gconf-deliver --merge-hierarchy "develop" --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.3.1
   artifacts:
     paths:
       - build/deliverable/
       - build/reports/
       - build/test-results/
 
-include:
-  - project: 'tfx-clearing/environments/ci'
-    file: 'deployable-builds-ci.yml'
+gconf:deployables-s2:
+  image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
+  stage: downstream
+  dependencies:
+    - gconf:deliver
+  script:
+    - export IMAGE_DIGEST=`cat build/deliverable/gconf.deliverable.ref | sed 's/^.*@//g'`
+    - echo "IMAGE_DIGEST=${IMAGE_DIGEST}"
+    ## s2
+    - curl -g --request POST --form token=${CI_JOB_TOKEN} --form ref=master "https://git.mdevlab.com/api/v4/projects/15782/trigger/pipeline?variables[IMAGE_DIGEST]=${IMAGE_DIGEST}"
