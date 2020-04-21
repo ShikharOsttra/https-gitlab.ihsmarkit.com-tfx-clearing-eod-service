@@ -9,6 +9,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFICATION_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_CLEANUP_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
@@ -17,6 +18,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
@@ -24,6 +26,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.EOD;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.function.Predicate.not;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -35,6 +38,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -216,7 +220,13 @@ public class JobRestartabilityTest {
                 Pair.of(COLLATERAL_LIST_LEDGER_STEP_NAME, COMPLETED)
             )
         );
-        assertThat(getStepExecutonStatuses()).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
+
+        Set<String> ignored = Set.of(ROLL_BUSINESS_DATE_STEP_NAME, EOD_COMPLETE_NOTIFICATION_STEP_NAME);
+        assertThat(
+            getStepExecutonStatuses()
+                .stream()
+                .filter(not(pair -> ignored.contains(pair.getLeft())))
+        ).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
 
     }
 
