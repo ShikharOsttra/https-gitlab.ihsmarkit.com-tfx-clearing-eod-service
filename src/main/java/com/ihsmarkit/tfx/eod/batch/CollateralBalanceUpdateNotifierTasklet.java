@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
-import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
 import com.ihsmarkit.tfx.core.domain.notification.system.CollateralBalanceChangeEventNotification;
@@ -34,8 +33,6 @@ public class CollateralBalanceUpdateNotifierTasklet implements Tasklet {
     private final LocalDate businessDate;
 
     private final SystemEventNotificationSender systemEventNotificationSender;
-
-    private final SystemParameterRepository systemParameterRepository;
 
     private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
