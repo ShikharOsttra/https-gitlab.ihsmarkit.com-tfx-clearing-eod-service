@@ -33,8 +33,6 @@ import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceReposito
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralProductRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashBalanceAdjustmentRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
-import com.ihsmarkit.tfx.core.domain.notification.system.CollateralBalanceChangeEventNotification;
-import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
 
@@ -69,8 +67,6 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
     private final Lazy<CollateralProductEntity> cashProduct =
         Lazy.of(() -> getCollateralProductRepository().findAllCashProducts().get(0));
 
-    private final SystemEventNotificationSender systemEventNotificationSender;
-
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
 
@@ -96,23 +92,14 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
         eodCashBalanceAdjustmentRepository.saveAll(margins.stream().map(this::mapToAdjustment)::iterator);
 
-        margins.stream()
-            .map(entity -> entity.getParticipant().getCode())
-            .forEach(this::publishCollateralUpdateNotification);
         log.info("[var-cash-settlement] completed for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         return RepeatStatus.FINISHED;
     }
 
-    private void publishCollateralUpdateNotification(final String code) {
-        systemEventNotificationSender.send(CollateralBalanceChangeEventNotification.builder()
-            .participantCode(code)
-            .purpose(MARGIN)
-            .productType(CASH)
-            .build());
-    }
-
     private EodCashBalanceAdjustmentEntity mapToAdjustment(final EodCashSettlementEntity margin) {
+        log.info("[var-cash-settlement] participant: {}, amount: {}, date: {}",
+            margin.getParticipant().getCode(), margin.getAmount().getValue().toPlainString(), margin.getDate());
         return cashSettlementMapper.toEodCashBalanceAdjustmentEntity(margin, clockService.getCurrentDateTimeUTC());
     }
 

@@ -129,6 +129,7 @@ public class RebalancingTasklet implements Tasklet {
                 trade,
                 ParticipantPositionType.REBALANCING,
                 businessDate,
+                businessDate,
                 tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
                 dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
             ));

@@ -1,6 +1,6 @@
 package com.ihsmarkit.tfx.eod.config;
 
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFICATION_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFY_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_STEP_NAME;
 
@@ -43,7 +43,7 @@ public class RollBusinessDateJobConfig {
     }
 
     private Step sendEodCompleteNotification() {
-        return steps.get(EOD_COMPLETE_NOTIFICATION_STEP_NAME)
+        return steps.get(EOD_COMPLETE_NOTIFY_STEP_NAME)
             .tasklet(eodCompleteNotifierTasklet)
             .build();
     }
