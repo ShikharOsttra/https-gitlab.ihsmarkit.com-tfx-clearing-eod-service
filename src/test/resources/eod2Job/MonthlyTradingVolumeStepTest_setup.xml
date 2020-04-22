@@ -9,15 +9,15 @@
     <fx_spot_product id="1" product_number="101" product_code="USD/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
     <fx_spot_product id="2" product_number="102" product_code="EUR/JPY" trading_unit="1000" tick_amount_val="0" tick_amount_ccy="JPY" description="desc"/>
 
-    <participant_position id="1" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" trade_date="2018-12-31" value_date="2019-01-03" price="3.12" amount="-10000000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
-    <participant_position id="2" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" trade_date="2019-01-01" value_date="2019-01-03" price="3.12" amount="-100000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
-    <participant_position id="3" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" trade_date="2019-01-02" value_date="2019-01-03" price="3.12" amount="-200000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
-    <participant_position id="4" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="101" trade_date="2019-01-01" value_date="2019-01-03" price="3.12" amount="500000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
-    <participant_position id="5" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="101" trade_date="2019-01-02" value_date="2019-01-03" price="3.12" amount="600000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
+    <participant_position id="1" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" date="2018-12-31" trade_date="2018-12-31" value_date="2019-01-03" price="3.12" amount="-10000000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
+    <participant_position id="2" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" date="2019-01-01" trade_date="2019-01-01" value_date="2019-01-03" price="3.12" amount="-100000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
+    <participant_position id="3" currency_pair_id="1" participant_type="LIQUIDITY_PROVIDER" participant_id="101" date="2019-01-02" trade_date="2019-01-02" value_date="2019-01-03" price="3.12" amount="-200000" currency="JPY" type="MONTHLY_VOLUME_NET_SELL"/>
+    <participant_position id="4" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="101" date="2019-01-01" trade_date="2019-01-01" value_date="2019-01-03" price="3.12" amount="500000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
+    <participant_position id="5" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="101" date="2019-01-02" trade_date="2019-01-02" value_date="2019-01-03" price="3.12" amount="600000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
 
-    <participant_position id="6" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" trade_date="2019-01-04" value_date="2019-01-03" price="3.12" amount="700000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
-    <participant_position id="7" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" trade_date="2019-01-05" value_date="2019-01-03" price="3.12" amount="800000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
-    <participant_position id="8" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" trade_date="2019-01-06" value_date="2019-01-03" price="3.12" amount="900000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
+    <participant_position id="6" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" date="2019-01-04" trade_date="2019-01-04" value_date="2019-01-03" price="3.12" amount="700000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
+    <participant_position id="7" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" date="2019-01-05" trade_date="2019-01-05" value_date="2019-01-03" price="3.12" amount="800000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
+    <participant_position id="8" currency_pair_id="2" participant_type="LIQUIDITY_PROVIDER" participant_id="102" date="2019-01-06" trade_date="2019-01-06" value_date="2019-01-03" price="3.12" amount="900000" currency="JPY" type="MONTHLY_VOLUME_NET_BUY"/>
 
 
 </dataset>
