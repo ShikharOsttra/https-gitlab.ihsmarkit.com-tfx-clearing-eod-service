@@ -147,7 +147,6 @@ public class StateMachineActionsConfig {
     private JobParameters getJobParameters(final LocalDate businessDate) {
         return new JobParametersBuilder()
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
-            //.addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
             .toJobParameters();
     }
 

@@ -9,21 +9,17 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JobEodAction implements EodAction {
 
     private final JobLauncher jobLauncher;
     private final Job job;
     private final Function<EodContext, JobParameters> parametersMapper;
-
-    public JobEodAction(final JobLauncher jobLauncher, final Job job, final Function<EodContext, JobParameters> parametersMapper) {
-        this.jobLauncher = jobLauncher;
-        this.job = job;
-        this.parametersMapper = parametersMapper;
-    }
 
     @SneakyThrows
     @Override
