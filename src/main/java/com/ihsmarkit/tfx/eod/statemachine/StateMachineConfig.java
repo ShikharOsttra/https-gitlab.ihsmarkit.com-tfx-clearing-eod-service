@@ -48,7 +48,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     }
     public enum Events { EOD, STOP }
 
-    private static final int WAIT_TIME = 1000;
+    private static final int WAIT_TIME = 5000;
 
     @Qualifier("dspApprovedGuard")
     private final Guard<States, Events> dspApprovedGuard;
