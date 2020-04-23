@@ -40,7 +40,7 @@ public class PositionRebalancePublishingService {
     private static final DateTimeFormatter DATE_JP_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
         .withLocale(JA_LOCALE)
         .withChronology(Chronology.ofLocale(JA_LOCALE));
-    private static final DateTimeFormatter DATE_EN_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter DATE_EN_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
     private static final String REBALANCE_EMAIL_TEMPLATE = "/velocity/templates/rebalance_email.vm";
     private static final String PARTICIPANT_NAME = "participantName";
