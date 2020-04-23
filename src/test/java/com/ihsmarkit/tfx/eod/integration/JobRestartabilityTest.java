@@ -24,6 +24,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.EOD;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.not;
@@ -201,7 +202,8 @@ public class JobRestartabilityTest {
                 Pair.of(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY, COMPLETED),
                 Pair.of(DAILY_MARKET_DATA_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(LEDGER_CLEANUP_STEP_NAME, COMPLETED),
-                Pair.of(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME, FAILED)
+                Pair.of(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME, FAILED),
+                Pair.of(TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME, COMPLETED)
             )
         );
         assertThat(getStepExecutonStatuses()).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
