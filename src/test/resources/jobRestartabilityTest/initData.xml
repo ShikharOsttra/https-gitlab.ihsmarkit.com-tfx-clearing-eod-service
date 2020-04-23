@@ -1,5 +1,7 @@
 <dataset>
     <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-07"/>
+    <system_parameter id="2" name="LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME" value="2019-01-07 07:30:00"/>
+    <system_parameter id="3" name="LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME" value="2019-01-07 07:35:00"/>
 
     <fx_spot_tick_size product_id="2" value="0.00000100" applicable_date="2019-02-02" business_date="2019-01-07"/>
     <fx_spot_tick_size product_id="13" value="0.00000100" applicable_date="2019-02-02" business_date="2019-01-07"/>
@@ -12,23 +14,22 @@
     <calendar_trading_swap_point id="5" currency_pair_id="2" trade_date="2019-01-07" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-06" variation_margin_settlement_date="2019-01-09"/>
     <calendar_trading_swap_point id="6" currency_pair_id="2" trade_date="2019-01-08" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-07" variation_margin_settlement_date="2019-01-10"/>
 
-    <eod_status stage="EOD_PRICES_BOND_UPDATE_COMPLETED" business_date="2019-01-07" timestamp="2019-01-07 07:30:00"/>
-    <eod_status stage="EOD_PRICES_EQUITY_UPDATE_COMPLETED" business_date="2019-01-07" timestamp="2019-01-07 07:35:00"/>
+
     <eod_status stage="DSP_APPROVED" business_date="2019-01-07" timestamp="2019-01-07 22:00:00"/>
     <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-07" timestamp="2019-01-07 23:00:00"/>
 
     <participant_position
-        id="1"
-        currency_pair_id="13"
-        participant_type="LIQUIDITY_PROVIDER"
-        participant_id="101"
-        date="2019-01-07"
-        trade_date="2019-01-07"
-        value_date="2019-01-09"
-        price="3.12"
-        amount="-1000000"
-        currency="JPY"
-        type="SOD"
+            id="1"
+            currency_pair_id="13"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            date="2019-01-07"
+            trade_date="2019-01-07"
+            value_date="2019-01-09"
+            price="3.12"
+            amount="-1000000"
+            currency="JPY"
+            type="SOD"
     />
 
     <margin_ratio id="1" currency_pair_id="13" value="80" applicable_date="2019-01-07" business_date="2019-01-07"/>
