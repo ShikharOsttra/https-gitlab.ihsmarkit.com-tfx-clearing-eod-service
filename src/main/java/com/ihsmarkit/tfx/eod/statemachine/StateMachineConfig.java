@@ -28,6 +28,7 @@ import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.States.SWP_P
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
@@ -48,7 +49,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
     }
     public enum Events { EOD, STOP }
 
-    private static final int WAIT_TIME = 5000;
+    @Value("${state.machine.wait.time.millis:5000}")
+    private int waitTime;
 
     @Qualifier("dspApprovedGuard")
     private final Guard<States, Events> dspApprovedGuard;
@@ -166,11 +168,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
                 .first(EOD1_READY, dspApprovedGuard)
                 .last(NO_DSP_TRADES_DELAY)
             .and().withExternal()
-                .source(NO_DSP_TRADES_DELAY).target(NO_DSP_TRADES).timer(WAIT_TIME)
+                .source(NO_DSP_TRADES_DELAY).target(NO_DSP_TRADES).timer(waitTime)
             .and().withExternal()
-                .source(DSP_NO_TRADES_DELAY).target(DSP_NO_TRADES).timer(WAIT_TIME)
+                .source(DSP_NO_TRADES_DELAY).target(DSP_NO_TRADES).timer(waitTime)
             .and().withExternal()
-                .source(NO_DSP_NO_TRADES_DELAY).target(NO_DSP_NO_TRADES).timer(WAIT_TIME)
+                .source(NO_DSP_NO_TRADES_DELAY).target(NO_DSP_NO_TRADES).timer(waitTime)
             .and().withExternal()
                 .source(EOD1_READY).target(EOD1_RUN).action(eod1runAction)
             .and().withChoice()
@@ -186,7 +188,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<StateM
                 .first(SWP_PNT_APPROVED, swpPointApprovedGuard)
                 .last(SWP_PNT_DELAY)
             .and().withExternal()
-                .source(SWP_PNT_DELAY).target(SWP_PNT_NOTAPPROVED).timer(WAIT_TIME)
+                .source(SWP_PNT_DELAY).target(SWP_PNT_NOTAPPROVED).timer(waitTime)
             .and().withExternal()
                 .source(SWP_PNT_APPROVED).target(EOD2_RUN).action(eod2runAction)
             .and().withChoice()
