@@ -9,7 +9,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFICATION_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFY_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_CLEANUP_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
@@ -24,6 +24,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIARY_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.EOD;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.not;
@@ -201,6 +202,7 @@ public class JobRestartabilityTest {
                 Pair.of(MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY, COMPLETED),
                 Pair.of(DAILY_MARKET_DATA_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(LEDGER_CLEANUP_STEP_NAME, COMPLETED),
+                Pair.of(TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME, COMPLETED),
                 Pair.of(SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME, FAILED)
             )
         );
@@ -223,7 +225,7 @@ public class JobRestartabilityTest {
             )
         );
 
-        Set<String> ignored = Set.of(ROLL_BUSINESS_DATE_STEP_NAME, EOD_COMPLETE_NOTIFICATION_STEP_NAME);
+        Set<String> ignored = Set.of(ROLL_BUSINESS_DATE_STEP_NAME, EOD_COMPLETE_NOTIFY_STEP_NAME);
         assertThat(
             getStepExecutonStatuses()
                 .stream()
