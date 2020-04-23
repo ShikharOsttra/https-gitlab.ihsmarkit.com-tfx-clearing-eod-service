@@ -23,6 +23,7 @@
             currency_pair_id="13"
             participant_type="LIQUIDITY_PROVIDER"
             participant_id="101"
+            date="2019-01-07"
             trade_date="2019-01-07"
             value_date="2019-01-09"
             price="3.12"
