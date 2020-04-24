@@ -14,7 +14,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
 import com.ihsmarkit.tfx.core.domain.notification.system.CollateralBalanceChangeEventNotification;
@@ -40,21 +40,20 @@ public class CollateralBalanceUpdateNotifierTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        final List<EodCashSettlementEntity> margins = getEodCashSettlementEntities();
 
-        margins.stream()
-            .map(entity -> entity.getParticipant().getCode())
+        final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
+        final List<ParticipantEntity> participants = eodCashSettlementRepository.findAllParticipantsWithCashSettlements(previousTradingDate);
+
+        participants.stream()
+            .map(ParticipantEntity::getCode)
             .forEach(this::publishCollateralUpdateNotification);
 
         return RepeatStatus.FINISHED;
     }
 
-    private List<EodCashSettlementEntity> getEodCashSettlementEntities() {
-        final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
-        return eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
-    }
-
     private void publishCollateralUpdateNotification(final String code) {
+        log.info("[var-cash-settlement-notify] participant: {}", code);
+
         systemEventNotificationSender.send(CollateralBalanceChangeEventNotification.builder()
             .participantCode(code)
             .purpose(MARGIN)
