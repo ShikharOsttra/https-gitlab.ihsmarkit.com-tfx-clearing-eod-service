@@ -16,7 +16,7 @@ gconf:deliver:
   stage: deliver
   image: docker-registry-eu.mdevlab.com/gconf/base-builder:v1.9.15
   script:
-    - gconf-deliver --merge-hierarchy "develop" --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.3.1
+    - gconf-deliver --merge-hierarchy "develop" --base-deliverable docker-registry-eu.mdevlab.com/mcp-tfx-clearing/base-deliverable:v1.4
   artifacts:
     paths:
       - build/deliverable/
