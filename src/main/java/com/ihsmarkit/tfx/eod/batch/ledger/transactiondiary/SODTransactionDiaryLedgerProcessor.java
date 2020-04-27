@@ -48,7 +48,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
-    @Value("#{stepExecutionContext['recordDate']}")
+    @Value("#{jobExecutionContext['transactionDiaryRecordDate']}")
     private final LocalDateTime recordDate;
 
     private final EODCalculator eodCalculator;

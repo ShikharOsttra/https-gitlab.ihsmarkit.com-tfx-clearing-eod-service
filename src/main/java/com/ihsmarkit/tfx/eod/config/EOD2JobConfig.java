@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.COLLATERAL_LIST_LEDGE
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_GENERATION_COMPLETED_ALERT_STEP;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_CLEANUP_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
@@ -29,6 +30,7 @@ import com.ihsmarkit.tfx.eod.batch.MarginCollateralExcessDeficiencyTasklet;
 import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.batch.LedgerGenerationCompleterTasklet;
+import com.ihsmarkit.tfx.eod.batch.ledger.LedgerCleanupTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
@@ -63,6 +65,8 @@ public class EOD2JobConfig {
 
     private final MarginCollateralExcessDeficiencyTasklet marginCollateralExcessDeficiencyTasklet;
 
+    private final LedgerCleanupTasklet ledgerCleanupTasklet;
+
     private final LedgerGenerationCompleterTasklet ledgerGenerationCompleterTasklet;
 
     private final EodJobListenerFactory eodJobListenerFactory;
@@ -89,6 +93,7 @@ public class EOD2JobConfig {
             .next(totalVM())
             .next(marginCollateralExcessOrDeficiency())
             //ledgers
+            .next(ledgerCleanup())
             .next(dailyMarkedDataLedger)
             .next(transactionDiaryLedger)
             .next(openPositionsLedger)
@@ -121,6 +126,13 @@ public class EOD2JobConfig {
     private Step ledgerGenerationCompletedAlertStep() {
         return steps.get(LEDGER_GENERATION_COMPLETED_ALERT_STEP)
             .tasklet(ledgerGenerationCompleterTasklet)
+            .build();
+    }
+
+    private Step ledgerCleanup() {
+        return steps.get(LEDGER_CLEANUP_STEP_NAME)
+            .allowStartIfComplete(true)
+            .tasklet(ledgerCleanupTasklet)
             .build();
     }
 

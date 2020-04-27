@@ -14,9 +14,9 @@
 
 <p>ーー</p>
 
-<p><span style="color: #000000;">Dear $participantName<br /></span></p>
+<p><span style="color: #000000;">Dear $participantName,<br /></span></p>
 <p>&nbsp;</p>
-<p><span style="color: #000000;">Please find the attached file for the result of Position Rebalance operation on the Trade Date $tradeDateEN</span></p>
+<p><span style="color: #000000;">Please find the attached file for the result of Position Rebalance operation on the Trade Date $tradeDateEN.</span></p>
 <p><span style="color: #000000;">The attachment will include no transaction data in case you were not subject for Position Rebalance.</span></p>
 <p>&nbsp;</p>
 <p><span style="color: #000000;">Please let us know if you have any questions.</span></p>

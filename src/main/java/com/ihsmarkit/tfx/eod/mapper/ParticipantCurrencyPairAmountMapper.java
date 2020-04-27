@@ -53,11 +53,13 @@ public interface ParticipantCurrencyPairAmountMapper {
     @Mapping(target = "currencyPair", source = "trade.currencyPair")
     @Mapping(target = "amount", source = "trade", qualifiedByName = PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
     @Mapping(target = "type", source = "positionType")
-    @Mapping(target = "tradeDate", source = "businessDate")
+    @Mapping(target = "tradeDate", source = "tradeDate")
+    @Mapping(target = "date", source = "businessDate")
     @Mapping(target = "valueDate", source = "settlementDate")
     ParticipantPositionEntity toParticipantPosition(
         ParticipantCurrencyPairAmount trade,
         ParticipantPositionType positionType,
+        LocalDate tradeDate,
         LocalDate businessDate,
         LocalDate settlementDate,
         BigDecimal price
@@ -71,10 +73,12 @@ public interface ParticipantCurrencyPairAmountMapper {
     @Mapping(target = "currencyPair", source = "position.currencyPair")
     @Mapping(target = "amount", source = "position", qualifiedByName = PARTICIPANT_POS_FOR_PAIR_AMOUNT_CONVERTOR)
     @Mapping(target = "type", source = "position.type")
-    @Mapping(target = "tradeDate", source = "businessDate")
+    @Mapping(target = "tradeDate", source = "tradeDate")
+    @Mapping(target = "date", source = "businessDate")
     @Mapping(target = "valueDate", source = "settlementDate")
     ParticipantPositionEntity toParticipantPosition(
         ParticipantPosition position,
+        LocalDate tradeDate,
         LocalDate businessDate,
         LocalDate settlementDate
     );

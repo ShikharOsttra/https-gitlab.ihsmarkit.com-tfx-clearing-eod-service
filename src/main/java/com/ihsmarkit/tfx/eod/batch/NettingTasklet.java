@@ -101,7 +101,7 @@ public class NettingTasklet implements Tasklet {
     private ParticipantPositionEntity mapParticipantPositionEntity(final ParticipantPosition participantPosition) {
         final CurrencyPairEntity currencyPair = participantPosition.getCurrencyPair();
         final LocalDate settlementDate = tradeAndSettlementDateService.getValueDate(businessDate, currencyPair);
-        return participantCurrencyPairAmountMapper.toParticipantPosition(participantPosition, businessDate, settlementDate);
+        return participantCurrencyPairAmountMapper.toParticipantPosition(participantPosition, businessDate, businessDate, settlementDate);
     }
 
     private boolean isInScopeOfMonthlyVolumeReport(final TradeEntity tradeEntity) {

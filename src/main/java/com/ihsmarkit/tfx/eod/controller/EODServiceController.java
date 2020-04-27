@@ -1,5 +1,7 @@
 package com.ihsmarkit.tfx.eod.controller;
 
+import static com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig.Events.EOD;
+
 import java.time.LocalDate;
 
 import javax.validation.Valid;
@@ -7,6 +9,7 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.ihsmarkit.tfx.eod.api.EodServiceControllerApi;
 import com.ihsmarkit.tfx.eod.exception.LockException;
 import com.ihsmarkit.tfx.eod.service.EODControlService;
+import com.ihsmarkit.tfx.eod.statemachine.StateMachineConfig;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class EODServiceController implements EodServiceControllerApi {
 
     private final EODControlService eodControlService;
+
+    private final StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
 
     @Override
     public ResponseEntity<LocalDate> undoCurrentEOD(@NotNull @Valid final Boolean keepMarketData) {
@@ -48,6 +54,12 @@ public class EODServiceController implements EodServiceControllerApi {
     @Override
     public ResponseEntity<String> runEOD2(@Valid final Boolean generateMonthlyLedger) {
         return ResponseEntity.ok(eodControlService.runEOD2Job(generateMonthlyLedger).name());
+    }
+
+    @Override
+    public ResponseEntity<Void> triggerEOD() {
+        stateMachine.sendEvent(EOD);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

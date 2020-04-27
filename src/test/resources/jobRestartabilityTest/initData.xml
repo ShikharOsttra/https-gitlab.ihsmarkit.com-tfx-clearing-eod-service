@@ -16,4 +16,22 @@
     <eod_status stage="EOD_PRICES_EQUITY_UPDATE_COMPLETED" business_date="2019-01-07" timestamp="2019-01-07 07:35:00"/>
     <eod_status stage="DSP_APPROVED" business_date="2019-01-07" timestamp="2019-01-07 22:00:00"/>
     <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-07" timestamp="2019-01-07 23:00:00"/>
+
+    <participant_position
+            id="1"
+            currency_pair_id="13"
+            participant_type="LIQUIDITY_PROVIDER"
+            participant_id="101"
+            date="2019-01-07"
+            trade_date="2019-01-07"
+            value_date="2019-01-09"
+            price="3.12"
+            amount="-1000000"
+            currency="JPY"
+            type="SOD"
+    />
+
+    <margin_ratio id="1" currency_pair_id="13" value="80" applicable_date="2019-01-07" business_date="2019-01-07"/>
+    <margin_ratio_multiplier id="1" participant_id="101" currency_pair_id="13" value="0.90" applicable_date="2019-01-07" business_date="2019-01-07"/>
+
 </dataset>

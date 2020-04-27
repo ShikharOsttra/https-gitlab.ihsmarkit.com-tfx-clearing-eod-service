@@ -11,6 +11,21 @@ servers:
   - url: http://ihsmarkit.com
 
 paths:
+  /triggerEOD:
+    post:
+      tags:
+        - eod-service-controller
+      summary: trigger EOD process
+      operationId: triggerEOD
+      responses:
+        204:
+          description: no result
+        401:
+          $ref: 'common-types.yaml#/components/responses/Unauthorized'
+        403:
+          $ref: 'common-types.yaml#/components/responses/Forbidden'
+        500:
+          $ref: 'common-types.yaml#/components/responses/InternalServerError'
   /undoCurrentBusinessDay:
     post:
       tags:
