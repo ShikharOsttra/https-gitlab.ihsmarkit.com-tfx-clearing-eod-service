@@ -17,7 +17,7 @@ public class PositionRebalanceCSVWriter {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 
-    private static final Object[] HEADER_LINE = new String[] {
+    private static final Object[] HEADER_LINE = {
         "Trade Date",
         "Trade Type",
         "Participant Code Source",
