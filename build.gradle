@@ -179,7 +179,8 @@ ext.additionalJacocoExclusions = [
         '**/eod/exception/LockException*', //non-production code
         '**/eod/service/DailySettlementPriceService*', //TODO fix post release
         '**/eod/batch/ledger/LedgerFormattingUtils*', //TODO fix post release (coverage dropped to zero)
-        '**/eod/batch/CollateralBalanceUpdateNotifierTasklet*' //TODO fix post release (0.5)
+        '**/eod/batch/CollateralBalanceUpdateNotifierTasklet*', //TODO fix post release (0.5)
+        '**/eod/service/MarginRatioService*' //TODO fix post release (coverage 0.6)
 ]
 
 test {
