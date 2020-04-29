@@ -1,9 +1,6 @@
 buildscript {
     dependencies {
         classpath(
-                // TODO: remove as soon as https://github.com/spotbugs/spotbugs-gradle-plugin/issues/147 is fixed
-                [group: 'com.google.guava', name: 'guava', version: guavaVersion],
-
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'sca-gradle-plugin', version: scaGradlePluginVersion],
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'idea-gradle-plugin', version: ideaGradlePluginVersion],
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'test-configuration-gradle-plugin', version: testConfigurationGradlePluginVersion]
