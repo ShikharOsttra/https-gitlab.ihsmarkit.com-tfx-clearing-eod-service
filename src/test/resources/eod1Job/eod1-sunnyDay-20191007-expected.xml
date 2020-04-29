@@ -335,7 +335,17 @@
         amount="330000"
         currency="EUR"
     />
-
+    <participant_position
+        currency_pair_id="13"
+        type="MONTHLY_VOLUME_NET_BUY"
+        participant_type="LIQUIDITY_PROVIDER"
+        participant_id="102"
+        trade_date="2019-10-07"
+        value_date="2019-10-10"
+        price="0"
+        amount="330000.00"
+        currency="EUR"
+    />
     <participant_position
         currency_pair_id="13"
         type="MONTHLY_VOLUME_NET_BUY"
@@ -360,17 +370,7 @@
         currency="EUR"
     />
 
-    <participant_position
-        currency_pair_id="13"
-        type="MONTHLY_VOLUME_NET_BUY"
-        participant_type="LIQUIDITY_PROVIDER"
-        participant_id="102"
-        trade_date="2019-10-07"
-        value_date="2019-10-10"
-        price="0"
-        amount="330000.00"
-        currency="EUR"
-    />
+
 
     <participant_position
         currency_pair_id="13"

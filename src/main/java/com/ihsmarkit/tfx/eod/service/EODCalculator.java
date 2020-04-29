@@ -27,6 +27,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -237,20 +238,18 @@ public class EODCalculator {
     }
 
     private static Stream<ParticipantCurrencyPairAmount> aggregateAndFlatten(final Stream<? extends CcyParticipantAmount> ccyPairAmounts) {
-        final var aggregatedTable = ccyPairAmounts
+        return ccyPairAmounts
             .collect(
-                GuavaCollectors.toTable(
-                    CcyParticipantAmount::getParticipant,
-                    CcyParticipantAmount::getCurrencyPair,
-                    summingBigDecimal(CcyParticipantAmount::getAmount)
+                collectingAndThen(
+                    groupingBy(
+                        ccyParticipantAmount -> Pair.of(ccyParticipantAmount.getParticipant(), ccyParticipantAmount.getCurrencyPair()),
+                        LinkedHashMap::new,
+                        summingBigDecimal(CcyParticipantAmount::getAmount)
+                    ),
+                    aggregatedMap -> EntryStream.of(aggregatedMap)
+                        .mapKeyValue((key, amount) -> ParticipantCurrencyPairAmount.of(key.getLeft(), key.getRight(), amount))
                 )
             );
-        return StreamEx.of(aggregatedTable.cellSet())
-            .map(cell -> ParticipantCurrencyPairAmount.of(
-                checkNotNull(cell.getRowKey()),
-                checkNotNull(cell.getColumnKey()),
-                checkNotNull(cell.getValue())
-            ));
     }
 
     public Stream<ParticipantCurrencyPairAmount> aggregatePositions(final Stream<ParticipantPositionEntity> positions) {
@@ -258,8 +257,7 @@ public class EODCalculator {
     }
 
     public Map<ParticipantEntity, Map<EodProductCashSettlementType, EnumMap<EodCashSettlementDateType, BigDecimal>>>
-        aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins,
-                                final Optional<LocalDate> theDay, final Optional<LocalDate> followingDate) {
+        aggregateRequiredMargin(final List<EodProductCashSettlementEntity> margins, final Optional<LocalDate> theDay, final Optional<LocalDate> followingDate) {
 
         return margins.stream()
             .collect(
@@ -496,7 +494,7 @@ public class EODCalculator {
     }
 
     private static Optional<BigDecimal> calculateCashDeficit(final ParticipantType type, final Optional<BigDecimal> cashCollateral,
-                                                   final Optional<BigDecimal> todaySettlement, final Optional<BigDecimal> nextDaySettlement) {
+        final Optional<BigDecimal> todaySettlement, final Optional<BigDecimal> nextDaySettlement) {
         return sumAll(cashCollateral, todaySettlement,
             ParticipantType.LIQUIDITY_PROVIDER == type && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
                 nextDaySettlement : Optional.of(ZERO));
@@ -587,6 +585,7 @@ public class EODCalculator {
     @NoArgsConstructor
     @Getter
     private static class NettingAccumulator {
+
         private Optional<BigDecimal> net = Optional.empty();
         private Optional<BigDecimal> buy = Optional.empty();
         private Optional<BigDecimal> sell = Optional.empty();
@@ -621,7 +620,7 @@ public class EODCalculator {
             );
         }
 
-        private Optional<BigDecimal> sum(final Function<NettingAccumulator, Optional<BigDecimal>> getter, final NettingAccumulator...accumulators) {
+        private Optional<BigDecimal> sum(final Function<NettingAccumulator, Optional<BigDecimal>> getter, final NettingAccumulator... accumulators) {
             return Arrays.stream(accumulators).map(getter).flatMap(Optional::stream).reduce(BigDecimal::add);
         }
     }
