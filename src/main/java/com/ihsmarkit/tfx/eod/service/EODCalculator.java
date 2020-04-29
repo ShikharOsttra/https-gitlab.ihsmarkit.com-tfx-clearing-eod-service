@@ -13,6 +13,7 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.MONTHLY_VOLUME_NET_SELL;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SELL;
+import static com.ihsmarkit.tfx.core.domain.type.ParticipantType.LIQUIDITY_PROVIDER;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 import static java.math.BigDecimal.ZERO;
 import static java.util.function.Predicate.not;
@@ -495,9 +496,13 @@ public class EODCalculator {
 
     private static Optional<BigDecimal> calculateCashDeficit(final ParticipantType type, final Optional<BigDecimal> cashCollateral,
         final Optional<BigDecimal> todaySettlement, final Optional<BigDecimal> nextDaySettlement) {
-        return sumAll(cashCollateral, todaySettlement,
-            ParticipantType.LIQUIDITY_PROVIDER == type && nextDaySettlement.map(value -> value.signum() < 0).orElse(Boolean.FALSE) ?
-                nextDaySettlement : Optional.of(ZERO));
+        return sumAll(
+            cashCollateral,
+            todaySettlement,
+            nextDaySettlement
+                .filter(value -> LIQUIDITY_PROVIDER == type)
+                .map(ZERO::min)
+        );
     }
 
     private ParticipantMargin createEodParticipantMargin(
