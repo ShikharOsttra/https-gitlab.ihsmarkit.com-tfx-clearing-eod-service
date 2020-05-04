@@ -22,9 +22,12 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.EODThresholdFutureValueRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.Amount;
+import com.ihsmarkit.tfx.core.domain.CurrencyPair;
+import com.ihsmarkit.tfx.core.domain.transaction.NewTransaction;
+import com.ihsmarkit.tfx.core.domain.transaction.NewTransactionsRequest;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.core.time.ClockService;
-import com.ihsmarkit.tfx.eod.mapper.BalanceTradeMapper;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
@@ -32,6 +35,7 @@ import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.PositionRebalancePublishingService;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
+import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 
 import lombok.RequiredArgsConstructor;
 import one.util.streamex.EntryStream;
@@ -43,7 +47,7 @@ public class RebalancingTasklet implements Tasklet {
 
     private final ParticipantPositionRepository participantPositionRepository;
 
-    private final TradeRepository tradeRepositiory;
+    private final TradeRepository tradeRepository;
 
     private final DailySettlementPriceService dailySettlementPriceService;
 
@@ -51,15 +55,13 @@ public class RebalancingTasklet implements Tasklet {
 
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
 
-    private final BalanceTradeMapper balanceTradeMapper;
-
     private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
 
     private final PositionRebalancePublishingService publishingService;
 
     private final EODThresholdFutureValueRepository eodThresholdFutureValueRepository;
 
-    private final ClockService clockService;
+    private final TransactionsSender transactionsSender;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -75,7 +77,7 @@ public class RebalancingTasklet implements Tasklet {
 
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
 
-        final List<TradeEntity> trades = EntryStream.of(balanceTrades)
+        final List<NewTransaction> newTransactions = EntryStream.of(balanceTrades)
             .flatMapKeyValue((currencyPair, tradesByCcy) ->
                 EntryStream.of(
                     tradesByCcy.stream()
@@ -91,27 +93,24 @@ public class RebalancingTasklet implements Tasklet {
                 )
                     .flatMapKeyValue((originator, counterpartyAmounts) ->
                         EntryStream.of(counterpartyAmounts)
-                            .flatMapKeyValue((counterparty, counterpartyAmount) ->
-                                Stream.of(
-                                    new BalanceTrade(originator, counterparty, counterpartyAmount),
-                                    new BalanceTrade(counterparty, originator, counterpartyAmount.negate())
-                                )
+                            .mapKeyValue((counterparty, counterpartyAmount) ->
+                                NewTransaction.builder()
+                                    .tradeDate(businessDate)
+                                    .tradeType(TransactionType.BALANCE)
+                                    .buyerParticipantId(counterpartyAmount.signum() > 0 ? originator.getCode() : counterparty.getCode())
+                                    .sellerParticipantId(counterpartyAmount.signum() > 0 ? counterparty.getCode() : originator.getCode())
+                                    .currencyPair(CurrencyPair.of(currencyPair.getBaseCurrency(), currencyPair.getValueCurrency()))
+                                    .spotRate(dailySettlementPriceService.getPrice(businessDate, currencyPair))
+                                    .baseCurrencyAmount(Amount.of(counterpartyAmount.abs(), currencyPair.getBaseCurrency()))
+                                    .build()
                             )
                     )
-                    .map(trade ->
-                        balanceTradeMapper.toTrade(
-                            trade,
-                            businessDate,
-                            tradeAndSettlementDateService.getValueDate(businessDate, currencyPair),
-                            clockService.getCurrentDateTimeUTC(),
-                            currencyPair,
-                            dailySettlementPriceService.getPrice(businessDate, currencyPair)
-                        )
-                    )
-            )
-            .collect(Collectors.toList());
+            ).toList();
 
-        tradeRepositiory.saveAll(trades);
+        transactionsSender.send(NewTransactionsRequest.builder()
+            .transactions(newTransactions)
+            .build()
+        );
 
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             EntryStream.of(balanceTrades)
@@ -135,6 +134,8 @@ public class RebalancingTasklet implements Tasklet {
             ));
 
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
+
+        final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
         publishingService.publishTrades(businessDate, trades);
 
         return RepeatStatus.FINISHED;
