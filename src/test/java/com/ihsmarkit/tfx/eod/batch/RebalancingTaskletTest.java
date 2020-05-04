@@ -18,25 +18,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 
-import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
-import com.ihsmarkit.tfx.core.dl.entity.LegalEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.domain.Amount;
+import com.ihsmarkit.tfx.core.domain.CurrencyPair;
+import com.ihsmarkit.tfx.core.domain.transaction.NewTransaction;
+import com.ihsmarkit.tfx.core.domain.transaction.NewTransactionsRequest;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
-import com.ihsmarkit.tfx.core.domain.type.Side;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.model.BalanceTrade;
@@ -45,6 +47,7 @@ import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
+import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 
 @ContextConfiguration(classes = EOD1JobConfig.class)
@@ -56,15 +59,10 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
     private static final CurrencyPairEntity EURUSD = CurrencyPairEntity.of(2L, "EUR", "USD");
     private static final BigDecimal EURUSD_RATE = BigDecimal.valueOf(1.1);
 
-    private static final LegalEntity ORIG_A = EntityTestDataFactory.aLegalEntityBuilder().name("LEA").build();
-    private static final LegalEntity ORIG_B = EntityTestDataFactory.aLegalEntityBuilder().name("LEB").build();
-    private static final LegalEntity ORIG_C = EntityTestDataFactory.aLegalEntityBuilder().name("LEC").build();
-    private static final LegalEntity ORIG_D = EntityTestDataFactory.aLegalEntityBuilder().name("LED").build();
-
-    private static final ParticipantEntity PARTICIPANT_A = aParticipantEntityBuilder().legalEntities(List.of(ORIG_A)).name("A").build();
-    private static final ParticipantEntity PARTICIPANT_B = aParticipantEntityBuilder().legalEntities(List.of(ORIG_B)).name("B").build();
-    private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().legalEntities(List.of(ORIG_C)).name("C").build();
-    private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().legalEntities(List.of(ORIG_D)).name("D").build();
+    private static final ParticipantEntity PARTICIPANT_A = aParticipantEntityBuilder().code("A").build();
+    private static final ParticipantEntity PARTICIPANT_B = aParticipantEntityBuilder().code("B").build();
+    private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().code("C").build();
+    private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().code("D").build();
 
     @MockBean
     private TradeRepository tradeRepository;
@@ -84,11 +82,14 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
     @MockBean
     private AwsSesMailClient mailClient;
 
+    @Autowired
+    private TransactionsSender transactionsSender;
+
     @Captor
     private ArgumentCaptor<Iterable<ParticipantPositionEntity>> positionCaptor;
 
     @Captor
-    private ArgumentCaptor<Iterable<TradeEntity>> tradeCaptor;
+    private ArgumentCaptor<NewTransactionsRequest> transactionCaptor;
 
     @Captor
     private ArgumentCaptor<Stream<CcyParticipantAmount>> netCaptor;
@@ -131,24 +132,20 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         verify(eodCalculator).rebalanceLPPositions(positions, Map.of());
 
-        verify(tradeRepository).saveAll(tradeCaptor.capture());
-        assertThat(tradeCaptor.getValue())
+        verify(transactionsSender).send(transactionCaptor.capture());
+        assertThat(transactionCaptor.getValue().getTransactions())
             .extracting(
-                TradeEntity::getOriginator,
-                TradeEntity::getCounterparty,
-                trade -> trade.getBaseAmount().getValue().intValue(),
-                TradeEntity::getDirection,
-                TradeEntity::getSpotRate,
-                TradeEntity::getCurrencyPair,
-                TradeEntity::getTradeDate,
-                TradeEntity::getValueDate
-            ).containsExactlyInAnyOrder(
-                tuple(ORIG_A, ORIG_C, 123539000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_A, ORIG_D, 25861000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_B, ORIG_D, 21100000, Side.SELL, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_C, ORIG_A, 123539000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_D, ORIG_A, 25861000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE),
-                tuple(ORIG_D, ORIG_B, 21100000, Side.BUY, EURUSD_RATE, EURUSD, BUSINESS_DATE, VALUE_DATE)
+                NewTransaction::getBuyerParticipantId,
+                NewTransaction::getSellerParticipantId,
+                NewTransaction::getBaseCurrencyAmount,
+                NewTransaction::getSpotRate,
+                NewTransaction::getCurrencyPair,
+                NewTransaction::getTradeDate
+            )
+            .containsExactlyInAnyOrder(
+                transaction(PARTICIPANT_C, PARTICIPANT_A, 123539000),
+                transaction(PARTICIPANT_D, PARTICIPANT_A, 25861000),
+                transaction(PARTICIPANT_D, PARTICIPANT_B, 21100000)
             );
 
         verify(eodCalculator).netAll(netCaptor.capture());
@@ -176,11 +173,17 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                 ParticipantPositionEntity::getValueDate,
                 ParticipantPositionEntity::getType
             ).containsOnly(
-                tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, BUSINESS_DATE, VALUE_DATE, ParticipantPositionType.REBALANCING)
-            );
+            tuple(EURUSD, PARTICIPANT_A, BigDecimal.TEN, EURUSD_RATE, BUSINESS_DATE, VALUE_DATE, ParticipantPositionType.REBALANCING)
+        );
 
+        verify(tradeRepository).findAllBalanceByTradeDate(BUSINESS_DATE);
         verifyNoMoreInteractions(tradeRepository, eodCalculator, participantPositionRepository);
 
+    }
+
+    private static Tuple transaction(final ParticipantEntity buyer, final ParticipantEntity seller, final int amount) {
+        return tuple(buyer.getCode(), seller.getCode(), Amount.of(BigDecimal.valueOf(amount), "EUR"), EURUSD_RATE,
+            CurrencyPair.of(EURUSD.getBaseCurrency(), EURUSD.getValueCurrency()), BUSINESS_DATE);
     }
 
 }

@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -33,8 +35,11 @@ import com.ihsmarkit.tfx.alert.client.domain.Eod1CompletedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
+import com.ihsmarkit.tfx.common.test.assertion.Matchers;
+import com.ihsmarkit.tfx.core.domain.transaction.NewTransaction;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
+import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
@@ -64,6 +69,9 @@ class Eod1JobIntegrationTest {
     @MockBean
     private AlertSender alertSender;
 
+    @Autowired
+    private TransactionsSender transactionsSender;
+
     @Test
     @DatabaseSetup({ "/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml" })
     @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
@@ -81,5 +89,19 @@ class Eod1JobIntegrationTest {
         inOrder.verify(alertSender).sendAlert(Eod1StartAlert.of(currentDateTime, businessDate));
         inOrder.verify(alertSender, times(4)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod1CompletedAlert.of(currentDateTime, businessDate));
+
+        verifyTransactionsSend();
+    }
+
+    private void verifyTransactionsSend() {
+        verify(transactionsSender).send(Matchers.argThat(request -> {
+                assertThat(request.getTransactions()).hasSize(1);
+                final NewTransaction newTransaction = request.getTransactions().get(0);
+                assertThat(newTransaction.getBuyerParticipantId()).isEqualTo("P11");
+                assertThat(newTransaction.getSellerParticipantId()).isEqualTo("P22");
+                assertThat(newTransaction.getBaseCurrencyAmount().getValue()).isEqualByComparingTo(BigDecimal.valueOf(330000));
+                assertThat(newTransaction.getSpotRate()).isEqualByComparingTo(BigDecimal.valueOf(1.1));
+            }
+        ));
     }
 }
