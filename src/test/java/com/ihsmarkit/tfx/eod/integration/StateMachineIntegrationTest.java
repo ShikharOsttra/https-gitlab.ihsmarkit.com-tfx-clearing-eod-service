@@ -26,7 +26,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -97,6 +96,7 @@ class StateMachineIntegrationTest {
     void shouldWaitDSP() throws Exception {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_2, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_2, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(NO_DSP_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -115,6 +115,7 @@ class StateMachineIntegrationTest {
     void shouldSkipExecution() throws Exception {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_1, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_1, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(EOD_PREMATURE, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -133,6 +134,7 @@ class StateMachineIntegrationTest {
     void shouldWaitDSPAndProceedToSwpPnt() throws InterruptedException {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_2, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_2, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -159,6 +161,7 @@ class StateMachineIntegrationTest {
     void shouldWaitTradesAndDSP() throws Exception {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_3, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_3, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(NO_DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -177,6 +180,7 @@ class StateMachineIntegrationTest {
     void shouldWaitTrades() throws Exception {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_4, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_4, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(DSP_NO_TRADES_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -195,6 +199,7 @@ class StateMachineIntegrationTest {
     void shouldWaitSwapPoints() throws Exception {
 
         when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_5, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_5, LocalTime.MIDNIGHT));
 
         resetToReady();
         waitFor(SWP_PNT_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
@@ -225,10 +230,6 @@ class StateMachineIntegrationTest {
         assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_7);
         assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
-    }
-
-    private StateMachineTestPlanBuilder<StateMachineConfig.States, StateMachineConfig.Events> testPlanBuilder() {
-        return StateMachineTestPlanBuilder.<StateMachineConfig.States, StateMachineConfig.Events>builder();
     }
 
     void waitFor(final StateMachineConfig.States state, final int seconds) throws InterruptedException {
