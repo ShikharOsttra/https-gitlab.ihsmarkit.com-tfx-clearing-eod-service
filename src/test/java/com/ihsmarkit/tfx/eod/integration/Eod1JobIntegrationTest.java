@@ -74,7 +74,7 @@ class Eod1JobIntegrationTest {
 
     @Test
     @DatabaseSetup({ "/common/currency.xml", "/common/fx_spot_product.xml", "/common/participants.xml", "/eod1Job/eod1-sunnyDay-20191007.xml" })
-    @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
+    @ExpectedDatabase(value = "/eod1Job/eod1-sunnyDay-20191007-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void testEodJob() throws Exception {
         final LocalDateTime currentDateTime = LocalDateTime.of(2019, 11, 12, 10, 10);
         final LocalDate businessDate = LocalDate.of(2019, 10, 7);
