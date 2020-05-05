@@ -27,6 +27,7 @@ import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
+import com.ihsmarkit.tfx.mailing.model.EmailRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,12 +61,14 @@ public class PositionRebalancePublishingService {
             getAllActiveLPs()
                 .sequential()
                 .forEach(participant -> {
-                    mailClient.sendEmailWithAttachments(
-                        String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()),
-                        generateEmailText(businessDate, participant.getName()),
-                        parseRecipients(participant.getNotificationEmail()),
-                        List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))));
+                    mailClient.sendEmail(EmailRequest.builder()
+                        .subject(String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()))
+                        .body(generateEmailText(businessDate, participant.getName()))
+                        .to(parseRecipients(participant.getNotificationEmail()))
+                        .attachments(List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
+                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))))
+                        .build()
+                    );
                 });
         } catch (final Exception ex) {
             log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());

@@ -1,18 +1,14 @@
 package com.ihsmarkit.tfx.eod.service;
 
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
-import static com.ihsmarkit.tfx.core.domain.type.TransactionType.REGULAR;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
@@ -63,18 +60,12 @@ class PositionRebalancePublishingServiceTest {
 
         publishingService.publishTrades(businessDate, tradeEntities);
 
-        verify(mailClient, times(1)).sendEmailWithAttachments(
-            anyString(),
-            anyString(),
-            eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
-            (List) argThat(IsCollectionWithSize.hasSize(1))
-        );
-    }
-
-    private TradeEntity.TradeEntityBuilder aTradeBuilder() {
-        return TradeEntity.builder()
-            .tradeReference("tradeRef")
-            .transactionType(REGULAR);
+        verify(mailClient, times(1)).sendEmail(Matchers.argThat(emailRequest -> {
+            assertThat(emailRequest.getSubject()).isEqualTo("2019-01-01 rebalance results for LP99");
+            assertThat(emailRequest.getBody()).isNotEmpty();
+            assertThat(emailRequest.getTo()).containsOnly("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com");
+            assertThat(emailRequest.getAttachments()).hasSize(1);
+        }));
     }
 
     @TestConfiguration
