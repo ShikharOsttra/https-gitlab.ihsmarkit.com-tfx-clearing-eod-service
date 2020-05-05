@@ -52,7 +52,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="3.12"
-            amount="-1000000"
+            amount="-1000000.00"
             currency="JPY"
             type="SOD"
     />
@@ -63,7 +63,7 @@
         trade_date="2019-10-06"
         value_date="2019-10-09"
         price="3.12"
-        amount="-1"
+        amount="-1.00"
         currency="JPY"
         type="SOD"
     />
@@ -74,7 +74,7 @@
         trade_date="2019-10-06"
         value_date="2019-10-09"
         price="3.12"
-        amount="-1"
+        amount="-1.00"
         currency="JPY"
         type="NET"
     />
@@ -85,7 +85,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="3.12"
-            amount="-1000000"
+            amount="-1000000.00"
             currency="JPY"
             type="SOD"
     />
@@ -97,7 +97,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.09"
-            amount="777"
+            amount="777.00"
             currency="EUR"
             type="SOD"
     />
@@ -157,7 +157,7 @@
             trade_date="2019-10-07"
             value_date="2019-10-10"
             price="1.09"
-            amount="777"
+            amount="777.00"
             currency="EUR"
             type="NET"
     />
@@ -170,7 +170,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="1.11"
-        amount="330000"
+        amount="330000.00"
         currency="EUR"
     />
 
@@ -182,7 +182,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="1.11"
-        amount="330000"
+        amount="330000.00"
         currency="EUR"
     />
     <participant_position
@@ -230,7 +230,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="1.1"
-        amount="330000"
+        amount="330000.00"
         currency="EUR"
     />
 
@@ -242,7 +242,7 @@
         trade_date="2019-10-07"
         value_date="2019-10-10"
         price="1.1"
-        amount="-330000"
+        amount="-330000.00"
         currency="EUR"
 
     />
@@ -278,7 +278,7 @@
             trade_date="2019-10-08"
             value_date="2019-10-11"
             price="1.1"
-            amount="777"
+            amount="777.00"
             currency="EUR"
             type="SOD"
     />
@@ -291,7 +291,7 @@
         trade_date="2019-10-08"
         value_date="2019-10-11"
         price="1.1"
-        amount="0"
+        amount="0.00"
         currency="EUR"
     />
 
