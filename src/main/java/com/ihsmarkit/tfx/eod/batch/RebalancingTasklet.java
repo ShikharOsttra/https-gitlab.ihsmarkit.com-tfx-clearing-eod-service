@@ -107,10 +107,12 @@ public class RebalancingTasklet implements Tasklet {
                     )
             ).toList();
 
-        transactionsSender.send(NewTransactionsRequest.builder()
-            .transactions(newTransactions)
-            .build()
-        );
+        if (!newTransactions.isEmpty()) {
+            transactionsSender.send(NewTransactionsRequest.builder()
+                .transactions(newTransactions)
+                .build()
+            );
+        }
 
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             EntryStream.of(balanceTrades)
