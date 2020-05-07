@@ -12,7 +12,7 @@ import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.Import;
 import org.springframework.jmx.support.RegistrationPolicy;
 
-import com.ihsmarkit.tfx.collateral.calculator.config.CollateralCalculatorConfiguration;
+import com.ihsmarkit.tfx.core.collateral.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
