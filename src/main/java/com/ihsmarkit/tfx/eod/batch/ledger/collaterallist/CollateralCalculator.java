@@ -6,10 +6,10 @@ import java.math.RoundingMode;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.collateral.calculator.CollateralCalculatorFactory;
-import com.ihsmarkit.tfx.collateral.calculator.EvaluatedAmountCalculator;
-import com.ihsmarkit.tfx.collateral.calculator.EvaluatedUnitPriceCalculator;
-import com.ihsmarkit.tfx.collateral.calculator.domain.ProductDetailsAdapterFactory;
+import com.ihsmarkit.tfx.core.collateral.CollateralCalculatorFactory;
+import com.ihsmarkit.tfx.core.collateral.EvaluatedAmountCalculator;
+import com.ihsmarkit.tfx.core.collateral.EvaluatedUnitPriceCalculator;
+import com.ihsmarkit.tfx.core.collateral.domain.ProductDetailsAdapterFactory;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
 

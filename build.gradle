@@ -44,7 +44,7 @@ dependencies {
             [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'collateral-calculator', version: collateralCalculatorVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-collateral', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'mailing-client', version: mailingClientVersion],
             [group: 'com.ihsmarkit.tfx', name: 'alert-client', version: alertClientVersion],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
