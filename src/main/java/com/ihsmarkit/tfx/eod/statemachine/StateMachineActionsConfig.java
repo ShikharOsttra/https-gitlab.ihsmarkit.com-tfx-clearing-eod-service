@@ -75,7 +75,7 @@ public class StateMachineActionsConfig {
         return context -> {
             final Map<Object, Object> variables = context.getExtendedState().getVariables();
             variables.put(BUSINESS_DATE_ATTRIBUTE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
-            variables.put(WALLCLOCK_TIMESTAMP_ATTRIBUTE, clockService.getCurrentDateTimeUTC());
+            variables.put(WALLCLOCK_TIMESTAMP_ATTRIBUTE, clockService.getCurrentDateTime());
         };
     }
 

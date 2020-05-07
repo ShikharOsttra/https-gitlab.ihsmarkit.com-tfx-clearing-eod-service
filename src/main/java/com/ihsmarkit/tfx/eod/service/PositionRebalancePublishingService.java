@@ -34,6 +34,7 @@ import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
+import com.ihsmarkit.tfx.mailing.model.EmailRequest;
 
 import io.vavr.API;
 import io.vavr.control.Try;
@@ -74,6 +75,15 @@ public class PositionRebalancePublishingService {
         Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
             .mapFailure(mapAnyException(RebalancingMailSendingException::new))
             .get();
+
+        mailClient.sendEmail(EmailRequest.builder()
+            .subject(String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()))
+            .body(generateEmailText(businessDate, participant.getName()))
+            .to(parseRecipients(participant.getNotificationEmail()))
+            .attachments(List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
+                getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))))
+            .build()
+        );
     }
 
     private void sendCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -35,6 +36,7 @@ import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
+import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
@@ -89,6 +91,13 @@ class PositionRebalancePublishingServiceTest {
             eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
             Matchers.argThat(list -> assertThat(list).hasSize(1))
         );
+
+        verify(mailClient, times(1)).sendEmail(Matchers.argThat(emailRequest -> {
+            assertThat(emailRequest.getSubject()).isEqualTo("2019-01-01 rebalance results for LP99");
+            assertThat(emailRequest.getBody()).isNotEmpty();
+            assertThat(emailRequest.getTo()).containsOnly("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com");
+            assertThat(emailRequest.getAttachments()).hasSize(1);
+        }));
     }
 
     @Test
