@@ -75,15 +75,6 @@ public class PositionRebalancePublishingService {
         Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
             .mapFailure(mapAnyException(RebalancingMailSendingException::new))
             .get();
-
-        mailClient.sendEmail(EmailRequest.builder()
-            .subject(String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()))
-            .body(generateEmailText(businessDate, participant.getName()))
-            .to(parseRecipients(participant.getNotificationEmail()))
-            .attachments(List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))))
-            .build()
-        );
     }
 
     private void sendCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
@@ -93,11 +84,12 @@ public class PositionRebalancePublishingService {
             .sequential()
             // todo: should we send empty CSV to participants without rebalancing trade?
             .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
-            .forEach(participant -> mailClient.sendEmailWithAttachments(
-                String.format("%s rebalance results for %s", businessDateString, participant.getCode()),
-                generateEmailText(businessDate, participant.getName()),
-                parseRecipients(participant.getNotificationEmail()),
-                csvEmailAttachment(participantCsvFiles.get(participant.getCode()))
+            .forEach(participant -> mailClient.sendEmail(EmailRequest.builder()
+                .subject(String.format("%s rebalance results for %s", businessDateString, participant.getCode()))
+                .body(generateEmailText(businessDate, participant.getName()))
+                .to(parseRecipients(participant.getNotificationEmail()))
+                .attachments(csvEmailAttachment(participantCsvFiles.get(participant.getCode())))
+                .build()
             ));
     }
 

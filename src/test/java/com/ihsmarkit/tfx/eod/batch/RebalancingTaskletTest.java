@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aLegalEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aParticipantEntityBuilder;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
@@ -36,9 +37,10 @@ import org.springframework.test.context.ContextConfiguration;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceCsvGenerationFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceSendingEmailFailedAlert;
-import com.ihsmarkit.tfx.core.dl.EntityTestDataFactory;
+import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
+import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
@@ -244,6 +246,22 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
 
+        when(tradeRepository.findAllBalanceByTradeDate(any()))
+            .thenReturn(List.of(
+                TradeEntity.builder()
+                    .currencyPair(CurrencyPairEntity.of(1L, "USD", "EUR"))
+                    .originator(aLegalEntityBuilder().build())
+                    .counterparty(aLegalEntityBuilder().build())
+                    .direction(Side.BUY)
+                    .spotRate(BigDecimal.ONE)
+                    .baseAmount(AmountEntity.of(BigDecimal.TEN, "USD"))
+                    .valueAmount(AmountEntity.of(BigDecimal.TEN, "EUR"))
+                    .tradeDate(LocalDate.now())
+                    .valueDate(LocalDate.now())
+                    .submissionTsp(LocalDateTime.now())
+                    .build()
+            ));
+
         final Throwable cause = new RuntimeException("csv process failed");
         when(csvWriter.getRecordsAsCsv(anyList()))
             .thenThrow(cause);
@@ -281,9 +299,24 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
             Stream.of(ParticipantCurrencyPairAmount.of(PARTICIPANT_A, EURUSD, BigDecimal.TEN))
         );
         when(csvWriter.getRecordsAsCsv(anyList())).thenReturn("csv");
+        when(tradeRepository.findAllBalanceByTradeDate(any()))
+            .thenReturn(List.of(
+                TradeEntity.builder()
+                    .currencyPair(CurrencyPairEntity.of(1L, "USD", "EUR"))
+                    .originator(aLegalEntityBuilder().build())
+                    .counterparty(aLegalEntityBuilder().build())
+                    .direction(Side.BUY)
+                    .spotRate(BigDecimal.ONE)
+                    .baseAmount(AmountEntity.of(BigDecimal.TEN, "USD"))
+                    .valueAmount(AmountEntity.of(BigDecimal.TEN, "EUR"))
+                    .tradeDate(LocalDate.now())
+                    .valueDate(LocalDate.now())
+                    .submissionTsp(LocalDateTime.now())
+                    .build()
+            ));
 
         final Throwable cause = new RuntimeException("mail sending process failed");
-        doThrow(cause).when(mailClient).sendEmailWithAttachments(any(), any(), any(), any());
+        doThrow(cause).when(mailClient).sendEmail(any());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
         when(participantRepository.findAllNotDeletedParticipantListItems())

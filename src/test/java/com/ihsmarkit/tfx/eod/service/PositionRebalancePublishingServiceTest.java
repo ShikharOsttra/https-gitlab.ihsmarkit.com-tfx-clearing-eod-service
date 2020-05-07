@@ -6,10 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -36,7 +33,6 @@ import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.dl.entity.AmountEntity;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
-import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
@@ -85,13 +81,6 @@ class PositionRebalancePublishingServiceTest {
 
         publishingService.publishTrades(businessDate, tradeEntities);
 
-        verify(mailClient, times(1)).sendEmailWithAttachments(
-            eq("2019-01-01 rebalance results for LP99"),
-            anyString(),
-            eq(List.of("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com")),
-            Matchers.argThat(list -> assertThat(list).hasSize(1))
-        );
-
         verify(mailClient, times(1)).sendEmail(Matchers.argThat(emailRequest -> {
             assertThat(emailRequest.getSubject()).isEqualTo("2019-01-01 rebalance results for LP99");
             assertThat(emailRequest.getBody()).isNotEmpty();
@@ -119,7 +108,7 @@ class PositionRebalancePublishingServiceTest {
     void shouldSendAlert_whenEmailSendFails() {
         final List<TradeEntity> tradeEntities = List.of(aTradeBuilder());
         final LocalDate businessDate = LocalDate.of(2019, 1, 1);
-        final Exception cause = new RuntimeException("can't generate csv exception");
+        final Exception cause = new RuntimeException("can't send email with csv exception");
 
         when(participantRepository.findAllNotDeletedParticipantListItems()).thenReturn(List.of(
             aParticipantEntityBuilder().type(ParticipantType.FX_BROKER).build(),
@@ -127,7 +116,7 @@ class PositionRebalancePublishingServiceTest {
             RECIPIENT,
             aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build()
         ));
-        doThrow(cause).when(mailClient).sendEmailWithAttachments(any(), any(), any(), any());
+        doThrow(cause).when(mailClient).sendEmail(any());
 
         assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
             .isInstanceOf(RebalancingMailSendingException.class)
