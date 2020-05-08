@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MarginRatioService {
 
     private static final int MARGIN_RATIO_SCALE = 2;
-    private static final RoundingMode MARGIN_RATIO_ROUNDING = RoundingMode.CEILING;
+    private static final RoundingMode MARGIN_RATIO_ROUNDING = RoundingMode.HALF_UP;
 
     private final MarginRatioRepository marginRatioRepository;
     private final MarginRatioMultiplierRepository marginRatioMultiplierRepository;
