@@ -38,7 +38,7 @@ class MarginRatioServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-        "1.23, 1.23, 1.51",
+        "1.23, 1.23, 1.52",
         "1.56, 2.78, 4.34"
     })
     void shouldReturnRequiredMarginRatio(final BigDecimal marginRatio, final BigDecimal marginMultiplier, final BigDecimal requiredMarginRatio) {
