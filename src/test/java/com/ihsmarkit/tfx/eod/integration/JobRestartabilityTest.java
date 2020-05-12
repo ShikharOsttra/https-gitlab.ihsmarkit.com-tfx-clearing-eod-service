@@ -97,7 +97,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     StateMachineConfig.class,
     StateMachineActionsConfig.class
 })
-@TestPropertySource("classpath:/application.properties")
+@TestPropertySource(
+    value = "classpath:/application.properties",
+    properties = "spring.datasource.url=jdbc:h2:mem:db2;MODE=MySQL;DB_CLOSE_ON_EXIT=false;DB_CLOSE_DELAY=-1"
+)
 public class JobRestartabilityTest {
 
     private static final long TIMEOUT = 5;
