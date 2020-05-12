@@ -42,6 +42,7 @@ class ParticipantCurrencyPairAmountMapperTest {
             ParticipantCurrencyPairAmount.of(PARTICIPANT_A, CURRENCY_PAIR, BigDecimal.ONE),
             ParticipantPositionType.NET,
             BUSINESS_DATE,
+            BUSINESS_DATE,
             SETTLEMENT_DATE,
             BigDecimal.TEN
         );
@@ -50,6 +51,7 @@ class ParticipantCurrencyPairAmountMapperTest {
         assertThat(position.getCurrencyPair()).isSameAs(CURRENCY_PAIR);
         assertThat(position.getParticipant()).isSameAs(PARTICIPANT_A);
         assertThat(position.getTradeDate()).isEqualTo(BUSINESS_DATE);
+        assertThat(position.getDate()).isEqualTo(BUSINESS_DATE);
         assertThat(position.getValueDate()).isEqualTo(SETTLEMENT_DATE);
         assertThat(position.getType()).isSameAs(ParticipantPositionType.NET);
         assertThat(position.getParticipantType()).isSameAs(ParticipantType.LIQUIDITY_PROVIDER);

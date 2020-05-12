@@ -40,6 +40,7 @@ import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
+import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -99,7 +100,7 @@ class Eod2JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(11)).sendAlert(any(EodStepCompleteAlert.class));
+        inOrder.verify(alertSender, times(12)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
     }
 

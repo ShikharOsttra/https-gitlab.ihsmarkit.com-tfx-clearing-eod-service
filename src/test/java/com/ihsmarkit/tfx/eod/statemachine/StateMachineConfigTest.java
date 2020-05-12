@@ -22,10 +22,12 @@ import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.guard.Guard;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = StateMachineConfig.class)
+@TestPropertySource(properties = "state.machine.wait.time.millis=50")
 class StateMachineConfigTest {
 
     @Autowired

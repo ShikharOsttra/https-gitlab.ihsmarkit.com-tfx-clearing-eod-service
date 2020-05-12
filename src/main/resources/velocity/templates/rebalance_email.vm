@@ -1,0 +1,32 @@
+<p><span style="color: #000000;">$participantName　御中<br /></span></p>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">平素は取引所為替証拠金取引の運営に関しまして格別のご高配を賜り、</span></p>
+<p><span style="color: #000000;">厚く御礼申し上げます。</span></p>
+<p><span style="color: #000000;">さて、<span>$tradeDateJP</span>付けのポジションリバランスを行いましたので、</span></p>
+<p><span style="color: #000000;">添付のファイルにてご報告いたします。</span></p>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">なお、当該取引日にポジションリバランスの対象とならなかった場合においても、</span></p>
+<p><span style="color: #000000;">本メールは送付いたします。</span></p>
+<p><span style="color: #000000;">その場合、添付ファイルに取引データはございません。</span></p>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">また、メールが受信されない等のご不明な点がございましたら、</span></p>
+<p><span style="color: #000000;">以下の連絡先にご一報くださいますようお願い申し上げます。</span></p>
+
+<p>ーー</p>
+
+<p><span style="color: #000000;">Dear $participantName,<br /></span></p>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">Please find the attached file for the result of Position Rebalance operation on the Trade Date $tradeDateEN.</span></p>
+<p><span style="color: #000000;">The attachment will include no transaction data in case you were not subject for Position Rebalance.</span></p>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">Please let us know if you have any questions.</span></p>
+<p><span style="color: #000000;">Thank you for your support on our FX Clearing market (T-CLEAR FX).</span></p>
+<p><span style="color: #000000;">Best regards,</span></p>
+
+<p>&nbsp;</p>
+<p style="color: #000000;">Tokyo Financial Exchange Inc.</p>
+<p style="color: #000000;">Market Surveillance Group</p>
+<p style="color: #000000;">1-8-2 Marunouchi Chiyoda-ku Tokyo 100-0005 Japan</p>
+<p style="color: #000000;">TEL:+81-3-4578-2436</p>
+<p style="color: #000000;">FAX:+81-3-3212-5780</p>
+<p style="color: #000000;">mm@tfx.co.jp</p>

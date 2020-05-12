@@ -75,7 +75,7 @@ public class EODCleanupService {
         }
     }
 
-    private void deleteAllLedgersByBusinessDate(final LocalDate businessDate) {
+    public void deleteAllLedgersByBusinessDate(final LocalDate businessDate) {
         Arrays.asList(ledgersDeleteSQLs).forEach(resource -> safeUpdate(businessDate, resource));
     }
 

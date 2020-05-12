@@ -12,7 +12,7 @@ import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.Import;
 import org.springframework.jmx.support.RegistrationPolicy;
 
-import com.ihsmarkit.tfx.collateral.calculator.config.CollateralCalculatorConfiguration;
+import com.ihsmarkit.tfx.core.collateral.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
@@ -21,6 +21,7 @@ import com.ihsmarkit.tfx.eod.config.DateConfig;
 import com.ihsmarkit.tfx.eod.config.SpringBatchConfig;
 import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
+import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.mailing.config.MailingAutoConfiguration;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -52,4 +53,8 @@ class IntegrationTestConfig {
 
     @MockBean
     private SystemEventNotificationSender systemEventNotificationSender;
+
+    @MockBean
+    private TransactionsSender transactionsSender;
+
 }

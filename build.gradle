@@ -1,9 +1,6 @@
 buildscript {
     dependencies {
         classpath(
-                // TODO: remove as soon as https://github.com/spotbugs/spotbugs-gradle-plugin/issues/147 is fixed
-                [group: 'com.google.guava', name: 'guava', version: guavaVersion],
-
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'sca-gradle-plugin', version: scaGradlePluginVersion],
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'idea-gradle-plugin', version: ideaGradlePluginVersion],
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'test-configuration-gradle-plugin', version: testConfigurationGradlePluginVersion]
@@ -47,7 +44,7 @@ dependencies {
             [group: 'com.ihsmarkit.tfx', name: 'core-domain', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-config', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'core-dl', version: coreVersion],
-            [group: 'com.ihsmarkit.tfx', name: 'collateral-calculator', version: collateralCalculatorVersion],
+            [group: 'com.ihsmarkit.tfx', name: 'core-collateral', version: coreVersion],
             [group: 'com.ihsmarkit.tfx', name: 'mailing-client', version: mailingClientVersion],
             [group: 'com.ihsmarkit.tfx', name: 'alert-client', version: alertClientVersion],
             [group: 'org.springframework.boot', name: 'spring-boot-starter-activemq'],
@@ -72,12 +69,14 @@ dependencies {
             [group: 'org.yaml', name: 'snakeyaml'],
             [group: 'org.apache.commons', name: 'commons-csv'],
             [group: 'io.vavr', name: 'vavr'],
-            [group: 'one.util', name: 'streamex']
+            [group: 'one.util', name: 'streamex'],
+            [group: 'org.apache.velocity', name: 'velocity-engine-core'],
+            [group: 'org.apache.velocity.tools', name: 'velocity-tools-generic']
     )
 
     runtimeOnly(
         [group: 'com.zaxxer', name: 'HikariCP'],
-        [group: 'mysql', name: 'mysql-connector-java']
+        [group: 'org.mariadb.jdbc', name: 'mariadb-java-client']
     )
     testImplementation(
             [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
@@ -98,7 +97,8 @@ dependencies {
             [group: 'org.mockito', name: 'mockito-junit-jupiter'],
             [group: 'org.springframework.statemachine', name: 'spring-statemachine-test'],
             [group: 'com.github.database-rider', name: 'rider-core', version: '1.10.0'],
-            [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter']
+            [group: 'com.github.gavlyukovskiy', name: 'datasource-proxy-spring-boot-starter'],
+            [group: 'com.mockrunner', name: 'mockrunner-jms']
     )
 
     testRuntimeOnly(
@@ -178,7 +178,8 @@ ext.additionalJacocoExclusions = [
         '**/eod/controller/EODServiceController*', //non-production code
         '**/eod/exception/LockException*', //non-production code
         '**/eod/service/DailySettlementPriceService*', //TODO fix post release
-        '**/eod/batch/ledger/LedgerFormattingUtils*' //TODO fix post release (coverage dropped to zero)
+        '**/eod/batch/ledger/LedgerFormattingUtils*', //TODO fix post release (coverage dropped to zero)
+        '**/eod/batch/CollateralBalanceUpdateNotifierTasklet*' //TODO fix post release (0.5)
 ]
 
 test {

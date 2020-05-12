@@ -22,10 +22,12 @@ import com.ihsmarkit.tfx.core.dl.repository.MarginRatioRepository;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @JobScope
 @RequiredArgsConstructor
+@Slf4j
 @Getter(AccessLevel.PRIVATE)
 public class MarginRatioService {
 
@@ -48,13 +50,23 @@ public class MarginRatioService {
 
         return marginRatioMultiplier.computeIfAbsent(
             participant,
-            p -> marginRatioMultiplierRepository.findAllByBusinessDateAndParticipantCode(businessDate, participant.getCode()).stream()
-                                .collect(Collectors.toMap(MarginRatioMultiplierEntity::getCurrencyPair, MarginRatioMultiplierEntity::getValue))
+            p -> getMarginRatioMultipliers(participant)
         ).computeIfAbsent(currencyPair, pairEntity -> {
             throw new IllegalStateException(String.format("unable to find margin multiplier for currency pair: %s, participant: %s and businessDate: %s",
                 currencyPair.getCode(), participant.getCode(), businessDate));
         })
             .multiply(marginRatio.get().get(currencyPair))
             .setScale(MARGIN_RATIO_SCALE, MARGIN_RATIO_ROUNDING);
+    }
+
+    private Map<CurrencyPairEntity, BigDecimal> getMarginRatioMultipliers(final ParticipantEntity participant) {
+        try {
+            return marginRatioMultiplierRepository.findAllByBusinessDateAndParticipantCode(businessDate, participant.getCode()).stream()
+                                .collect(Collectors.toMap(MarginRatioMultiplierEntity::getCurrencyPair,
+                                                          MarginRatioMultiplierEntity::getValue));
+        } catch (final Exception ex) {
+            log.error("unable to build margin ratio multipliers map for participant: {} with message: {}", participant.getCode(), ex.getMessage());
+            throw ex;
+        }
     }
 }

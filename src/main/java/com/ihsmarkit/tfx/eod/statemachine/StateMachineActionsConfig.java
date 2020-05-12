@@ -3,17 +3,17 @@ package com.ihsmarkit.tfx.eod.statemachine;
 import static com.ihsmarkit.tfx.core.domain.eod.EodStage.DSP_APPROVED;
 import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD1_COMPLETE;
 import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD2_COMPLETE;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD_PRICES_BOND_UPDATE_COMPLETED;
+import static com.ihsmarkit.tfx.core.domain.eod.EodStage.EOD_PRICES_EQUITY_UPDATE_COMPLETED;
 import static com.ihsmarkit.tfx.core.domain.eod.EodStage.SWAP_POINTS_APPROVED;
 import static com.ihsmarkit.tfx.core.domain.type.SystemParameters.BUSINESS_DATE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
-import static com.ihsmarkit.tfx.eod.config.EodJobConstants.CURRENT_TSP_JOB_PARAM_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.batch.core.Job;
@@ -32,8 +32,6 @@ import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.domain.eod.EodStage;
-import com.ihsmarkit.tfx.core.domain.type.SystemParameter;
-import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import com.ihsmarkit.tfx.core.time.ClockService;
 
 import lombok.RequiredArgsConstructor;
@@ -77,13 +75,13 @@ public class StateMachineActionsConfig {
         return context -> {
             final Map<Object, Object> variables = context.getExtendedState().getVariables();
             variables.put(BUSINESS_DATE_ATTRIBUTE, systemParameterRepository.getParameterValueFailFast(BUSINESS_DATE));
-            variables.put(WALLCLOCK_TIMESTAMP_ATTRIBUTE, clockService.getCurrentDateTimeUTC());
+            variables.put(WALLCLOCK_TIMESTAMP_ATTRIBUTE, clockService.getCurrentDateTime());
         };
     }
 
     @Bean
     public JobEodAction eod1runAction() {
-        return context -> jobLauncher.run(eod1Job, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, eod1Job, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
@@ -105,12 +103,12 @@ public class StateMachineActionsConfig {
 
     @Bean
     public JobEodAction eod2runAction() {
-        return context -> jobLauncher.run(eod2Job, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, eod2Job, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
     public JobEodAction dateRollRunAction() {
-        return context -> jobLauncher.run(rollBusinessDateJob, getJobParameters(context.getBusinessDate()));
+        return new JobEodAction(jobLauncher, rollBusinessDateJob, context -> getJobParameters(context.getBusinessDate()));
     }
 
     @Bean
@@ -121,8 +119,8 @@ public class StateMachineActionsConfig {
     @Bean
     public EodGuard swpPointApprovedGuard() {
         return context -> hasSwapPointsApproved(context.getBusinessDate())
-            && isCollateralPriceUploadCompleted(context.getBusinessDate(), SystemParameters.LAST_EOD_PRICES_BOND_UPDATE_DATE_TIME)
-            && isCollateralPriceUploadCompleted(context.getBusinessDate(), SystemParameters.LAST_EOD_PRICES_EQUITY_UPDATE_DATE_TIME);
+            && isCollateralPriceUploadCompleted(context.getBusinessDate(), EOD_PRICES_BOND_UPDATE_COMPLETED)
+            && isCollateralPriceUploadCompleted(context.getBusinessDate(), EOD_PRICES_EQUITY_UPDATE_COMPLETED);
     }
 
     @Bean
@@ -148,14 +146,12 @@ public class StateMachineActionsConfig {
     private JobParameters getJobParameters(final LocalDate businessDate) {
         return new JobParametersBuilder()
             .addString(BUSINESS_DATE_JOB_PARAM_NAME, businessDate.format(BUSINESS_DATE_FMT))
-            .addString(CURRENT_TSP_JOB_PARAM_NAME, clockService.getCurrentDateTimeUTC().toString())
             .toJobParameters();
     }
 
-    private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final SystemParameter<LocalDateTime> collateralUpdateParameter) {
-        final boolean result = collateralPriceUploadCheckEnabled &&
-                                systemParameterRepository.getParameterValueFailFast(collateralUpdateParameter).isAfter(businessDate.atStartOfDay());
-        log.info("[EOD2 trigger] collateral price upload check for: {} and businessDay: {} returns: {}", collateralUpdateParameter, businessDate, result);
+    private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final EodStage eodPriceStage) {
+        final boolean result = collateralPriceUploadCheckEnabled && eodStatusRepository.existsById(new EodStatusCompositeId(eodPriceStage, businessDate));
+        log.info("[EOD2 trigger] collateral price upload check for: {} and businessDay: {} returns: {}", eodPriceStage, businessDate, result);
         return result;
     }
 
