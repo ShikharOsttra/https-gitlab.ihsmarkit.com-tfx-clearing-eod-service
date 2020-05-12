@@ -15,8 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.ihsmarkit.tfx.collateral.calculator.CollateralCalculatorFactory;
-import com.ihsmarkit.tfx.collateral.calculator.domain.ProductDetailsAdapter;
+import com.ihsmarkit.tfx.core.collateral.CollateralCalculatorFactory;
+import com.ihsmarkit.tfx.core.collateral.domain.ProductDetailsAdapter;
 import com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 
