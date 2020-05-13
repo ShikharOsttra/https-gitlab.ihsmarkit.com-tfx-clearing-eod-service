@@ -35,9 +35,7 @@ import com.ihsmarkit.tfx.alert.client.domain.MarginCashSettlementFailedAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.CashCollateralBalanceUpdateJobConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
 import com.ihsmarkit.tfx.eod.mapper.CashSettlementMapper;
-import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -61,9 +59,6 @@ public class CashBalanceUpdateJobIntegrationTest {
 
     @MockBean
     private AlertSender alertSender;
-
-    @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
 
     @SpyBean
     private ClockService clockService;

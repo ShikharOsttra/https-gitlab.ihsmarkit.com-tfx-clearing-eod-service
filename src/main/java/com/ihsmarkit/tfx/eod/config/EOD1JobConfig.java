@@ -22,7 +22,7 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
 import lombok.AllArgsConstructor;
@@ -45,7 +45,7 @@ public class EOD1JobConfig {
 
     private final EodJobListenerFactory eodJobListenerFactory;
 
-    private final EodFailedStepAlertSender eodFailedStepAlertSender;
+    private final EodFailedStepAlertListenerFactory eodFailedStepAlertListenerFactory;
 
     @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
@@ -59,15 +59,15 @@ public class EOD1JobConfig {
     }
 
     private Step mtmTrades() {
-        return createStep(MTM_TRADES_STEP_NAME, markToMarketTradesTasklet, eodFailedStepAlertSender.mtmFailedListener());
+        return createStep(MTM_TRADES_STEP_NAME, markToMarketTradesTasklet, eodFailedStepAlertListenerFactory.mtmFailedListener());
     }
 
     private Step netTrades() {
-        return createStep(NET_TRADES_STEP_NAME, nettingTasklet, eodFailedStepAlertSender.nettingFailedListener());
+        return createStep(NET_TRADES_STEP_NAME, nettingTasklet, eodFailedStepAlertListenerFactory.nettingFailedListener());
     }
 
     private Step rebalancePositions() {
-        return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertSender.rebalancingProcessFailedListener());
+        return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
     }
 
     private Step rollPositions() {

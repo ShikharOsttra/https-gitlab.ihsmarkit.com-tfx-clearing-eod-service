@@ -33,7 +33,7 @@ import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 import lombok.RequiredArgsConstructor;
 
 @ExtendWith(MockitoExtension.class)
-class EodFailedStepAlertSenderTest {
+class EodFailedStepAlertListenerFactoryTest {
 
     private static final LocalDateTime CURRENT_DATE_TIME = LocalDateTime.now();
     private static final String MESSAGE = "errorMessage";
@@ -43,7 +43,7 @@ class EodFailedStepAlertSenderTest {
     @Mock
     private AlertSender alertSender;
     @InjectMocks
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
+    private EodFailedStepAlertListenerFactory eodFailedStepAlertSender;
 
     @Test
     void shouldSendAlert() {

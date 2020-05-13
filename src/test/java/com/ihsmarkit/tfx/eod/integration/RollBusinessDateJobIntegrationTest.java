@@ -25,7 +25,7 @@ import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.github.springtestdbunit.dataset.ReplacementDataSetLoader;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.eod.config.RollBusinessDateJobConfig;
-import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertSender;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -50,7 +50,7 @@ class RollBusinessDateJobIntegrationTest {
     private AlertSender alertSender;
 
     @MockBean
-    private EodFailedStepAlertSender eodFailedStepAlertSender;
+    private EodFailedStepAlertListenerFactory eodFailedStepAlertListenerFactory;
 
     @Test
     @DatabaseSetup("/rollBusinessDateJob/RollBusinessDate_setup.xml")

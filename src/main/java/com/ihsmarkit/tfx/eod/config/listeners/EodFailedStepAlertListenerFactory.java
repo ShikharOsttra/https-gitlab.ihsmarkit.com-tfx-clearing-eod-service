@@ -1,13 +1,15 @@
 package com.ihsmarkit.tfx.eod.config.listeners;
 
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_FMT;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PARAM_NAME;
+
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.alert.client.domain.EodMtmFailedAlert;
@@ -15,27 +17,42 @@ import com.ihsmarkit.tfx.alert.client.domain.EodNettingFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceCsvGenerationFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceFailedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.EodPositionRebalanceSendingEmailFailedAlert;
+import com.ihsmarkit.tfx.alert.client.domain.MarginCashSettlementFailedAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EodFailedStepAlertSender {
+public class EodFailedStepAlertListenerFactory {
 
     private final AlertSender alertSender;
     private final ClockService clockService;
 
-    public StepExecutionListener mtmFailedListener() {
-        return new AlertSenderStepListener() {
+    public StepExecutionListener cashSettlementListener() {
+        return new StepErrorListener() {
             @Override
-            protected void handleExceptions(final List<Throwable> exceptions) {
+            protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
+                log.info("Found {} exception(s) in cash settlement execution job", exceptions);
+                alertSender.sendAlert(MarginCashSettlementFailedAlert.of(clockService.getCurrentDateTimeUTC(), getBusinessDateFromContext(stepExecution)));
+            }
+
+            private LocalDate getBusinessDateFromContext(final StepExecution stepExecution) {
+                final String businessDate = stepExecution.getJobParameters().getString(BUSINESS_DATE_JOB_PARAM_NAME);
+                return LocalDate.parse(businessDate, BUSINESS_DATE_FMT);
+            }
+        };
+    }
+
+    public StepExecutionListener mtmFailedListener() {
+        return new StepErrorListener() {
+            @Override
+            protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send MtM failed alert", cause);
                 alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
@@ -44,9 +61,9 @@ public class EodFailedStepAlertSender {
     }
 
     public StepExecutionListener nettingFailedListener() {
-        return new AlertSenderStepListener() {
+        return new StepErrorListener() {
             @Override
-            protected void handleExceptions(final List<Throwable> exceptions) {
+            protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send Netting failed alert", cause);
                 alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
@@ -56,9 +73,9 @@ public class EodFailedStepAlertSender {
 
     @SuppressWarnings({ "checkstyle:AnonInnerLength", "PMD.ConfusingTernary" })
     public StepExecutionListener rebalancingProcessFailedListener() {
-        return new AlertSenderStepListener() {
+        return new StepErrorListener() {
             @Override
-            protected void handleExceptions(final List<Throwable> exceptions) {
+            protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 @Nullable
                 final Throwable csvFailException = findCauseByType(exceptions, RebalancingCsvGenerationException.class);
                 @Nullable
@@ -81,31 +98,6 @@ public class EodFailedStepAlertSender {
                 }
             }
         };
-    }
-
-    @Nullable
-    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
-    private static Throwable findCauseByType(final List<Throwable> stepExceptions, final Class<? extends Throwable> wantedException) {
-        return stepExceptions.stream()
-            .filter(wantedException::isInstance)
-            .findFirst()
-            .map(Throwable::getCause)
-            .orElse(null);
-    }
-
-    private abstract static class AlertSenderStepListener extends StepExecutionListenerSupport {
-
-        @Override
-        public ExitStatus afterStep(final StepExecution stepExecution) {
-            final List<Throwable> exceptions = stepExecution.getFailureExceptions();
-            if (!exceptions.isEmpty()) {
-                log.info("Step {} finished with {} error(s)", stepExecution.getStepName(), exceptions.size());
-                handleExceptions(exceptions);
-            }
-            return null;
-        }
-
-        protected abstract void handleExceptions(List<Throwable> exceptions);
     }
 
 }
