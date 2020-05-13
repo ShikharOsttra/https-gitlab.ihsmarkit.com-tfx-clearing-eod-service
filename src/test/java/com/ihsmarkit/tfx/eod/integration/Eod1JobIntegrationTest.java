@@ -1,7 +1,6 @@
 package com.ihsmarkit.tfx.eod.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,7 +32,6 @@ import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import com.ihsmarkit.tfx.alert.client.domain.Eod1CompletedAlert;
 import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
-import com.ihsmarkit.tfx.alert.client.domain.EodStepCompleteAlert;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.common.test.assertion.Matchers;
 import com.ihsmarkit.tfx.core.domain.transaction.NewTransaction;
@@ -87,8 +85,8 @@ class Eod1JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod1StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender, times(4)).sendAlert(any(EodStepCompleteAlert.class));
         inOrder.verify(alertSender).sendAlert(Eod1CompletedAlert.of(currentDateTime, businessDate));
+        inOrder.verifyNoMoreInteractions();
 
         verifyTransactionsSend();
     }

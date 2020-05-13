@@ -69,7 +69,6 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
-
         final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
         log.info("[var-cash-settlement] starting for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
