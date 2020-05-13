@@ -1,5 +1,8 @@
 package com.ihsmarkit.tfx.eod.service;
 
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -10,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,14 +27,20 @@ import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantStatus;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
+import com.ihsmarkit.tfx.core.domain.type.TransactionType;
+import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
+import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceCSVWriter;
 import com.ihsmarkit.tfx.eod.service.csv.PositionRebalanceRecord;
 import com.ihsmarkit.tfx.mailing.client.AwsSesMailClient;
 import com.ihsmarkit.tfx.mailing.model.EmailAttachment;
 import com.ihsmarkit.tfx.mailing.model.EmailRequest;
 
+import io.vavr.API;
+import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import one.util.streamex.EntryStream;
 
 @Service
 @AllArgsConstructor
@@ -47,6 +57,8 @@ public class PositionRebalancePublishingService {
     private static final String PARTICIPANT_NAME = "participantName";
     private static final String TRADE_DATE_JP = "tradeDateJP";
     private static final String TRADE_DATE_EN = "tradeDateEN";
+    private static final String POSITIONS_REBALANCE_CSV_FILENAME = "positions-rebalance.csv";
+    private static final String TEXT_CSV_TYPE = "text/csv";
 
     private final AwsSesMailClient mailClient;
 
@@ -54,25 +66,45 @@ public class PositionRebalancePublishingService {
 
     private final ParticipantRepository participantRepository;
 
+    @SuppressWarnings("unchecked")
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
-        try {
-            final Map<String, List<TradeEntity>> participantTradesMap = trades.stream().collect(
-                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()));
-            getAllActiveLPs()
-                .sequential()
-                .forEach(participant -> {
-                    mailClient.sendEmail(EmailRequest.builder()
-                        .subject(String.format("%s rebalance results for %s", businessDate.toString(), participant.getCode()))
-                        .body(generateEmailText(businessDate, participant.getName()))
-                        .to(parseRecipients(participant.getNotificationEmail()))
-                        .attachments(List.of(EmailAttachment.of("positions-rebalance.csv", "text/csv",
-                            getPositionRebalanceCsv(participantTradesMap.getOrDefault(participant.getCode(), List.of())))))
-                        .build()
-                    );
-                });
-        } catch (final Exception ex) {
-            log.error("error while publish position rebalance csv for businessDate: {} with error: {}", businessDate, ex.getMessage());
-        }
+        final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
+            .mapFailure(mapAnyException(RebalancingCsvGenerationException::new))
+            .get();
+
+        Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
+            .mapFailure(mapAnyException(RebalancingMailSendingException::new))
+            .get();
+    }
+
+    private void sendCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
+        final String businessDateString = businessDate.toString();
+
+        getAllActiveLPs()
+            .sequential()
+            // todo: should we send empty CSV to participants without rebalancing trade?
+            .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
+            .forEach(participant -> mailClient.sendEmail(EmailRequest.builder()
+                .subject(String.format("%s rebalance results for %s", businessDateString, participant.getCode()))
+                .body(generateEmailText(businessDate, participant.getName()))
+                .to(parseRecipients(participant.getNotificationEmail()))
+                .attachments(csvEmailAttachment(participantCsvFiles.get(participant.getCode())))
+                .build()
+            ));
+    }
+
+    private List<EmailAttachment> csvEmailAttachment(final byte[] csvFile) {
+        return List.of(EmailAttachment.of(POSITIONS_REBALANCE_CSV_FILENAME, TEXT_CSV_TYPE, csvFile));
+    }
+
+    private Map<String, byte[]> prepareCsvFiles(final List<TradeEntity> trades) {
+        return trades.stream()
+            .collect(Collectors.collectingAndThen(
+                Collectors.groupingBy(trade -> trade.getOriginator().getParticipant().getCode()),
+                participantTradesMap -> EntryStream.of(participantTradesMap)
+                    .mapValues(this::getPositionRebalanceCsv)
+                    .toImmutableMap()
+            ));
     }
 
     private static List<String> parseRecipients(final String notificationEmails) {
@@ -81,10 +113,10 @@ public class PositionRebalancePublishingService {
             .collect(Collectors.toUnmodifiableList());
     }
 
-    private List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
+    private static List<PositionRebalanceRecord> getPositionRebalanceTradesAsRecords(final List<TradeEntity> trades) {
         return trades.stream().map(tradeEntity -> PositionRebalanceRecord.builder()
             .tradeDate(tradeEntity.getTradeDate())
-            .tradeType(2)
+            .tradeType(TransactionType.BALANCE.getValue())
             .participantCodeSource(tradeEntity.getOriginator().getCode())
             .participantCodeTarget(tradeEntity.getCounterparty().getCode())
             .currencyPair(tradeEntity.getCurrencyPair().getCode())
@@ -118,5 +150,9 @@ public class PositionRebalancePublishingService {
         final StringWriter writer = new StringWriter();
         Velocity.mergeTemplate(REBALANCE_EMAIL_TEMPLATE, StandardCharsets.UTF_8.name(), context, writer);
         return writer.toString();
+    }
+
+    private static API.Match.Case<Throwable, ? extends Throwable> mapAnyException(final Function<Throwable, ? extends Throwable> remapper) {
+        return Case($(exception -> true), remapper);
     }
 }

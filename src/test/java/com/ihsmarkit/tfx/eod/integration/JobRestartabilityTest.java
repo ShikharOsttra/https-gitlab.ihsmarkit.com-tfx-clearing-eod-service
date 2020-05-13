@@ -11,6 +11,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD2_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD_COMPLETE_NOTIFY_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_CLEANUP_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_GENERATION_COMPLETED_ALERT_STEP;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
@@ -224,7 +225,8 @@ public class JobRestartabilityTest {
                 Pair.of(OPEN_POSITIONS_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(COLLATERAL_BALANCE_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(DAILY_MARKET_DATA_LEDGER_STEP_NAME, COMPLETED),
-                Pair.of(COLLATERAL_LIST_LEDGER_STEP_NAME, COMPLETED)
+                Pair.of(COLLATERAL_LIST_LEDGER_STEP_NAME, COMPLETED),
+                Pair.of(LEDGER_GENERATION_COMPLETED_ALERT_STEP, COMPLETED)
             )
         );
 

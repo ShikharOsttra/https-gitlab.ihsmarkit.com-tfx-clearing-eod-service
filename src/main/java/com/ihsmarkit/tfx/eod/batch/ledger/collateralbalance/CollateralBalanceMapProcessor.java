@@ -117,11 +117,11 @@ public class CollateralBalanceMapProcessor implements ItemProcessor<CollateralBa
 
     private CollateralBalanceWriteItem mapToMarginItem(final CollateralBalanceAdapter collateralBalanceAdapter) {
         return purposeItemBuilder(MARGIN, collateralBalanceAdapter)
-            .totalInitialMargin(formatBigDecimalRoundTo1Jpy(collateralBalanceAdapter.getInitialMargin()))
-            .totalVariationMargin(formatBigDecimalRoundTo1Jpy(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, TOTAL)))
-            .deficitInCashSettlement(formatBigDecimalRoundTo1Jpy(collateralBalanceAdapter.getDeficitInCashSettlement()))
-            .cashSettlement(formatBigDecimalRoundTo1Jpy(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, DAY)))
-            .cashSettlementFollowingDay(formatBigDecimalRoundTo1Jpy(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, FOLLOWING)))
+            .totalInitialMargin(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getInitialMargin()))
+            .totalVariationMargin(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, TOTAL)))
+            .deficitInCashSettlement(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getDeficitInCashSettlement()))
+            .cashSettlement(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, DAY)))
+            .cashSettlementFollowingDay(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(TOTAL_VM, FOLLOWING)))
             .initialMtmTotal(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(INITIAL_MTM, TOTAL)))
             .initialMtmDay(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(INITIAL_MTM, DAY)))
             .initialMtmFollowingDay(formatBigDecimalRoundTo1JpyDefaultZero(collateralBalanceAdapter.getCashSettlement(INITIAL_MTM, FOLLOWING)))

@@ -21,7 +21,7 @@ import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.collateral.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.time.ClockService;
-import com.ihsmarkit.tfx.eod.config.listeners.EodAlertStepListener;
+import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.mailing.config.MailingAutoConfiguration;
@@ -44,7 +44,7 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
     DateConfig.class,
     InMemoryJobRepositoryConfiguration.class,
     EodJobListenerFactory.class,
-    EodAlertStepListener.class,
+    EodFailedStepAlertListenerFactory.class,
 
     ClockService.class
 })

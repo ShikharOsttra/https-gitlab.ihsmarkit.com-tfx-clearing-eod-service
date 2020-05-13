@@ -31,7 +31,6 @@ import com.ihsmarkit.tfx.eod.mapper.ParticipantCurrencyPairAmountMapper;
 import com.ihsmarkit.tfx.eod.mapper.TradeOrPositionEssentialsMapper;
 import com.ihsmarkit.tfx.eod.model.ParticipantPosition;
 import com.ihsmarkit.tfx.eod.model.TradeOrPositionEssentials;
-import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
@@ -52,8 +51,6 @@ public class NettingTasklet implements Tasklet {
     private final TradeRepository tradeRepository;
 
     private final ParticipantPositionRepository participantPositionRepository;
-
-    private final DailySettlementPriceService dailySettlementPriceService;
 
     private final EODCalculator eodCalculator;
 

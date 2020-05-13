@@ -13,12 +13,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -32,6 +35,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 
+import com.ihsmarkit.tfx.alert.client.domain.EodMtmFailedAlert;
 import com.ihsmarkit.tfx.common.function.ThrowingConsumer;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
@@ -41,6 +45,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodProductCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
+import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.AbstractSpringBatchTest;
 import com.ihsmarkit.tfx.eod.config.EOD1JobConfig;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
@@ -94,6 +99,9 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     @MockBean
     private EodCashSettlementMappingService eodCashSettlementMappingService;
+
+    @MockBean
+    private ClockService clockService;
 
     @Captor
     private ArgumentCaptor<Iterable<EodProductCashSettlementEntity>> captor;
@@ -174,5 +182,23 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
             jpyRateService,
             dailySettlementPriceService
         );
+
+        verifyZeroInteractions(alertSender);
+    }
+
+    @Test
+    void shouldSendAlert_whenExceptionOccur() {
+        final Exception cause = new RuntimeException("mtm step failed message");
+        doThrow(cause).when(eodCalculator).calculateAndAggregateInitialMtm(any(), any(), any());
+        final LocalDateTime alertTime = LocalDateTime.now();
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
+
+        final JobExecution execution = jobLauncherTestUtils.launchStep(MTM_TRADES_STEP_NAME,
+            new JobParametersBuilder(jobLauncherTestUtils.getUniqueJobParameters())
+                .addString(BUSINESS_DATE_JOB_PARAM_NAME, BUSINESS_DATE.format(BUSINESS_DATE_FMT))
+                .toJobParameters());
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
+        verify(alertSender).sendAlert(EodMtmFailedAlert.of(alertTime, "mtm step failed message"));
     }
 }
