@@ -300,7 +300,12 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                 margin -> margin.getInitialMargin().doubleValue(),
                 margin -> margin.getTotalDeficit().doubleValue(),
                 margin -> margin.getCashDeficit().doubleValue(),
-                margin -> margin.getMarginRatio().doubleValue()
+                margin -> margin.getMarginRatio().doubleValue(),
+                margin -> margin.getMarginAmount().doubleValue(),
+                margin -> margin.getSurplus().doubleValue(),
+                margin -> margin.getDrawableAmount().doubleValue(),
+                margin -> margin.getCashDrawableAmount().doubleValue(),
+                margin -> margin.getMarginCall().doubleValue()
             ).containsExactlyInAnyOrder(
                 tuple(
                     PARTICIPANT1,
@@ -315,7 +320,12 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     4200000.0,
                     -2298500.0,
                     1001000.0,
-                    45.0
+                    45.0,
+                    1900000.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    2298500.0
                 ),
                 tuple(
                     PARTICIPANT2,
@@ -330,7 +340,12 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     6300000.0,
                     -3287300.0,
                     3000000.0,
-                    48.0
+                    48.0,
+                    3000000.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    3287300.0
                 )
             );
     }

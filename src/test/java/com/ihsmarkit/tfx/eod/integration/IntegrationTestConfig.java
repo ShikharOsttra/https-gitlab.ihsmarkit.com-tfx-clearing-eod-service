@@ -15,6 +15,7 @@ import org.springframework.jmx.support.RegistrationPolicy;
 import com.ihsmarkit.tfx.core.collateral.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
 import com.ihsmarkit.tfx.core.domain.notification.system.SystemEventNotificationSender;
+import com.ihsmarkit.tfx.core.margin.config.MarginCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.CacheConfig;
 import com.ihsmarkit.tfx.eod.config.DateConfig;
@@ -35,8 +36,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
     BatchAutoConfiguration.class,
     MailingAutoConfiguration.class,
     CollateralCalculatorConfiguration.class,
-
-    CoreDlAutoConfiguration.class
+    CoreDlAutoConfiguration.class,
+    MarginCalculatorConfiguration.class
 })
 @Import({
     DateConfig.class,
