@@ -4,8 +4,6 @@ import static java.math.BigDecimal.ZERO;
 
 import java.math.BigDecimal;
 
-import javax.annotation.Nullable;
-
 import com.ihsmarkit.tfx.core.domain.type.ParticipantType;
 import com.ihsmarkit.tfx.core.margin.MarginAdapter;
 import com.ihsmarkit.tfx.eod.model.ParticipantMargin;
@@ -22,13 +20,11 @@ class MarginAdapterImpl implements MarginAdapter {
         return margin.getParticipant().getType();
     }
 
-    @Nullable
     @Override
     public BigDecimal getRequiredMarginBaseAmount() {
         return margin.getInitialMargin().orElse(ZERO);
     }
 
-    @Nullable
     @Override
     public BigDecimal getPnl() {
         return margin.getPnl().orElse(ZERO);
@@ -39,7 +35,6 @@ class MarginAdapterImpl implements MarginAdapter {
         return margin.getTodaySettlement().orElse(ZERO);
     }
 
-    @Nullable
     @Override
     public BigDecimal getFollowingDaySettlement() {
         return margin.getNextDaySettlement().orElse(ZERO);
