@@ -1,7 +1,8 @@
 {
   "name": "eod-service",
   "imageType": "IMAGE",
-  "parent": "openjdk:11-jre-slim",
+  "parent": "/mserv/extern/openjdk:11-jre-slim",
+  "subSystemVersion": "v1.4",
   "maintainerEmail": "oleksandr.berezovskyi@ihsmarkit.com",
   "copyPaths": {
     "build/libs/": "/opt/app/",
@@ -31,7 +32,6 @@
       ]
     },
     "spec": {
-      "serviceAccount": "tfx-clearing-systemuser",
       "volumes": [
         {
           "name": "app-config",
