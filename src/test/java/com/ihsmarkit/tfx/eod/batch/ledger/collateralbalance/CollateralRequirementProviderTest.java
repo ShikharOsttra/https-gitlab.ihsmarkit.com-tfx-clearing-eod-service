@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ class CollateralRequirementProviderTest {
     @Test
     void shouldReturnRequiredAmount() {
         when(participantCollateralRequirementRepository.findByBusinessDate(BUSINESS_DATE)).thenReturn(
-            Set.of(ParticipantCollateralRequirementEntity.builder()
+            List.of(ParticipantCollateralRequirementEntity.builder()
                 .participant(aParticipantEntityBuilder().build())
                 .purpose(MARGIN)
                 .value(BigDecimal.TEN)
