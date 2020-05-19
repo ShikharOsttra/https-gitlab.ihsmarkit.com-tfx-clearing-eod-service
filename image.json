@@ -36,7 +36,13 @@
         {
           "name": "app-config",
           "configMap": {
-            "name": "eod-service-app-config"
+            "name": "environment-config",
+            "items": [
+              {
+                "key": "eod-service.app.config.override",
+                "path": "application.properties"
+              }
+            ]
           }
         },
         {
