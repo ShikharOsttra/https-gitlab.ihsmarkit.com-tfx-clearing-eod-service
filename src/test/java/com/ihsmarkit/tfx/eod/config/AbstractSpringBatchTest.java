@@ -20,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.collateral.config.CollateralCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.dl.config.CoreDlAutoConfiguration;
+import com.ihsmarkit.tfx.core.margin.config.MarginCalculatorConfiguration;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
@@ -35,8 +36,8 @@ import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
     MailingAutoConfiguration.class,
     CollateralCalculatorConfiguration.class,
     BatchAutoConfiguration.class,
-
-    CoreDlAutoConfiguration.class
+    CoreDlAutoConfiguration.class,
+    MarginCalculatorConfiguration.class
 })
 @EnableMBeanExport(registration = RegistrationPolicy.REPLACE_EXISTING)
 @ContextConfiguration(classes = {
