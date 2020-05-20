@@ -61,20 +61,8 @@ master-job:
     paths:
       - build/libs/
 
-gconf:deliver:
-  stage: deliver
-  image: docker-registry-eu.mdevlab.com/mcp-gconf/gconf-deliver:v3.0
-  script:
-    - gconf-deliver
-  only:
-    - master
-    - develop
-    - uat-drop
-  artifacts:
-    paths:
-      - build/deliverable/
-      - build/gconf.deliverable.ref
-
 include:
+  - project: 'tfx-clearing/ci-jobs'
+    file: 'deliver/gconf-deliver.yml'
   - project: 'tfx-clearing/environments/ci'
     file: 'deployable-builds-ci.yml'
