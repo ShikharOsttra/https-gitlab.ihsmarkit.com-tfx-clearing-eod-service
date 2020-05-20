@@ -73,8 +73,7 @@ gconf:deliver:
   artifacts:
     paths:
       - build/deliverable/
-      - build/reports/
-      - build/test-results/
+      - build/gconf.deliverable.ref
 
 include:
   - project: 'tfx-clearing/environments/ci'
