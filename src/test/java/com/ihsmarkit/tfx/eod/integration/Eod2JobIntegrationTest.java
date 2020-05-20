@@ -77,7 +77,7 @@ class Eod2JobIntegrationTest {
     @DatabaseSetup({
         "/common/currency.xml",
         "/common/participants.xml",
-        "/common/business_date_2019_1_1.xml",
+        "/common/business_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/fx_spot_product.xml",

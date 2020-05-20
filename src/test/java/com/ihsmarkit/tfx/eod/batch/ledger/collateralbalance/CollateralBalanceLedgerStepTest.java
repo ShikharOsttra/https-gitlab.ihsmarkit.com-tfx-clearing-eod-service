@@ -34,7 +34,7 @@ class CollateralBalanceLedgerStepTest extends AbstractSpringBatchTest {
 
     @Test
     @DatabaseSetup({
-        "/common/business_date_2019_1_1.xml",
+        "/common/business_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/currency.xml",
@@ -43,9 +43,9 @@ class CollateralBalanceLedgerStepTest extends AbstractSpringBatchTest {
     })
     @ExpectedDatabase(value = "/eod2Job/CollateralBalanceLedger_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT)
     void testCollateralBalanceLedgerStep() {
-        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 1, 2, 11, 30, 0, 0));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 10, 8, 11, 30, 0, 0));
 
-        final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20190101")
+        final JobParameters jobParams = new JobParametersBuilder().addString("businessDate", "20191007")
             .toJobParameters();
         final JobExecution jobExecution = jobLauncherTestUtils.launchStep(COLLATERAL_BALANCE_LEDGER_STEP_NAME, jobParams);
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
