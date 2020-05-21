@@ -184,11 +184,12 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
 
         when(calendarDatesProvider.getNextTradingDate(OCT_6)).thenReturn(Optional.of(OCT_7));
         when(calendarDatesProvider.getNextTradingDate(OCT_7)).thenReturn(Optional.of(OCT_8));
+        when(calendarDatesProvider.getNextBusinessDate()).thenReturn(OCT_7);
 
-        when(haircutRateRepository.findByBusinessDate(OCT_6)).thenReturn(
+        when(haircutRateRepository.findNotOutdatedByBusinessDate(OCT_6)).thenReturn(
             List.of(
-                EquityHaircutRateEntity.builder().value(BigDecimal.ONE).build(),
-                LogHaircutRateEntity.builder().value(valueOf(90)).issuer(LOG_PRODUCT.getIssuer()).build()
+                EquityHaircutRateEntity.builder().value(BigDecimal.ONE).businessDate(OCT_7).build(),
+                LogHaircutRateEntity.builder().value(valueOf(90)).issuer(LOG_PRODUCT.getIssuer()).businessDate(OCT_7).build()
             )
         );
 

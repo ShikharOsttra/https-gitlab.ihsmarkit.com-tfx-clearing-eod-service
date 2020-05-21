@@ -21,30 +21,48 @@ import org.springframework.data.util.Pair;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.ParticipantCollateralRequirementEntity;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.ParticipantCollateralRequirementRepository;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 
 @ExtendWith(MockitoExtension.class)
 class CollateralRequirementProviderTest {
 
     private static final LocalDate BUSINESS_DATE = LocalDate.of(2019, 1, 1);
+    private static final LocalDate NEXT_BUSINESS_DATE = LocalDate.of(2019, 1, 2);
 
     @Mock
     private ParticipantCollateralRequirementRepository participantCollateralRequirementRepository;
+
+    @Mock
+    private CalendarDatesProvider calendarDatesProvider;
 
     private CollateralRequirementProvider collateralRequirementProvider;
 
     @BeforeEach
     void setUp() {
-        collateralRequirementProvider = new CollateralRequirementProvider(BUSINESS_DATE, participantCollateralRequirementRepository);
+        collateralRequirementProvider = new CollateralRequirementProvider(
+            BUSINESS_DATE,
+            participantCollateralRequirementRepository,
+            calendarDatesProvider
+        );
+        when(calendarDatesProvider.getNextBusinessDate()).thenReturn(NEXT_BUSINESS_DATE);
     }
 
     @Test
     void shouldReturnRequiredAmount() {
-        when(participantCollateralRequirementRepository.findByBusinessDate(BUSINESS_DATE)).thenReturn(
-            List.of(ParticipantCollateralRequirementEntity.builder()
-                .participant(aParticipantEntityBuilder().build())
-                .purpose(MARGIN)
-                .value(BigDecimal.TEN)
-                .build()
+        when(participantCollateralRequirementRepository.findNotOutdatedByBusinessDate(BUSINESS_DATE)).thenReturn(
+            List.of(
+                ParticipantCollateralRequirementEntity.builder()
+                    .participant(aParticipantEntityBuilder().build())
+                    .purpose(MARGIN)
+                    .value(BigDecimal.ZERO)
+                    .businessDate(LocalDate.of(2019, 1, 1))
+                    .build(),
+                ParticipantCollateralRequirementEntity.builder()
+                    .participant(aParticipantEntityBuilder().build())
+                    .purpose(MARGIN)
+                    .value(BigDecimal.TEN)
+                    .businessDate(LocalDate.of(2019, 1, 2))
+                    .build()
             ));
 
         assertThat(collateralRequirementProvider.getRequiredAmount(11L)).containsOnly(Map.entry(MARGIN, BigDecimal.TEN));
@@ -55,7 +73,7 @@ class CollateralRequirementProviderTest {
         final BigDecimal nextValue = BigDecimal.TEN;
         final LocalDate applicableDate = LocalDate.of(2019, 10, 10);
 
-        when(participantCollateralRequirementRepository.findFutureOnlyByBusinessDate(BUSINESS_DATE)).thenReturn(
+        when(participantCollateralRequirementRepository.findFutureOnlyByBusinessDate(NEXT_BUSINESS_DATE)).thenReturn(
             Set.of(ParticipantCollateralRequirementEntity.builder()
                     .participant(aParticipantEntityBuilder().build())
                     .purpose(CLEARING_DEPOSIT)

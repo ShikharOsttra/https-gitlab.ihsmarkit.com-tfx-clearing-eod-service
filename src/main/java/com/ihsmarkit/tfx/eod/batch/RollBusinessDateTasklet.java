@@ -37,8 +37,7 @@ public class RollBusinessDateTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
-        final LocalDate nextBusinessDate = calendarDatesProvider.getNextTradingDate(businessDate)
-            .orElseThrow(() -> new IllegalStateException("Missing Trading/Swap calendar for given business date: " + businessDate));
+        final LocalDate nextBusinessDate = calendarDatesProvider.getNextBusinessDate();
 
         futureValueService.rollFutureValues(this.businessDate, nextBusinessDate);
 
