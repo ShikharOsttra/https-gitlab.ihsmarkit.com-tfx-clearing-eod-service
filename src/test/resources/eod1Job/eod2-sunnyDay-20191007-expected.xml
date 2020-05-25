@@ -4,13 +4,13 @@
     <!-- EOD1 -->
     <eod_product_cash_settlement
         participant_id="101" currency_pair_id="13" amount="9500" currency="JPY"
-        settlement_date="2019-10-08" date="2019-10-06"
+        settlement_date="2019-10-08" date="2019-10-04"
         type="DAILY_MTM"
     />
 
     <eod_product_cash_settlement
         participant_id="101" currency_pair_id="13" amount="9500" currency="JPY"
-        settlement_date="2019-10-08" date="2019-10-06"
+        settlement_date="2019-10-08" date="2019-10-04"
         type="TOTAL_VM"
     />
 
@@ -24,13 +24,13 @@
     <!-- 102 -->
     <eod_product_cash_settlement
         participant_id="102" currency_pair_id="13" amount="9700" currency="JPY"
-        settlement_date="2019-10-08" date="2019-10-06"
+        settlement_date="2019-10-08" date="2019-10-04"
         type="DAILY_MTM"
     />
 
     <eod_product_cash_settlement
         participant_id="102" currency_pair_id="13" amount="9700" currency="JPY"
-        settlement_date="2019-10-08" date="2019-10-06"
+        settlement_date="2019-10-08" date="2019-10-04"
         type="TOTAL_VM"
     />
 
