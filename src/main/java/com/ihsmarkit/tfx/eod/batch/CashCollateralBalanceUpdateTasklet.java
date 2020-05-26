@@ -3,12 +3,14 @@ package com.ihsmarkit.tfx.eod.batch;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARGIN;
 import static java.math.BigDecimal.ZERO;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.partitioningBy;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.common.math.BigDecimals;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
@@ -86,8 +89,18 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
             .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
             .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
 
-        collateralBalanceRepository.deleteAll(separated.get(Boolean.TRUE).stream().map(Pair::getRight)::iterator);
-        collateralBalanceRepository.saveAll(separated.get(Boolean.FALSE).stream().map(this::adjustAmount)::iterator);
+        collateralBalanceRepository.deleteAll(
+            separated.get(Boolean.TRUE).stream()
+                .map(Pair::getRight)
+                .filter(Objects::nonNull)
+                ::iterator
+        );
+        collateralBalanceRepository.saveAll(
+            separated.get(Boolean.FALSE).stream()
+                .map(this::adjustAmount)
+                .filter(not(BigDecimals.isEqualToZero(CollateralBalanceEntity::getAmount)))
+                ::iterator
+        );
 
         eodCashBalanceAdjustmentRepository.saveAll(margins.stream().map(this::mapToAdjustment)::iterator);
 
