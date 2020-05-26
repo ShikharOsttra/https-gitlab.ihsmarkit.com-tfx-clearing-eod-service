@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.batch;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralProductType.CASH;
 import static com.ihsmarkit.tfx.core.domain.type.CollateralPurpose.MARGIN;
 import static java.math.BigDecimal.ZERO;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.partitioningBy;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -97,7 +98,7 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         collateralBalanceRepository.saveAll(
             separated.get(Boolean.FALSE).stream()
                 .map(this::adjustAmount)
-                .filter(balance -> !BigDecimals.isEqualToZero(balance.getAmount()))
+                .filter(not(BigDecimals.isEqualToZero(CollateralBalanceEntity::getAmount)))
                 ::iterator
         );
 
