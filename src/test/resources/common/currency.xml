@@ -3,9 +3,9 @@
     <currency_pair id="14" base_ccy="USD" value_ccy="JPY"/>
     <currency_pair id="2" base_ccy="EUR" value_ccy="JPY"/>
 
-    <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-06" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-06" remarks="[]"/>
-    <eod_daily_settlement_price currency_pair_id="2" dsp="120.08" business_date="2019-10-06" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-04" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-04" remarks="[]"/>
+    <eod_daily_settlement_price currency_pair_id="2" dsp="120.08" business_date="2019-10-04" remarks="[]"/>
 
     <eod_daily_settlement_price currency_pair_id="13" dsp="1.10" business_date="2019-10-07" remarks="[]"/>
     <eod_daily_settlement_price currency_pair_id="14" dsp="109.38" business_date="2019-10-07" remarks="[]"/>

@@ -10,12 +10,15 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,6 +33,7 @@ import com.ihsmarkit.tfx.core.dl.entity.SummerTimeSettingEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradingHoursEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SummerTimeSettingRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradingHoursRepository;
+import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.domain.type.TradingHoursType;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +57,8 @@ class PositionDateProviderTest {
     @Mock
     private TradingHoursRepository tradingHoursRepository;
 
+    @Mock
+    private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     @ParameterizedTest
     @MethodSource("positionDatesDataProvider")
@@ -79,7 +85,20 @@ class PositionDateProviderTest {
             tradingHours(SUMMER, FRIDAY, SUMMER_FRIDAY_CLOSE_TIME)
         ));
 
-        final PositionDateProvider positionDateProvider = new PositionDateProvider(businessDate, summerTimeSettingRepository, tradingHoursRepository);
+        when(calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(any())).thenAnswer(
+            invocation -> ((LocalDate) invocation.getArgument(0)).with(
+                temporal -> DayOfWeek.from(temporal) == MONDAY
+                            ? temporal.with(TemporalAdjusters.previous(FRIDAY))
+                            : temporal.minus(1, ChronoUnit.DAYS)
+            )
+        );
+
+        final PositionDateProvider positionDateProvider = new PositionDateProvider(
+            businessDate,
+            summerTimeSettingRepository,
+            tradingHoursRepository,
+            calendarTradingSwapPointRepository
+        );
 
         assertThat(positionDateProvider.getSodDate()).isEqualTo(sodDate);
         assertThat(positionDateProvider.getNetDate()).isEqualTo(netDate);

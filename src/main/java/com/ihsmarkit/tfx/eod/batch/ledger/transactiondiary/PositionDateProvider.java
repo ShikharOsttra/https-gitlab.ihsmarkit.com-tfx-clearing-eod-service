@@ -5,19 +5,11 @@ import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.NET;
 import static com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType.SOD;
 import static com.ihsmarkit.tfx.core.domain.type.TradingHoursType.REGULAR;
 import static com.ihsmarkit.tfx.core.domain.type.TradingHoursType.SUMMER;
-import static java.time.DayOfWeek.FRIDAY;
-import static java.time.DayOfWeek.MONDAY;
-import static java.time.DayOfWeek.SATURDAY;
-import static java.time.temporal.ChronoUnit.DAYS;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDate;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +23,7 @@ import com.ihsmarkit.tfx.core.dl.entity.SummerTimeSettingEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradingHoursEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SummerTimeSettingRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradingHoursRepository;
+import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.core.domain.type.TradingHoursType;
 
@@ -48,6 +41,8 @@ public class PositionDateProvider {
 
     private final TradingHoursRepository tradingHoursRepository;
 
+    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
+
     private Lazy<Map<ParticipantPositionType, LocalDateTime>> dates = Lazy.of(this::calculateDates);
 
     public LocalDateTime getSodDate() {
@@ -63,10 +58,12 @@ public class PositionDateProvider {
         final SummerTimeSettingEntity summerTimeSetting = summerTimeSettingRepository.findByCurrencyPairFamilyFailFast(NON_NZD);
         final List<TradingHoursEntity> tradingHours = tradingHoursRepository.findAll();
 
+        final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
+
         return Map.of(
             SOD, LocalDateTime.of(
-                businessDate.with(saturdayIfMonday()),
-                getCloseTime(businessDate.with(prevBusinessDay()), summerTimeSetting, tradingHours)
+                previousTradingDate.plusDays(1),
+                getCloseTime(previousTradingDate, summerTimeSetting, tradingHours)
             ),
             NET, LocalDateTime.of(
                 businessDate.plusDays(1),
@@ -90,18 +87,6 @@ public class PositionDateProvider {
             .map(TradingHoursEntity::getCloseTime)
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Trading hours not found"));
-    }
-
-    private static TemporalAdjuster saturdayIfMonday() {
-        return temporal -> isMonday(temporal) ? temporal.with(TemporalAdjusters.previous(SATURDAY)) : temporal;
-    }
-
-    private static TemporalAdjuster prevBusinessDay() {
-        return temporal -> isMonday(temporal) ? temporal.with(TemporalAdjusters.previous(FRIDAY)) : temporal.minus(1, DAYS);
-    }
-
-    private static boolean isMonday(final Temporal temporal) {
-        return DayOfWeek.from(temporal) == MONDAY;
     }
 
 }
