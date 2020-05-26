@@ -14,7 +14,6 @@
     <participant id="105" code="P55" name="Party_555" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
 
     <collateral_balance id="1" purpose="1" participant_id="101" product_id="1" amount="10001" version="1"/>
-    <collateral_balance id="2" purpose="1" participant_id="102" product_id="1" amount="9400" version="1"/>
     <collateral_balance id="3" purpose="1" participant_id="103" product_id="1" amount="19700" version="1"/>
     <collateral_balance id="4" purpose="1" participant_id="101" product_id="4" amount="2000" version="1"/>
     <collateral_balance id="5" purpose="1" participant_id="105" product_id="1" amount="2000" version="1"/>
@@ -28,7 +27,7 @@
     <eod_cash_settlement id="16" participant_id="101" date="2019-10-07" amount="-22722" currency="JPY" date_type="FOLLOWING" type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
     <eod_cash_settlement id="17" participant_id="101" date="2019-10-07" amount="-13222" currency="JPY" date_type="TOTAL"     type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
-    <eod_cash_settlement id="18" participant_id="102" date="2019-10-07" amount="-9700"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
+    <eod_cash_settlement id="18" participant_id="102" date="2019-10-07" amount="0"   currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
     <eod_cash_settlement id="19" participant_id="103" date="2019-10-07" amount="-19700"  currency="JPY" date_type="DAY"       type="TOTAL_VM" timestamp="2019-03-05 16:00:00" />
 
