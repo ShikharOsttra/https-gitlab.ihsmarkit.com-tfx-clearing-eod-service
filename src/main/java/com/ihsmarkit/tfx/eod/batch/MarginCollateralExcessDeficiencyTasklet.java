@@ -162,7 +162,7 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 .collect(Collectors.toMap(item -> item.getParticipant().getCode(), Function.identity()));
 
         final var allParticipantMargin = EntryStream.of(participantMap)
-            .map(participantEntry -> participantMargin.getOrDefault(participantEntry.getKey(), emptyMargin(participantEntry.getValue())))
+            .mapKeyValue((participantCode, participant) -> participantMargin.getOrDefault(participantCode, emptyMargin(participant)))
             .toImmutableList();
 
         eodParticipantMarginRepository.saveAll(allParticipantMargin);

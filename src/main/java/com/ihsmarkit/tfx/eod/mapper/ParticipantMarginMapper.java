@@ -61,7 +61,7 @@ public interface ParticipantMarginMapper {
     @Mapping(target = "requiredAmount", constant = "0")
     @Mapping(target = "initialMargin", constant = "0")
     @Mapping(target = "marginRatio", constant = "0")
-    @Mapping(target = "marginAlertLevel", expression = "java(null)")
+    @Mapping(target = "marginAlertLevel", ignore = true)
     @Mapping(target = "totalDeficit", constant = "0")
     @Mapping(target = "cashDeficit", constant = "0")
     @Mapping(target = "cashCollateral", constant = "0")
