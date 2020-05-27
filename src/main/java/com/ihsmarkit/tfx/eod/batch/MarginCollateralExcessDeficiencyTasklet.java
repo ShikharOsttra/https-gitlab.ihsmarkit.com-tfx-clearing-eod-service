@@ -99,8 +99,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final List<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThan(businessDate).collect(Collectors.toList());
 
-        final Optional<LocalDate> theDay = calendarDatesProvider.getNextTradingDate(businessDate);
-        final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextTradingDate);
+        final Optional<LocalDate> theDay = calendarDatesProvider.getNextBankBusinessDate(businessDate);
+        final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextBankBusinessDate);
         final var aggregated = eodCalculator.aggregateRequiredMargin(margin, theDay, followingDay);
 
         final Stream<EodCashSettlementEntity> cashSettlement = EntryStream.of(aggregated)

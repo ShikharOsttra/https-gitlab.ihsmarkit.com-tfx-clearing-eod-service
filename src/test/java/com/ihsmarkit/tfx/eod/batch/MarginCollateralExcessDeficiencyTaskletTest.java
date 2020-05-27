@@ -185,8 +185,8 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
 
         when(systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE)).thenReturn(OCT_6);
 
-        when(calendarDatesProvider.getNextTradingDate(OCT_6)).thenReturn(Optional.of(OCT_7));
-        when(calendarDatesProvider.getNextTradingDate(OCT_7)).thenReturn(Optional.of(OCT_8));
+        when(calendarDatesProvider.getNextBankBusinessDate(OCT_6)).thenReturn(Optional.of(OCT_7));
+        when(calendarDatesProvider.getNextBankBusinessDate(OCT_7)).thenReturn(Optional.of(OCT_8));
         when(calendarDatesProvider.getNextBusinessDate()).thenReturn(OCT_7);
 
         when(haircutRateRepository.findNotOutdatedByBusinessDate(OCT_6)).thenReturn(
