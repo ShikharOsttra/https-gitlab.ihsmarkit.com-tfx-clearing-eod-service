@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS eod_ledger_collateral_list
     collateral_purpose_type varchar(5)   not null,
     collateral_purpose      varchar(64)  not null,
     collateral_name         varchar(255) not null,
-    collateral_type_no      varchar(1)   not null,
+    collateral_type_no      varchar(5)   not null,
     collateral_type         varchar(64)  not null,
     security_code           varchar(9)   not null,
     isin_code               varchar(12)  not null,

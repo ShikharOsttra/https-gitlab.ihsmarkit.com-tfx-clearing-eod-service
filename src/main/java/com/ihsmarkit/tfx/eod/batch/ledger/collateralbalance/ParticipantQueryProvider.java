@@ -9,7 +9,7 @@ import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
 
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity_;
-import com.ihsmarkit.tfx.eod.batch.ledger.PredicateFactory;
+import com.ihsmarkit.tfx.eod.batch.ledger.SpecificationFactory;
 
 public class ParticipantQueryProvider extends AbstractJpaQueryProvider {
 
@@ -20,7 +20,7 @@ public class ParticipantQueryProvider extends AbstractJpaQueryProvider {
 
         final Root<ParticipantEntity> root = query.from(ParticipantEntity.class);
 
-        query.where(PredicateFactory.participantPredicate().apply(cb, root))
+        query.where(SpecificationFactory.participantPathSpecification().toPredicate(root, query, cb))
             .orderBy(cb.asc(root.get(ParticipantEntity_.id)));
 
         return getEntityManager().createQuery(query);
