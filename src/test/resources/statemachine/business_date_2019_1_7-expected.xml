@@ -1,5 +1,6 @@
 <dataset>
     <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-08"/>
+    <system_parameter id="501" name="EVALUATION_DATE" value="2019-10-07"/>
     <eod_status stage="EOD_PRICES_BOND_UPDATE_COMPLETED" business_date="2019-01-07"/>
     <eod_status stage="EOD_PRICES_EQUITY_UPDATE_COMPLETED" business_date="2019-01-07"/>
     <eod_status stage="DSP_APPROVED" business_date="2019-01-07"/>

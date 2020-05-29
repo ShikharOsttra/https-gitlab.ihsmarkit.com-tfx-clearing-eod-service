@@ -78,6 +78,7 @@ class Eod2JobIntegrationTest {
         "/common/participants.xml",
         "/Eod2JobIntegrationTest/additionalParticipant.xml",
         "/common/business_date_2019_10_07.xml",
+        "/common/evaluation_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/fx_spot_product.xml",
