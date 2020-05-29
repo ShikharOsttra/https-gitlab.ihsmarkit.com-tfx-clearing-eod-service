@@ -76,6 +76,7 @@ class Eod2JobIntegrationTest {
     @DatabaseSetup({
         "/common/currency.xml",
         "/common/participants.xml",
+        "/Eod2JobIntegrationTest/additionalParticipant.xml",
         "/common/business_date_2019_10_07.xml",
         "/common/evaluation_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
@@ -100,7 +101,7 @@ class Eod2JobIntegrationTest {
 
         final InOrder inOrder = inOrder(alertSender);
         inOrder.verify(alertSender).sendAlert(Eod2StartAlert.of(currentDateTime, businessDate));
-        inOrder.verify(alertSender).sendAlert(EodLedgerGenerationCompletedAlert.of(currentDateTime, Set.of("P11", "P22", "P23", "CLHS")));
+        inOrder.verify(alertSender).sendAlert(EodLedgerGenerationCompletedAlert.of(currentDateTime, Set.of("P11", "P22", "P23", "P44", "CLHS")));
         inOrder.verify(alertSender).sendAlert(Eod2CompletedAlert.of(currentDateTime, businessDate));
         inOrder.verifyNoMoreInteractions();
     }

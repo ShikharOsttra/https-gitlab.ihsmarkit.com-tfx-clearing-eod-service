@@ -1,0 +1,4 @@
+<dataset>
+    <participant id="104" code="P44" name="Party_444" type="FX_BROKER" matching_preference="ENTITY" status="ACTIVE" notification_email="gio.romano@gmail.com"/>
+    <legal_entity id="104" code="TFEP44" name="Legal_444" participant_id="104" status="ACTIVE" clearing_role="NON_MEMBER"/>
+</dataset>

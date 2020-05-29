@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,8 +26,10 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
+import com.ihsmarkit.tfx.core.dl.entity.eod.EodParticipantMarginEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.repository.MarginAlertConfigurationRepository;
+import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodCashSettlementRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodParticipantMarginRepository;
@@ -54,6 +57,7 @@ import one.util.streamex.EntryStream;
 @AllArgsConstructor
 @JobScope
 @Slf4j
+@SuppressWarnings("PMD.TooManyFields")
 public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
@@ -84,6 +88,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     private final CalendarDatesProvider calendarDatesProvider;
 
+    private final ParticipantRepository participantRepository;
+
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -93,8 +99,8 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         final List<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThan(businessDate).collect(Collectors.toList());
 
-        final Optional<LocalDate> theDay = calendarDatesProvider.getNextTradingDate(businessDate);
-        final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextTradingDate);
+        final Optional<LocalDate> theDay = calendarDatesProvider.getNextBankBusinessDate(businessDate);
+        final Optional<LocalDate> followingDay = theDay.flatMap(calendarDatesProvider::getNextBankBusinessDate);
         final var aggregated = eodCalculator.aggregateRequiredMargin(margin, theDay, followingDay);
 
         final Stream<EodCashSettlementEntity> cashSettlement = EntryStream.of(aggregated)
@@ -141,6 +147,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 )
             ));
 
+        final var participantMap = participantRepository.findAllNotDeletedWithoutClearingHouse().stream()
+            .collect(Collectors.toMap(ParticipantEntity::getCode, Function.identity()));
+
         final var participantMargin =
             eodCalculator
                 .calculateParticipantMargin(
@@ -149,11 +158,20 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                     deposits,
                     marginAlertCalculatorsPerParticipant
                 )
-                .map(marginEntry -> participantMarginMapper.toEntity(marginEntry, businessDate, clockService.getCurrentDateTimeUTC()));
+                .map(marginEntry -> participantMarginMapper.toEntity(marginEntry, businessDate, clockService.getCurrentDateTimeUTC()))
+                .collect(Collectors.toMap(item -> item.getParticipant().getCode(), Function.identity()));
 
-        eodParticipantMarginRepository.saveAll(participantMargin::iterator);
+        final var allParticipantMargin = EntryStream.of(participantMap)
+            .mapKeyValue((participantCode, participant) -> participantMargin.getOrDefault(participantCode, emptyMargin(participant)))
+            .toImmutableList();
+
+        eodParticipantMarginRepository.saveAll(allParticipantMargin);
 
         return RepeatStatus.FINISHED;
+    }
+
+    private EodParticipantMarginEntity emptyMargin(final ParticipantEntity participant) {
+        return participantMarginMapper.toEmptyEodMargin(participant, businessDate, clockService.getCurrentDateTimeUTC());
     }
 
     private Map<ParticipantEntity, BalanceContribution> calculateDeposits(final Set<Long> participants) {
