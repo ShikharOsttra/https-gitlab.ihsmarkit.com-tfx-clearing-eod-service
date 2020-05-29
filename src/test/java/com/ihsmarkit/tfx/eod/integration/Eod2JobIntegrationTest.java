@@ -40,7 +40,6 @@ import com.ihsmarkit.tfx.alert.client.jms.AlertSender;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.monthlytradingvolume.LastTradingDateInMonthDecider;
 import com.ihsmarkit.tfx.eod.config.EOD2JobConfig;
-import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 import com.ihsmarkit.tfx.test.utils.db.DbUnitTestListeners;
 
 @ExtendWith(SpringExtension.class)
@@ -78,6 +77,7 @@ class Eod2JobIntegrationTest {
         "/common/currency.xml",
         "/common/participants.xml",
         "/common/business_date_2019_10_07.xml",
+        "/common/evaluation_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/fx_spot_product.xml",

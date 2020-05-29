@@ -74,6 +74,9 @@ class StateMachineIntegrationTest {
     private static final LocalDate JAN_5 = JAN_1.plusDays(4);
     private static final LocalDate JAN_7 = JAN_1.plusDays(6);
     private static final LocalDate JAN_8 = JAN_1.plusDays(7);
+    private static final LocalDate JAN_9 = JAN_1.plusDays(8);
+    private static final LocalDate JAN_10 = JAN_1.plusDays(9);
+    private static final LocalDate JAN_11 = JAN_1.plusDays(10);
 
     @Autowired
     private StateMachine<StateMachineConfig.States, StateMachineConfig.Events> stateMachine;
@@ -215,7 +218,8 @@ class StateMachineIntegrationTest {
         "/common/fx_spot_product.xml",
         "/common/participants.xml",
         "/common/tradingHours.xml",
-        "/statemachine/business_date_2019_1_7.xml"
+        "/statemachine/business_date_2019_1_7.xml",
+        "/common/evaluation_date_2019_10_07.xml"
     })
     @ExpectedDatabase(value = "/statemachine/business_date_2019_1_7-expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunFullCycle() throws Exception {
@@ -230,6 +234,65 @@ class StateMachineIntegrationTest {
         assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_7);
         assertThat(stateMachine.getState().getIds()).containsOnly(READY);
 
+    }
+
+    @Test
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/common/fx_spot_product.xml",
+        "/common/participants.xml",
+        "/common/tradingHours.xml",
+        "/statemachine/business_date_2019_1_8.xml",
+        "/common/evaluation_date_2019_10_07.xml"
+    })
+    void shouldNotWaitCollateralPricesWhenNotBankBusinessDate() throws Exception {
+
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_9, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_9, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDate()).thenReturn(JAN_9);
+
+        resetToReady();
+        waitFor(INIT, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
+        waitFor(READY, WAITING_TIME);
+
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_8);
+        assertThat(stateMachine.getState().getIds()).containsOnly(READY);
+    }
+
+    @Test
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/statemachine/business_date_2019_1_9.xml"
+    })
+    void shouldWaitBondPrices() throws Exception {
+
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_10, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_10, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDate()).thenReturn(JAN_10);
+
+        resetToReady();
+        waitFor(SWP_PNT_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
+
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_9);
+        assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
+    }
+
+    @Test
+    @DatabaseSetup({
+        "/common/currency.xml",
+        "/statemachine/business_date_2019_1_10.xml"
+    })
+    void shouldWaitEquityPrices() throws Exception {
+
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(LocalDateTime.of(JAN_11, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(JAN_11, LocalTime.MIDNIGHT));
+        when(clockService.getCurrentDate()).thenReturn(JAN_11);
+
+        resetToReady();
+        waitFor(SWP_PNT_DELAY, WAITING_TIME, () -> stateMachine.sendEvent(StateMachineConfig.Events.EOD));
+
+        assertThat(stateMachine.getExtendedState().getVariables().get(BUSINESS_DATE_ATTRIBUTE)).isEqualTo(JAN_10);
+        assertThat(stateMachine.getState().getIds()).containsOnly(EOD2, SWP_PNT_DELAY);
     }
 
     void waitFor(final StateMachineConfig.States state, final int seconds) throws InterruptedException {

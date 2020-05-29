@@ -34,6 +34,7 @@ class CollateralListLedgerStepTest extends AbstractSpringBatchTest {
     @Test
     @DatabaseSetup({
         "/common/business_date_2019_10_07.xml",
+        "/common/evaluation_date_2019_10_07.xml",
         "/common/issuerBanks.xml",
         "/common/haircuts.xml",
         "/common/currency.xml",
