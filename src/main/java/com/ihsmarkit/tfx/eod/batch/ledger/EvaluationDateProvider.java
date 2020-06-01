@@ -2,6 +2,7 @@ package com.ihsmarkit.tfx.eod.batch.ledger;
 
 import java.time.LocalDate;
 
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.data.util.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 import lombok.RequiredArgsConstructor;
 
 @Component
+@StepScope
 @RequiredArgsConstructor
 public class EvaluationDateProvider {
 
