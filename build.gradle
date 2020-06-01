@@ -77,8 +77,7 @@ dependencies {
 
     runtimeOnly(
         [group: 'com.zaxxer', name: 'HikariCP'], 
-        [group: 'mysql', name: 'mysql-connector-java'],
-        [group: 'org.mariadb.jdbc', name: 'mariadb-java-client']
+        [group: 'mysql', name: 'mysql-connector-java']
     )
     testImplementation(
             [group: 'com.ihsmarkit.tfx', name: 'common', classifier: 'tests', version: tfxCommonVersion],
