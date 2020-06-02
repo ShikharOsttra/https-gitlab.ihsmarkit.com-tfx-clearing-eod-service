@@ -9,6 +9,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.LEDGER_CLEANUP_STEP_N
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MONTHLY_TRADING_VOLUME_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SAVE_EOD_PARTICIPANTS_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_FLOW_NAME;
@@ -31,6 +32,7 @@ import com.ihsmarkit.tfx.eod.batch.SwapPnLTasklet;
 import com.ihsmarkit.tfx.eod.batch.TotalVariationMarginTasklet;
 import com.ihsmarkit.tfx.eod.batch.LedgerGenerationCompleterTasklet;
 import com.ihsmarkit.tfx.eod.batch.ledger.LedgerCleanupTasklet;
+import com.ihsmarkit.tfx.eod.batch.ledger.SaveEodParticipantsTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralBalanceLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.CollateralListLedgerConfig;
 import com.ihsmarkit.tfx.eod.config.ledger.DailyMarketDataLedgerConfig;
@@ -69,6 +71,8 @@ public class EOD2JobConfig {
 
     private final LedgerGenerationCompleterTasklet ledgerGenerationCompleterTasklet;
 
+    private final SaveEodParticipantsTasklet saveEodParticipantsTasklet;
+
     private final EodJobListenerFactory eodJobListenerFactory;
 
     @Qualifier(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
@@ -100,6 +104,7 @@ public class EOD2JobConfig {
             .next(collateralListLedger)
             .next(collateralBalanceLedger)
             .next(monthlyTradingVolumeLedger)
+            .next(saveEodParticipants())
             .next(ledgerGenerationCompletedAlertStep())
             .end()
             .build();
@@ -133,6 +138,13 @@ public class EOD2JobConfig {
         return steps.get(LEDGER_CLEANUP_STEP_NAME)
             .allowStartIfComplete(true)
             .tasklet(ledgerCleanupTasklet)
+            .build();
+    }
+
+    private Step saveEodParticipants() {
+        return steps.get(SAVE_EOD_PARTICIPANTS_STEP_NAME)
+            .allowStartIfComplete(true)
+            .tasklet(saveEodParticipantsTasklet)
             .build();
     }
 

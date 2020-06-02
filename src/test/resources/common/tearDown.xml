@@ -59,4 +59,5 @@
     <eod_cash_balance_adjustment/>
     <eod_threshold_future_value />
     <forced_allocation_threshold_future_value />
+    <eod_participant/>
 </dataset>
