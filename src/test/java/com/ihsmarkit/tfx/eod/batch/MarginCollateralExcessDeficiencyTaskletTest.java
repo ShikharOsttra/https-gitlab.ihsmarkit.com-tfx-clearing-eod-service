@@ -236,7 +236,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
         when(marginRatioService.getRequiredMarginRatio(CURRENCY_PAIR_USDJPY, PARTICIPANT2)).thenReturn(valueOf(30));
         when(marginRatioService.getRequiredMarginRatio(CURRENCY_PAIR_NZDJPY, PARTICIPANT2)).thenReturn(valueOf(50));
 
-        when(dailySettlementPriceRepository.findAllByBusinessDate(OCT_6)).thenReturn(
+        when(dailySettlementPriceRepository.findLatestDailySettlementPrices(OCT_6)).thenReturn(
             List.of(
                 DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_EURUSD).dailySettlementPrice(valueOf(1.1)).build(),
                 DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_USDJPY).dailySettlementPrice(valueOf(100)).build(),
