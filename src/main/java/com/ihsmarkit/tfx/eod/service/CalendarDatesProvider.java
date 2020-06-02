@@ -32,4 +32,8 @@ public class CalendarDatesProvider {
         return getNextTradingDate(systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE))
             .orElseThrow(() -> new IllegalStateException("Missing Trading/Swap calendar for given business date: " + businessDate));
     }
+
+    public Optional<LocalDate> getNextBankBusinessDate(final LocalDate currentDate) {
+        return calendarTradingSwapPointRepository.findNextBankBusinessDate(currentDate);
+    }
 }

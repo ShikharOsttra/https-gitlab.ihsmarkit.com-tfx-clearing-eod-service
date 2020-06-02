@@ -4,37 +4,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
+import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
+import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluationDateProviderTest {
 
-    private static final LocalDate BUSINESS_DATE = LocalDate.of(2020, 1, 5);
-    private static final LocalDate PREV_BANK_BUSINESS_DATE = LocalDate.of(2020, 1, 3);
+    private static final LocalDate EVALUATION_DATE = LocalDate.of(2020, 1, 5);
 
     @Mock
-    private CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
+    private SystemParameterRepository systemParameterRepository;
 
+    @InjectMocks
     private EvaluationDateProvider evaluationDateProvider;
-
-    @BeforeEach
-    void setUp() {
-        evaluationDateProvider = new EvaluationDateProvider(BUSINESS_DATE, calendarTradingSwapPointRepository);
-    }
 
     @Test
     void shouldProvideEvaluationDate() {
-        when(calendarTradingSwapPointRepository.findPrevBankBusinessDateOrToday(BUSINESS_DATE)).thenReturn(Optional.of(PREV_BANK_BUSINESS_DATE));
+        when(systemParameterRepository.getParameterValueFailFast(SystemParameters.EVALUATION_DATE)).thenReturn(EVALUATION_DATE);
 
-        assertThat(evaluationDateProvider.get()).isEqualTo(PREV_BANK_BUSINESS_DATE);
+        assertThat(evaluationDateProvider.get()).isEqualTo(EVALUATION_DATE);
     }
 
 }

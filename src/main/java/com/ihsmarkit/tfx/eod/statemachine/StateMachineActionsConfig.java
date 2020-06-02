@@ -30,6 +30,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusEntity;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
+import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
 import com.ihsmarkit.tfx.core.domain.eod.EodStage;
 import com.ihsmarkit.tfx.core.time.ClockService;
@@ -69,6 +70,8 @@ public class StateMachineActionsConfig {
     private final SystemParameterRepository systemParameterRepository;
 
     private final ClockService clockService;
+
+    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
 
     @Bean
     public Action<StateMachineConfig.States, StateMachineConfig.Events> initAction() {
@@ -119,8 +122,8 @@ public class StateMachineActionsConfig {
     @Bean
     public EodGuard swpPointApprovedGuard() {
         return context -> hasSwapPointsApproved(context.getBusinessDate())
-            && isCollateralPriceUploadCompleted(context.getBusinessDate(), EOD_PRICES_BOND_UPDATE_COMPLETED)
-            && isCollateralPriceUploadCompleted(context.getBusinessDate(), EOD_PRICES_EQUITY_UPDATE_COMPLETED);
+            && isCollateralPriceUploadCompleted(EOD_PRICES_BOND_UPDATE_COMPLETED)
+            && isCollateralPriceUploadCompleted(EOD_PRICES_EQUITY_UPDATE_COMPLETED);
     }
 
     @Bean
@@ -149,9 +152,21 @@ public class StateMachineActionsConfig {
             .toJobParameters();
     }
 
-    private boolean isCollateralPriceUploadCompleted(final LocalDate businessDate, final EodStage eodPriceStage) {
-        final boolean result = collateralPriceUploadCheckEnabled && eodStatusRepository.existsById(new EodStatusCompositeId(eodPriceStage, businessDate));
-        log.info("[EOD2 trigger] collateral price upload check for: {} and businessDay: {} returns: {}", eodPriceStage, businessDate, result);
+    private boolean isCollateralPriceUploadCompleted(final EodStage eodPriceStage) {
+        if (!collateralPriceUploadCheckEnabled) {
+            log.info("[EOD2 trigger] collateral price upload check for: {} is disabled", eodPriceStage);
+            return true;
+        }
+
+        final LocalDate currentDate = clockService.getCurrentDate();
+        if (!calendarTradingSwapPointRepository.existsByTradeDateAndBankBusinessDateIsTrue(currentDate)) {
+            log.info("[EOD2 trigger] skip collateral price upload check for: {} because current date {} is not bank business date", eodPriceStage, currentDate);
+            return true;
+        }
+
+        final LocalDate evaluationDate = calendarTradingSwapPointRepository.findPrevBankBusinessDate(currentDate).orElseThrow();
+        final boolean result = eodStatusRepository.existsById(new EodStatusCompositeId(eodPriceStage, evaluationDate));
+        log.info("[EOD2 trigger] collateral price upload check for: {} and evaluationDate: {} returns: {}", eodPriceStage, evaluationDate, result);
         return result;
     }
 
