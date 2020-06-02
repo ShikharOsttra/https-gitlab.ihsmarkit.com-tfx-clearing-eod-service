@@ -1,5 +1,6 @@
 package com.ihsmarkit.tfx.eod.batch;
 
+import static com.ihsmarkit.tfx.common.test.assertion.Matchers.argThat;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aCashCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.CollateralTestDataFactory.aLogCollateralProductEntityBuilder;
 import static com.ihsmarkit.tfx.core.dl.EntityTestDataFactory.aCurrencyPairEntityBuilder;
@@ -57,6 +58,7 @@ import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.MarginAlertConfigurationRepository;
+import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.CollateralBalanceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.collateral.HaircutRateRepository;
@@ -84,8 +86,9 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     private static final CashCollateralProductEntity CASH_PRODUCT = aCashCollateralProductEntityBuilder().build();
     private static final LogCollateralProductEntity LOG_PRODUCT = aLogCollateralProductEntityBuilder().build();
 
-    private static final ParticipantEntity PARTICIPANT1 = aParticipantEntityBuilder().id(1L).build();
-    private static final ParticipantEntity PARTICIPANT2 = aParticipantEntityBuilder().id(2L).build();
+    private static final ParticipantEntity PARTICIPANT1 = aParticipantEntityBuilder().id(1L).code("P11").build();
+    private static final ParticipantEntity PARTICIPANT2 = aParticipantEntityBuilder().id(2L).code("P12").build();
+    private static final ParticipantEntity PARTICIPANT3 = aParticipantEntityBuilder().id(3L).code("P13").build();
 
     private static final LocalDate OCT_6 = LocalDate.of(2019, 10, 6);
     private static final LocalDate OCT_7 = OCT_6.plusDays(1);
@@ -127,11 +130,11 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     @MockBean
     private SystemParameterRepository systemParameterRepository;
 
-    @Captor
-    private ArgumentCaptor<Iterable<EodCashSettlementEntity>> settlementCaptor;
+    @MockBean
+    private ParticipantRepository participantRepository;
 
     @Captor
-    private ArgumentCaptor<Iterable<EodParticipantMarginEntity>> marginCaptor;
+    private ArgumentCaptor<Iterable<EodCashSettlementEntity>> settlementCaptor;
 
     private EodProductCashSettlementEntity settlement(
         CurrencyPairEntity currencyPair,
@@ -182,8 +185,8 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
 
         when(systemParameterRepository.getParameterValueFailFast(SystemParameters.BUSINESS_DATE)).thenReturn(OCT_6);
 
-        when(calendarDatesProvider.getNextTradingDate(OCT_6)).thenReturn(Optional.of(OCT_7));
-        when(calendarDatesProvider.getNextTradingDate(OCT_7)).thenReturn(Optional.of(OCT_8));
+        when(calendarDatesProvider.getNextBankBusinessDate(OCT_6)).thenReturn(Optional.of(OCT_7));
+        when(calendarDatesProvider.getNextBankBusinessDate(OCT_7)).thenReturn(Optional.of(OCT_8));
         when(calendarDatesProvider.getNextBusinessDate()).thenReturn(OCT_7);
 
         when(haircutRateRepository.findNotOutdatedByBusinessDate(OCT_6)).thenReturn(
@@ -251,6 +254,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     position(PARTICIPANT2, CURRENCY_PAIR_NZDJPY, NET, 66.0, 100000.0)
                 )
             );
+        when(participantRepository.findAllNotDeletedWithoutClearingHouse()).thenReturn(List.of(PARTICIPANT1, PARTICIPANT2, PARTICIPANT3));
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(
             MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY,
@@ -286,8 +290,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                 tuple(PARTICIPANT2, OCT_6, TOTAL_VM, TOTAL, 12700.0)
         );
 
-        verify(eodParticipantMarginRepository).saveAll(marginCaptor.capture());
-        assertThat(marginCaptor.getValue())
+        verify(eodParticipantMarginRepository).saveAll(argThat(eodMargins -> assertThat(eodMargins)
             .extracting(
                 EodParticipantMarginEntity::getParticipant,
                 EodParticipantMarginEntity::getDate,
@@ -347,8 +350,29 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     0.0,
                     0.0,
                     3287300.0
+                ),
+                tuple(
+                    PARTICIPANT3,
+                    OCT_6,
+                    null,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
                 )
-            );
+            )
+        ));
     }
 
 }

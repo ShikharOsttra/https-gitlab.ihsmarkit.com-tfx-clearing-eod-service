@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodStatusCompositeId;
+import com.ihsmarkit.tfx.core.dl.repository.LedgerCompletionReferenceRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodDataRepository;
 import com.ihsmarkit.tfx.core.dl.repository.eod.EodStatusRepository;
@@ -34,6 +35,8 @@ public class EODCleanupService {
 
     private final TradeRepository tradeRepository;
 
+    private final LedgerCompletionReferenceRepository ledgerCompletionReferenceRepository;
+
     private final List<EodDataRepository> eodDataRepositories;
 
     private final JdbcTemplate jdbcTemplate;
@@ -51,6 +54,7 @@ public class EODCleanupService {
         repositories.forEach(repository -> repository.deleteAllByDateGreaterThanEqual(currentBusinessDate));
         log.info("[cleanup] removing all data from ledgers tables for business date: {}", currentBusinessDate);
         deleteAllLedgersByBusinessDate(currentBusinessDate);
+        ledgerCompletionReferenceRepository.deleteByBusinessDate(currentBusinessDate);
         removeEODStageRecordsForDate(currentBusinessDate);
     }
 

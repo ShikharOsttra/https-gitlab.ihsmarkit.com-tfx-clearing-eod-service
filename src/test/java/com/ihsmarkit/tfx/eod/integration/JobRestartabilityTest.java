@@ -159,6 +159,7 @@ public class JobRestartabilityTest {
         "/common/fx_spot_product.xml",
         "/common/participants.xml",
         "/common/marginAlertConfiguration.xml",
+        "/common/evaluation_date_2019_10_07.xml",
         "/jobRestartabilityTest/initData.xml"
     })
     void shouldExecuteEodInSeveralAttempts() throws Exception {

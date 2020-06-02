@@ -3,23 +3,20 @@ package com.ihsmarkit.tfx.eod.batch.ledger;
 import java.time.LocalDate;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.ihsmarkit.tfx.core.dl.repository.calendar.CalendarTradingSwapPointRepository;
+import com.ihsmarkit.tfx.core.dl.repository.SystemParameterRepository;
+import com.ihsmarkit.tfx.core.domain.type.SystemParameters;
 
 import lombok.RequiredArgsConstructor;
 
-@StepScope
 @Component
+@StepScope
 @RequiredArgsConstructor
 public class EvaluationDateProvider {
 
-    @Value("#{jobParameters['businessDate']}")
-    private final LocalDate businessDate;
-
-    private final CalendarTradingSwapPointRepository calendarTradingSwapPointRepository;
+    private final SystemParameterRepository systemParameterRepository;
 
     private final Lazy<LocalDate> evaluationDate = Lazy.of(this::loadEvaluationDate);
 
@@ -28,8 +25,7 @@ public class EvaluationDateProvider {
     }
 
     private LocalDate loadEvaluationDate() {
-        return calendarTradingSwapPointRepository.findPrevBankBusinessDateOrToday(businessDate)
-            .orElseThrow(() -> new IllegalStateException("Cannot find prev bank business date"));
+        return systemParameterRepository.getParameterValueFailFast(SystemParameters.EVALUATION_DATE);
     }
 
 }

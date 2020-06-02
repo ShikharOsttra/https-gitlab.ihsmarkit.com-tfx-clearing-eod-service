@@ -1,0 +1,11 @@
+<dataset>
+    <system_parameter id="1" name="BUSINESS_DATE" value="2019-01-10"/>
+
+    <calendar_trading_swap_point id="1" currency_pair_id="2" trade_date="2019-01-10" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-07" variation_margin_settlement_date="2019-01-10"/>
+    <calendar_trading_swap_point id="2" currency_pair_id="2" trade_date="2019-01-11" is_relevant_currency_trade="true" is_exchange_business_date="true" is_bank_business_date="true" value_date="2019-01-07" variation_margin_settlement_date="2019-01-10"/>
+
+    <eod_status stage="DSP_APPROVED" business_date="2019-01-10" timestamp="2019-01-07 22:00:00"/>
+    <eod_status stage="SWAP_POINTS_APPROVED" business_date="2019-01-10" timestamp="2019-01-09 23:00:00"/>
+    <eod_status stage="EOD_PRICES_BOND_UPDATE_COMPLETED" business_date="2019-01-10" timestamp="2019-01-02 07:35:00"/>
+
+</dataset>
