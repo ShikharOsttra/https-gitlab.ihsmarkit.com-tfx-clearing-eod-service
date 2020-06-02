@@ -25,9 +25,9 @@ public class JPYRateService {
 
     @Cacheable(JPY_RATES_CACHE)
     public BigDecimal getJpyRate(final LocalDate date, final String currency) {
-        return Optional.ofNullable(dailySettlementPriceService.getPrice(date, currency, JPY)).orElseThrow(() -> {
-            log.warn("unable to find JPY price for currency: {} on date: {}", currency, date);
-            return new IllegalArgumentException("unable to find JPY price");
+        return Optional.ofNullable(dailySettlementPriceService.getPrice(date, currency, JPY)).orElseGet(() -> {
+            log.error("unable to find JPY price for currency: {} on date: {}", currency, date);
+            return null;
         });
     }
 
