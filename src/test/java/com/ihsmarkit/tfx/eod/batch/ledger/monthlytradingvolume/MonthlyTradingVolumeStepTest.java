@@ -34,7 +34,10 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     private ClockService clockService;
 
     @Test
-    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_setup.xml")
+    @DatabaseSetup({
+        "/common/evaluation_date_2019_10_07.xml",
+        "/eod2Job/MonthlyTradingVolumeStepTest_setup.xml"
+    })
     @ExpectedDatabase(value = "/eod2Job/MonthlyTradingVolumeStepTest_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
     void shouldRunMonthlyTradingVolumeStep() {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
@@ -47,7 +50,10 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     }
 
     @Test
-    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    @DatabaseSetup({
+        "/common/evaluation_date_2019_10_07.xml",
+        "/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml"
+    })
     void shouldRunMonthlyTradingVolumeStepOnLastTradingDayInMonth() throws Exception {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
@@ -63,7 +69,10 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     }
 
     @Test
-    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    @DatabaseSetup({
+        "/common/evaluation_date_2019_10_07.xml",
+        "/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml"
+    })
     void shouldNotRunMonthlyTradingVolumeStepOnNotLastTradingDayInMonth() throws Exception {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
@@ -79,7 +88,10 @@ class MonthlyTradingVolumeStepTest extends AbstractSpringBatchTest {
     }
 
     @Test
-    @DatabaseSetup("/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml")
+    @DatabaseSetup({
+        "/common/evaluation_date_2019_10_07.xml",
+        "/eod2Job/MonthlyTradingVolumeStepTest_lastTradingDayInMonth_setup.xml"
+    })
     void shouldRunMonthlyTradingVolumeStep_OnNotLastTradingDayInMonth_AndGenerateMonthlyLedgerIsTrue() throws Exception {
         when(clockService.getCurrentDateTime()).thenReturn(LocalDateTime.of(2019, 2, 1, 11, 30, 0));
 
