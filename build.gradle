@@ -3,15 +3,15 @@ buildscript {
         classpath(
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'sca-gradle-plugin', version: scaGradlePluginVersion],
                 [group: 'com.ihsmarkit.tfx.gradle', name: 'idea-gradle-plugin', version: ideaGradlePluginVersion],
-                [group: 'com.ihsmarkit.tfx.gradle', name: 'test-configuration-gradle-plugin', version: testConfigurationGradlePluginVersion]
+                [group: 'com.ihsmarkit.tfx.gradle', name: 'test-configuration-gradle-plugin', version: testConfigurationGradlePluginVersion],
+                [group: 'org.springframework.boot', name: 'spring-boot-gradle-plugin', version: springbootGradlePluginVersion],
+                [group: 'io.spring.gradle', name: 'dependency-management-plugin', version: dependencyManagementPluginVersion],
+                [group: 'gradle.plugin.org.hidetake', name: 'gradle-swagger-generator-plugin', version: gradleSwaggerGeneratorPluginVersion]
         )
     }
 }
 
 plugins {
-    id 'org.springframework.boot' version '2.1.14.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
-    id 'org.hidetake.swagger.generator' version '2.18.1'
     id 'idea'
 }
 
@@ -21,6 +21,9 @@ project.targetCompatibility = javaVersion
 apply plugin: 'com.ihsmarkit.tfx.gradle.sca'
 apply plugin: 'com.ihsmarkit.tfx.gradle.idea'
 apply plugin: 'com.ihsmarkit.tfx.gradle.test-configuration'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'org.hidetake.swagger.generator'
 
 dependencyManagement {
     imports {
@@ -107,7 +110,7 @@ dependencies {
     )
 
     swaggerCodegen (
-            [group: 'org.openapitools', name: 'openapi-generator-cli']
+        [group: 'org.openapitools', name: 'openapi-generator-cli']
     )
 }
 
