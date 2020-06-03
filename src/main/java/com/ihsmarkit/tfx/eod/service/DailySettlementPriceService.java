@@ -31,7 +31,7 @@ public class DailySettlementPriceService {
     public BigDecimal getPrice(final LocalDate date, final String baseCurrency, final String valueCurrency) {
         return dailySettlementPrices.computeIfAbsent(
             date,
-            businessDate -> dailySettlementPriceRepository.findAllByBusinessDate(date).stream()
+            businessDate -> dailySettlementPriceRepository.findLatestDailySettlementPrices(date).stream()
                 .filter(entity -> entity.getDailySettlementPrice() != null)
                 .collect(
                     Collectors.toMap(
