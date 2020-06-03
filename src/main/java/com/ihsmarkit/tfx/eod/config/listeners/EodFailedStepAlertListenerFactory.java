@@ -24,6 +24,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -103,6 +104,7 @@ public class EodFailedStepAlertListenerFactory {
         };
     }
 
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
     private static String getCauseMessage(final Throwable cause) {
         return Objects.toString(
             cause.getMessage(),
