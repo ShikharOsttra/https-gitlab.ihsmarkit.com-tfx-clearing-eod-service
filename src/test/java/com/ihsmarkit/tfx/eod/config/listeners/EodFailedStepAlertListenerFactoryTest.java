@@ -78,6 +78,19 @@ class EodFailedStepAlertListenerFactoryTest {
     }
 
     @Test
+    void shouldWriteThrowableClassName_whenNoMessage() {
+        when(clockService.getCurrentDateTimeUTC()).thenReturn(CURRENT_DATE_TIME);
+
+        final StepExecution stepExecution = new StepExecution("stepName", mock(JobExecution.class));
+        stepExecution.addFailureException(new RuntimeException());
+        eodFailedStepAlertSender.mtmFailedListener().afterStep(stepExecution);
+
+        verify(alertSender).sendAlert(EodMtmFailedAlert.of(
+            CURRENT_DATE_TIME, "exception type: java.lang.RuntimeException"
+        ));
+    }
+
+    @Test
     void shouldNotSendAlert_whenStepFinishedSuccessfully() {
         List.of(
             eodFailedStepAlertSender.mtmFailedListener(),

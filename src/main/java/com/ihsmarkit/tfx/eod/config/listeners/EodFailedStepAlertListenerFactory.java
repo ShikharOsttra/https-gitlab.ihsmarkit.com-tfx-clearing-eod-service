@@ -5,6 +5,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.BUSINESS_DATE_JOB_PAR
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -23,6 +24,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.exception.RebalancingCsvGenerationException;
 import com.ihsmarkit.tfx.eod.exception.RebalancingMailSendingException;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +57,7 @@ public class EodFailedStepAlertListenerFactory {
             protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send MtM failed alert", cause);
-                alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), getCauseMessage(cause)));
             }
         };
     }
@@ -66,7 +68,7 @@ public class EodFailedStepAlertListenerFactory {
             protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send Netting failed alert", cause);
-                alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), getCauseMessage(cause)));
             }
         };
     }
@@ -85,19 +87,29 @@ public class EodFailedStepAlertListenerFactory {
                 // only way to differ what has been failed is to handle separate exceptions
                 if (csvFailException != null) {
                     log.info("Send Rebalancing CSV generation failed alert", csvFailException);
-                    alertSender.sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(clockService.getCurrentDateTimeUTC(), csvFailException.getMessage()));
+                    alertSender.sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(
+                        clockService.getCurrentDateTimeUTC(), getCauseMessage(csvFailException)
+                    ));
                 } else if (mailSendingFailException != null) {
                     log.info("Send Rebalancing mail sending failed alert", mailSendingFailException);
                     alertSender.sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(
-                        clockService.getCurrentDateTimeUTC(), mailSendingFailException.getMessage()
+                        clockService.getCurrentDateTimeUTC(), getCauseMessage(mailSendingFailException)
                     ));
                 } else {
                     final Throwable cause = exceptions.get(0);
                     log.info("Send Rebalancing process failed alert", cause);
-                    alertSender.sendAlert(EodPositionRebalanceFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                    alertSender.sendAlert(EodPositionRebalanceFailedAlert.of(clockService.getCurrentDateTimeUTC(), getCauseMessage(cause)));
                 }
             }
         };
+    }
+
+    @SuppressFBWarnings("UPM_UNCALLED_PRIVATE_METHOD")
+    private static String getCauseMessage(final Throwable cause) {
+        return Objects.toString(
+            cause.getMessage(),
+            String.format("exception type: %s", cause.getClass().getCanonicalName())
+        );
     }
 
 }
