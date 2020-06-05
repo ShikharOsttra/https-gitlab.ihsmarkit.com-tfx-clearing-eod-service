@@ -12,7 +12,6 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
@@ -52,7 +51,6 @@ public class MarkToMarketTradesTasklet implements Tasklet {
     private final LocalDate businessDate;
 
     @Override
-    @Transactional
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
 
         final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);

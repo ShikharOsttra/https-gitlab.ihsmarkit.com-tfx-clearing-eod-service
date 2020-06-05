@@ -33,7 +33,6 @@ public class TradeListQueryProvider extends AbstractJpaQueryProvider {
         final CriteriaQuery<TradeEntity> query = criteriaBuilder.createQuery(TradeEntity.class);
 
         final Root<TradeEntity> root = query.from(TradeEntity.class);
-        root.fetch(TradeEntity_.currencyPair);
         root.fetch(TradeEntity_.originator).fetch(LegalEntity_.participant);
         root.fetch(TradeEntity_.counterparty).fetch(LegalEntity_.participant);
 
