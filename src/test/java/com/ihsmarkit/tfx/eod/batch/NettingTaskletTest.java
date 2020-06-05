@@ -238,8 +238,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldSendAlert_whenExceptionOccur() {
-        final Exception cause = new RuntimeException("step failed message");
-        doThrow(cause).when(eodCalculator).netAllByBuySell(any(), any());
+        doThrow(new RuntimeException()).when(eodCalculator).netAllByBuySell(any(), any());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
 
@@ -249,7 +248,7 @@ class NettingTaskletTest extends AbstractSpringBatchTest {
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
-        verify(alertSender).sendAlert(EodNettingFailedAlert.of(alertTime, "step failed message"));
+        verify(alertSender).sendAlert(EodNettingFailedAlert.of(alertTime));
     }
 
 }
