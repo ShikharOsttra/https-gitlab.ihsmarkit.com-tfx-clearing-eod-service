@@ -188,8 +188,7 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldSendAlert_whenExceptionOccur() {
-        final Exception cause = new RuntimeException("mtm step failed message");
-        doThrow(cause).when(eodCalculator).calculateAndAggregateInitialMtm(any(), any(), any());
+        doThrow(new RuntimeException()).when(eodCalculator).calculateAndAggregateInitialMtm(any(), any(), any());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
 
@@ -199,6 +198,6 @@ class MarkToMarketTradesTaskletTest extends AbstractSpringBatchTest {
                 .toJobParameters());
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
-        verify(alertSender).sendAlert(EodMtmFailedAlert.of(alertTime, "mtm step failed message"));
+        verify(alertSender).sendAlert(EodMtmFailedAlert.of(alertTime));
     }
 }
