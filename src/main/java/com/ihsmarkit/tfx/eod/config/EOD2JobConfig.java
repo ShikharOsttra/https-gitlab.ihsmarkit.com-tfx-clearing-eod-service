@@ -143,7 +143,6 @@ public class EOD2JobConfig {
 
     private Step saveEodParticipants() {
         return steps.get(SAVE_EOD_PARTICIPANTS_STEP_NAME)
-            .allowStartIfComplete(true)
             .tasklet(saveEodParticipantsTasklet)
             .build();
     }
