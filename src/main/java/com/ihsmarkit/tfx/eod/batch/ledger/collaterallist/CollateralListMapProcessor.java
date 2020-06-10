@@ -162,26 +162,30 @@ public class CollateralListMapProcessor implements ItemProcessor<CollateralListI
     }
 
     public List<CollateralListWriteItem> mapToParticipantTotal(final Map<CollateralListParticipantTotalKey, BigDecimalTotalValue> totals) {
-        return
-            Stream.concat(
-                participantRepository.findAll(participantPathSpecification().toRootSpecification()).stream().map(ParticipantEntity::getCode),
-                Stream.of(Participant.CLEARING_HOUSE_CODE)
+        final var participantsMap = participantRepository.findAll(participantPathSpecification().toRootSpecification()).stream()
+            .collect(Collectors.toMap(ParticipantEntity::getCode, ParticipantEntity::getName));
+
+        return Stream.concat(
+            participantsMap.keySet().stream(),
+            Stream.of(Participant.CLEARING_HOUSE_CODE)
+        )
+            .flatMap(participantCode ->
+                Stream.of(CollateralPurpose.values())
+                    .map(purpose -> CollateralListParticipantTotalKey.of(participantCode, purpose))
+                    .map(key -> mapToParticipantTotal(key, participantsMap, totals))
             )
-                .flatMap(participantCode ->
-                    Stream.of(CollateralPurpose.values())
-                        .map(purpose -> CollateralListParticipantTotalKey.of(participantCode, purpose))
-                        .map(key -> mapToParticipantTotal(key, totals))
-                )
-                .collect(Collectors.toList());
+            .collect(Collectors.toList());
     }
 
     public CollateralListWriteItem mapToParticipantTotal(
         final CollateralListParticipantTotalKey key,
+        final Map<String, String> participantNamesMap,
         final Map<CollateralListParticipantTotalKey, BigDecimalTotalValue> totals
     ) {
         return CollateralListWriteItem.builder()
             .businessDate(businessDate)
             .participantCode(key.getParticipantCode())
+            .participantName(participantNamesMap.getOrDefault(key.getParticipantCode(), TFX_TOTAL))
             .collateralPurposeType(key.getPurpose().getValue().toString())
             .collateralPurpose(formatEnum(key.getPurpose()))
             .collateralTypeNo(TOTAL)
