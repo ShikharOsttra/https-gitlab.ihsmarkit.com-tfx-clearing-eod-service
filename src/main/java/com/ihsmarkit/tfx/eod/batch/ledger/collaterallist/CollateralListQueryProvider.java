@@ -9,6 +9,7 @@ import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
 
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity_;
+import com.ihsmarkit.tfx.eod.batch.ledger.SpecificationFactory;
 
 public class CollateralListQueryProvider extends AbstractJpaQueryProvider {
 
@@ -20,6 +21,8 @@ public class CollateralListQueryProvider extends AbstractJpaQueryProvider {
         final Root<CollateralBalanceEntity> root = query.from(CollateralBalanceEntity.class);
         root.fetch(CollateralBalanceEntity_.product);
         root.fetch(CollateralBalanceEntity_.participant);
+
+        query.where(SpecificationFactory.participantPathSpecification().toPredicate(root.get(CollateralBalanceEntity_.participant), query, cb));
 
         query.orderBy(
             cb.asc(root.get(CollateralBalanceEntity_.participant)),

@@ -7,6 +7,8 @@ import lombok.Value;
 @Value(staticConstructor = "of")
 public class BigDecimalTotalValue implements TotalValue<BigDecimalTotalValue> {
 
+    public final static BigDecimalTotalValue ZERO = BigDecimalTotalValue.of(BigDecimal.ZERO);
+
     private final BigDecimal value;
 
     @Override

@@ -28,7 +28,7 @@ public class ParticipantAndCurrencyPairQueryProvider extends AbstractJpaQueryPro
         final Root<ParticipantEntity> participantRoot = query.from(ParticipantEntity.class);
         final Root<CurrencyPairEntity> currencyPairRoot = query.from(CurrencyPairEntity.class);
 
-        query.where(PredicateFactory.participantPredicate().apply(criteriaBuilder, participantRoot))
+        query.where(SpecificationFactory.participantPathSpecification().toPredicate(participantRoot, query, criteriaBuilder))
             .orderBy(criteriaBuilder.asc(participantRoot.get(ParticipantEntity_.id)), criteriaBuilder.asc(currencyPairRoot.get(CurrencyPairEntity_.id)))
             .multiselect(participantRoot, currencyPairRoot);
 

@@ -11,6 +11,7 @@ import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDat
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatDateTime;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatEnum;
 import static com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils.formatMonthDay;
+import static com.ihsmarkit.tfx.eod.batch.ledger.SpecificationFactory.participantPathSpecification;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.time.LocalDate;
@@ -20,17 +21,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.BondCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralBalanceEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.CollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.LogCollateralProductEntity;
 import com.ihsmarkit.tfx.core.dl.entity.collateral.SecurityCollateralProductEntity;
+import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
 import com.ihsmarkit.tfx.core.domain.Participant;
 import com.ihsmarkit.tfx.core.domain.type.CollateralProductType;
 import com.ihsmarkit.tfx.core.domain.type.CollateralPurpose;
@@ -64,6 +69,8 @@ public class CollateralListMapProcessor implements ItemProcessor<CollateralListI
     private final CollateralListItemOrderProvider collateralListItemOrderProvider;
 
     private final EvaluationDateProvider evaluationDateProvider;
+
+    private final ParticipantRepository participantRepository;
 
     @Override
     public CollateralListWriteItem process(final CollateralListItem item) {
@@ -155,18 +162,35 @@ public class CollateralListMapProcessor implements ItemProcessor<CollateralListI
     }
 
     public List<CollateralListWriteItem> mapToParticipantTotal(final Map<CollateralListParticipantTotalKey, BigDecimalTotalValue> totals) {
-        return EntryStream.of(totals)
-            .mapKeyValue((collateralListParticipantTotalKey, amount) ->
-                CollateralListWriteItem.builder()
-                    .businessDate(businessDate)
-                    .participantCode(collateralListParticipantTotalKey.getParticipantCode())
-                    .collateralPurpose(TOTAL)
-                    .evaluatedAmount(amount.getValue().toPlainString())
-                    .orderId(collateralListItemOrderProvider.getOrderId(collateralListParticipantTotalKey, SUBTOTAL_RECORD_TYPE))
-                    .recordType(SUBTOTAL_RECORD_TYPE)
-                    .build()
+        return
+            Stream.concat(
+                participantRepository.findAll(participantPathSpecification().toRootSpecification()).stream().map(ParticipantEntity::getCode),
+                Stream.of(Participant.CLEARING_HOUSE_CODE)
             )
-            .toList();
+                .flatMap(participantCode ->
+                    Stream.of(CollateralPurpose.values())
+                        .map(purpose -> CollateralListParticipantTotalKey.of(participantCode, purpose))
+                        .map(key -> mapToParticipantTotal(key, totals))
+                )
+                .collect(Collectors.toList());
+    }
+
+    public CollateralListWriteItem mapToParticipantTotal(
+        final CollateralListParticipantTotalKey key,
+        final Map<CollateralListParticipantTotalKey, BigDecimalTotalValue> totals
+    ) {
+        return CollateralListWriteItem.builder()
+            .businessDate(businessDate)
+            .participantCode(key.getParticipantCode())
+            .collateralPurposeType(key.getPurpose().getValue().toString())
+            .collateralPurpose(formatEnum(key.getPurpose()))
+            .collateralTypeNo(TOTAL)
+            .evaluatedAmount(totals.getOrDefault(key, BigDecimalTotalValue.ZERO).getValue().toPlainString())
+            .evaluationDate(formatDate(evaluationDateProvider.get()))
+            .recordDate(formatDateTime(recordDate))
+            .orderId(collateralListItemOrderProvider.getOrderId(key, SUBTOTAL_RECORD_TYPE))
+            .recordType(SUBTOTAL_RECORD_TYPE)
+            .build();
     }
 
     public List<CollateralListWriteItem> mapToTfxTotal(final Map<CollateralListTfxTotalKey, BigDecimalTotalValue> tfxTotals) {
