@@ -74,7 +74,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
 
         when(calendarTradingSwapPointRepository.findNextTradingDateFailFast(any(), any())).thenReturn(OCT_11);
 
-        when(dailySettlementPriceRepository.findAllByBusinessDate(OCT_10)).thenReturn(List.of(USD_DSP, EUR_DSP));
+        when(dailySettlementPriceRepository.findLatestDailySettlementPrices(OCT_10)).thenReturn(List.of(USD_DSP, EUR_DSP));
 
         assertThat(
             Stream.generate(this::launchJobAndGetStatus).limit(2)
@@ -83,7 +83,7 @@ class CacheConfigTest extends AbstractSpringBatchTest {
         );
 
         verify(calendarTradingSwapPointRepository, times(2)).findNextTradingDateFailFast(OCT_10, USDJPY);
-        verify(dailySettlementPriceRepository, times(2)).findAllByBusinessDate(OCT_10);
+        verify(dailySettlementPriceRepository, times(2)).findLatestDailySettlementPrices(OCT_10);
 
         verifyNoMoreInteractions(calendarTradingSwapPointRepository);
     };

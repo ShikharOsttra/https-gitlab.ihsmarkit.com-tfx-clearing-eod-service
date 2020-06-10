@@ -119,7 +119,7 @@ public class PositionRebalancePublishingService {
             .tradeType(TransactionType.BALANCE.getValue())
             .participantCodeSource(tradeEntity.getOriginator().getCode())
             .participantCodeTarget(tradeEntity.getCounterparty().getCode())
-            .currencyPair(tradeEntity.getCurrencyPair().getCode())
+            .currencyPair(tradeEntity.getProductCode())
             .side(tradeEntity.getDirection().name())
             .tradePrice(tradeEntity.getSpotRate())
             .baseCurrencyAmount(tradeEntity.getBaseAmount().getValue())
