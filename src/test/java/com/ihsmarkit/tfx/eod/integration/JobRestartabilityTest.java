@@ -21,6 +21,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_S
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SAVE_EOD_PARTICIPANTS_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SOD_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.SWAP_PNL_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TOTAL_VM_STEP_NAME;
@@ -227,6 +228,7 @@ public class JobRestartabilityTest {
                 Pair.of(COLLATERAL_BALANCE_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(DAILY_MARKET_DATA_LEDGER_STEP_NAME, COMPLETED),
                 Pair.of(COLLATERAL_LIST_LEDGER_STEP_NAME, COMPLETED),
+                Pair.of(SAVE_EOD_PARTICIPANTS_STEP_NAME, COMPLETED),
                 Pair.of(LEDGER_GENERATION_COMPLETED_ALERT_STEP, COMPLETED)
             )
         );
