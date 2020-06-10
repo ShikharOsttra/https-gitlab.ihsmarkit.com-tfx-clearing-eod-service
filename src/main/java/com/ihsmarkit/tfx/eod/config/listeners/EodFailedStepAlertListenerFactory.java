@@ -55,7 +55,7 @@ public class EodFailedStepAlertListenerFactory {
             protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send MtM failed alert", cause);
-                alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                alertSender.sendAlert(EodMtmFailedAlert.of(clockService.getCurrentDateTimeUTC()));
             }
         };
     }
@@ -66,7 +66,7 @@ public class EodFailedStepAlertListenerFactory {
             protected void onExceptionsAfterStep(final StepExecution stepExecution, final List<Throwable> exceptions) {
                 final Throwable cause = exceptions.get(0);
                 log.info("Send Netting failed alert", cause);
-                alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                alertSender.sendAlert(EodNettingFailedAlert.of(clockService.getCurrentDateTimeUTC()));
             }
         };
     }
@@ -85,16 +85,14 @@ public class EodFailedStepAlertListenerFactory {
                 // only way to differ what has been failed is to handle separate exceptions
                 if (csvFailException != null) {
                     log.info("Send Rebalancing CSV generation failed alert", csvFailException);
-                    alertSender.sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(clockService.getCurrentDateTimeUTC(), csvFailException.getMessage()));
+                    alertSender.sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(clockService.getCurrentDateTimeUTC()));
                 } else if (mailSendingFailException != null) {
                     log.info("Send Rebalancing mail sending failed alert", mailSendingFailException);
-                    alertSender.sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(
-                        clockService.getCurrentDateTimeUTC(), mailSendingFailException.getMessage()
-                    ));
+                    alertSender.sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(clockService.getCurrentDateTimeUTC()));
                 } else {
                     final Throwable cause = exceptions.get(0);
                     log.info("Send Rebalancing process failed alert", cause);
-                    alertSender.sendAlert(EodPositionRebalanceFailedAlert.of(clockService.getCurrentDateTimeUTC(), cause.getMessage()));
+                    alertSender.sendAlert(EodPositionRebalanceFailedAlert.of(clockService.getCurrentDateTimeUTC()));
                 }
             }
         };

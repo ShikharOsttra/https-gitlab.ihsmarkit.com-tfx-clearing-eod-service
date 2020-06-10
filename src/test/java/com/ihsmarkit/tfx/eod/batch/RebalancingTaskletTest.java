@@ -210,8 +210,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
     @Test
     void shouldSendAlert_whenRebalancingProcessFails() {
-        final Exception cause = new RuntimeException("rebalancing step failed");
-        doThrow(cause).when(eodCalculator).rebalanceLPPositions(any(), any());
+        doThrow(new RuntimeException()).when(eodCalculator).rebalanceLPPositions(any(), any());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
 
@@ -222,7 +221,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
 
-        verify(alertSender).sendAlert(EodPositionRebalanceFailedAlert.of(alertTime, "rebalancing step failed"));
+        verify(alertSender).sendAlert(EodPositionRebalanceFailedAlert.of(alertTime));
         verifyNoMoreInteractions(alertSender);
     }
 
@@ -262,9 +261,8 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                     .build()
             ));
 
-        final Throwable cause = new RuntimeException("csv process failed");
         when(csvWriter.getRecordsAsCsv(anyList()))
-            .thenThrow(cause);
+            .thenThrow(new RuntimeException());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
 
@@ -275,7 +273,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
 
-        verify(alertSender).sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(alertTime, "csv process failed"));
+        verify(alertSender).sendAlert(EodPositionRebalanceCsvGenerationFailedAlert.of(alertTime));
         verifyNoMoreInteractions(alertSender);
     }
 
@@ -315,8 +313,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
                     .build()
             ));
 
-        final Throwable cause = new RuntimeException("mail sending process failed");
-        doThrow(cause).when(mailClient).sendEmail(any());
+        doThrow(new RuntimeException()).when(mailClient).sendEmail(any());
         final LocalDateTime alertTime = LocalDateTime.now();
         when(clockService.getCurrentDateTimeUTC()).thenReturn(alertTime);
         when(participantRepository.findAllNotDeletedParticipantListItems())
@@ -331,7 +328,7 @@ class RebalancingTaskletTest extends AbstractSpringBatchTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
 
-        verify(alertSender).sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(alertTime, "mail sending process failed"));
+        verify(alertSender).sendAlert(EodPositionRebalanceSendingEmailFailedAlert.of(alertTime));
         verifyNoMoreInteractions(alertSender);
     }
 

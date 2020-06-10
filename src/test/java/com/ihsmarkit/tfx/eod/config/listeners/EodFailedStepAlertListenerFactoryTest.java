@@ -36,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 class EodFailedStepAlertListenerFactoryTest {
 
     private static final LocalDateTime CURRENT_DATE_TIME = LocalDateTime.now();
-    private static final String MESSAGE = "errorMessage";
 
     @Mock
     private ClockService clockService;
@@ -50,20 +49,20 @@ class EodFailedStepAlertListenerFactoryTest {
         when(clockService.getCurrentDateTimeUTC()).thenReturn(CURRENT_DATE_TIME);
 
         final Map<TestSetup, NewAlert> testerMap = Map.of(
-            TestSetup.of(eodFailedStepAlertSender.mtmFailedListener(), new RuntimeException(MESSAGE)),
-            EodMtmFailedAlert.of(CURRENT_DATE_TIME, MESSAGE),
+            TestSetup.of(eodFailedStepAlertSender.mtmFailedListener(), new RuntimeException()),
+            EodMtmFailedAlert.of(CURRENT_DATE_TIME),
 
-            TestSetup.of(eodFailedStepAlertSender.nettingFailedListener(), new RuntimeException(MESSAGE)),
-            EodNettingFailedAlert.of(CURRENT_DATE_TIME, MESSAGE),
+            TestSetup.of(eodFailedStepAlertSender.nettingFailedListener(), new RuntimeException()),
+            EodNettingFailedAlert.of(CURRENT_DATE_TIME),
 
-            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RuntimeException(MESSAGE)),
-            EodPositionRebalanceFailedAlert.of(CURRENT_DATE_TIME, MESSAGE),
+            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RuntimeException()),
+            EodPositionRebalanceFailedAlert.of(CURRENT_DATE_TIME),
 
-            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RebalancingCsvGenerationException(new RuntimeException(MESSAGE))),
-            EodPositionRebalanceCsvGenerationFailedAlert.of(CURRENT_DATE_TIME, MESSAGE),
+            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RebalancingCsvGenerationException(new RuntimeException())),
+            EodPositionRebalanceCsvGenerationFailedAlert.of(CURRENT_DATE_TIME),
 
-            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RebalancingMailSendingException(new RuntimeException(MESSAGE))),
-            EodPositionRebalanceSendingEmailFailedAlert.of(CURRENT_DATE_TIME, MESSAGE)
+            TestSetup.of(eodFailedStepAlertSender.rebalancingProcessFailedListener(), new RebalancingMailSendingException(new RuntimeException())),
+            EodPositionRebalanceSendingEmailFailedAlert.of(CURRENT_DATE_TIME)
         );
 
         testerMap.forEach((testSetup, expectedAlert) -> {

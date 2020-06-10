@@ -64,7 +64,7 @@ public class DailyMarketDataReader implements ItemReader<Map<String, DailyMarked
             .filter(not(offsettedByTransactionPredicate()))
             .collect(
                 Collectors.groupingBy(
-                    trade -> trade.getCurrencyPair().getCode(),
+                    TradeEntity::getProductCode,
                     Collector.of(TradeHolder::new, TradeHolder::acceptTrade, TradeHolder::merge, DailyMarketDataReader::finisher)
                 )
             );
