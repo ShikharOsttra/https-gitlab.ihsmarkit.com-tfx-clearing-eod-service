@@ -31,6 +31,7 @@ import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.OffsettedTradeMatchIdProvider;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -74,12 +75,14 @@ class TradeTransactionDiaryLedgerProcessorTest {
     private OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
     @Mock
     private TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    @Mock
+    private CalendarDatesProvider calendarDatesProvider;
 
     @BeforeEach
     void init() {
         this.processor = new TradeTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, jpyRateService, dailySettlementPriceService, fxSpotProductService, clockService,
-            currencyPairSwapPointService, offsettedTradeMatchIdProvider, transactionDiaryOrderIdProvider);
+            currencyPairSwapPointService, offsettedTradeMatchIdProvider, transactionDiaryOrderIdProvider, calendarDatesProvider);
     }
 
     @Test
@@ -100,6 +103,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
             .build());
         when(fxSpotProductService.getScaleForCurrencyPair(any(CurrencyPairEntity.class))).thenReturn(3);
         when(transactionDiaryOrderIdProvider.getOrderId(PARTICIPANT.getCode(), FX_SPOT_PRODUCT.getProductNumber(), CLEARING_DATE)).thenReturn(ORDER_ID);
+        when(calendarDatesProvider.getSettlementDate(CURRENCY_PAIR)).thenReturn(LocalDate.of(2019, 1, 3));
 
         assertThat(processor.process(aTrade()))
             .isEqualTo(TransactionDiary.builder()
@@ -126,7 +130,7 @@ class TradeTransactionDiaryLedgerProcessorTest {
                 .dailyMtMAmount("0")
                 .swapPoint("0")
                 .outstandingPositionAmount("0")
-                .settlementDate("2019/01/02")
+                .settlementDate("2019/01/03")
                 .tradeId("tradeRef")
                 .reference("1")
                 .userReference(EMPTY)

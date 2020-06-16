@@ -26,9 +26,9 @@ import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
-import com.ihsmarkit.tfx.eod.batch.ledger.LedgerFormattingUtils;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -60,6 +60,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
     private final ParticipantPositionRepository participantPositionRepository;
     private final TradeAndSettlementDateService tradeAndSettlementDateService;
     private final PositionDateProvider positionDateProvider;
+    private final CalendarDatesProvider calendarDatesProvider;
 
     @Override
     public TransactionDiary process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
@@ -101,7 +102,7 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             .dailyMtMAmount(dailyMtMAmount)
             .swapPoint(swapPoint)
             .outstandingPositionAmount(formatBigDecimal(ZERO))
-            .settlementDate(getSettlementDate(currencyPair, participantPosition))
+            .settlementDate(formatDate(calendarDatesProvider.getSettlementDate(currencyPair)))
             .tradeId(EMPTY)
             .reference(EMPTY)
             .userReference(EMPTY)
@@ -137,14 +138,6 @@ public class SODTransactionDiaryLedgerProcessor implements TransactionDiaryLedge
             ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy),
             this::getJpyRate
         ).getAmount();
-    }
-
-    private String getSettlementDate(final CurrencyPairEntity currencyPair, final Optional<ParticipantPositionEntity> participantPosition) {
-        final boolean isTradabaleCurrency = tradeAndSettlementDateService.isTradable(businessDate, currencyPair);
-        return participantPosition
-            .map(ParticipantPositionEntity::getValueDate)
-            .map(LedgerFormattingUtils::formatDate)
-            .orElseGet(() -> isTradabaleCurrency ? formatDate(tradeAndSettlementDateService.getValueDate(businessDate, currencyPair)) : EMPTY);
     }
 
     private BigDecimal getJpyRate(final String ccy) {

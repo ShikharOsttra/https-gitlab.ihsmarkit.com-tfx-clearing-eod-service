@@ -38,7 +38,7 @@ import com.ihsmarkit.tfx.core.domain.type.EodProductCashSettlementType;
 import com.ihsmarkit.tfx.core.domain.type.ParticipantPositionType;
 import com.ihsmarkit.tfx.eod.batch.ledger.openpositions.domain.OpenPositionsItem;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
-import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class OpenPositionsInputProcessor implements ItemProcessor<ParticipantAnd
 
     private final ParticipantPositionRepository participantPositionRepository;
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
-    private final TradeAndSettlementDateService tradeAndSettlementDateService;
+    private final CalendarDatesProvider calendarDatesProvider;
 
     @Override
     public OpenPositionsItem process(final ParticipantAndCurrencyPair participantAndCurrencyPair) {
@@ -82,7 +82,7 @@ public class OpenPositionsInputProcessor implements ItemProcessor<ParticipantAnd
             .dailyMtmAmount(getMarginOrZero(cashSettlements, DAILY_MTM))
             .swapPoint(getMarginOrZero(cashSettlements, SWAP_PNL))
             .totalVariationMargin(getMarginOrZero(cashSettlements, TOTAL_VM))
-            .settlementDate(getSettlementDate(participantAndCurrencyPair.getCurrencyPair()))
+            .settlementDate(calendarDatesProvider.getSettlementDate(participantAndCurrencyPair.getCurrencyPair()))
             .build();
     }
 
@@ -102,13 +102,6 @@ public class OpenPositionsInputProcessor implements ItemProcessor<ParticipantAnd
         return position.orElse(ZERO)
             .add(rebalancingPosition.orElse(ZERO))
             .abs();
-    }
-
-    @Nullable
-    private LocalDate getSettlementDate(final CurrencyPairEntity currencyPair) {
-        return tradeAndSettlementDateService.isTradable(businessDate, currencyPair)
-               ? tradeAndSettlementDateService.getVmSettlementDate(businessDate, currencyPair)
-               : null;
     }
 
     private static BigDecimal longPosition(final Optional<BigDecimal> amount) {

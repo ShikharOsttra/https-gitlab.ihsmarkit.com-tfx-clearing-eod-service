@@ -29,6 +29,7 @@ import com.ihsmarkit.tfx.core.domain.type.TransactionType;
 import com.ihsmarkit.tfx.core.time.ClockService;
 import com.ihsmarkit.tfx.eod.batch.ledger.marketdata.OffsettedTradeMatchIdProvider;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -56,6 +57,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
     private final CurrencyPairSwapPointService currencyPairSwapPointService;
     private final OffsettedTradeMatchIdProvider offsettedTradeMatchIdProvider;
     private final TransactionDiaryOrderIdProvider transactionDiaryOrderIdProvider;
+    private final CalendarDatesProvider calendarDatesProvider;
 
     @Override
     public TransactionDiary process(final TradeEntity trade) {
@@ -114,7 +116,7 @@ public class TradeTransactionDiaryLedgerProcessor implements ItemProcessor<Trade
             .dailyMtMAmount(mtmAmount)
             .swapPoint(swapPoint)
             .outstandingPositionAmount(formatBigDecimal(BigDecimal.ZERO))
-            .settlementDate(formatDate(trade.getValueDate()))
+            .settlementDate(formatDate(calendarDatesProvider.getSettlementDate(trade.getCurrencyPair())))
             .tradeId(trade.getTradeReference())
             .reference(trade.getTransactionType().getValue().toString())
             .userReference(getUserReference(trade, participantCode))
