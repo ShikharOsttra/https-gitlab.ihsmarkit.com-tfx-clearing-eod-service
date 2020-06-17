@@ -29,6 +29,7 @@ import com.ihsmarkit.tfx.core.dl.repository.eod.ParticipantPositionRepository;
 import com.ihsmarkit.tfx.eod.model.ParticipantAndCurrencyPair;
 import com.ihsmarkit.tfx.eod.model.ParticipantCurrencyPairAmount;
 import com.ihsmarkit.tfx.eod.model.ledger.TransactionDiary;
+import com.ihsmarkit.tfx.eod.service.CalendarDatesProvider;
 import com.ihsmarkit.tfx.eod.service.CurrencyPairSwapPointService;
 import com.ihsmarkit.tfx.eod.service.DailySettlementPriceService;
 import com.ihsmarkit.tfx.eod.service.EODCalculator;
@@ -69,12 +70,14 @@ class SODTransactionDiaryLedgerProcessorTest {
     private TradeAndSettlementDateService tradeAndSettlementDateService;
     @Mock
     private PositionDateProvider positionDateProvider;
+    @Mock
+    private CalendarDatesProvider calendarDatesProvider;
 
     @BeforeEach
     void init() {
         this.processor = new SODTransactionDiaryLedgerProcessor(
             BUSINESS_DATE, RECORD_DATE, eodCalculator, currencyPairSwapPointService, jpyRateService, dailySettlementPriceService, fxSpotProductService,
-            transactionDiaryOrderIdProvider, participantPositionRepository, tradeAndSettlementDateService, positionDateProvider);
+            transactionDiaryOrderIdProvider, participantPositionRepository, tradeAndSettlementDateService, positionDateProvider, calendarDatesProvider);
     }
 
     @Test
@@ -95,6 +98,7 @@ class SODTransactionDiaryLedgerProcessorTest {
             PARTICIPANT
         )).thenReturn(Optional.of(aParticipantPosition()));
         when(positionDateProvider.getSodDate()).thenReturn(LocalDateTime.of(2019, 1, 1, 7, 0));
+        when(calendarDatesProvider.getSettlementDate(CURRENCY_PAIR)).thenReturn(LocalDate.of(2019, 1, 3));
 
         assertThat(processor.process(new ParticipantAndCurrencyPair(PARTICIPANT, CURRENCY_PAIR)))
             .isEqualTo(TransactionDiary.builder()
@@ -121,7 +125,7 @@ class SODTransactionDiaryLedgerProcessorTest {
                 .dailyMtMAmount("0")
                 .swapPoint("0")
                 .outstandingPositionAmount("0")
-                .settlementDate("2019/01/02")
+                .settlementDate("2019/01/03")
                 .tradeId(EMPTY)
                 .reference(EMPTY)
                 .userReference(EMPTY)
