@@ -3,16 +3,36 @@ variables:
 
 stages:
   - build
-  - post-build
   - deliver
   - downstream
 
-include:
-  - project: 'tfx-clearing/ci-jobs'
-    file: 'build/build-and-publish.yml'
-  - project: 'tfx-clearing/ci-jobs'
-    file: 'build/check-dependencies.yml'
-  - project: 'tfx-clearing/ci-jobs'
-    file: 'deliver/gconf-deliver.yml'
-  - project: 'tfx-clearing/environments/ci'
-    file: 'deployable-builds-ci.yml'
+build-job:
+  stage: build
+  image: docker-registry-eu.mdevlab.com/mcp-tfx-clearing/java-builder:v1.20
+  script:
+    - gradle clean build -x check
+  artifacts:
+    paths:
+      - build/libs/
+      - ${MODULE_DIR}/build/libs
+
+gconf:deliver:
+  image: docker-registry-eu.mdevlab.com/mcp-gconf/gconf-deliver:v3.0
+  stage: deliver
+  script:
+    - gconf-deliver --merge-hierarchy "develop"
+  artifacts:
+    paths:
+      - build/deliverable/
+      - build/gconf.deliverable.ref
+
+gconf:deployables-s2:
+  image: docker-registry-eu.mdevlab.com/mcp-gconf/gconf-deliver:v3.0
+  stage: downstream
+  dependencies:
+    - gconf:deliver
+  script:
+    - export IMAGE_DIGEST=`cat build/gconf.deliverable.ref | sed 's/^.*@//g'`
+    - echo "IMAGE_DIGEST=${IMAGE_DIGEST}"
+    ## s2
+    - curl -g --request POST --form token=${CI_JOB_TOKEN} --form ref=master "https://git.mdevlab.com/api/v4/projects/15782/trigger/pipeline?variables[IMAGE_DIGEST]=${IMAGE_DIGEST}"
