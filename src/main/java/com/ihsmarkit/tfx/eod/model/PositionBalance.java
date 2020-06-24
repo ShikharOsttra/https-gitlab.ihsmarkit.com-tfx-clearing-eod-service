@@ -141,7 +141,8 @@ public class PositionBalance {
         final Slicer<RawPositionData> slicer =
             new Slicer<>(toReduce, (RawPositionData position) -> position.getAmount().abs());
 
-        return from.getPositions().stream().sorted(BY_AMOUNT_AND_PARTICIPANT_CODE)
+        return from.getPositions().stream()
+            .sorted(BY_AMOUNT_AND_PARTICIPANT_CODE)
             .flatMap(
                 position -> slicer.produce(
                     position.getAmount()

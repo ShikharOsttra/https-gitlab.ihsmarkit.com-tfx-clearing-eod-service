@@ -32,7 +32,8 @@ public class SingleCurrencyRebalanceCalculator {
         int tradesInIteration = Integer.MAX_VALUE;
 
         while (tradesInIteration > 0 && balance.getBuy().getNet().min(balance.getSell().getNet().abs()).compareTo(BigDecimal.valueOf(threshold)) > 0) {
-            final List<BalanceTrade> iterationTrades = balance.rebalance(rounding).collect(Collectors.toList());
+            final List<BalanceTrade> iterationTrades = balance.rebalance(rounding)
+                .collect(Collectors.toList());
             tradesInIteration = iterationTrades.size();
             trades.addAll(iterationTrades);
             balance = balance.applyTrades(iterationTrades.stream());

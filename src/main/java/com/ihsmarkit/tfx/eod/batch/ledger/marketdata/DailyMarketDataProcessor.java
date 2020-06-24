@@ -147,7 +147,7 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
         final int priceScale = fxSpotProductService.getScaleForCurrencyPair(currencyPairCode);
         final DailySettlementPriceEntity dsp = dspMap.get(currencyPairCode);
         final FxSpotProductEntity fxSpotProduct = fxSpotProductService.getFxSpotProduct(currencyPairCode);
-        // todo: do we expect nulls in any of the below vars?
+
         final BigDecimal openPositionAmount = currencyPairOpenPosition.getOrDefault(currencyPairCode, ZERO);
         final BigDecimal currentDsp = getDspValue(dsp, DailySettlementPriceEntity::getDailySettlementPrice);
         final BigDecimal previousDsp = getDspValue(dsp, DailySettlementPriceEntity::getPreviousDailySettlementPrice);
