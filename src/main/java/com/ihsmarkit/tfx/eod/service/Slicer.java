@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -16,6 +17,8 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
 public class Slicer<T> {
 
@@ -44,21 +47,16 @@ public class Slicer<T> {
     public <R> Stream<R> produce(final BigDecimal amount, final BiFunction<T, BigDecimal, R> producer) {
 
         return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(new ProducingIterator<R>(amount, producer), 0), //FIXME verify characteristics!
+            Spliterators.spliteratorUnknownSize(new ProducingIterator<>(producer, amount), Spliterator.ORDERED | Spliterator.NONNULL),
             false
         );
     }
 
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     private final class ProducingIterator<R> implements Iterator<R> {
 
         private final BiFunction<T, BigDecimal, R> producer;
         private BigDecimal toProduce;
-
-        private ProducingIterator(final BigDecimal toProduce, final BiFunction<T, BigDecimal, R> producer) {
-            this.toProduce = toProduce;
-            this.producer = producer;
-        }
-
 
         @Override
         public boolean hasNext() {
