@@ -8,7 +8,10 @@ spring.liquibase.default-schema=devXX
 
 swagger-ui.enabled=true
 
-# Output queues
+# Input queues
+jms.system.event.notification.consumer=Consumer.EODSVC.VirtualTopic.SYSTEM.EVENT.NOTIFICATION.DEV_<USERNAME>
+
+# Output queues/topics
 jms.any.alert-service.queue=ANY.ALERTSRV.NEW.ALERT.DEV_<USERNAME>
-jms.system.event.notification.topic=SYSTEM.EVENT.NOTIFICATION.DEV_<USERNAME>
+jms.system.event.notification.topic=VirtualTopic.SYSTEM.EVENT.NOTIFICATION.DEV_<USERNAME>
 jms.trade-state-machine.new-transaction-input.queue=TSM.NEWTRANSACTIONINPUT.DEV_<USERNAME>
