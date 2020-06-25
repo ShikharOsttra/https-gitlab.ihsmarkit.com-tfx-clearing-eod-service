@@ -25,10 +25,11 @@ public class JPYRateService {
 
     @Cacheable(JPY_RATES_CACHE)
     public BigDecimal getJpyRate(final LocalDate date, final String currency) {
-        return Optional.ofNullable(dailySettlementPriceService.getPrice(date, currency, JPY)).orElseGet(() -> {
-            log.error("unable to find JPY price for currency: {} on date: {}", currency, date);
-            return null;
-        });
+        return Optional.ofNullable(dailySettlementPriceService.getPrice(date, currency, JPY))
+            .orElseGet(() -> {
+                log.error("unable to find JPY price for currency: {} on date: {}", currency, date);
+                return null;
+            });
     }
 
     @Cacheable(JPY_CROSS_RATES_CACHE)
@@ -36,7 +37,8 @@ public class JPYRateService {
         if (JPY.equals(valueCurrency)) {
             return getJpyRate(date, baseCurrency);
         } else {
-            return getJpyRate(date, valueCurrency).multiply(dailySettlementPriceService.getPrice(date, baseCurrency, valueCurrency));
+            return getJpyRate(date, valueCurrency)
+                .multiply(dailySettlementPriceService.getPrice(date, baseCurrency, valueCurrency));
         }
     }
 }

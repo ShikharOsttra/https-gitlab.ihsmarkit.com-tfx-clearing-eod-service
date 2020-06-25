@@ -29,16 +29,22 @@ public class DailySettlementPriceService {
     }
 
     public BigDecimal getPrice(final LocalDate date, final String baseCurrency, final String valueCurrency) {
+        final var currencyPairKey = baseCurrency + valueCurrency;
         return dailySettlementPrices.computeIfAbsent(
             date,
-            businessDate -> dailySettlementPriceRepository.findLatestDailySettlementPrices(date).stream()
+            businessDate -> dailySettlementPriceRepository.findLatestDailySettlementPrices(businessDate).stream()
                 .filter(entity -> entity.getDailySettlementPrice() != null)
                 .collect(
                     Collectors.toMap(
-                        dsp -> dsp.getCurrencyPair().getBaseCurrency() + dsp.getCurrencyPair().getValueCurrency(),
+                        dsp -> toCurrencyPairKey(dsp.getCurrencyPair()),
                         DailySettlementPriceEntity::getDailySettlementPrice
                     )
                 )
-        ).get(baseCurrency + valueCurrency);
+        )
+            .get(currencyPairKey);
+    }
+
+    private static String toCurrencyPairKey(final CurrencyPairEntity currencyPairEntity) {
+        return currencyPairEntity.getBaseCurrency() + currencyPairEntity.getValueCurrency();
     }
 }
