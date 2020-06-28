@@ -27,11 +27,15 @@ import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 import com.ihsmarkit.tfx.eod.service.JPYRateService;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
 @JobScope
+@Slf4j
 public class MarkToMarketTradesTasklet implements Tasklet {
+
+    private static final String TASKLET_LABEL = "[mtmTrades]";
 
     private final TradeRepository tradeRepository;
 
@@ -52,25 +56,32 @@ public class MarkToMarketTradesTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
 
         final Function<CurrencyPairEntity, BigDecimal> dspResolver = ccy -> dailySettlementPriceService.getPrice(businessDate, ccy);
         final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
+        log.info("{} loading novated trades", TASKLET_LABEL);
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
+        log.info("{} calculating initial mtm", TASKLET_LABEL);
         final Stream<EodProductCashSettlementEntity> initial =
             eodCalculator.calculateAndAggregateInitialMtm(novatedTrades, dspResolver, jpyRatesResolver)
                 .map(eodCashSettlementMappingService::mapInitialMtm);
 
+        log.info("{} loading SOD positions", TASKLET_LABEL);
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
+        log.info("{} calculating daily mtm", TASKLET_LABEL);
         final Stream<EodProductCashSettlementEntity> daily =
             eodCalculator.calculateAndAggregateDailyMtm(positions, dspResolver, jpyRatesResolver)
                 .map(eodCashSettlementMappingService::mapDailyMtm);
 
+        log.info("{} persisting product cash settlements", TASKLET_LABEL);
         eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 

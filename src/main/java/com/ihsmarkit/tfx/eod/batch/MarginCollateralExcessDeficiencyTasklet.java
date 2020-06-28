@@ -60,6 +60,8 @@ import one.util.streamex.EntryStream;
 @SuppressWarnings("PMD.TooManyFields")
 public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
+    private static final String TASKLET_LABEL = "[marginCollateralExcessOrDeficiency]";
+
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
     private final ParticipantPositionRepository participantPositionRepository;
@@ -95,7 +97,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
 
+        log.info("{} calculating cash settlements", TASKLET_LABEL);
         final List<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findAllBySettlementDateIsGreaterThan(businessDate).collect(Collectors.toList());
 
@@ -120,8 +124,10 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                     )
             );
 
+        log.info("{} persisting cash settlements", TASKLET_LABEL);
         eodCashSettlementRepository.saveAll(cashSettlement::iterator);
 
+        log.info("{} calculating participants margins", TASKLET_LABEL);
         final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> variationMargins =
             EntryStream.of(aggregated)
                 .flatMapValues(byParticipant -> Stream.ofNullable(byParticipant.get(TOTAL_VM)))
@@ -165,8 +171,10 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
             .mapKeyValue((participantCode, participant) -> participantMargin.getOrDefault(participantCode, emptyMargin(participant)))
             .toImmutableList();
 
+        log.info("{} persisting participants margins", TASKLET_LABEL);
         eodParticipantMarginRepository.saveAll(allParticipantMargin);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 

@@ -22,11 +22,15 @@ import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @JobScope
+@Slf4j
 public class PositionRollTasklet implements Tasklet {
+
+    private static final String TASKLET_LABEL = "[rollPositions]";
 
     private final ParticipantPositionRepository participantPositionRepository;
 
@@ -43,13 +47,17 @@ public class PositionRollTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+        log.info("{} start", TASKLET_LABEL);
 
+        log.info("{} loading net and rebalance positions", TASKLET_LABEL);
         final Stream<ParticipantPositionEntity> aggregatedSodPositions = eodCalculator
             .aggregatePositions(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate))
             .map(this::mapToSodParticipantPositionEntity);
 
+        log.info("{} persisting next date SOD positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(aggregatedSodPositions::iterator);
 
+        log.info("{} start", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 

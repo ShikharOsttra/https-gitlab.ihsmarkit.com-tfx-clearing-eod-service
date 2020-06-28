@@ -6,6 +6,9 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRADE_TRANSACTION_DIA
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_LEDGER_FLOW_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.TRANSACTION_DIARY_RECORD_DATE_SET_STEP_NAME;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -49,6 +52,9 @@ public class TransactionDiaryLedgerConfig {
 
     private final TradeListQueryProvider tradeListQueryProvider;
     private final ParticipantAndCurrencyPairQueryProvider participantAndCurrencyPairQueryProvider;
+
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Bean(TRANSACTION_DIARY_LEDGER_FLOW_NAME)
     Flow transactionDiaryLedger() {
@@ -112,6 +118,7 @@ public class TransactionDiaryLedgerConfig {
             .reader(tradeEntityItemReader)
             .processor(transactionDiaryLedgerProcessor)
             .writer(writer)
+            .listener(new EntityManagerClearListener(entityManager))
             .build();
     }
 
