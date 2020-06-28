@@ -6,6 +6,9 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_NAME;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecutionListener;
@@ -22,6 +25,7 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
+import com.ihsmarkit.tfx.eod.config.ledger.EntityManagerClearListener;
 import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
 
@@ -46,6 +50,9 @@ public class EOD1JobConfig {
     private final EodJobListenerFactory eodJobListenerFactory;
 
     private final EodFailedStepAlertListenerFactory eodFailedStepAlertListenerFactory;
+
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Bean(name = EOD1_BATCH_JOB_NAME)
     public Job eod1Job() {
@@ -77,6 +84,7 @@ public class EOD1JobConfig {
     private Step createStep(final String stepName, final Tasklet stepTasklet, final StepExecutionListener stepExecutionListener) {
         return steps.get(stepName)
             .listener(stepExecutionListener)
+            .listener(new EntityManagerClearListener(entityManager))
             .tasklet(stepTasklet)
             .build();
     }

@@ -22,11 +22,15 @@ import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.EodCashSettlementMappingService;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
 @JobScope
+@Slf4j
 public class TotalVariationMarginTasklet implements Tasklet {
+
+    private static final String TASKLET_LABEL = "[totalVM]";
 
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
@@ -41,16 +45,21 @@ public class TotalVariationMarginTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
 
+        log.info("{} loading product cash settlements", TASKLET_LABEL);
         final Stream<EodProductCashSettlementEntity> margin =
             eodProductCashSettlementRepository.findAllByDateAndTypeIn(businessDate, DAILY_MTM, INITIAL_MTM, SWAP_PNL);
 
+        log.info("{} calculating VMs", TASKLET_LABEL);
         final Stream<EodProductCashSettlementEntity> totalVM =
             eodCalculator.netAll(margin.map(mapper::toParticipantCurrencyPairAmount))
                 .map(eodCashSettlementMappingService::mapTotalVM);
 
+        log.info("{} persisting VMs", TASKLET_LABEL);
         eodProductCashSettlementRepository.saveAll(totalVM::iterator);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 

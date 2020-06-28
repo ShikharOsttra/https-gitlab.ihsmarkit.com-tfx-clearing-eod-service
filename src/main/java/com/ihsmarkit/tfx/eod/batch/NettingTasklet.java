@@ -35,11 +35,15 @@ import com.ihsmarkit.tfx.eod.service.EODCalculator;
 import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @JobScope
+@Slf4j
 public class NettingTasklet implements Tasklet {
+
+    private static final String TASKLET_LABEL = "[netTrades]";
 
     private static final Set<TransactionType> MONTHLY_VOLUME_TRANSACTION_TYPES = Set.of(
         TransactionType.REGULAR,
@@ -67,7 +71,9 @@ public class NettingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
 
+        log.info("{} loading novated trades", TASKLET_LABEL);
         final Stream<TradeEntity> novatedTrades = tradeRepository.findAllNovatedForTradeDate(businessDate);
 
         final Map<Boolean, List<TradeOrPositionEssentials>> allNovatedTradesGroupedByScope = novatedTrades
@@ -75,12 +81,13 @@ public class NettingTasklet implements Tasklet {
 
         final List<TradeOrPositionEssentials> tradesInScopeOfMonthlyVolumeReport = allNovatedTradesGroupedByScope.getOrDefault(Boolean.TRUE, List.of());
 
+        log.info("{} loading SOD positions", TASKLET_LABEL);
         final Stream<ParticipantPositionEntity> sodParticipantPositions =
             participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate);
 
+        log.info("{} calculating net positions", TASKLET_LABEL);
         final Stream<TradeOrPositionEssentials> sodPositions = sodParticipantPositions
             .map(tradeOrPositionMapper::convertPosition);
-
         final Stream<ParticipantPositionEntity> netted =
             Stream.concat(
                 eodCalculator.netAllByBuySell(
@@ -92,9 +99,10 @@ public class NettingTasklet implements Tasklet {
             )
                 .map(this::mapParticipantPositionEntity);
 
-
+        log.info("{} persisting participant positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(netted::iterator);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 

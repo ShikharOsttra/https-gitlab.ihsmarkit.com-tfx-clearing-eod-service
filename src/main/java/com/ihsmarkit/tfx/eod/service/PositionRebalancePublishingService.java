@@ -82,7 +82,6 @@ public class PositionRebalancePublishingService {
 
         getAllActiveLPs()
             .sequential()
-            // todo: should we send empty CSV to participants without rebalancing trade?
             .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
             .forEach(participant -> mailClient.sendEmail(EmailRequest.builder()
                 .subject(String.format("%s rebalance results for %s", businessDateString, participant.getCode()))

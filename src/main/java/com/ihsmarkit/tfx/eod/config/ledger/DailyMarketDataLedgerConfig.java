@@ -5,6 +5,9 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.DAILY_MARKET_DATA_LED
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.batch.core.Step;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +22,11 @@ import com.ihsmarkit.tfx.eod.model.ledger.DailyMarketDataEnriched;
 import com.ihsmarkit.tfx.eod.support.ListItemWriter;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @AllArgsConstructor
+@Slf4j
 public class DailyMarketDataLedgerConfig {
 
     private final DailyMarketDataReader dailyMarketDataReader;
@@ -30,12 +35,16 @@ public class DailyMarketDataLedgerConfig {
     private final Resource dailyMarketDataSqlInsert;
     private final LedgerStepFactory ledgerStepFactory;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Bean(DAILY_MARKET_DATA_LEDGER_STEP_NAME)
     Step dailyMarketDataLedgerStep() {
         return ledgerStepFactory.<Map<String, DailyMarkedDataAggregated>, List<DailyMarketDataEnriched>>stepBuilder(DAILY_MARKET_DATA_LEDGER_STEP_NAME, 1)
             .reader(dailyMarketDataReader)
             .processor(dailyMarketDataProcessor)
             .writer(new ListItemWriter<>(dailyMarkedDataWriter()))
+            .listener(new EntityManagerClearListener(entityManager))
             .build();
     }
 

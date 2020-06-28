@@ -38,12 +38,16 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import one.util.streamex.EntryStream;
 
 @Service
 @RequiredArgsConstructor
 @JobScope
+@Slf4j
 public class RebalancingTasklet implements Tasklet {
+
+    private static final String TASKLET_LABEL = "[rebalancePositions]";
 
     private final ParticipantPositionRepository participantPositionRepository;
 
@@ -68,14 +72,19 @@ public class RebalancingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
+        log.info("{} loading positions", TASKLET_LABEL);
         final Stream<ParticipantPositionEntity> positions =
             participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
+        log.info("{} loading thresholds", TASKLET_LABEL);
         final Map<CurrencyPairEntity, Long> thresholds = eodThresholdFutureValueRepository.findByBusinessDate(businessDate).stream()
             .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), EODThresholdFutureValueEntity::getValue));
 
+        log.info("{} calculating rebalance positions", TASKLET_LABEL);
         final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
 
+        log.info("{} calculating rebalance positions", TASKLET_LABEL);
         final List<NewTransaction> newTransactions = EntryStream.of(balanceTrades)
             .flatMapKeyValue((currencyPair, tradesByCcy) ->
                 EntryStream.of(
@@ -107,12 +116,14 @@ public class RebalancingTasklet implements Tasklet {
             ).toList();
 
         if (!newTransactions.isEmpty()) {
+            log.info("{} publishing rebalance transactions", TASKLET_LABEL);
             transactionsSender.send(NewTransactionsRequest.builder()
                 .transactions(newTransactions)
                 .build()
             );
         }
 
+        log.info("{} calculating net positions after rebalance", TASKLET_LABEL);
         final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
             EntryStream.of(balanceTrades)
                 .flatMapKeyValue((currencyPair, ccyPairTrades) ->
@@ -134,11 +145,16 @@ public class RebalancingTasklet implements Tasklet {
                 dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
             ));
 
+        log.info("{} persisting rebalance net positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
 
+        log.info("{} loading rebalanced trades", TASKLET_LABEL);
         final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
+
+        log.info("{} emailing rebalance results", TASKLET_LABEL);
         publishingService.publishTrades(businessDate, trades);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 }

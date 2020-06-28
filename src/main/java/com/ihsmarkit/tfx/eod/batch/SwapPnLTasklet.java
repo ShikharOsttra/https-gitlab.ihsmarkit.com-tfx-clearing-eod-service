@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SwapPnLTasklet implements Tasklet {
 
+    private static final String TASKLET_LABEL = "[swapPnL]";
+
     private final EodProductCashSettlementRepository eodProductCashSettlementRepository;
 
     private final EODCalculator eodCalculator;
@@ -48,17 +50,21 @@ public class SwapPnLTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        log.info("{} start", TASKLET_LABEL);
 
         final Function<CurrencyPairEntity, BigDecimal> swapPointResolver = ccy -> currencyPairSwapPointService.getSwapPoint(businessDate, ccy);
         final Function<String, BigDecimal> jpyRatesResolver = ccy -> jpyRateService.getJpyRate(businessDate, ccy);
 
+        log.info("{} calculating swap PnL", TASKLET_LABEL);
         final Stream<EodProductCashSettlementEntity> eodProductCashSettlementEntityStream = eodCalculator
             .aggregatePositions(participantPositionRepository.findAllNetAndRebalancingPositionsByTradeDate(businessDate))
             .map(position -> eodCalculator.calculateSwapPoint(position, swapPointResolver, jpyRatesResolver))
             .map(eodCashSettlementMappingService::mapSwapPnL);
 
+        log.info("{} persisting product cash settlements", TASKLET_LABEL);
         eodProductCashSettlementRepository.saveAll(eodProductCashSettlementEntityStream::iterator);
 
+        log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
     }
 
