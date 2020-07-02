@@ -71,23 +71,19 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         Lazy.of(() -> getCollateralProductRepository().findAllCashProducts().get(0));
 
     @Override
-    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
+        if (!calendarTradingSwapPointRepository.existsByTradeDateAndBankBusinessDateIsTrue(businessDate)) {
+            log.info("[var-cash-settlement] business day: {} is not a bank business day => settlement is not possible", businessDate);
+            return RepeatStatus.FINISHED;
+        }
+
         final LocalDate previousTradingDate = calendarTradingSwapPointRepository.findPreviousTradingDateFailFast(businessDate);
         log.info("[var-cash-settlement] starting for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         final List<EodCashSettlementEntity> margins = eodCashSettlementRepository.findAllActionableCashSettlements(previousTradingDate);
         log.info("[var-cash-settlement] found: {} actionable cash settlements for trade date: {}", margins.size(), previousTradingDate);
 
-        final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
-            collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(
-                margins.stream().map(EodCashSettlementEntity::getParticipant).collect(Collectors.toSet()),
-                MARGIN,
-                CASH
-            ).collect(Collectors.toMap(CollateralBalanceEntity::getParticipant, Function.identity()));
-
-        final Map<Boolean, List<Pair<EodCashSettlementEntity, CollateralBalanceEntity>>> separated = margins.stream()
-            .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
-            .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
+        final var separated = getMarginCashBalancePairs(margins);
 
         collateralBalanceRepository.deleteAll(
             separated.get(Boolean.TRUE).stream()
@@ -107,6 +103,19 @@ public class CashCollateralBalanceUpdateTasklet implements Tasklet {
         log.info("[var-cash-settlement] completed for trade date: {} on business date: {}", previousTradingDate, businessDate);
 
         return RepeatStatus.FINISHED;
+    }
+
+    private Map<Boolean, List<Pair<EodCashSettlementEntity, CollateralBalanceEntity>>> getMarginCashBalancePairs(final List<EodCashSettlementEntity> margins) {
+        final Map<ParticipantEntity, CollateralBalanceEntity> balanceByParticipant =
+            collateralBalanceRepository.findAllByParticipantInAndPurposeAndProductType(
+                margins.stream().map(EodCashSettlementEntity::getParticipant).collect(Collectors.toSet()),
+                MARGIN,
+                CASH
+            ).collect(Collectors.toMap(CollateralBalanceEntity::getParticipant, Function.identity()));
+
+        return margins.stream()
+            .map(margin -> Pair.of(margin, balanceByParticipant.get(margin.getParticipant())))
+            .collect(partitioningBy(CashCollateralBalanceUpdateTasklet::sameAmounts));
     }
 
     private EodCashBalanceAdjustmentEntity mapToAdjustment(final EodCashSettlementEntity margin) {
