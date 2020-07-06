@@ -116,7 +116,7 @@ public class RebalancingTasklet implements Tasklet {
             ).toList();
 
         if (!newTransactions.isEmpty()) {
-            log.info("{} publishing rebalance transactions", TASKLET_LABEL);
+            log.info("{} publishing {} rebalance transactions", TASKLET_LABEL, newTransactions.size());
             transactionsSender.send(NewTransactionsRequest.builder()
                 .transactions(newTransactions)
                 .build()
