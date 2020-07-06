@@ -151,7 +151,7 @@ public class RebalancingTasklet implements Tasklet {
         log.info("{} loading rebalanced trades", TASKLET_LABEL);
         final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
 
-        log.info("{} emailing rebalance results", TASKLET_LABEL);
+        log.info("{} publishing rebalance results for {} trades", TASKLET_LABEL, trades.size());
         publishingService.publishTrades(businessDate, trades);
 
         log.info("{} end", TASKLET_LABEL);

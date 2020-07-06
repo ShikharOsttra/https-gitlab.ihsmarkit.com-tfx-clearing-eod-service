@@ -72,24 +72,31 @@ public class PositionRebalancePublishingService {
             .mapFailure(mapAnyException(RebalancingCsvGenerationException::new))
             .get();
 
-        Try.run(() -> sendCsvToLiquidityProviders(businessDate, participantCsvFiles))
+        Try.run(() -> publishCsvToLiquidityProviders(businessDate, participantCsvFiles))
             .mapFailure(mapAnyException(RebalancingMailSendingException::new))
             .get();
     }
 
-    private void sendCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
+    private void publishCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
         final String businessDateString = businessDate.toString();
 
         getAllActiveLPs()
             .sequential()
             .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
-            .forEach(participant -> mailClient.sendEmail(EmailRequest.builder()
-                .subject(String.format("%s rebalance results for %s", businessDateString, participant.getCode()))
-                .body(generateEmailText(businessDate, participant.getName()))
-                .to(parseRecipients(participant.getNotificationEmail()))
-                .attachments(csvEmailAttachment(participantCsvFiles.get(participant.getCode())))
-                .build()
-            ));
+            .forEach(participant -> emailToParticipant(businessDate, participantCsvFiles.get(participant.getCode()), businessDateString, participant));
+    }
+
+    private void emailToParticipant(final LocalDate businessDate, final byte[] participantCsvFile, final String businessDateString,
+                                    final ParticipantEntity participant) {
+        log.info("[rebalancePositions] sending to participant: {}, email: {} on business date: {}", participant.getCode(),
+            participant.getNotificationEmail(), businessDate);
+        mailClient.sendEmail(EmailRequest.builder()
+            .subject(String.format("%s rebalance results for %s", businessDateString, participant.getCode()))
+            .body(generateEmailText(businessDate, participant.getName()))
+            .to(parseRecipients(participant.getNotificationEmail()))
+            .attachments(csvEmailAttachment(participantCsvFile))
+            .build()
+        );
     }
 
     private List<EmailAttachment> csvEmailAttachment(final byte[] csvFile) {
