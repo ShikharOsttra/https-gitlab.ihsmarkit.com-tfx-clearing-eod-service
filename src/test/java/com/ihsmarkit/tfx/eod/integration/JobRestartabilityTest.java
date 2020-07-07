@@ -18,6 +18,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRANSACTION_DIARY_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.OPEN_POSITIONS_LEDGER_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_PUBLISHING_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_BUSINESS_DATE_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_NAME;
@@ -192,6 +193,7 @@ public class JobRestartabilityTest {
         expectedSoFar.addAll(
             List.of(
                 Pair.of(REBALANCE_POSITIONS_STEP_NAME, COMPLETED),
+                Pair.of(REBALANCE_PUBLISHING_STEP_NAME, COMPLETED),
                 Pair.of(ROLL_POSITIONS_STEP_NAME, COMPLETED),
                 Pair.of(SWAP_PNL_STEP_NAME, COMPLETED),
                 Pair.of(TOTAL_VM_STEP_NAME, COMPLETED),
