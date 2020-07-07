@@ -64,7 +64,6 @@ public class EOD1JobConfig {
             .start(mtmTrades())
             .next(netTrades())
             .next(rebalancePositions())
-            .next(rebalancePositions2())
             .next(rollPositions())
             .build();
     }
@@ -79,10 +78,6 @@ public class EOD1JobConfig {
 
     private Step rebalancePositions() {
         return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
-    }
-
-    private Step rebalancePositions2() {
-        return createStep(REBALANCE_POSITIONS_STEP_NAME + "2", rebalancingTasklet2, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
     }
 
     private Step rollPositions() {
