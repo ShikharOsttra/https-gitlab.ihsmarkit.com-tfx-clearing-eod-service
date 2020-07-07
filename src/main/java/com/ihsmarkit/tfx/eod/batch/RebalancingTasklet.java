@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.EODThresholdFutureValueEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.EODThresholdFutureValueRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
@@ -147,12 +146,6 @@ public class RebalancingTasklet implements Tasklet {
 
         log.info("{} persisting rebalance net positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
-
-        log.info("{} loading rebalanced trades", TASKLET_LABEL);
-        final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
-
-        log.info("{} publishing rebalance results for {} trades", TASKLET_LABEL, trades.size());
-        publishingService.publishTrades(businessDate, trades);
 
         log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;

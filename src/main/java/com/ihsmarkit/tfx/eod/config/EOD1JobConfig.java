@@ -4,6 +4,7 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.EOD1_BATCH_JOB_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MTM_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.NET_TRADES_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_POSITIONS_STEP_NAME;
+import static com.ihsmarkit.tfx.eod.config.EodJobConstants.REBALANCE_PUBLISHING_STEP_NAME;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.ROLL_POSITIONS_STEP_NAME;
 
 import javax.persistence.EntityManager;
@@ -24,6 +25,7 @@ import com.ihsmarkit.tfx.alert.client.domain.Eod1StartAlert;
 import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
+import com.ihsmarkit.tfx.eod.batch.RebalancePublishingTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
 import com.ihsmarkit.tfx.eod.config.ledger.EntityManagerClearListener;
 import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
@@ -47,6 +49,8 @@ public class EOD1JobConfig {
 
     private final PositionRollTasklet positionRollTasklet;
 
+    private final RebalancePublishingTasklet rebalancePublishingTasklet;
+
     private final EodJobListenerFactory eodJobListenerFactory;
 
     private final EodFailedStepAlertListenerFactory eodFailedStepAlertListenerFactory;
@@ -61,6 +65,7 @@ public class EOD1JobConfig {
             .start(mtmTrades())
             .next(netTrades())
             .next(rebalancePositions())
+            .next(rebalancePublishing())
             .next(rollPositions())
             .build();
     }
@@ -75,6 +80,10 @@ public class EOD1JobConfig {
 
     private Step rebalancePositions() {
         return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
+    }
+
+    private Step rebalancePublishing() {
+        return createStep(REBALANCE_PUBLISHING_STEP_NAME, rebalancePublishingTasklet, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
     }
 
     private Step rollPositions() {
