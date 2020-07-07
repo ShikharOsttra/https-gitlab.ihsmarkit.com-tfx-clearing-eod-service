@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -67,6 +69,9 @@ class PositionRebalancePublishingServiceTest {
     @MockBean
     private ParticipantRepository participantRepository;
 
+    @MockBean
+    private RebalancingCsvFileStorage rebalancingCsvFileStorage;
+
     @Test
     void onMailServiceCallOnEmptyTrades() {
         final List<TradeEntity> tradeEntities = List.of(aTradeBuilder());
@@ -87,6 +92,7 @@ class PositionRebalancePublishingServiceTest {
             assertThat(emailRequest.getTo()).containsOnly("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com");
             assertThat(emailRequest.getAttachments()).hasSize(1);
         }));
+        verify(rebalancingCsvFileStorage).store(eq(businessDate), Matchers.argThat(participantsCsv -> assertThat(participantsCsv).hasSize(1)));
     }
 
     @Test
@@ -96,6 +102,28 @@ class PositionRebalancePublishingServiceTest {
         final Exception cause = new RuntimeException("can't generate csv exception");
 
         doThrow(cause).when(positionRebalanceCSVWriter).getRecordsAsCsv(anyList());
+
+        assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
+            .isInstanceOf(RebalancingCsvGenerationException.class)
+            .hasCause(cause);
+
+        verifyZeroInteractions(mailClient, rebalancingCsvFileStorage);
+    }
+
+    @Test
+    void shouldSendAlert_whenCsvStoringOnFileSystemFails() {
+        final List<TradeEntity> tradeEntities = List.of(aTradeBuilder());
+        final LocalDate businessDate = LocalDate.of(2019, 1, 1);
+        final Exception cause = new RuntimeException("can't store csv file exception");
+
+        when(participantRepository.findAllNotDeletedParticipantListItems()).thenReturn(List.of(
+            aParticipantEntityBuilder().type(ParticipantType.FX_BROKER).build(),
+            aParticipantEntityBuilder().type(ParticipantType.CLEARING_HOUSE).build(),
+            RECIPIENT,
+            aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build()
+        ));
+
+        doThrow(cause).when(rebalancingCsvFileStorage).store(any(), anyMap());
 
         assertThatThrownBy(() -> publishingService.publishTrades(businessDate, tradeEntities))
             .isInstanceOf(RebalancingCsvGenerationException.class)

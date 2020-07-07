@@ -2,6 +2,7 @@
 
 CREDENTIALS_TPL=/opt/app/credentials.tpl
 CREDENTIALS_FILE=/etc/.creds/credentials.properties
+export REBALANCING_CSV_DIR=/data/${KUBERNETES_NAMESPACE}/rebalancing-csv
 export LOG_PATH=/logs/${KUBERNETES_NAMESPACE}
 export STOP=0
 trap "export STOP=1" SIGINT SIGTERM
@@ -29,6 +30,7 @@ else
 fi
 
 [[ -d ${LOG_PATH} ]] || mkdir -p ${LOG_PATH}
+[[ -d ${REBALANCING_CSV_DIR} ]] || mkdir -p ${REBALANCING_CSV_DIR}
 
 java ${JAVA_OPTS} -jar /opt/app/${JAVA_APP_JAR} --spring.config.location=classpath:/application.properties,classpath:/application-env.properties,file:${CREDENTIALS_FILE},file:/opt/app/config/application.properties &
 pid=$!
