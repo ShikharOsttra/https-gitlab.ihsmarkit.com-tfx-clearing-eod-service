@@ -3,10 +3,13 @@ package com.ihsmarkit.tfx.eod.batch;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.persistence.EntityManager;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.Environment;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -15,8 +18,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
@@ -73,6 +74,8 @@ public class RebalancingTasklet implements Tasklet {
     private final TransactionsSender transactionsSender;
 
     private final JdbcTemplate jdbcTemplate;
+
+    private final EntityManager entityManager;
 
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
@@ -156,8 +159,7 @@ public class RebalancingTasklet implements Tasklet {
         log.info("{} persisting rebalance net positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
 
-        log.info("isolation level: {}", TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
-
+        entityManager.unwrap(Session.class).doWork(connection -> log.info("isolation level: {}", Environment.isolationLevelToString(connection.getTransactionIsolation())));
 
         log.info("{} loading rebalanced trades", TASKLET_LABEL);
         final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
