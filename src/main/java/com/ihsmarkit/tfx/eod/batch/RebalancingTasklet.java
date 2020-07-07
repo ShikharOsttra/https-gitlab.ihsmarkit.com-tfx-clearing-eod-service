@@ -6,23 +6,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-
-import org.hibernate.Session;
-import org.hibernate.cfg.Environment;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.ihsmarkit.tfx.common.streams.Streams;
 import com.ihsmarkit.tfx.core.dl.entity.CurrencyPairEntity;
 import com.ihsmarkit.tfx.core.dl.entity.EODThresholdFutureValueEntity;
-import com.ihsmarkit.tfx.core.dl.entity.TradeEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.ParticipantPositionEntity;
 import com.ihsmarkit.tfx.core.dl.repository.EODThresholdFutureValueRepository;
 import com.ihsmarkit.tfx.core.dl.repository.TradeRepository;
@@ -43,7 +37,6 @@ import com.ihsmarkit.tfx.eod.service.TradeAndSettlementDateService;
 import com.ihsmarkit.tfx.eod.service.TransactionsSender;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import one.util.streamex.EntryStream;
 
@@ -73,15 +66,10 @@ public class RebalancingTasklet implements Tasklet {
 
     private final TransactionsSender transactionsSender;
 
-    private final JdbcTemplate jdbcTemplate;
-
-    private final EntityManager entityManager;
-
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
     @Override
-    @SneakyThrows
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
         log.info("{} start", TASKLET_LABEL);
         log.info("{} loading positions", TASKLET_LABEL);
@@ -158,14 +146,6 @@ public class RebalancingTasklet implements Tasklet {
 
         log.info("{} persisting rebalance net positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
-
-        entityManager.unwrap(Session.class).doWork(connection -> log.info("isolation level: {}", Environment.isolationLevelToString(connection.getTransactionIsolation())));
-
-        log.info("{} loading rebalanced trades", TASKLET_LABEL);
-        final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
-
-        log.info("{} publishing rebalance results for {} trades", TASKLET_LABEL, trades.size());
-        publishingService.publishTrades(businessDate, trades);
 
         log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
