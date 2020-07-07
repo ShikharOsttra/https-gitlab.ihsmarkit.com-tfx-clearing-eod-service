@@ -48,27 +48,11 @@ import one.util.streamex.EntryStream;
 @RequiredArgsConstructor
 @JobScope
 @Slf4j
-public class RebalancingTasklet implements Tasklet {
+public class RebalancingTasklet2 implements Tasklet {
 
-    private static final String TASKLET_LABEL = "[rebalancePositions]";
-
-    private final ParticipantPositionRepository participantPositionRepository;
+    private static final String TASKLET_LABEL = "[rebalancePositions2]";
 
     private final TradeRepository tradeRepository;
-
-    private final DailySettlementPriceService dailySettlementPriceService;
-
-    private final EODCalculator eodCalculator;
-
-    private final TradeAndSettlementDateService tradeAndSettlementDateService;
-
-    private final ParticipantCurrencyPairAmountMapper participantCurrencyPairAmountMapper;
-
-    private final PositionRebalancePublishingService publishingService;
-
-    private final EODThresholdFutureValueRepository eodThresholdFutureValueRepository;
-
-    private final TransactionsSender transactionsSender;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -79,82 +63,7 @@ public class RebalancingTasklet implements Tasklet {
     @SneakyThrows
     public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) {
         log.info("{} start", TASKLET_LABEL);
-        log.info("{} loading positions", TASKLET_LABEL);
-        final Stream<ParticipantPositionEntity> positions =
-            participantPositionRepository.findAllNetPositionsOfActiveLPByTradeDateFetchParticipant(businessDate);
 
-        log.info("{} loading thresholds", TASKLET_LABEL);
-        final Map<CurrencyPairEntity, Long> thresholds = eodThresholdFutureValueRepository.findByBusinessDate(businessDate).stream()
-            .collect(Collectors.toMap(setting -> setting.getFxSpotProduct().getCurrencyPair(), EODThresholdFutureValueEntity::getValue));
-
-        log.info("{} calculating rebalance positions", TASKLET_LABEL);
-        final Map<CurrencyPairEntity, List<BalanceTrade>> balanceTrades = eodCalculator.rebalanceLPPositions(positions, thresholds);
-
-        log.info("{} calculating rebalance positions", TASKLET_LABEL);
-        final List<NewTransaction> newTransactions = EntryStream.of(balanceTrades)
-            .flatMapKeyValue((currencyPair, tradesByCcy) ->
-                EntryStream.of(
-                    tradesByCcy.stream()
-                        .collect(
-                            Collectors.groupingBy(
-                                BalanceTrade::getOriginator,
-                                Collectors.groupingBy(
-                                    BalanceTrade::getCounterparty,
-                                    Streams.summingBigDecimal(BalanceTrade::getAmount)
-                                )
-                            )
-                        )
-                )
-                    .flatMapKeyValue((originator, counterpartyAmounts) ->
-                        EntryStream.of(counterpartyAmounts)
-                            .mapKeyValue((counterparty, counterpartyAmount) ->
-                                NewTransaction.builder()
-                                    .tradeDate(businessDate)
-                                    .tradeType(TransactionType.BALANCE)
-                                    .buyerParticipantId(counterpartyAmount.signum() > 0 ? originator.getCode() : counterparty.getCode())
-                                    .sellerParticipantId(counterpartyAmount.signum() > 0 ? counterparty.getCode() : originator.getCode())
-                                    .currencyPair(CurrencyPair.of(currencyPair.getBaseCurrency(), currencyPair.getValueCurrency()))
-                                    .spotRate(dailySettlementPriceService.getPrice(businessDate, currencyPair))
-                                    .baseCurrencyAmount(Amount.of(counterpartyAmount.abs(), currencyPair.getBaseCurrency()))
-                                    .build()
-                            )
-                    )
-            ).toList();
-
-        if (!newTransactions.isEmpty()) {
-            log.info("{} publishing {} rebalance transactions", TASKLET_LABEL, newTransactions.size());
-            transactionsSender.send(NewTransactionsRequest.builder()
-                .transactions(newTransactions)
-                .build()
-            );
-        }
-
-        log.info("{} calculating net positions after rebalance", TASKLET_LABEL);
-        final Stream<ParticipantPositionEntity> rebalanceNetPositions = eodCalculator.netAll(
-            EntryStream.of(balanceTrades)
-                .flatMapKeyValue((currencyPair, ccyPairTrades) ->
-                    ccyPairTrades.stream()
-                        .flatMap(
-                            trade -> Stream.of(
-                                ParticipantCurrencyPairAmount.of(trade.getOriginator(), currencyPair, trade.getAmount()),
-                                ParticipantCurrencyPairAmount.of(trade.getCounterparty(), currencyPair, trade.getAmount().negate())
-                            )
-                        )
-                )
-        )
-            .map(trade -> participantCurrencyPairAmountMapper.toParticipantPosition(
-                trade,
-                ParticipantPositionType.REBALANCING,
-                businessDate,
-                businessDate,
-                tradeAndSettlementDateService.getValueDate(businessDate, trade.getCurrencyPair()),
-                dailySettlementPriceService.getPrice(businessDate, trade.getCurrencyPair())
-            ));
-
-        log.info("{} persisting rebalance net positions", TASKLET_LABEL);
-        participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
-
-        log.info("{} start waiting", TASKLET_LABEL);
         Thread.sleep(TimeUnit.SECONDS.toMillis(15));
         jdbcTemplate.query(
             "  select " +
@@ -256,7 +165,6 @@ public class RebalancingTasklet implements Tasklet {
         final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
 
         log.info("{} publishing rebalance results for {} trades", TASKLET_LABEL, trades.size());
-        publishingService.publishTrades(businessDate, trades);
 
         log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;

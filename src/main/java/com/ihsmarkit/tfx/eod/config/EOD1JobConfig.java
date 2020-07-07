@@ -25,6 +25,7 @@ import com.ihsmarkit.tfx.eod.batch.MarkToMarketTradesTasklet;
 import com.ihsmarkit.tfx.eod.batch.NettingTasklet;
 import com.ihsmarkit.tfx.eod.batch.PositionRollTasklet;
 import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet;
+import com.ihsmarkit.tfx.eod.batch.RebalancingTasklet2;
 import com.ihsmarkit.tfx.eod.config.ledger.EntityManagerClearListener;
 import com.ihsmarkit.tfx.eod.config.listeners.EodFailedStepAlertListenerFactory;
 import com.ihsmarkit.tfx.eod.config.listeners.EodJobListenerFactory;
@@ -45,6 +46,8 @@ public class EOD1JobConfig {
 
     private final RebalancingTasklet rebalancingTasklet;
 
+    private final RebalancingTasklet2 rebalancingTasklet2;
+
     private final PositionRollTasklet positionRollTasklet;
 
     private final EodJobListenerFactory eodJobListenerFactory;
@@ -61,6 +64,7 @@ public class EOD1JobConfig {
             .start(mtmTrades())
             .next(netTrades())
             .next(rebalancePositions())
+            .next(rebalancePositions2())
             .next(rollPositions())
             .build();
     }
@@ -75,6 +79,10 @@ public class EOD1JobConfig {
 
     private Step rebalancePositions() {
         return createStep(REBALANCE_POSITIONS_STEP_NAME, rebalancingTasklet, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
+    }
+
+    private Step rebalancePositions2() {
+        return createStep(REBALANCE_POSITIONS_STEP_NAME + "2", rebalancingTasklet2, eodFailedStepAlertListenerFactory.rebalancingProcessFailedListener());
     }
 
     private Step rollPositions() {
