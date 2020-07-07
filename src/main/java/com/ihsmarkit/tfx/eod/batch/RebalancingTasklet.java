@@ -243,8 +243,8 @@ public class RebalancingTasklet implements Tasklet {
                 "  participant participan4_" +
                 "  on legalentit3_.participant_id=participan4_.id" +
                 "  where" +
-                "  tradeentit0_.trade_date= '2020-06-26'" +
-                "  and tradeentit0_.transaction_type=2 ",
+ //               "  tradeentit0_.trade_date= '2020-06-26' and" +
+                "  tradeentit0_.transaction_type=2 ",
             rs -> {
                 rs.last();
                 log.info("result size: {}", rs.getRow());
