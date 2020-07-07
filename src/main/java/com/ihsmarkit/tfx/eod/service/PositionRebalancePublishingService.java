@@ -66,9 +66,12 @@ public class PositionRebalancePublishingService {
 
     private final ParticipantRepository participantRepository;
 
+    private final RebalancingCsvFileStorage rebalancingCsvFileStorage;
+
     @SuppressWarnings("unchecked")
     public void publishTrades(final LocalDate businessDate, final List<TradeEntity> trades) {
         final Map<String, byte[]> participantCsvFiles = Try.ofSupplier(() -> prepareCsvFiles(trades))
+            .andThen(participantCsv -> rebalancingCsvFileStorage.store(businessDate, participantCsv))
             .mapFailure(mapAnyException(RebalancingCsvGenerationException::new))
             .get();
 
