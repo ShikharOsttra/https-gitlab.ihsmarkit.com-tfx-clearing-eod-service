@@ -151,7 +151,8 @@ public class RebalancingTasklet implements Tasklet {
         log.info("{} persisting rebalance net positions", TASKLET_LABEL);
         participantPositionRepository.saveAll(rebalanceNetPositions::iterator);
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+        log.info("{} start waiting", TASKLET_LABEL);
+        Thread.sleep(TimeUnit.MINUTES.toMillis(15));
         log.info("{} loading rebalanced trades", TASKLET_LABEL);
         final List<TradeEntity> trades = tradeRepository.findAllBalanceByTradeDate(businessDate);
 
