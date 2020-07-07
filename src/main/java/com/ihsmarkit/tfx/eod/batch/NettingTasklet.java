@@ -103,6 +103,7 @@ public class NettingTasklet implements Tasklet {
         participantPositionRepository.saveAll(netted::iterator);
 
         log.info("{} end", TASKLET_LABEL);
+        novatedTrades.close();
         return RepeatStatus.FINISHED;
     }
 
