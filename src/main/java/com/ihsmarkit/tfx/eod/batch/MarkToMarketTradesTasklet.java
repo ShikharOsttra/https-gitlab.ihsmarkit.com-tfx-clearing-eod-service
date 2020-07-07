@@ -82,7 +82,6 @@ public class MarkToMarketTradesTasklet implements Tasklet {
         eodProductCashSettlementRepository.saveAll(Stream.concat(initial, daily)::iterator);
 
         log.info("{} end", TASKLET_LABEL);
-        novatedTrades.close();
         return RepeatStatus.FINISHED;
     }
 

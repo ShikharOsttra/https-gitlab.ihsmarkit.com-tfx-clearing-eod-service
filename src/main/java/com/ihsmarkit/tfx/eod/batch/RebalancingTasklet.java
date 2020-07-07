@@ -3,15 +3,10 @@ package com.ihsmarkit.tfx.eod.batch;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-
-import org.hibernate.SessionFactory;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -77,8 +72,6 @@ public class RebalancingTasklet implements Tasklet {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final EntityManager entityManager;
-
     @Value("#{jobParameters['businessDate']}")
     private final LocalDate businessDate;
 
@@ -129,13 +122,11 @@ public class RebalancingTasklet implements Tasklet {
             ).toList();
 
         if (!newTransactions.isEmpty()) {
-            ExecutorService executorService = Executors.newFixedThreadPool(20);
-
             log.info("{} publishing {} rebalance transactions", TASKLET_LABEL, newTransactions.size());
-            executorService.submit( () -> transactionsSender.send(NewTransactionsRequest.builder()
+            transactionsSender.send(NewTransactionsRequest.builder()
                 .transactions(newTransactions)
                 .build()
-            ));
+            );
         }
 
         log.info("{} calculating net positions after rebalance", TASKLET_LABEL);
@@ -266,9 +257,9 @@ public class RebalancingTasklet implements Tasklet {
 
         log.info("{} publishing rebalance results for {} trades", TASKLET_LABEL, trades.size());
         publishingService.publishTrades(businessDate, trades);
+        throw  new RuntimeException();
 
-
-        log.info("{} end", TASKLET_LABEL);
-        return RepeatStatus.FINISHED;
+       // log.info("{} end", TASKLET_LABEL);
+       // return RepeatStatus.FINISHED;
     }
 }
