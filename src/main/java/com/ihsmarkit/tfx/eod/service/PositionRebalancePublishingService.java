@@ -85,8 +85,9 @@ public class PositionRebalancePublishingService {
 
         getAllActiveLPs()
             .sequential()
-            .filter(participant -> participantCsvFiles.containsKey(participant.getCode()))
-            .forEach(participant -> emailToParticipant(businessDate, participantCsvFiles.get(participant.getCode()), businessDateString, participant));
+            .forEach(participant -> emailToParticipant(
+                businessDate, participantCsvFiles.getOrDefault(participant.getCode(), emptyCsv()), businessDateString, participant
+            ));
     }
 
     private void emailToParticipant(final LocalDate businessDate, final byte[] participantCsvFile, final String businessDateString,
@@ -102,7 +103,7 @@ public class PositionRebalancePublishingService {
         );
     }
 
-    private List<EmailAttachment> csvEmailAttachment(final byte[] csvFile) {
+    private static List<EmailAttachment> csvEmailAttachment(final byte[] csvFile) {
         return List.of(EmailAttachment.of(POSITIONS_REBALANCE_CSV_FILENAME, TEXT_CSV_TYPE, csvFile));
     }
 
@@ -138,6 +139,10 @@ public class PositionRebalancePublishingService {
             .timestamp(tradeEntity.getSubmissionTsp())
             .build())
             .collect(Collectors.toList());
+    }
+
+    private byte[] emptyCsv() {
+        return getPositionRebalanceCsv(List.of());
     }
 
     private byte[] getPositionRebalanceCsv(final List<TradeEntity> trades) {
