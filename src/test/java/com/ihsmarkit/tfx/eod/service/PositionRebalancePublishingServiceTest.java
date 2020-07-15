@@ -9,8 +9,8 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -81,18 +81,27 @@ class PositionRebalancePublishingServiceTest {
             aParticipantEntityBuilder().type(ParticipantType.FX_BROKER).build(),
             aParticipantEntityBuilder().type(ParticipantType.CLEARING_HOUSE).build(),
             RECIPIENT,
-            aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build()
+            aParticipantEntityBuilder().type(ParticipantType.LIQUIDITY_PROVIDER).status(ParticipantStatus.SUSPENDED).build(),
+            aParticipantEntityBuilder().code("emptyCsv").type(ParticipantType.LIQUIDITY_PROVIDER).build()
         ));
 
         publishingService.publishTrades(businessDate, tradeEntities);
 
-        verify(mailClient, times(1)).sendEmail(Matchers.argThat(emailRequest -> {
+        verify(mailClient).sendEmail(Matchers.argThat(emailRequest -> {
             assertThat(emailRequest.getSubject()).isEqualTo("2019-01-01 rebalance results for LP99");
             assertThat(emailRequest.getBody()).isNotEmpty();
             assertThat(emailRequest.getTo()).containsOnly("email1@email.com", "email2@email.com", "email3@email.com", "email4@email.com");
             assertThat(emailRequest.getAttachments()).hasSize(1);
         }));
+        verify(mailClient).sendEmail(Matchers.argThat(emailRequest -> {
+            assertThat(emailRequest.getSubject()).isEqualTo("2019-01-01 rebalance results for emptyCsv");
+            assertThat(emailRequest.getBody()).isNotEmpty();
+            assertThat(emailRequest.getTo()).containsOnly("notitificationEmail");
+            assertThat(emailRequest.getAttachments()).hasSize(1);
+        }));
         verify(rebalancingCsvFileStorage).store(eq(businessDate), Matchers.argThat(participantsCsv -> assertThat(participantsCsv).hasSize(1)));
+
+        verifyNoMoreInteractions(mailClient);
     }
 
     @Test
