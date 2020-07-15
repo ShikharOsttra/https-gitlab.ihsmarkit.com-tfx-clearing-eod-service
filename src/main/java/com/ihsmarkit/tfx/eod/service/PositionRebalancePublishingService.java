@@ -82,11 +82,12 @@ public class PositionRebalancePublishingService {
 
     private void publishCsvToLiquidityProviders(final LocalDate businessDate, final Map<String, byte[]> participantCsvFiles) {
         final String businessDateString = businessDate.toString();
+        final byte[] emptyCsv = getPositionRebalanceCsv(List.of());
 
         getAllActiveLPs()
             .sequential()
             .forEach(participant -> emailToParticipant(
-                businessDate, participantCsvFiles.getOrDefault(participant.getCode(), emptyCsv()), businessDateString, participant
+                businessDate, participantCsvFiles.getOrDefault(participant.getCode(), emptyCsv), businessDateString, participant
             ));
     }
 
@@ -139,10 +140,6 @@ public class PositionRebalancePublishingService {
             .timestamp(tradeEntity.getSubmissionTsp())
             .build())
             .collect(Collectors.toList());
-    }
-
-    private byte[] emptyCsv() {
-        return getPositionRebalanceCsv(List.of());
     }
 
     private byte[] getPositionRebalanceCsv(final List<TradeEntity> trades) {
