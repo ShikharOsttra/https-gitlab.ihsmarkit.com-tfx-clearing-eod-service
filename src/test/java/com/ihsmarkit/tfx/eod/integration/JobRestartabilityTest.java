@@ -110,6 +110,7 @@ public class JobRestartabilityTest {
 
     private static final CurrencyPairEntity CURRENCY_PAIR_EUR_USD = aCurrencyPairEntityBuilder().id(13L).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_USD_JPY = aCurrencyPairEntityBuilder().id(14L).build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_EUR_JPY = aCurrencyPairEntityBuilder().id(15L).build();
 
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().id(13L).build();
 
@@ -174,6 +175,7 @@ public class JobRestartabilityTest {
         assertThat(getStepExecutonStatuses()).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
 
         dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_EUR_USD, 1.13));
+        dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_EUR_JPY, 111.98));
 
         sendAndWaitForAlerts(EOD, EOD_1_COMPLETED, TIMEOUT);
 

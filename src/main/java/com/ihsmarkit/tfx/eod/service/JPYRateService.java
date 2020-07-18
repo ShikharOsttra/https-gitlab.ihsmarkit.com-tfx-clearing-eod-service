@@ -31,14 +31,4 @@ public class JPYRateService {
                 return null;
             });
     }
-
-    @Cacheable(JPY_CROSS_RATES_CACHE)
-    public BigDecimal getJpyRate(final LocalDate date, final String baseCurrency, final String valueCurrency) {
-        if (JPY.equals(valueCurrency)) {
-            return getJpyRate(date, baseCurrency);
-        } else {
-            return getJpyRate(date, valueCurrency)
-                .multiply(dailySettlementPriceService.getPrice(date, baseCurrency, valueCurrency));
-        }
-    }
 }
