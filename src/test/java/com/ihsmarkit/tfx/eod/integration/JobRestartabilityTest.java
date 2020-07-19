@@ -110,7 +110,7 @@ public class JobRestartabilityTest {
 
     private static final CurrencyPairEntity CURRENCY_PAIR_EUR_USD = aCurrencyPairEntityBuilder().id(13L).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_USD_JPY = aCurrencyPairEntityBuilder().id(14L).build();
-    private static final CurrencyPairEntity CURRENCY_PAIR_EUR_JPY = aCurrencyPairEntityBuilder().id(15L).build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_EUR_JPY = aCurrencyPairEntityBuilder().id(2L).build();
 
     private static final FxSpotProductEntity FX_SPOT_PRODUCT = aFxSpotProductEntity().id(13L).build();
 
