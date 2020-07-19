@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.service;
 
-import static com.ihsmarkit.tfx.eod.config.CacheConfig.JPY_CROSS_RATES_CACHE;
 import static com.ihsmarkit.tfx.eod.config.CacheConfig.JPY_RATES_CACHE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 
