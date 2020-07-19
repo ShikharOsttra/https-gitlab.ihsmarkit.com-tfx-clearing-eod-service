@@ -1,6 +1,5 @@
 package com.ihsmarkit.tfx.eod.service;
 
-import static com.ihsmarkit.tfx.eod.config.CacheConfig.JPY_CROSS_RATES_CACHE;
 import static com.ihsmarkit.tfx.eod.config.CacheConfig.JPY_RATES_CACHE;
 import static com.ihsmarkit.tfx.eod.config.EodJobConstants.JPY;
 
@@ -30,15 +29,5 @@ public class JPYRateService {
                 log.error("unable to find JPY price for currency: {} on date: {}", currency, date);
                 return null;
             });
-    }
-
-    @Cacheable(JPY_CROSS_RATES_CACHE)
-    public BigDecimal getJpyRate(final LocalDate date, final String baseCurrency, final String valueCurrency) {
-        if (JPY.equals(valueCurrency)) {
-            return getJpyRate(date, baseCurrency);
-        } else {
-            return getJpyRate(date, valueCurrency)
-                .multiply(dailySettlementPriceService.getPrice(date, baseCurrency, valueCurrency));
-        }
     }
 }

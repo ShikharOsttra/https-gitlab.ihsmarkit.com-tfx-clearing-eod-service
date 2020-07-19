@@ -82,6 +82,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     private static final CurrencyPairEntity CURRENCY_PAIR_EURUSD = aCurrencyPairEntityBuilder().baseCurrency("EUR").valueCurrency("USD").build();
     private static final CurrencyPairEntity CURRENCY_PAIR_USDJPY = aCurrencyPairEntityBuilder().valueCurrency(JPY).build();
     private static final CurrencyPairEntity CURRENCY_PAIR_NZDJPY = aCurrencyPairEntityBuilder().baseCurrency("NZD").valueCurrency(JPY).build();
+    private static final CurrencyPairEntity CURRENCY_PAIR_EURJPY = aCurrencyPairEntityBuilder().baseCurrency("EUR").valueCurrency(JPY).build();
 
     private static final CashCollateralProductEntity CASH_PRODUCT = aCashCollateralProductEntityBuilder().build();
     private static final LogCollateralProductEntity LOG_PRODUCT = aLogCollateralProductEntityBuilder().build();
@@ -240,7 +241,8 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
             List.of(
                 DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_EURUSD).dailySettlementPrice(valueOf(1.1)).build(),
                 DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_USDJPY).dailySettlementPrice(valueOf(100)).build(),
-                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_NZDJPY).dailySettlementPrice(valueOf(66)).build()
+                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_NZDJPY).dailySettlementPrice(valueOf(66)).build(),
+                DailySettlementPriceEntity.builder().currencyPair(CURRENCY_PAIR_EURJPY).dailySettlementPrice(valueOf(110)).build()
             )
         );
 
