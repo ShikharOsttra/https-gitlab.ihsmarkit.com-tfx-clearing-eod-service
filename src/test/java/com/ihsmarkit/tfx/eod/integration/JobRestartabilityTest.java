@@ -41,6 +41,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -58,6 +59,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -175,7 +177,6 @@ public class JobRestartabilityTest {
         assertThat(getStepExecutonStatuses()).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
 
         dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_EUR_USD, 1.13));
-        dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_EUR_JPY, 111.98));
 
         sendAndWaitForAlerts(EOD, EOD_1_COMPLETED, TIMEOUT);
 
@@ -204,6 +205,8 @@ public class JobRestartabilityTest {
         );
         assertThat(getStepExecutonStatuses()).containsExactlyInAnyOrder(expectedSoFar.toArray(new Pair[expectedSoFar.size()]));
 
+        dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_USD_JPY, 99.1));
+        dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_EUR_JPY, 111.98));
         dailySettlementPriceRepository.save(dailySettlementPriceEntity(CURRENCY_PAIR_USD_JPY, 99.1));
 
         sendAndWaitForAlerts(EOD, EOD_2_COMPLETED, TIMEOUT);
@@ -273,6 +276,7 @@ public class JobRestartabilityTest {
             .flatMap(Collection::stream)
             .map(JobExecution::getStepExecutions)
             .flatMap(Collection::stream)
+            .sorted(Comparator.comparing(StepExecution::getEndTime))
             .map(
                 execution -> Pair.of(execution.getStepName(), execution.getStatus())
             ).collect(Collectors.toList());

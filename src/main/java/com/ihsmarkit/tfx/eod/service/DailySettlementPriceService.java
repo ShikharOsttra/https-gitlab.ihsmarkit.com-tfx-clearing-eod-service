@@ -3,6 +3,7 @@ package com.ihsmarkit.tfx.eod.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -14,10 +15,12 @@ import com.ihsmarkit.tfx.core.dl.entity.marketdata.DailySettlementPriceEntity;
 import com.ihsmarkit.tfx.core.dl.repository.marketdata.DailySettlementPriceRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @JobScope
 @RequiredArgsConstructor
+@Slf4j
 public class DailySettlementPriceService {
 
     private final DailySettlementPriceRepository dailySettlementPriceRepository;
@@ -25,7 +28,11 @@ public class DailySettlementPriceService {
     private final Map<LocalDate, Map<String, BigDecimal>> dailySettlementPrices = new ConcurrentHashMap<>();
 
     public BigDecimal getPrice(final LocalDate date, final CurrencyPairEntity currencyPair) {
-        return getPrice(date, currencyPair.getBaseCurrency(), currencyPair.getValueCurrency());
+        return Optional.ofNullable(getPrice(date, currencyPair.getBaseCurrency(), currencyPair.getValueCurrency()))
+            .orElseGet(() -> {
+                log.error("unable to find price for currencyPair: {} on date: {}", currencyPair, date);
+                return null;
+            });
     }
 
     public BigDecimal getPrice(final LocalDate date, final String baseCurrency, final String valueCurrency) {
