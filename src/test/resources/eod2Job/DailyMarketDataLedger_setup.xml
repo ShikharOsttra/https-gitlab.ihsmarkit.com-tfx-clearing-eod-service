@@ -53,7 +53,7 @@
         trade_date="2019-02-02" value_date="2019-11-01" amount="501" currency="GBP" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
 
     <participant_position id="7" currency_pair_id="84" participant_id="102" participant_type="LIQUIDITY_PROVIDER" date="2019-02-02"
-        trade_date="2019-02-02" value_date="2019-11-01" amount="123000" currency="CHF" price="8.5" timestamp="2019-10-30 17:08:29" type="SOD"/>
+        trade_date="2019-02-02" value_date="2019-11-01" amount="-123000" currency="CHF" price="8.5" timestamp="2019-10-30 17:08:29" type="NET"/>
 
     <trade
         id="111"

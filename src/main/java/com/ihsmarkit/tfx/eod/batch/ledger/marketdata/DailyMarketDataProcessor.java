@@ -88,14 +88,13 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
             notTradedCcyPairsItems = Stream.empty();
             notTradedCcyPairsTotalItems = Stream.empty();
         } else {
-            final Map<String, BigDecimal> notTradedCcyPairsPosition = getSodPositionAmount(ccyPairsNotTradedToday);
             notTradedCcyPairsItems = ccyPairsNotTradedToday.stream()
                 .map(currencyPairCode ->
-                    mapToEnrichedItem(currencyPairCode, Optional.empty(), swapPointsMapper, dspMap, notTradedCcyPairsPosition)
+                    mapToEnrichedItem(currencyPairCode, Optional.empty(), swapPointsMapper, dspMap, currencyPairOpenPosition)
                 );
             notTradedCcyPairsTotalItems = ccyPairsNotTradedToday.stream()
                 .map(currencyPairCode ->
-                    mapToTotal(currencyPairCode, ZERO, notTradedCcyPairsPosition)
+                    mapToTotal(currencyPairCode, ZERO, currencyPairOpenPosition)
                 );
         }
 
@@ -233,17 +232,6 @@ public class DailyMarketDataProcessor implements ItemProcessor<Map<String, Daily
                         .collect(Streams.summingBigDecimal(BigDecimal::abs))
                 )
                 .toMap();
-    }
-
-    private Map<String, BigDecimal> getSodPositionAmount(final Set<String> ccyPairs) {
-        return participantPositionRepository.findAllByPositionTypeAndTradeDateFetchCurrencyPair(ParticipantPositionType.SOD, businessDate)
-            .filter(item -> ccyPairs.contains(item.getCurrencyPair().getCode()))
-            .collect(
-                Collectors.groupingBy(
-                    item -> item.getCurrencyPair().getCode(),
-                    Streams.summingBigDecimal(item -> item.getAmount().getValue().abs())
-                )
-            );
     }
 
     private static BigDecimal getDspValue(@Nullable final DailySettlementPriceEntity dsp, final Function<DailySettlementPriceEntity, BigDecimal> extractor) {
