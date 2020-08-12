@@ -129,8 +129,8 @@ public class PositionBalance {
                 if (fromPositionAmount.compareTo(BigDecimal.ZERO) <= 0) {
                     break;
                 }
-                final BigDecimal amountToAllocate = toPositionData.getAmount().abs().compareTo(fromPositionAmount.abs()) > 0
-                                              ? fromPositionAmount.abs() : toPositionData.getAmount().abs();
+                final BigDecimal amountToAllocate = toPositionData.getAmount().abs().compareTo(fromPositionAmount) > 0
+                                              ? fromPositionAmount : toPositionData.getAmount().abs();
                 balanceTrades.add(new BalanceTrade(other.getParticipant(),
                     toPositionData.getParticipant(),
                     amountAdjuster.apply(amountToAllocate.abs())));
