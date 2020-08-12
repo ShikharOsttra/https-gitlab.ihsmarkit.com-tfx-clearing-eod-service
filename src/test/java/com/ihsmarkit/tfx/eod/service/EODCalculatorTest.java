@@ -371,17 +371,6 @@ class EODCalculatorTest {
     }
 
     @Test
-    void shouldRebalanceNothingIfNoPositions() {
-        Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
-            eodCalculator.rebalanceLPPositions(
-                Stream.of(),
-                Map.of(EURUSD, 10_000_000L)
-            );
-
-        assertThat(balanceTrades.get(EURUSD)).hasSize(0);
-    }
-
-    @Test
     void shouldRebalanceNothingIfZeroPositions() {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
             eodCalculator.rebalanceLPPositions(
