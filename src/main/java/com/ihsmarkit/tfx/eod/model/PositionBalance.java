@@ -11,7 +11,9 @@ import static java.util.stream.Collectors.reducing;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
@@ -117,15 +119,26 @@ public class PositionBalance {
         final UnaryOperator<BigDecimal> amountAdjuster
     ) {
 
+        List<BalanceTrade> balanceTrades = new ArrayList<>();
         final Optional<RawPositionData> fromPosition = from.getPositions().stream().sorted(BY_AMOUNT_AND_PARTICIPANT_CODE).findFirst();
 
         if (fromPosition.isPresent()) {
             final RawPositionData other = fromPosition.get();
-            return to.getPositions().stream()
-                .map(position -> new BalanceTrade(other.getParticipant(), position.getParticipant(), amountAdjuster.apply(position.getAmount().abs())));
-        } else {
-            return Stream.of();
+            BigDecimal fromPositionAmount = other.getAmount().abs();
+            for (RawPositionData toPositionData : to.getPositions()) {
+                if (fromPositionAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    break;
+                }
+                BigDecimal amountToAllocate = toPositionData.getAmount().abs().compareTo(fromPositionAmount.abs()) > 0
+                                              ? fromPositionAmount.abs() : toPositionData.getAmount().abs();
+                balanceTrades.add(new BalanceTrade(other.getParticipant(),
+                    toPositionData.getParticipant(),
+                    amountAdjuster.apply(amountToAllocate.abs())));
+                fromPositionAmount = fromPositionAmount.subtract(amountToAllocate);
+            }
         }
+
+        return balanceTrades.stream();
     }
 
     private Stream<BalanceTrade> rebalanceImpl(

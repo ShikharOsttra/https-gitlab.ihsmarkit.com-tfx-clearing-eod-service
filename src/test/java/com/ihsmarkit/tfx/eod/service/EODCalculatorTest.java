@@ -69,6 +69,10 @@ class EODCalculatorTest {
 
     private static final ParticipantEntity PARTICIPANT_C = aParticipantEntityBuilder().name("C").build();
     private static final ParticipantEntity PARTICIPANT_D = aParticipantEntityBuilder().name("D").build();
+    private static final ParticipantEntity PARTICIPANT_E = aParticipantEntityBuilder().name("E").build();
+    private static final ParticipantEntity PARTICIPANT_F = aParticipantEntityBuilder().name("F").build();
+    private static final ParticipantEntity PARTICIPANT_G = aParticipantEntityBuilder().name("G").build();
+    private static final ParticipantEntity PARTICIPANT_H = aParticipantEntityBuilder().name("H").build();
 
     private static final TradeEntity A_BUYS_20K_USD = TradeEntity.builder()
         .direction(Side.BUY)
@@ -288,7 +292,7 @@ class EODCalculatorTest {
     }
 
     @Test
-    void shouldRebalancePositions() {
+    void shouldRebalancePositionsBAU() {
         Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
             eodCalculator.rebalanceLPPositions(
                 Stream.of(A_POS_EUR_L_212M, B_POS_EUR_L_30M, C_POS_EUR_S_123M539, D_POS_EUR_S_47M, C_POS_USD_L_37M7, D_POS_USD_S_47M),
@@ -307,6 +311,44 @@ class EODCalculatorTest {
             .containsOnly(
                 tuple(PARTICIPANT_D, PARTICIPANT_C, 37700000)
             );
+    }
+
+    @Test
+    void shouldRebalancePositionsBelowThreshold() {
+        Map<@NonNull CurrencyPairEntity, List<BalanceTrade>> balanceTrades =
+            eodCalculator.rebalanceLPPositions(
+                Stream.of(
+                    createEURUSDParticipantPosition(PARTICIPANT_A, 5_000_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_B, 4_996_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_C, -5_100_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_D, 1_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_E, -1_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_F, -1_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_G, -701_000),
+                    createEURUSDParticipantPosition(PARTICIPANT_H, -100_000)
+                ),
+                Map.of(EURUSD, 10_000_000L)
+            );
+
+        assertThat(balanceTrades.get(EURUSD))
+            .extracting(BalanceTrade::getOriginator, BalanceTrade::getCounterparty, trade -> trade.getAmount().intValue())
+            .containsExactlyInAnyOrder(
+                tuple(PARTICIPANT_A, PARTICIPANT_C, -5_000_000),
+                tuple(PARTICIPANT_B, PARTICIPANT_C, -100_000),
+                tuple(PARTICIPANT_B, PARTICIPANT_E, -1_000),
+                tuple(PARTICIPANT_B, PARTICIPANT_F, -1_000),
+                tuple(PARTICIPANT_B, PARTICIPANT_G, -701_000),
+                tuple(PARTICIPANT_B, PARTICIPANT_H, -100_000)
+            );
+    }
+
+    private ParticipantPositionEntity createEURUSDParticipantPosition(final ParticipantEntity participantEntity, final long positionSize) {
+        return ParticipantPositionEntity.builder()
+            .currencyPair(EURUSD)
+            .amount(AmountEntity.of(BigDecimal.valueOf(positionSize), "EUR"))
+            .price(BigDecimal.valueOf(2.00))
+            .participant(participantEntity)
+            .build();
     }
 
     @Test
