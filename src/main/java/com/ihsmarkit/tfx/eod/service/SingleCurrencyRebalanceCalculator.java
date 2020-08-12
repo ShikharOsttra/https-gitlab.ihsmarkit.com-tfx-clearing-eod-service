@@ -40,9 +40,10 @@ public class SingleCurrencyRebalanceCalculator {
         }
 
         //outstanding residual amount to be allocated to LP with largest net position
-        if (!isEqualToZero(balance.getBuy().getNet().min(balance.getSell().getNet().abs()))) {
+        while (!isEqualToZero(balance.getBuy().getNet().min(balance.getSell().getNet().abs()))) {
             final List<BalanceTrade> residualTrades = balance.allocateResidual().collect(Collectors.toList());
             trades.addAll(residualTrades);
+            balance = balance.applyTrades(residualTrades.stream());
         }
 
         return mergeBalanceTrades(trades);

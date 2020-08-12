@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -25,12 +26,13 @@ import com.ihsmarkit.tfx.eod.service.Slicer;
 
 import lombok.Builder;
 import lombok.Getter;
+import one.util.streamex.StreamEx;
 
 @Getter
 @Builder
 public class PositionBalance {
 
-    private static final Comparator<RawPositionData> BY_AMOUNT_AND_PARTICIPANT_CODE  = Comparator
+    private static final Comparator<RawPositionData> BY_AMOUNT_AND_PARTICIPANT_CODE = Comparator
         .comparing((RawPositionData position) -> position.getAmount().abs(), BigDecimal::compareTo).reversed()
         .thenComparing(position -> position.getParticipant().getCode());
 
@@ -59,10 +61,10 @@ public class PositionBalance {
                         .orElseGet(PositionList.PositionListBuilder::empty)
                         .build()
                 ).buy(
-                    Optional.ofNullable(separatedByDirection.get(Boolean.TRUE))
-                        .orElseGet(PositionList.PositionListBuilder::empty)
-                        .build()
-                ).build();
+                Optional.ofNullable(separatedByDirection.get(Boolean.TRUE))
+                    .orElseGet(PositionList.PositionListBuilder::empty)
+                    .build()
+            ).build();
     }
 
     public PositionBalance applyTrades(final Stream<BalanceTrade> trades) {
@@ -121,11 +123,18 @@ public class PositionBalance {
 
         if (fromPosition.isPresent()) {
             final RawPositionData other = fromPosition.get();
-            return to.getPositions().stream()
-                .map(position -> new BalanceTrade(other.getParticipant(), position.getParticipant(), amountAdjuster.apply(position.getAmount().abs())));
-        } else {
-            return Stream.of();
+            final AtomicReference<BigDecimal> fromPositionAmount = new AtomicReference<>(other.getAmount().abs());
+
+            return StreamEx.of(to.getPositions().stream().takeWhile($ -> isGreaterThanZero(fromPositionAmount.get())))
+                .mapToEntry(
+                    RawPositionData::getParticipant,
+                    toPositionData -> toPositionData.getAmount().abs().min(fromPositionAmount.get())
+                )
+                .peekValues(amountToAllocate -> fromPositionAmount.getAndAccumulate(amountToAllocate, BigDecimal::subtract))
+                .map(entry -> new BalanceTrade(other.getParticipant(), entry.getKey(), amountAdjuster.apply(entry.getValue().abs())));
         }
+
+        return Stream.of();
     }
 
     private Stream<BalanceTrade> rebalanceImpl(
