@@ -119,17 +119,17 @@ public class PositionBalance {
         final UnaryOperator<BigDecimal> amountAdjuster
     ) {
 
-        List<BalanceTrade> balanceTrades = new ArrayList<>();
+        final List<BalanceTrade> balanceTrades = new ArrayList<>();
         final Optional<RawPositionData> fromPosition = from.getPositions().stream().sorted(BY_AMOUNT_AND_PARTICIPANT_CODE).findFirst();
 
         if (fromPosition.isPresent()) {
             final RawPositionData other = fromPosition.get();
             BigDecimal fromPositionAmount = other.getAmount().abs();
-            for (RawPositionData toPositionData : to.getPositions()) {
+            for (final RawPositionData toPositionData : to.getPositions()) {
                 if (fromPositionAmount.compareTo(BigDecimal.ZERO) <= 0) {
                     break;
                 }
-                BigDecimal amountToAllocate = toPositionData.getAmount().abs().compareTo(fromPositionAmount.abs()) > 0
+                final BigDecimal amountToAllocate = toPositionData.getAmount().abs().compareTo(fromPositionAmount.abs()) > 0
                                               ? fromPositionAmount.abs() : toPositionData.getAmount().abs();
                 balanceTrades.add(new BalanceTrade(other.getParticipant(),
                     toPositionData.getParticipant(),
