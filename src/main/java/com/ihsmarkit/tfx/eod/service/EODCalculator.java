@@ -528,10 +528,11 @@ public class EODCalculator {
         return cashCollateral
             .flatMap(value -> logCollateral.map(value::add))
             .flatMap(value -> pnl.map(value::add))
+            .map(EFFECTIVE_RATIO_FACTOR::multiply)
             .flatMap(value -> initialMargin
                 .filter(not(isEqualToZero()))
                 .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
-            ).map(EFFECTIVE_RATIO_FACTOR::multiply);
+            );
     }
 
     private static <R, C, LEFT, RIGHT, T> Stream<T> mergeAndFlatten(final Table<R, C, LEFT> left, final Table<R, C, RIGHT> right,
