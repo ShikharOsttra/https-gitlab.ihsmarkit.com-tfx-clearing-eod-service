@@ -531,7 +531,7 @@ public class EODCalculator {
             .map(EFFECTIVE_RATIO_FACTOR::multiply)
             .flatMap(value -> initialMargin
                 .filter(not(isEqualToZero()))
-                .map(amount -> value.divide(amount, 2, RoundingMode.HALF_DOWN))
+                .map(amount -> value.divide(amount, 2, RoundingMode.HALF_UP))
             );
     }
 
