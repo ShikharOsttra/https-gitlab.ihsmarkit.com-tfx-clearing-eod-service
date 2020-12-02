@@ -90,6 +90,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
     private static final ParticipantEntity PARTICIPANT1 = aParticipantEntityBuilder().id(1L).code("P11").build();
     private static final ParticipantEntity PARTICIPANT2 = aParticipantEntityBuilder().id(2L).code("P12").build();
     private static final ParticipantEntity PARTICIPANT3 = aParticipantEntityBuilder().id(3L).code("P13").build();
+    private static final ParticipantEntity PARTICIPANT4 = aParticipantEntityBuilder().id(4L).code("P14").build();
 
     private static final LocalDate OCT_6 = LocalDate.of(2019, 10, 6);
     private static final LocalDate OCT_7 = OCT_6.plusDays(1);
@@ -201,7 +202,9 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
         when(marginAlertConfigurationRepository.findAll()).thenReturn(
             List.of(
                 MarginAlertConfigurationEntity.builder().participant(PARTICIPANT1).level(ALERT).triggerLevel(valueOf(50)).action(BOTH).build(),
-                MarginAlertConfigurationEntity.builder().participant(PARTICIPANT2).level(HALT).triggerLevel(valueOf(50)).action(BOTH).build()
+                MarginAlertConfigurationEntity.builder().participant(PARTICIPANT2).level(HALT).triggerLevel(valueOf(50)).action(BOTH).build(),
+                MarginAlertConfigurationEntity.builder().participant(PARTICIPANT3).level(HALT).triggerLevel(valueOf(50)).action(BOTH).build(),
+                MarginAlertConfigurationEntity.builder().participant(PARTICIPANT4).level(HALT).triggerLevel(valueOf(50)).action(BOTH).build()
             )
         );
 
@@ -228,7 +231,8 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
             List.of(
                 collateralBalance(PARTICIPANT1, LOG_PRODUCT, 1000000),
                 collateralBalance(PARTICIPANT1, CASH_PRODUCT, 1000000),
-                collateralBalance(PARTICIPANT2, CASH_PRODUCT, 3000000)
+                collateralBalance(PARTICIPANT2, CASH_PRODUCT, 3000000),
+                collateralBalance(PARTICIPANT4, CASH_PRODUCT, 100)
             )
         );
 
@@ -256,7 +260,7 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     position(PARTICIPANT2, CURRENCY_PAIR_NZDJPY, NET, 66.0, 100000.0)
                 )
             );
-        when(participantRepository.findAllNotDeletedWithoutClearingHouse()).thenReturn(List.of(PARTICIPANT1, PARTICIPANT2, PARTICIPANT3));
+        when(participantRepository.findAllNotDeletedWithoutClearingHouse()).thenReturn(List.of(PARTICIPANT1, PARTICIPANT2, PARTICIPANT3, PARTICIPANT4));
 
         final JobExecution execution = jobLauncherTestUtils.launchStep(
             MARGIN_COLLATERAL_EXCESS_OR_DEFICIENCY,
@@ -371,6 +375,26 @@ class MarginCollateralExcessDeficiencyTaskletTest extends AbstractSpringBatchTes
                     0.0,
                     0.0,
                     0.0,
+                    0.0
+                ),
+                tuple(
+                    PARTICIPANT4,
+                    OCT_6,
+                    null,
+                    100.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    100.0,
+                    100.0,
+                    0.0,
+                    100.0,
+                    100.0,
+                    100.0,
+                    100.0,
                     0.0
                 )
             )

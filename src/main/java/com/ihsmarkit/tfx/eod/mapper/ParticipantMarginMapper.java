@@ -21,7 +21,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import com.ihsmarkit.tfx.common.mapstruct.DefaultMapperConfig;
-import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodParticipantMarginEntity;
 import com.ihsmarkit.tfx.core.margin.MarginAdapter;
 import com.ihsmarkit.tfx.core.margin.MarginCalculationMapper;
@@ -55,28 +54,6 @@ public interface ParticipantMarginMapper {
     @Mapping(target = "timestamp", source = "timestamp")
     @Mapping(target = "date", source = "date")
     EodParticipantMarginEntity toEntity(ParticipantMargin margin, LocalDate date, LocalDateTime timestamp);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "participant", source = "participant")
-    @Mapping(target = "requiredAmount", constant = "0")
-    @Mapping(target = "initialMargin", constant = "0")
-    @Mapping(target = "marginRatio", constant = "0")
-    @Mapping(target = "marginAlertLevel", ignore = true)
-    @Mapping(target = "totalDeficit", constant = "0")
-    @Mapping(target = "cashDeficit", constant = "0")
-    @Mapping(target = "cashCollateral", constant = "0")
-    @Mapping(target = "logCollateral", constant = "0")
-    @Mapping(target = "pnl", constant = "0")
-    @Mapping(target = "todaySettlement", constant = "0")
-    @Mapping(target = "nextDaySettlement", constant = "0")
-    @Mapping(target = "marginAmount", constant = "0")
-    @Mapping(target = "surplus", constant = "0")
-    @Mapping(target = "drawableAmount", constant = "0")
-    @Mapping(target = "cashDrawableAmount", constant = "0")
-    @Mapping(target = "marginCall", constant = "0")
-    @Mapping(target = "timestamp", source = "timestamp")
-    @Mapping(target = "date", source = "date")
-    EodParticipantMarginEntity toEmptyEodMargin(ParticipantEntity participant, LocalDate date, LocalDateTime timestamp);
 
     @Named(UNWRAP_BIG_DECIMAL)
     default BigDecimal unwrapBigDecimal(Optional<BigDecimal> input) {
