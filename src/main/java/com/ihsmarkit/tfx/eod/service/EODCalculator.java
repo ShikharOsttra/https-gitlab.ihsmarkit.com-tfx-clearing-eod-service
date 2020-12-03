@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -454,20 +453,19 @@ public class EODCalculator {
     }
 
     public Stream<ParticipantMargin> calculateParticipantMargin(
+        final List<ParticipantEntity> participants,
         final Map<ParticipantEntity, BigDecimal> requiredInitialMargin,
         final Map<ParticipantEntity, EnumMap<EodCashSettlementDateType, BigDecimal>> dayCashSettlement,
         final Map<ParticipantEntity, BalanceContribution> deposits,
         final Map<Long, Function<BigDecimal, Optional<MarginAlertLevel>>> marginAlertLevelCalculators
     ) {
-        return Stream.of(requiredInitialMargin, dayCashSettlement, deposits)
-            .map(Map::keySet)
-            .flatMap(Set::stream)
-            .distinct()
+        return participants.stream()
             .map(
                 participant -> createEodParticipantMargin(
                     participant,
-                    Optional.ofNullable(marginAlertLevelCalculators.get(participant.getId()))
-                        .orElseThrow(() -> new IllegalStateException("Unable to resolve margin alert configuration for participant: " + participant.getCode())),
+                    effectiveMargin -> Optional.ofNullable(marginAlertLevelCalculators.get(participant.getId()))
+                        .orElseThrow(() -> new IllegalStateException("Unable to resolve margin alert configuration for participant: " + participant.getCode()))
+                        .apply(effectiveMargin),
                     Optional.ofNullable(requiredInitialMargin.get(participant)),
                     Optional.ofNullable(dayCashSettlement.get(participant)),
                     Optional.ofNullable(deposits.get(participant))

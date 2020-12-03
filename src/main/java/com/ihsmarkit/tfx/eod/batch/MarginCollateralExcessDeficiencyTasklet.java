@@ -5,13 +5,11 @@ import static com.ihsmarkit.tfx.eod.config.EodJobConstants.MARGIN_COLLATERAL_EXC
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +24,6 @@ import org.springframework.stereotype.Service;
 import com.ihsmarkit.tfx.core.dl.entity.MarginAlertConfigurationEntity;
 import com.ihsmarkit.tfx.core.dl.entity.ParticipantEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodCashSettlementEntity;
-import com.ihsmarkit.tfx.core.dl.entity.eod.EodParticipantMarginEntity;
 import com.ihsmarkit.tfx.core.dl.entity.eod.EodProductCashSettlementEntity;
 import com.ihsmarkit.tfx.core.dl.repository.MarginAlertConfigurationRepository;
 import com.ihsmarkit.tfx.core.dl.repository.ParticipantRepository;
@@ -140,7 +137,9 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 (baseCcy, valueCcy) -> jpyRateService.getJpyRate(businessDate, baseCcy)
             );
 
-        final var deposits = calculateDeposits(uniqueParticipantIds(requiredInitialMargin, variationMargins));
+
+        final var participants = participantRepository.findAllNotDeletedWithoutClearingHouse();
+        final var deposits = calculateDeposits(participants.stream().map(ParticipantEntity::getId).collect(Collectors.toSet()));
         final var marginAlertCalculatorsPerParticipant = marginAlertConfigurationRepository.findAll().stream()
             .collect(Collectors.groupingBy(
                 entity -> entity.getParticipant().getId(),
@@ -153,33 +152,23 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
                 )
             ));
 
-        final var participantMap = participantRepository.findAllNotDeletedWithoutClearingHouse().stream()
-            .collect(Collectors.toMap(ParticipantEntity::getCode, Function.identity()));
-
         final var participantMargin =
             eodCalculator
                 .calculateParticipantMargin(
+                    participants,
                     requiredInitialMargin,
                     variationMargins,
                     deposits,
                     marginAlertCalculatorsPerParticipant
                 )
                 .map(marginEntry -> participantMarginMapper.toEntity(marginEntry, businessDate, clockService.getCurrentDateTimeUTC()))
-                .collect(Collectors.toMap(item -> item.getParticipant().getCode(), Function.identity()));
-
-        final var allParticipantMargin = EntryStream.of(participantMap)
-            .mapKeyValue((participantCode, participant) -> participantMargin.getOrDefault(participantCode, emptyMargin(participant)))
-            .toImmutableList();
+                .collect(Collectors.toList());
 
         log.info("{} persisting participants margins", TASKLET_LABEL);
-        eodParticipantMarginRepository.saveAll(allParticipantMargin);
+        eodParticipantMarginRepository.saveAll(participantMargin);
 
         log.info("{} end", TASKLET_LABEL);
         return RepeatStatus.FINISHED;
-    }
-
-    private EodParticipantMarginEntity emptyMargin(final ParticipantEntity participant) {
-        return participantMarginMapper.toEmptyEodMargin(participant, businessDate, clockService.getCurrentDateTimeUTC());
     }
 
     private Map<ParticipantEntity, BalanceContribution> calculateDeposits(final Set<Long> participants) {
@@ -194,12 +183,4 @@ public class MarginCollateralExcessDeficiencyTasklet implements Tasklet {
         }
     }
 
-    @SafeVarargs
-    private Set<Long> uniqueParticipantIds(final Map<ParticipantEntity, ?>...requiredInitialMargin) {
-        return Arrays.stream(requiredInitialMargin)
-            .map(Map::keySet)
-            .flatMap(Set::stream)
-            .map(ParticipantEntity::getId)
-            .collect(Collectors.toSet());
-    }
 }
