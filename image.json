@@ -77,6 +77,18 @@
             }
           },
           {
+            "name": "KUBERNETES_PODNAME",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "metadata.name"
+              }
+            }
+          },
+          {
+            "name": "APP_INSTANCE_NAME",
+            "value": "eod-service"
+          },
+          {
             "name": "JAVA_APP_JAR",
             "value": "eod-service.jar"
           },
