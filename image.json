@@ -85,6 +85,15 @@
             }
           },
           {
+            "name": "SIGHTRAY_URL",
+            "valueFrom": {
+              "configMapKeyRef": {
+                "name": "environment-config",
+                "key": "tfx.sightray.url"
+              }
+            }
+          },
+          {
             "name": "APP_INSTANCE_NAME",
             "value": "eod-service"
           },
