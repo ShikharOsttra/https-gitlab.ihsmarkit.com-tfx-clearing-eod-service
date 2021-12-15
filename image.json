@@ -2,7 +2,7 @@
   "name": "eod-service",
   "imageType": "IMAGE",
   "parent": "/mserv/extern/openjdk:11-jre-slim",
-  "subSystemVersion": "v1.4",
+  "subSystemVersion": "v1.5",
   "maintainerEmail": "oleksandr.berezovskyi@ihsmarkit.com",
   "copyPaths": {
     "build/libs/": "/opt/app/",
