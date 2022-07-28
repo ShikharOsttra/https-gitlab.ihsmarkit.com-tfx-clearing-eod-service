@@ -10,8 +10,8 @@ stages:
 include:
   - project: 'tfx-clearing/ci-jobs'
     file: 'build/build-and-publish.yml'
-  - project: 'tfx-clearing/ci-jobs'
-    file: 'build/check-dependencies.yml'
+  # - project: 'tfx-clearing/ci-jobs'
+  #   file: 'build/check-dependencies.yml'
   - project: 'tfx-clearing/ci-jobs'
     file: 'deliver/gconf-deliver.yml'
   - project: 'tfx-clearing/environments/ci'
