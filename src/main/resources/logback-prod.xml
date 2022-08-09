@@ -3,14 +3,14 @@
 
     <appender name="ConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %X{session_id} %logger{36}.%M - %msg%n</Pattern>
+            <Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %X{sessionId} %logger{36}.%M - %msg%n</Pattern>
         </encoder>
     </appender>
 
     <appender name="RollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${HOSTNAME}.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %X{session_id} %logger{36}.%M - %msg%n</Pattern>
+            <Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %X{sessionId} %logger{36}.%M - %msg%n</Pattern>
         </encoder>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
