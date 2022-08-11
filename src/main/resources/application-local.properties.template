@@ -15,3 +15,16 @@ jms.system.event.notification.consumer=Consumer.EODSVC.VirtualTopic.SYSTEM.EVENT
 jms.any.alert-service.queue=ANY.ALERTSRV.NEW.ALERT.DEV_<USERNAME>
 jms.system.event.notification.topic=VirtualTopic.SYSTEM.EVENT.NOTIFICATION.DEV_<USERNAME>
 jms.trade-state-machine.new-transaction-input.queue=TSM.NEWTRANSACTIONINPUT.DEV_<USERNAME>
+
+###############################################################################################################
+##  add below to the application.properties and remove the properties they override, comment out "management.*"  ##
+###############################################################################################################
+
+spring.main.allow-bean-definition-overriding=true
+spring.datasource.url=jdbc:mysql://127.0.0.1:3306/s1?usePipelineAuth=false&useBatchMultiSend=false
+spring.jpa.properties.hibernate.default_catalog=s1
+spring.datasource.username=s1_owner
+spring.datasource.password=s1_owner_tfx
+spring.activemq.broker-url=tcp://localhost:61616
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.datasource.hikari.catalog=s1

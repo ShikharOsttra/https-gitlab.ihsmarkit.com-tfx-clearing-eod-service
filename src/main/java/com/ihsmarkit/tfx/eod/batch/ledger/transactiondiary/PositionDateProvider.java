@@ -77,10 +77,11 @@ public class PositionDateProvider {
         final List<TradingHoursEntity> tradingHours
     ) {
         final Range<ChronoLocalDate> summerTimeRange = Range.between(summerTimeSetting.getStartDate(), summerTimeSetting.getEndDate().minusDays(1));
-        final TradingHoursType tradingHoursType = summerTimeRange.contains(date) ? SUMMER : REGULAR;
+        // 2019-03-08,2019-11-01
+        final TradingHoursType tradingHoursType = summerTimeRange.contains(date) ? SUMMER : REGULAR; // REGULAR
         return tradingHours.stream()
             .filter(tradingHour ->
-                tradingHour.getType() == tradingHoursType &&
+                tradingHour.getType() == tradingHoursType /*REGULAR*/ &&
                     tradingHour.getDayOfWeek() == date.getDayOfWeek() &&
                     tradingHour.getCurrencyPairFamily() == NON_NZD
             )

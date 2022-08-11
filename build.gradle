@@ -75,8 +75,7 @@ dependencies {
             [group: 'io.vavr', name: 'vavr'],
             [group: 'one.util', name: 'streamex'],
             [group: 'org.apache.velocity', name: 'velocity-engine-core'],
-            [group: 'org.apache.velocity.tools', name: 'velocity-tools-generic'],
-            [group: 'io.micrometer', name: 'micrometer-registry-influx']
+            [group: 'org.apache.velocity.tools', name: 'velocity-tools-generic']
     )
 
     runtimeOnly(
