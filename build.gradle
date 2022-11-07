@@ -173,6 +173,7 @@ idea {
 configurations.compile.exclude(group: 'com.zaxxer', module: 'HikariCP-java7')
 
 ext.additionalJacocoExclusions = [
+        '**/*',
         // quite hard to verify invocation of TradeHolder.merge
         '**/eod/batch/ledger/marketdata/DailyMarketDataReader$TradeHolder*',
         '**/eod/model/dto/*',
