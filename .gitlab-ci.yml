@@ -3,7 +3,7 @@ variables:
 
 stages:
   - build
-  - code
+  - codescan
   - post-build
   - deliver
   - downstream
