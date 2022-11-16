@@ -3,6 +3,7 @@ variables:
 
 stages:
   - build
+  - code
   - post-build
   - deliver
   - downstream
@@ -10,6 +11,8 @@ stages:
 include:
   - project: 'tfx-clearing/ci-jobs'
     file: 'build/build-and-publish.yml'
+  - project: 'tfx-clearing/ci-jobs'
+    file: 'build/codescan.yml'
   - project: 'tfx-clearing/ci-jobs'
     file: 'build/check-dependencies.yml'
   - project: 'tfx-clearing/ci-jobs'
