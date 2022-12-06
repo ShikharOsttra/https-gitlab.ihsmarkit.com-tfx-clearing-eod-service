@@ -13,7 +13,10 @@
     "for i in $(ls /opt/app | egrep '.*-(tests|sources|contracts).jar$'); do rm -f /opt/app/$i; done",
     "mv `ls /opt/app/*.jar` $(echo `ls /opt/app/*.jar` | sed -En s/-[0-9]+\\.[0-9]+\\.[0-9]+\\(-SNAPSHOT\\)?.jar//p).jar",
     "mkdir /etc/.creds",
-    "apt-get -y update && apt-get -y install jq"
+    "apt-get -y update && apt-get -y install jq wget",
+    "wget https://download.ej-technologies.com/jprofiler/jprofiler_linux_10_1_5.tar.gz -P /tmp/",
+    "tar -xzf /tmp/jprofiler_linux_10_1_5.tar.gz -C /usr/local",
+    "rm /tmp/jprofiler_linux_10_1_5.tar.gz"
   ],
   "entrypoint": "/opt/app/entrypoint.sh",
   "containerConfig": {
