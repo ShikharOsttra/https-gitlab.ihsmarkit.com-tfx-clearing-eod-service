@@ -1,9 +1,6 @@
 buildscript {
     dependencies {
         classpath(
-                [group: 'com.ihsmarkit.tfx.gradle', name: 'sca-gradle-plugin', version: scaGradlePluginVersion],
-                [group: 'com.ihsmarkit.tfx.gradle', name: 'idea-gradle-plugin', version: ideaGradlePluginVersion],
-                [group: 'com.ihsmarkit.tfx.gradle', name: 'test-configuration-gradle-plugin', version: testConfigurationGradlePluginVersion],
                 [group: 'org.springframework.boot', name: 'spring-boot-gradle-plugin', version: springbootGradlePluginVersion],
                 [group: 'io.spring.gradle', name: 'dependency-management-plugin', version: dependencyManagementPluginVersion],
                 [group: 'gradle.plugin.org.hidetake', name: 'gradle-swagger-generator-plugin', version: gradleSwaggerGeneratorPluginVersion]
