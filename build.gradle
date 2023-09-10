@@ -12,9 +12,6 @@ plugins {
     id 'idea'
 }
 
-apply plugin: 'com.ihsmarkit.tfx.gradle.sca'
-apply plugin: 'com.ihsmarkit.tfx.gradle.idea'
-apply plugin: 'com.ihsmarkit.tfx.gradle.test-configuration'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'org.hidetake.swagger.generator'
