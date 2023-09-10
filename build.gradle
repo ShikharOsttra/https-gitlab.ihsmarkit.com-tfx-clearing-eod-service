@@ -12,8 +12,8 @@ plugins {
     id 'idea'
 }
 
-project.sourceCompatibility = javaVersion
-project.targetCompatibility = javaVersion
+project.sourceCompatibility = 11
+project.targetCompatibility = 11
 
 apply plugin: 'com.ihsmarkit.tfx.gradle.sca'
 apply plugin: 'com.ihsmarkit.tfx.gradle.idea'
